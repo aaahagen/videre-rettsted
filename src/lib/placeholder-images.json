@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "warehouse-loading-dock",
+      "description": "A loading dock at a large warehouse facility with a truck backed in.",
+      "imageUrl": "https://images.unsplash.com/photo-1581200755095-81990f2e27fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3YXJlaG91c2UlMjBkb2NrfGVufDB8fHx8MTc2OTAzNjEzM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "warehouse dock"
+    },
+    {
+      "id": "downtown-storefront",
+      "description": "The entrance to a modern retail store in a city center.",
+      "imageUrl": "https://images.unsplash.com/photo-1759153820384-12c9ddf8bd8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxyZXRhaWwlMjBzdG9yZWZyb250fGVufDB8fHx8MTc2OTEwMTEwOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "retail storefront"
+    },
+    {
+      "id": "apartment-building-entrance",
+      "description": "The main entrance and lobby door of a multi-story apartment building.",
+      "imageUrl": "https://images.unsplash.com/photo-1696128672724-282254d71937?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhcGFydG1lbnQlMjBlbnRyYW5jZXxlbnwwfHx8fDE3NjkxMDExMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "apartment entrance"
+    },
+    {
+      "id": "suburban-house-porch",
+      "description": "The front porch and door of a single-family suburban home.",
+      "imageUrl": "https://images.unsplash.com/photo-1740858923870-52181e170df7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxob3VzZSUyMHBvcmNofGVufDB8fHx8MTc2OTEwMTEwOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "house porch"
+    },
+    {
+      "id": "office-building-reception",
+      "description": "The reception desk area inside a corporate office building.",
+      "imageUrl": "https://images.unsplash.com/photo-1677272292473-babd917423d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxvZmZpY2UlMjByZWNlcHRpb258ZW58MHx8fHwxNzY5MDE1MzMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "office reception"
+    },
+    {
+      "id": "construction-site-gate",
+      "description": "The gated entrance to a new construction site with heavy machinery in the background.",
+      "imageUrl": "https://images.unsplash.com/photo-1567954970774-58d6aa6c50dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb25zdHJ1Y3Rpb24lMjBzaXRlfGVufDB8fHx8MTc2OTA0NTU1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "construction site"
+    },
+    {
+      "id": "restaurant-backdoor",
+      "description": "The back delivery entrance for a restaurant kitchen.",
+      "imageUrl": "https://images.unsplash.com/photo-1624633813008-0ce3dbe9e9e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxyZXN0YXVyYW50JTIwZGVsaXZlcnl8ZW58MHx8fHwxNzY5MTAxMTA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "restaurant delivery"
+    },
+    {
+      "id": "shopping-mall-entrance",
+      "description": "Main entrance of a large indoor shopping mall.",
+      "imageUrl": "https://images.unsplash.com/photo-1614521084980-811d04f6c6cb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxzaG9wcGluZyUyMG1hbGx8ZW58MHx8fHwxNzY5MTAxMTA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "shopping mall"
+    }
+  ]
 }
