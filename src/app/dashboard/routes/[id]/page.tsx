@@ -7,39 +7,39 @@ import { useRouter, useParams } from 'next/navigation';
 import { firebaseDB } from '../../../../lib/firebase/database';
 import { auth } from '../../../../lib/firebase/firebase';
 
-export default function PlaceDetailsPage() {
+export default function RouteDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
-  const [place, setPlace] = useState<any>(null);
+  const [route, setRoute] = useState<any>(null);
   const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
+  const [distance, setDistance] = useState('');
   const router = useRouter();
   const params = useParams();
   const { id } = params;
 
   useEffect(() => {
     if (user && id) {
-      firebaseDB.getPlace(id as string).then(placeData => {
-        if (placeData) {
-          setPlace(placeData);
-          setName(placeData.name);
-          setAddress(placeData.address);
+      firebaseDB.getRoute(id as string).then(routeData => {
+        if (routeData) {
+          setRoute(routeData);
+          setName(routeData.name);
+          setDistance(routeData.distance.toString());
         }
       });
     }
   }, [user, id]);
 
-  const handleUpdatePlace = async (e: React.FormEvent) => {
+  const handleUpdateRoute = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (place) {
-      await firebaseDB.updatePlace(place.id, { name, address });
-      router.push('/dashboard/places');
+    if (route) {
+      await firebaseDB.updateRoute(route.id, { name, distance: parseFloat(distance) });
+      router.push('/dashboard/routes');
     }
   };
 
-  const handleDeletePlace = async () => {
-    if (place && window.confirm('Are you sure you want to delete this place?')) {
-      await firebaseDB.deletePlace(place.id);
-      router.push('/dashboard/places');
+  const handleDeleteRoute = async () => {
+    if (route && window.confirm('Are you sure you want to delete this route?')) {
+      await firebaseDB.deleteRoute(route.id);
+      router.push('/dashboard/routes');
     }
   };
 
@@ -56,14 +56,14 @@ export default function PlaceDetailsPage() {
     return null; 
   }
 
-  if (!place) {
-    return <p>Place not found.</p>;
+  if (!route) {
+    return <p>Route not found.</p>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Edit Place</h1>
-      <form onSubmit={handleUpdatePlace} className="max-w-md mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Edit Route</h1>
+      <form onSubmit={handleUpdateRoute} className="max-w-md mx-auto">
         <div className="mb-4">
           <label htmlFor="name" className="block text-gray-700 font-semibold mb-2">Name</label>
           <input
@@ -76,12 +76,12 @@ export default function PlaceDetailsPage() {
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="address" className="block text-gray-700 font-semibold mb-2">Address</label>
+          <label htmlFor="distance" className="block text-gray-700 font-semibold mb-2">Distance (in miles)</label>
           <input
-            type="text"
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            type="number"
+            id="distance"
+            value={distance}
+            onChange={(e) => setDistance(e.target.value)}
             className="w-full px-4 py-2 border rounded-md"
             required
           />
@@ -90,8 +90,8 @@ export default function PlaceDetailsPage() {
           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
             Save Changes
           </button>
-          <button type="button" onClick={handleDeletePlace} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
-            Delete Place
+          <button type="button" onClick={handleDeleteRoute} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+            Delete Route
           </button>
         </div>
       </form>

@@ -1,49 +1,42 @@
-import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
-import { getPlaces } from '@/lib/data';
-import { PlaceGrid } from '@/components/places/place-grid';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
-export default async function DashboardPage() {
-  const places = await getPlaces();
+'use client';
+
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { firebaseAuth } from '../../lib/firebase/auth';
+import { auth } from '../../lib/firebase/firebase';
+import { useRouter } from 'next/navigation';
+
+export default function DashboardPage() {
+  const [user, loading, error] = useAuthState(auth);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await firebaseAuth.signOut();
+    router.push('/login');
+  };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>Error: {error.message}</p>;
+  }
+
+  if (!user) {
+    router.push('/login');
+    return null; // Don't render anything while redirecting
+  }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="font-headline text-2xl">
-              Delivery Places
-            </CardTitle>
-            <CardDescription>
-              Search and manage your delivery locations.
-            </CardDescription>
-          </div>
-          <Button asChild className="bg-primary hover:bg-primary/90">
-            <Link href="/dashboard/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Place
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <Input
-              placeholder="Search by name, address, or #hashtag..."
-              className="max-w-lg"
-            />
-          </div>
-          <PlaceGrid places={places} />
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <h1 className="text-4xl font-bold mb-4">Welcome to Your Dashboard</h1>
+      <div className="flex flex-col items-center">
+        <p className="text-lg mb-4">You are logged in as {user.email}</p>
+        <button onClick={handleLogout} className="px-6 py-3 text-lg font-semibold text-white bg-red-600 rounded-md hover:bg-red-700">
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
