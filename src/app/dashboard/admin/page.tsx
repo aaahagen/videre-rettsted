@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -17,6 +19,14 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Mock data for admin page
 const users = [
@@ -58,25 +68,39 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline text-xl">
-              Invite Users
+              Create New User
             </CardTitle>
             <CardDescription>
-              Invite new drivers or admins to your organization. An expiring
-              link will be sent to their email.
+              Add a new driver or admin to your organization. They will receive an email to set up their account.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex max-w-lg items-center space-x-2">
-              <Input
-                type="email"
-                placeholder="Enter email to invite..."
-                className="flex-1"
-              />
-              <Button className="bg-primary hover:bg-primary/90">
+            <form className="max-w-lg space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" placeholder="John Doe" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="user@example.com" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select>
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="driver">Driver</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="bg-primary hover:bg-primary/90">
                 <UserPlus className="mr-2 h-4 w-4" />
-                Send Invite
+                Create and Invite User
               </Button>
-            </div>
+            </form>
           </CardContent>
         </Card>
 
