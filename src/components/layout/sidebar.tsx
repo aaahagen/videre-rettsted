@@ -10,6 +10,7 @@ import {
   User as UserIcon,
   Building2,
   ChevronsUpDown,
+  PlusCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -39,6 +40,7 @@ import { Organization, User } from '@/lib/types';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Hjem' },
+  { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Heart, label: 'Favoritter' },
   { href: '/dashboard/admin', icon: Shield, label: 'Admin' },
 ];

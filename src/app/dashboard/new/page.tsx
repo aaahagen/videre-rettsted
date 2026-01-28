@@ -13,11 +13,10 @@ export default function NewPlacePage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-2xl">
-            Create New Delivery Place
+            Opprett Nytt Leveringssted
           </CardTitle>
           <CardDescription>
-            Add a new location with all the necessary details for future
-            deliveries.
+            Legg til en ny lokasjon med alle nødvendige detaljer for fremtidige leveringer.
           </CardDescription>
         </CardHeader>
         <CardContent>

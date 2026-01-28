@@ -16,7 +16,10 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { FavoriteButton } from './favorite-button';
 
 export function PlaceCard({ place }: { place: DeliveryPlace }) {
-  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates.lat},${place.coordinates.lng}`;
+  const hasCoordinates = place.coordinates?.lat !== undefined && place.coordinates?.lng !== undefined;
+  const gmapsUrl = hasCoordinates 
+    ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates.lat},${place.coordinates.lng}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl">
@@ -24,7 +27,7 @@ export function PlaceCard({ place }: { place: DeliveryPlace }) {
         <div className="relative">
           <AspectRatio ratio={16 / 9}>
             <Image
-              src={place.imageUrl}
+              src={place.imageUrl || '/icon.png'}
               alt={place.name}
               fill
               className="object-cover"
@@ -42,7 +45,7 @@ export function PlaceCard({ place }: { place: DeliveryPlace }) {
           {place.address}
         </CardDescription>
         <div className="mt-4 flex flex-wrap gap-2">
-          {place.hashtags.slice(0, 3).map((tag) => (
+          {place.hashtags && place.hashtags.slice(0, 3).map((tag) => (
             <Badge key={tag} variant="secondary">
               #{tag}
             </Badge>
@@ -53,7 +56,7 @@ export function PlaceCard({ place }: { place: DeliveryPlace }) {
         <Button variant="outline" size="sm" asChild>
           <Link href={`/dashboard/places/${place.id}`}>
             <Edit className="mr-2 h-4 w-4" />
-            View
+            Se mer
           </Link>
         </Button>
         <Button
@@ -63,7 +66,7 @@ export function PlaceCard({ place }: { place: DeliveryPlace }) {
         >
           <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
             <Map className="mr-2 h-4 w-4" />
-            Navigate
+            Naviger
           </a>
         </Button>
       </CardFooter>

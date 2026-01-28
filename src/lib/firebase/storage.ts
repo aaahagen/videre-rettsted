@@ -19,3 +19,5 @@ export class FirebaseStorage implements Storage {
     return await getDownloadURL(storageRef);
   }
 }
+
+export const firebaseStorage = new FirebaseStorage();

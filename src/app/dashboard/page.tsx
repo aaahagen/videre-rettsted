@@ -1,48 +1,79 @@
-
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { firebaseAuth } from '../../lib/firebase/auth';
-import { auth } from '../../lib/firebase/firebase';
+import { auth } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
+import { firebaseDB } from '@/lib/firebase/database';
+import { PlaceGrid } from '@/components/places/place-grid';
+import { Button } from '@/components/ui/button';
+import { Plus, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { DeliveryPlace } from '@/lib/types';
 
 export default function DashboardPage() {
-  const [user, loading, error] = useAuthState(auth);
+  const [authUser, loadingAuth] = useAuthState(auth);
+  const [places, setPlaces] = useState<DeliveryPlace[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loadingAuth && !authUser) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [authUser, loadingAuth, router]);
 
-  const handleLogout = async () => {
-    await firebaseAuth.signOut();
-    router.push('/login');
-  };
+  useEffect(() => {
+    async function fetchPlaces() {
+      if (authUser) {
+        try {
+          const userDoc = await firebaseDB.getUser(authUser.uid);
+          if (userDoc?.orgId) {
+            const placesData = await firebaseDB.getPlaces(userDoc.orgId);
+            setPlaces(placesData as DeliveryPlace[]);
+          }
+        } catch (error) {
+          console.error('Error fetching places:', error);
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    }
 
-  if (loading) {
-    return <p>Loading...</p>;
+    if (authUser) {
+      fetchPlaces();
+    }
+  }, [authUser]);
+
+  if (loadingAuth || (loadingData && authUser)) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  if (error) {
-    return <p>Error: {error.message}</p>;
-  }
-
-  if (!user) {
-    return null; // Don't render anything while redirecting
+  if (!authUser) {
+    return null;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-4xl font-bold mb-4">Welcome to Your Dashboard</h1>
-      <div className="flex flex-col items-center">
-        <p className="text-lg mb-4">You are logged in as {user.email}</p>
-        <button onClick={handleLogout} className="px-6 py-3 text-lg font-semibold text-white bg-red-600 rounded-md hover:bg-red-700">
-          Logout
-        </button>
+    <div className="space-y-8 p-4 sm:p-6 lg:p-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-headline text-2xl font-bold tracking-tight text-slate-900">
+            Leveringssteder
+          </h1>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard/new">
+            <Plus className="mr-1 h-4 w-4" />
+            Nytt sted
+          </Link>
+        </Button>
       </div>
+
+      <PlaceGrid places={places} />
     </div>
   );
 }

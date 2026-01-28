@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2 } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,38 +22,65 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebase';
+import { firebaseDB } from '@/lib/firebase/database';
+import { firebaseStorage } from '@/lib/firebase/storage';
+import { Place } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
   address: z.string().min(5, 'Adresse er påkrevd.'),
   description: z.string().optional(),
   hashtags: z.string().optional(),
-  image: z.any().refine((file) => file, 'Bilde er påkrevd.'),
+  mainImageIndex: z.number().default(0),
+  images: z.array(z.object({
+    file: z.any().optional(),
+    url: z.string().optional(),
+    description: z.string().optional(),
+    preview: z.string().optional(),
+  })).min(1, 'Minst ett bilde er påkrevd.').max(6, 'Maks 6 bilder tillatt.'),
 });
 
 type PlaceFormValues = z.infer<typeof placeSchema>;
 
-export function PlaceForm() {
+export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () => void }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const initialMainImageIndex = place?.images && place.imageUrl 
+    ? place.images.findIndex(img => img.url === place.imageUrl)
+    : 0;
 
   const form = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     defaultValues: {
-      name: '',
-      address: '',
-      description: '',
-      hashtags: '',
+      name: place?.name || '',
+      address: place?.address || '',
+      description: place?.description || '',
+      hashtags: place?.hashtags?.join(', ') || '',
+      mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
+      images: place?.images?.map(img => ({
+        url: img.url,
+        description: img.description || '',
+        preview: img.url
+      })) || [],
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "images",
+  });
+
+  const mainImageIndex = form.watch('mainImageIndex');
+
+  const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    form.setValue('image', file);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -66,7 +94,8 @@ export function PlaceForm() {
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          setImagePreview(canvas.toDataURL('image/jpeg', 0.8));
+          const preview = canvas.toDataURL('image/jpeg', 0.8);
+          update(index, { ...fields[index], file, preview, url: undefined });
         }
       };
       if (event.target?.result) {
@@ -77,25 +106,85 @@ export function PlaceForm() {
   };
 
   const onSubmit = async (data: PlaceFormValues) => {
+    if (!authUser) {
+        toast({
+            title: 'Feil',
+            description: 'Du må være logget inn for å utføre denne handlingen.',
+            variant: 'destructive'
+        });
+        return;
+    }
+
     setIsSubmitting(true);
     try {
-        // In a real application, you would upload the image to Firebase Storage
-        // and then save the place data with the image URL to Firestore.
-        console.log('Submitting data:', { ...data, image: '...image data...' });
+        const userDoc = await firebaseDB.getUser(authUser.uid);
+        if (!userDoc?.orgId) {
+            throw new Error('Fant ikke organisasjons-ID for brukeren.');
+        }
 
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const finalImages = [];
+        for (const item of data.images) {
+            if (item.file instanceof File) {
+                const fileName = `places/${userDoc.orgId}/${uuidv4()}-${item.file.name}`;
+                const url = await firebaseStorage.uploadFile(fileName, item.file);
+                finalImages.push({
+                    url,
+                    description: item.description || '',
+                    uploadedAt: new Date()
+                });
+            } else if (item.url) {
+                finalImages.push({
+                    url: item.url,
+                    description: item.description || '',
+                    uploadedAt: new Date()
+                });
+            }
+        }
 
-        toast({
-          title: 'Sted Opprettet',
-          description: `Vellykket opprettelse av "${data.name}".`,
-        });
-        router.push('/dashboard');
-    } catch (error) {
+        const hashtagsArray = data.hashtags 
+            ? data.hashtags.split(',').map(tag => tag.trim().replace(/^#/, ''))
+            : [];
+
+        // Ensure mainImageIndex is within bounds
+        const safeMainIndex = Math.min(data.mainImageIndex, finalImages.length - 1);
+        const finalMainIndex = safeMainIndex >= 0 ? safeMainIndex : 0;
+
+        const placeData = {
+            name: data.name,
+            address: data.address,
+            description: data.description || '',
+            hashtags: hashtagsArray,
+            imageUrl: finalImages[finalMainIndex]?.url || '', 
+            images: finalImages,
+            orgId: userDoc.orgId,
+            updatedAt: new Date(),
+        };
+
+        if (place) {
+            await firebaseDB.updatePlace(place.id, placeData);
+            toast({
+              title: 'Sted Oppdatert',
+              description: `Vellykket oppdatering av "${data.name}".`,
+            });
+            if (onSuccess) onSuccess();
+        } else {
+            await firebaseDB.createPlace({
+                ...placeData,
+                createdBy: authUser.uid,
+                createdAt: new Date(),
+                coordinates: { lat: 0, lng: 0 }
+            });
+            toast({
+              title: 'Sted Opprettet',
+              description: `Vellykket opprettelse av "${data.name}".`,
+            });
+            router.push('/dashboard');
+        }
+    } catch (error: any) {
         console.error(error);
         toast({
             title: 'Feil',
-            description: 'Kunne ikke opprette sted. Vennligst prøv igjen.',
+            description: error.message || 'Kunne ikke lagre stedet. Vennligst prøv igjen.',
             variant: 'destructive'
         });
     } finally {
@@ -140,9 +229,6 @@ export function PlaceForm() {
                       </Button>
                     </div>
                   </FormControl>
-                  <FormDescription>
-                    Bruk knappen for å hente koordinater fra adresse (ikke implementert).
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -182,63 +268,116 @@ export function PlaceForm() {
             />
           </div>
 
-          <div className="md:col-span-1">
-            <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bilde</FormLabel>
-                  <FormControl>
-                    <div className="relative flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card hover:bg-secondary">
-                      {imagePreview ? (
-                        <Image
-                          src={imagePreview}
-                          alt="Preview"
-                          width={400}
-                          height={225}
-                          className="h-full w-full rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-48 flex-col items-center justify-center text-center">
-                          <UploadCloud className="mb-2 h-8 w-8 text-muted-foreground" />
-                          <p className="font-semibold">Klikk for å laste opp eller dra & slipp</p>
-                          <p className="text-xs text-muted-foreground">
-                            PNG, JPG, eller WEBP (maks 1200px bredde)
-                          </p>
-                        </div>
-                      )}
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 h-full w-full opacity-0"
-                        onChange={handleImageChange}
+          <div className="md:col-span-1 space-y-6">
+            <div className="space-y-4">
+              <FormLabel>Bilder (Maks 6)</FormLabel>
+              <FormDescription className="text-xs">
+                Klikk på stjerne-ikonet for å velge hovedbilde til dashbordet.
+              </FormDescription>
+              {fields.map((field, index) => (
+                <div key={field.id} className={cn(
+                    "space-y-2 p-4 border rounded-lg bg-slate-50 relative transition-all",
+                    mainImageIndex === index && "ring-2 ring-primary bg-primary/5 border-primary/20"
+                )}>
+                  <div className="absolute top-2 right-2 flex gap-1 z-10">
+                    <Button 
+                        type="button" 
+                        variant={mainImageIndex === index ? "default" : "outline"}
+                        size="icon" 
+                        className={cn(
+                            "h-8 w-8 rounded-full",
+                            mainImageIndex === index ? "bg-primary text-white" : "bg-white/80 text-slate-400 hover:text-primary"
+                        )}
+                        onClick={() => form.setValue('mainImageIndex', index)}
+                        title="Sett som hovedbilde"
+                    >
+                        <Star className={cn("h-4 w-4", mainImageIndex === index && "fill-current")} />
+                    </Button>
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 bg-white/80 rounded-full"
+                        onClick={() => {
+                            remove(index);
+                            if (mainImageIndex === index) form.setValue('mainImageIndex', 0);
+                            else if (mainImageIndex > index) form.setValue('mainImageIndex', mainImageIndex - 1);
+                        }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="relative aspect-video rounded-md overflow-hidden bg-slate-200 cursor-pointer group">
+                    {field.preview ? (
+                      <Image
+                        src={field.preview}
+                        alt={`Bilde ${index + 1}`}
+                        fill
+                        className="object-cover"
                       />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                        <UploadCloud className="h-8 w-8 mb-2" />
+                        <span className="text-xs">Velg bilde</span>
+                      </div>
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer h-full"
+                      onChange={(e) => handleImageChange(index, e)}
+                    />
+                  </div>
+                  
+                  <Input
+                    placeholder="Kort beskrivelse av bilde..."
+                    {...form.register(`images.${index}.description` as const)}
+                    className="text-xs h-8 text-center"
+                  />
+                  {mainImageIndex === index && (
+                      <p className="text-[10px] text-center font-bold text-primary uppercase tracking-wider">Hovedbilde</p>
+                  )}
+                </div>
+              ))}
+              
+              {fields.length < 6 && (
+                <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full h-24 border-dashed border-2 flex flex-col gap-2"
+                    onClick={() => append({ description: '', preview: '' })}
+                >
+                    <Plus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm">Legg til bilde</span>
+                </Button>
               )}
-            />
-            <Button type="button" variant="outline" className="mt-2 w-full">
+              {form.formState.errors.images && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.images.message}
+                </p>
+              )}
+            </div>
+            
+            <Button type="button" variant="outline" className="w-full">
               <Camera className="mr-2 h-4 w-4" />
               Bruk Kamera
             </Button>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-8 border-t">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.back()}
+            onClick={() => place ? (onSuccess && onSuccess()) : router.back()}
             disabled={isSubmitting}
           >
             Avbryt
           </Button>
           <Button
             type="submit"
-            className="bg-accent text-accent-foreground hover:bg-accent/90"
+            className="bg-accent text-accent-foreground hover:bg-accent/90 px-8"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -247,7 +386,10 @@ export function PlaceForm() {
                 Lagrer...
               </>
             ) : (
-              'Lagre Sted'
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                {place ? 'Lagre Endringer' : 'Lagre Sted'}
+              </>
             )}
           </Button>
         </div>
