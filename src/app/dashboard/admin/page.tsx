@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -27,40 +28,88 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { firebaseAuth } from '@/lib/firebase/auth';
 
 // Mock data for admin page
 const users = [
   {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'Ola Nordmann',
+    email: 'ola.nordmann@example.com',
     role: 'admin',
-    status: 'Active',
+    status: 'Aktiv',
   },
   {
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    role: 'driver',
-    status: 'Active',
+    name: 'Kari Nordmann',
+    email: 'kari.nordmann@example.com',
+    role: 'sjåfør',
+    status: 'Aktiv',
   },
   {
-    name: 'pending.user@example.com',
-    email: 'pending.user@example.com',
-    role: 'driver',
-    status: 'Pending',
+    name: 'venter.bruker@example.com',
+    email: 'venter.bruker@example.com',
+    role: 'sjåfør',
+    status: 'Venter',
   },
 ];
 
 export default function AdminPage() {
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'driver' | 'admin'>('driver');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !role) {
+      toast({
+        title: 'Feil',
+        description: 'Vennligst fyll ut alle feltene.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await firebaseAuth.inviteUser(email, role);
+      toast({
+        title: 'Suksess',
+        description: `Invitasjon sendt til ${email}.`,
+      });
+      setEmail('');
+      setRole('driver');
+    } catch (error: any) {
+      console.error('Kunne ikke invitere bruker:', error);
+      toast({
+        title: 'Invitasjon Mislyktes',
+        description: error.message || 'En uventet feil oppstod.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle className="font-headline text-2xl">
-              Admin Panel
+              Adminpanel
             </CardTitle>
             <CardDescription>
-              Manage your organization and users.
+              Administrer din organisasjon og brukere.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -68,37 +117,43 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline text-xl">
-              Create New User
+              Opprett Ny Bruker
             </CardTitle>
             <CardDescription>
-              Add a new driver or admin to your organization. They will receive an email to set up their account.
+              Legg til en ny sjåfør eller administrator i organisasjonen din. De vil motta en invitasjon for å sette opp kontoen sin.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="max-w-lg space-y-4">
+            <form onSubmit={handleInviteUser} className="max-w-lg space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="John Doe" />
+                <Label htmlFor="email">E-post</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="bruker@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="user@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select>
+                <Label htmlFor="role">Rolle</Label>
+                <Select
+                  value={role}
+                  onValueChange={(value: 'driver' | 'admin') => setRole(value)}
+                >
                   <SelectTrigger id="role">
-                    <SelectValue placeholder="Select a role" />
+                    <SelectValue placeholder="Velg en rolle" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="driver">Driver</SelectItem>
+                    <SelectItem value="driver">Sjåfør</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="bg-primary hover:bg-primary/90">
+              <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Create and Invite User
+                {isSubmitting ? 'Sender Invitasjon...' : 'Opprett og Inviter Bruker'}
               </Button>
             </form>
           </CardContent>
@@ -107,19 +162,19 @@ export default function AdminPage() {
         <Card>
           <CardHeader>
             <CardTitle className="font-headline text-xl">
-              Manage Users
+              Administrer Brukere
             </CardTitle>
-            <CardDescription>View and manage current users in your organization.</CardDescription>
+            <CardDescription>Se og administrer nåværende brukere i din organisasjon.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Navn</TableHead>
+                  <TableHead>E-post</TableHead>
+                  <TableHead>Rolle</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Handlinger</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,16 +193,16 @@ export default function AdminPage() {
                     <TableCell>
                       <Badge
                         variant={
-                          user.status === 'Active' ? 'outline' : 'destructive'
+                          user.status === 'Aktiv' ? 'outline' : 'destructive'
                         }
-                        className={user.status === 'Active' ? 'text-green-600 border-green-400' : ''}
+                        className={user.status === 'Aktiv' ? 'text-green-600 border-green-400' : ''}
                       >
                         {user.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm">
-                        Edit
+                        Rediger
                       </Button>
                     </TableCell>
                   </TableRow>
