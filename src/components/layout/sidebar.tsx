@@ -100,7 +100,7 @@ export default function AppSidebar() {
     >
       <SidebarHeader>
         <div className="flex items-center gap-2 p-2">
-          <Logo className="h-8 w-8" />
+          <Logo className="h-16 w-16" />
           <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="font-headline text-lg font-semibold leading-none">
               Videre RettSted

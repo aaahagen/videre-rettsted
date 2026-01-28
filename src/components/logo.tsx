@@ -5,15 +5,15 @@ export function Logo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-12 w-12 items-center justify-center rounded-full bg-primary overflow-hidden',
+        'flex h-24 w-24 items-center justify-center rounded-lg bg-primary overflow-hidden',
         className
       )}
     >
       <Image
-        src="/videre_icon.png.png"
+        src="/icon.png"
         alt="Videre RettSted Logo"
-        width={48}
-        height={48}
+        width={96}
+        height={96}
         className="h-full w-full object-cover"
       />
     </div>

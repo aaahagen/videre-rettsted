@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       <div className="mb-8 flex flex-col items-center gap-2">
         <Link href="/">
-            <Logo className="h-16 w-16" />
+            <Logo className="h-32 w-32" />
         </Link>
         <h1 className="font-headline text-3xl font-bold tracking-tight text-slate-900">
           Videre RettSted

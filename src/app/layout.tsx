@@ -5,7 +5,11 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Videre RettSted',
-  description: 'Find your delivery place with ease.',
+  description: 'Finn leveringsstedet ditt med letthet.',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default function RootLayout({
@@ -14,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="nb" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
