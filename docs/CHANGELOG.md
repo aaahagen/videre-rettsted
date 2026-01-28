@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Metadata (created by, date created/updated) on the place details page.
 - Organization name display in the sidebar.
 - "Profil" and "Innstillinger" items in the user profile dropdown.
+- Real Firebase-backed favorites functionality.
+- Empty state for the favorites page.
 
 ### Changed
 - Refined the layout and spacing of the place details page.
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesigned the sidebar header to display the app name on two lines for a more compact look.
 - Improved the alignment and spacing of the logo and app name in the sidebar.
 - Updated `docs/ARCHITECTURE.md` to reflect the latest project structure and data model.
+- Renamed "Hjem" to "Leveringssteder" in the sidebar menu.
+- Removed redundant "Nytt sted" button from the dashboard header.
+- Replaced heart icon with a star icon for favorites.
+- Switched the favorites page to a client-side component for real-time data fetching.
 
 ## [0.1.0] - 2024-05-16
 

@@ -6,9 +6,7 @@ import { auth } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
-import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 import { DeliveryPlace } from '@/lib/types';
 
 export default function DashboardPage() {
@@ -65,12 +63,6 @@ export default function DashboardPage() {
             Leveringssteder
           </h1>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/dashboard/new">
-            <Plus className="mr-1 h-4 w-4" />
-            Nytt sted
-          </Link>
-        </Button>
       </div>
 
       <PlaceGrid places={places} />

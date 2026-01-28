@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Heart,
+  Star,
   Home,
   LogOut,
   Settings,
@@ -39,9 +39,9 @@ import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Hjem' },
+  { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
-  { href: '/dashboard/favorites', icon: Heart, label: 'Favoritter' },
+  { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
   { href: '/dashboard/admin', icon: Shield, label: 'Admin' },
 ];
 
