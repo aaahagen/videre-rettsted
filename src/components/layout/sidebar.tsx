@@ -101,20 +101,15 @@ export default function AppSidebar() {
       className="border-r"
     >
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <Logo className="h-16 w-16" />
-          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
-            <span className="font-headline text-lg font-semibold leading-none">
-              Videre RettSted
+        <div className="flex items-center gap-3 px-3 py-2">
+          <Logo className="h-10 w-10 shrink-0 rounded-lg" />
+          <div className="flex flex-col justify-center overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="font-headline text-lg font-bold leading-[1.1] tracking-tight text-sidebar-foreground">
+              Videre
             </span>
-            {orgLoading ? (
-               <Skeleton className="mt-1 h-3 w-20" />
-            ) : org ? (
-              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <Building2 className="h-3 w-3" />
-                <span className="truncate font-medium">{org.name}</span>
-              </div>
-            ) : null}
+            <span className="font-headline text-lg font-bold leading-[1.1] tracking-tight text-sidebar-foreground">
+              RettSted
+            </span>
           </div>
         </div>
       </SidebarHeader>
@@ -131,37 +126,21 @@ export default function AppSidebar() {
                         </div>
                     </div>
                 ) : authUser ? (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <SidebarMenuButton 
-                                size="lg"
-                                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                            >
-                                <Avatar className="h-8 w-8 rounded-lg">
-                                    {(authUser.photoURL || dbUser?.avatarUrl) && (
-                                        <AvatarImage 
-                                            src={authUser.photoURL || dbUser?.avatarUrl} 
-                                            alt={displayName} 
-                                        />
-                                    )}
-                                    <AvatarFallback className="rounded-lg">
-                                        {getInitials(displayName)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                                    <span className="truncate font-semibold">{displayName}</span>
-                                    <span className="truncate text-xs text-muted-foreground">{authUser.email}</span>
-                                </div>
-                                <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
-                            </SidebarMenuButton>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent 
-                            side="right" 
-                            align="end" 
-                            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                        >
-                            <DropdownMenuLabel className="p-0 font-normal">
-                                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                    <div className="space-y-1">
+                        {orgLoading ? (
+                            <Skeleton className="ml-2 h-3 w-24" />
+                        ) : org ? (
+                            <div className="ml-2 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-bold group-data-[collapsible=icon]:hidden">
+                                <Building2 className="h-3 w-3" />
+                                <span className="truncate">{org.name}</span>
+                            </div>
+                        ) : null}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton 
+                                    size="lg"
+                                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                                >
                                     <Avatar className="h-8 w-8 rounded-lg">
                                         {(authUser.photoURL || dbUser?.avatarUrl) && (
                                             <AvatarImage 
@@ -173,28 +152,54 @@ export default function AppSidebar() {
                                             {getInitials(displayName)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                                         <span className="truncate font-semibold">{displayName}</span>
-                                        <span className="truncate text-xs">{authUser.email}</span>
+                                        <span className="truncate text-xs text-muted-foreground">{authUser.email}</span>
                                     </div>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                                <UserIcon className="mr-2 h-4 w-4" />
-                                <span>Profil</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Settings className="mr-2 h-4 w-4" />
-                                <span>Innstillinger</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                <span>Logg ut</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent 
+                                side="right" 
+                                align="end" 
+                                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                            >
+                                <DropdownMenuLabel className="p-0 font-normal">
+                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                        <Avatar className="h-8 w-8 rounded-lg">
+                                            {(authUser.photoURL || dbUser?.avatarUrl) && (
+                                                <AvatarImage 
+                                                    src={authUser.photoURL || dbUser?.avatarUrl} 
+                                                    alt={displayName} 
+                                                />
+                                            )}
+                                            <AvatarFallback className="rounded-lg">
+                                                {getInitials(displayName)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="grid flex-1 text-left text-sm leading-tight">
+                                            <span className="truncate font-semibold">{displayName}</span>
+                                            <span className="truncate text-xs">{authUser.email}</span>
+                                        </div>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                    <UserIcon className="mr-2 h-4 w-4" />
+                                    <span>Profil</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Innstillinger</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Logg ut</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 ) : null}
             </SidebarMenuItem>
         </SidebarMenu>
