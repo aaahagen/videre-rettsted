@@ -6,6 +6,8 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { firebaseDB } from '../../../../lib/firebase/database';
 import { auth } from '../../../../lib/firebase/firebase';
+import { Input } from '../../../../components/ui/input';
+import { Button } from '../../../../components/ui/button';
 
 export default function PlaceDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -15,6 +17,12 @@ export default function PlaceDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (user && id) {
@@ -43,6 +51,16 @@ export default function PlaceDetailsPage() {
     }
   };
 
+  const handleNameChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setName(value);
+  };
+
+  const handleAddressChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setAddress(value);
+  };
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -52,8 +70,7 @@ export default function PlaceDetailsPage() {
   }
 
   if (!user) {
-    router.push('/login');
-    return null; 
+    return null;
   }
 
   if (!place) {
@@ -66,33 +83,29 @@ export default function PlaceDetailsPage() {
       <form onSubmit={handleUpdatePlace} className="max-w-md mx-auto">
         <div className="mb-4">
           <label htmlFor="name" className="block text-gray-700 font-semibold mb-2">Name</label>
-          <input
-            type="text"
+          <Input
             id="name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            onChange={handleNameChange}
             required
           />
         </div>
         <div className="mb-4">
           <label htmlFor="address" className="block text-gray-700 font-semibold mb-2">Address</label>
-          <input
-            type="text"
+          <Input
             id="address"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            onChange={handleAddressChange}
             required
           />
         </div>
         <div className="flex justify-between">
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+          <Button type="submit">
             Save Changes
-          </button>
-          <button type="button" onClick={handleDeletePlace} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+          </Button>
+          <Button type="button" variant="destructive" onClick={handleDeletePlace}>
             Delete Place
-          </button>
+          </Button>
         </div>
       </form>
     </div>

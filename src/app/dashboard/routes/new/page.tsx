@@ -1,71 +1,101 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '../../../lib/firebase/database';
 import { auth } from '../../../lib/firebase/firebase';
+import { Input } from '../../../components/ui/input';
+import { Button } from '../../../components/ui/button';
+import { Label } from '../../../components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 export default function NewRoutePage() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState('');
   const [distance, setDistance] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   const handleCreateRoute = async (e: React.FormEvent) => {
     e.preventDefault();
     if (user) {
-      // In a real app, you would get the orgId from the user's claims
-      // or from a document in Firestore. For now, we'll hardcode it.
-      const orgId = 'mock-org-id'; 
-      await firebaseDB.createRoute({ name, distance: parseFloat(distance), orgId });
-      router.push('/dashboard/routes');
+      setIsSubmitting(true);
+      try {
+        // In a real app, you would get the orgId from the user's claims
+        // or from a document in Firestore. For now, we'll hardcode it.
+        const orgId = 'mock-org-id'; 
+        await firebaseDB.createRoute({ name, distance: parseFloat(distance), orgId });
+        router.push('/dashboard/routes');
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
+  const handleNameChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setName(value);
+  };
+
+  const handleDistanceChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setDistance(value);
+  };
+
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (error) {
-    return <p>Error: {error.message}</p>;
+    return <p>Feil: {error.message}</p>;
   }
 
   if (!user) {
-    router.push('/login');
     return null; 
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Create New Route</h1>
-      <form onSubmit={handleCreateRoute} className="max-w-md mx-auto">
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-gray-700 font-semibold mb-2">Name</label>
-          <input
-            type="text"
+      <h1 className="text-3xl font-bold mb-6">Opprett Ny Rute</h1>
+      <form onSubmit={handleCreateRoute} className="max-w-md mx-auto space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="name">Navn</Label>
+          <Input
             id="name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            onChange={handleNameChange}
             required
+            placeholder="F.eks. Oslo - Bergen"
           />
         </div>
-        <div className="mb-4">
-          <label htmlFor="distance" className="block text-gray-700 font-semibold mb-2">Distance (in miles)</label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="distance">Distanse (i km)</Label>
+          <Input
             type="number"
             id="distance"
             value={distance}
-            onChange={(e) => setDistance(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md"
+            onChange={handleDistanceChange}
             required
+            placeholder="0.0"
           />
         </div>
-        <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-          Create Route
-        </button>
+        <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg">
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Opprett Rute'}
+        </Button>
       </form>
     </div>
   );

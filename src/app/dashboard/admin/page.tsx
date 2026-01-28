@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -96,8 +96,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleEmailChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setEmail(value);
+  };
+
   if (!isMounted) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -132,7 +141,7 @@ export default function AdminPage() {
                   type="email"
                   placeholder="bruker@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   required
                 />
               </div>
@@ -152,8 +161,17 @@ export default function AdminPage() {
                 </Select>
               </div>
               <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                {isSubmitting ? 'Sender Invitasjon...' : 'Opprett og Inviter Bruker'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sender Invitasjon...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Opprett og Inviter Bruker
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
