@@ -36,4 +36,15 @@ export type Place = {
   updatedAt?: Date;
 };
 
+export type Route = {
+  id: string;
+  name: string;
+  orgId: string;
+  places: string[]; // array of placeIds
+  driverId?: string;
+  distance?: number;
+  createdAt: Date;
+  updatedAt?: Date;
+};
+
 export type DeliveryPlace = Place;

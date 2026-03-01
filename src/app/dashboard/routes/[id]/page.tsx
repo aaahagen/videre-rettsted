@@ -4,11 +4,11 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
-import { firebaseDB } from '../../../../lib/firebase/database';
-import { auth } from '../../../../lib/firebase/firebase';
-import { Input } from '../../../../components/ui/input';
-import { Button } from '../../../../components/ui/button';
-import { Label } from '../../../../components/ui/label';
+import { firebaseDB } from '@/lib/firebase/database';
+import { auth } from '@/lib/firebase/firebase';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
 export default function RouteDetailsPage() {
@@ -33,7 +33,7 @@ export default function RouteDetailsPage() {
         if (routeData) {
           setRoute(routeData);
           setName(routeData.name);
-          setDistance(routeData.distance.toString());
+          setDistance(routeData.distance ? routeData.distance.toString() : '');
         }
       });
     }

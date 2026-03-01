@@ -1,9 +1,9 @@
 'use client';
 
-import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { Database } from '../database';
-import { Place, User, Organization } from '../types';
+import { Place, User, Organization, Route } from '../types';
 
 const createOrganization = async (name: string): Promise<string> => {
   const docRef = await addDoc(collection(db, 'organizations'), { name });
@@ -17,7 +17,7 @@ const getOrganization = async (orgId: string): Promise<Organization | null> => {
 };
 
 const createUser = async (uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void> => {
-  await setDoc(doc(db, 'users', uid), { name, email, orgId, role });
+  await setDoc(doc(db, 'users', uid), { name, email, orgId, role, favorites: [] });
 };
 
 const getUser = async (uid: string): Promise<User | null> => {
@@ -26,32 +26,123 @@ const getUser = async (uid: string): Promise<User | null> => {
   return docSnap.exists() ? { ...docSnap.data() as User, id: docSnap.id } : null;
 };
 
-const createPlace = async (place: any): Promise<Place> => {
-  const docRef = await addDoc(collection(db, 'places'), place);
-  return { ...place, id: docRef.id };
+const createPlace = async (place: Omit<Place, 'id'>): Promise<Place> => {
+  const docRef = await addDoc(collection(db, 'places'), {
+    ...place,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { ...place, id: docRef.id } as Place;
 };
 
 const getPlace = async (id: string): Promise<Place | null> => {
   const docRef = doc(db, 'places', id);
   const docSnap = await getDoc(docRef);
-  return docSnap.exists() ? { ...docSnap.data() as Place, id: docSnap.id } : null;
+  if (!docSnap.exists()) return null;
+  const data = docSnap.data();
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Place;
 };
 
 const getPlaces = async (orgId: string): Promise<Place[]> => {
   const q = query(collection(db, 'places'), where('orgId', '==', orgId));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ ...doc.data() as Place, id: doc.id }));
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
+    } as Place;
+  });
 };
 
 const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> => {
   const docRef = doc(db, 'places', id);
-  await updateDoc(docRef, updates);
+  await updateDoc(docRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
   const updated = await getDoc(docRef);
-  return { ...updated.data() as Place, id: updated.id };
+  const data = updated.data()!;
+  return {
+    ...data,
+    id: updated.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Place;
 };
 
 const deletePlace = async (id: string): Promise<void> => {
   const docRef = doc(db, 'places', id);
+  await deleteDoc(docRef);
+};
+
+// Route methods
+const getRoute = async (id: string): Promise<Route | null> => {
+  const docRef = doc(db, 'routes', id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return null;
+  const data = docSnap.data();
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Route;
+};
+
+const getRoutes = async (orgId: string): Promise<Route[]> => {
+  const q = query(collection(db, 'routes'), where('orgId', '==', orgId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
+    } as Route;
+  });
+};
+
+const createRoute = async (route: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>): Promise<Route> => {
+  const docRef = await addDoc(collection(db, 'routes'), {
+    ...route,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return {
+    ...route,
+    id: docRef.id,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Route;
+};
+
+const updateRoute = async (id: string, updates: Partial<Route>): Promise<Route> => {
+  const docRef = doc(db, 'routes', id);
+  await updateDoc(docRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+  const updated = await getDoc(docRef);
+  const data = updated.data()!;
+  return {
+    ...data,
+    id: updated.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Route;
+};
+
+const deleteRoute = async (id: string): Promise<void> => {
+  const docRef = doc(db, 'routes', id);
   await deleteDoc(docRef);
 };
 
@@ -79,4 +170,9 @@ export const firebaseDB: Database = {
   getPlaces,
   updatePlace,
   deletePlace,
+  getRoute,
+  getRoutes,
+  createRoute,
+  updateRoute,
+  deleteRoute,
 };

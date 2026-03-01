@@ -4,8 +4,12 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { firebaseDB } from '../../../lib/firebase/database';
-import { auth } from '../../../lib/firebase/firebase';
+import { Plus } from 'lucide-react';
+import { firebaseDB } from '@/lib/firebase/database';
+import { auth } from '@/lib/firebase/firebase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -26,11 +30,15 @@ export default function RoutesPage() {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (error) {
-    return <p>Error: {error.message}</p>;
+    return <p>Feil: {error.message}</p>;
   }
 
   if (!user) {
@@ -41,19 +49,40 @@ export default function RoutesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Routes</h1>
-        <button onClick={handleCreateRoute} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-          Create Route
-        </button>
+        <h1 className="text-3xl font-bold">Ruter</h1>
+        <Button onClick={handleCreateRoute}>
+          <Plus className="mr-2 h-4 w-4" />
+          Opprett Rute
+        </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {routes.map(route => (
-          <div key={route.id} className="bg-white p-6 rounded-lg shadow-md cursor-pointer hover:shadow-lg" onClick={() => router.push(`/dashboard/routes/${route.id}`)}>
-            <h2 className="text-xl font-semibold mb-2">{route.name}</h2>
-            <p className="text-gray-600">{route.distance} miles</p>
-          </div>
-        ))}
-      </div>
+      
+      {routes.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p>Ingen ruter funnet. Opprett din første rute for å komme i gang.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {routes.map(route => (
+            <Card 
+              key={route.id} 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => router.push(`/dashboard/routes/${route.id}`)}
+            >
+              <CardHeader>
+                <CardTitle className="text-xl">{route.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  {route.distance ? `${route.distance} km` : 'Ingen distanse angitt'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Opprettet: {route.createdAt?.toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

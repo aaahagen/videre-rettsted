@@ -8,8 +8,8 @@ const MOCK_USER: User = {
   email: 'john.doe@example.com',
   avatarUrl: 'https://i.pravatar.cc/150?u=user-1',
   role: 'admin',
-  organizationId: 'org-1',
-  favoritePlaces: ['place-2', 'place-4'],
+  orgId: 'org-1',
+  favorites: ['place-2', 'place-4'],
 };
 
 const MOCK_PLACES: DeliveryPlace[] = [
@@ -22,7 +22,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['warehouse', 'priority', 'after-hours'],
     imageUrl: PlaceHolderImages[0].imageUrl,
     imageHint: PlaceHolderImages[0].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[0].imageUrl,
+      uploadedAt: new Date('2023-10-26T10:00:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-2',
     createdAt: new Date('2023-10-26T10:00:00Z'),
   },
@@ -35,7 +39,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['retail', 'downtown', 'alley-delivery'],
     imageUrl: PlaceHolderImages[1].imageUrl,
     imageHint: PlaceHolderImages[1].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[1].imageUrl,
+      uploadedAt: new Date('2023-10-25T14:30:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-1',
     createdAt: new Date('2023-10-25T14:30:00Z'),
   },
@@ -48,7 +56,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['residential', 'concierge'],
     imageUrl: PlaceHolderImages[2].imageUrl,
     imageHint: PlaceHolderImages[2].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[2].imageUrl,
+      uploadedAt: new Date('2023-10-25T11:00:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-1',
     createdAt: new Date('2023-10-25T11:00:00Z'),
   },
@@ -61,7 +73,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['residential', 'porch-drop'],
     imageUrl: PlaceHolderImages[3].imageUrl,
     imageHint: PlaceHolderImages[3].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[3].imageUrl,
+      uploadedAt: new Date('2023-10-24T09:00:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-2',
     createdAt: new Date('2023-10-24T09:00:00Z'),
   },
@@ -74,7 +90,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['office', 'mailroom', 'loading-bay'],
     imageUrl: PlaceHolderImages[4].imageUrl,
     imageHint: PlaceHolderImages[4].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[4].imageUrl,
+      uploadedAt: new Date('2023-10-23T16:00:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-1',
     createdAt: new Date('2023-10-23T16:00:00Z'),
   },
@@ -87,7 +107,11 @@ const MOCK_PLACES: DeliveryPlace[] = [
     hashtags: ['construction', 'danger', 'manager-signoff'],
     imageUrl: PlaceHolderImages[5].imageUrl,
     imageHint: PlaceHolderImages[5].imageHint,
-    organizationId: 'org-1',
+    images: [{
+      url: PlaceHolderImages[5].imageUrl,
+      uploadedAt: new Date('2023-10-22T08:30:00Z'),
+    }],
+    orgId: 'org-1',
     createdBy: 'user-2',
     createdAt: new Date('2023-10-22T08:30:00Z'),
   },
@@ -129,17 +153,19 @@ export async function getPlaceById(id: string): Promise<DeliveryPlace | undefine
 
 export async function getFavoritePlaces(): Promise<DeliveryPlace[]> {
     await delay(400);
-    return MOCK_PLACES.filter(place => MOCK_USER.favoritePlaces.includes(place.id));
+    return MOCK_PLACES.filter(place => MOCK_USER.favorites?.includes(place.id));
 }
 
 // Mock function to toggle favorite status
 export async function toggleFavorite(placeId: string): Promise<User> {
     await delay(100);
-    const isFavorite = MOCK_USER.favoritePlaces.includes(placeId);
+    const favorites = MOCK_USER.favorites || [];
+    const isFavorite = favorites.includes(placeId);
+    
     if(isFavorite) {
-        MOCK_USER.favoritePlaces = MOCK_USER.favoritePlaces.filter(id => id !== placeId);
+        MOCK_USER.favorites = favorites.filter(id => id !== placeId);
     } else {
-        MOCK_USER.favoritePlaces.push(placeId);
+        MOCK_USER.favorites = [...favorites, placeId];
     }
     return MOCK_USER;
 }

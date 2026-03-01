@@ -155,6 +155,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             description: data.description || '',
             hashtags: hashtagsArray,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
+            imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
             orgId: userDoc.orgId,
             updatedAt: new Date(),
