@@ -3,8 +3,8 @@ export interface Auth {
   // Registers a new organization and its first admin user
   registerOrganization(email: string, password: string, organizationName: string): Promise<{ uid: string; orgId: string }>;
 
-  // Sends an invitation email to a new user
-  inviteUser(email: string, role: 'driver' | 'admin'): Promise<void>;
+  // Creates an invitation and returns the invitation link
+  inviteUser(email: string, role: 'driver' | 'admin'): Promise<string>;
 
   // Signs in a user
   signIn(email: string, password: string): Promise<{ uid: string }>;
@@ -17,4 +17,7 @@ export interface Auth {
 
   // Gets the current user
   getCurrentUser(): any;
+
+  // Updates the current user's profile
+  updateProfile(profile: { displayName?: string; photoURL?: string }): Promise<void>;
 }

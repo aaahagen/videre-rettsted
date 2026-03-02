@@ -1,6 +1,6 @@
 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail, updateProfile as firebaseUpdateProfile } from 'firebase/auth';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, addDoc, collection, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Auth } from '../auth';
 import { auth, db } from './firebase';
 
@@ -27,13 +27,31 @@ export const firebaseAuth: Auth = {
   },
 
   async inviteUser(email, role) {
-    console.log('Inviting user:', { email, role });
-    // This is a complex operation that should be handled by a backend function.
-    // 1. A backend function (e.g., Cloud Function) should create an invitation document in Firestore.
-    // 2. The function should then generate a unique, secure link.
-    // 3. The function should send an email (e.g., using SendGrid) with the link.
-    // For now, we'll leave this as a placeholder.
-    throw new Error('User invitation is not implemented yet.');
+    const user = auth.currentUser;
+    if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
+
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (!userDoc.exists()) throw new Error('Brukerprofil ikke funnet.');
+
+    const userData = userDoc.data();
+    const orgId = userData.orgId;
+
+    if (!orgId) throw new Error('Ingen organisasjon funnet for brukeren.');
+
+    // Create the invitation document
+    const invitationRef = await addDoc(collection(db, 'invitations'), {
+      email,
+      role,
+      orgId,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
+      createdAt: serverTimestamp(),
+      createdBy: user.uid,
+      status: 'pending'
+    });
+
+    // Generate the invitation link
+    // Assuming the registration page handles the 'invite' query parameter
+    return `${window.location.origin}/register?invite=${invitationRef.id}`;
   },
 
   async signIn(email, password) {

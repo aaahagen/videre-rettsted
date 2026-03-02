@@ -26,6 +26,15 @@ const getUser = async (uid: string): Promise<User | null> => {
   return docSnap.exists() ? { ...docSnap.data() as User, id: docSnap.id } : null;
 };
 
+const getUsers = async (orgId: string): Promise<User[]> => {
+  const q = query(collection(db, 'users'), where('orgId', '==', orgId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { ...data, id: doc.id } as User;
+  });
+};
+
 const updateUser = async (uid: string, data: Partial<User>): Promise<void> => {
   const docRef = doc(db, 'users', uid);
   await updateDoc(docRef, data);
@@ -170,6 +179,7 @@ export const firebaseDB: Database = {
   getOrganization,
   createUser,
   getUser,
+  getUsers,
   updateUser,
   createPlace,
   getPlace,
