@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Implemented real-time user list in the admin dashboard using Firestore `onSnapshot`.
+- Created a dedicated `/invite` page for new users to complete their registration.
+- Added a "Remember Me" checkbox on the login page with Firebase Auth persistence control.
+- Added a field for administrator name during organization registration.
+- Implemented a clipboard fallback for the invitation link in the admin dashboard.
 - Implemented profile picture upload functionality.
 - Created `storage.rules` for Firebase Storage security.
 - "Bytt passord" and "Endre profilbilde" items in the user profile dropdown.
@@ -20,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Empty state for the favorites page.
 
 ### Changed
+- Fixed Firestore rules to allow unauthenticated access to individual invitation documents via ID.
+- Improved the invitation flow to ensure new users are correctly linked to their organization.
+- Fixed an issue where browser autofill incorrectly populated the "Name" field on the invite page.
+- Updated `src/lib/auth.ts` and its Firebase implementation to support names and "Remember Me".
 - Improved sidebar performance on mobile by automatically closing it when profile actions are clicked.
 - Fixed avatar image aspect ratio to prevent distortion (`object-cover`).
 - Improved profile picture upload UX (cancel button behavior, error handling).
