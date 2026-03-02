@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/firebase';
 import { Logo } from '@/components/logo';
@@ -70,7 +70,7 @@ function InviteContent() {
 
         setInvitationData(data);
         setEmail(data.email);
-        setName('');
+        setName(data.name || ''); // Pre-fill name if provided in invitation
       } catch (err: any) {
         console.error('Error fetching invitation:', err);
         setError(`En feil oppstod: ${err.message || 'Kunne ikke hente invitasjon'}`);
@@ -94,7 +94,10 @@ function InviteContent() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-      // 2. Create User Profile in Firestore
+      // 2. Update display name in Auth
+      await updateProfile(userCredential.user, { displayName: name });
+
+      // 3. Create User Profile in Firestore
       await setDoc(doc(db, 'users', uid), {
         name,
         email,
@@ -105,14 +108,13 @@ function InviteContent() {
         createdAt: new Date()
       });
 
-      // 3. Mark invitation as accepted
+      // 4. Mark invitation as accepted
       await updateDoc(doc(db, 'invitations', inviteId), {
         status: 'accepted',
         acceptedAt: new Date(),
         acceptedBy: uid
       });
 
-      // Redirect is handled by the useEffect watching auth state
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Kunne ikke opprette bruker.');

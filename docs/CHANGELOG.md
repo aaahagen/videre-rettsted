@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Mobile-Optimized Admin Panel**: Redesigned the admin user management interface with a card-based layout for mobile devices, improved touch targets, and responsive dialogs.
+- **User Naming Control**: Admins can now assign a name when inviting a new user and edit names of existing users within the organization.
 - **Full administrative user management**: Admins can now change user roles, toggle account status (Active/Paused), and delete users directly from the admin panel.
 - **Role-Based Access Control (RBAC)**: Restricted the Admin panel to users with the 'admin' role. Drivers (Sjåfør) no longer see the admin link in the sidebar and are redirected if attempting to access the page directly.
 - **Enhanced Image Viewer**: Added a dedicated close button (X) to the full-screen image dialog for better usability.
@@ -31,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a toast notification system for user feedback.
 
 ### Changed
+- **Accessibility Fix**: Added visually hidden titles to all image dialogs to comply with ARIA standards and resolve console errors.
 - Refactored the Admin panel code for better maintainability, moving content to a dedicated component.
 - Updated Firestore security rules to support administrative actions on user documents.
 - Refactored Firebase initialization into a modular structure within `src/lib/firebase`.

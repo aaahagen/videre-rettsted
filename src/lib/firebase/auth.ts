@@ -25,6 +25,7 @@ export const firebaseAuth: Auth = {
       role: 'admin', // First user is always an admin
       favorites: [],
       createdAt: serverTimestamp(),
+      status: 'active'
     });
 
     // 4. Update the Firebase Auth profile display name
@@ -33,7 +34,7 @@ export const firebaseAuth: Auth = {
     return { uid, orgId };
   },
 
-  async inviteUser(email, role) {
+  async inviteUser(email, role, name) {
     const user = auth.currentUser;
     if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
 
@@ -49,6 +50,7 @@ export const firebaseAuth: Auth = {
     const invitationRef = await addDoc(collection(db, 'invitations'), {
       email,
       role,
+      name: name || null,
       orgId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
       createdAt: serverTimestamp(),

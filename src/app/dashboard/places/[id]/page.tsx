@@ -22,6 +22,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogClose,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import Image from 'next/image';
 import Link from 'next/link';
@@ -146,6 +147,9 @@ export default function PlaceDetailsPage() {
                                   </div>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                                  <DialogTitle className="sr-only">
+                                    Bildevisning for {place.name} - Bilde {index + 1}
+                                  </DialogTitle>
                                   <div className="relative w-full h-[90vh] flex items-center justify-center">
                                     <Image
                                       src={img.url}
@@ -207,6 +211,9 @@ export default function PlaceDetailsPage() {
                         </div>
                       </DialogTrigger>
                       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                        <DialogTitle className="sr-only">
+                          Bildevisning for {place.name}
+                        </DialogTitle>
                         <div className="relative w-full h-[90vh] flex items-center justify-center">
                           <Image
                             src={place.imageUrl || '/icon.png'}
