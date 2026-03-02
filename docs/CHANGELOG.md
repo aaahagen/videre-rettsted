@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Empty state for the favorites page.
 
 ### Changed
+- Improved sidebar performance on mobile by automatically closing it when profile actions are clicked.
 - Fixed avatar image aspect ratio to prevent distortion (`object-cover`).
 - Improved profile picture upload UX (cancel button behavior, error handling).
 - Increased the size of the sidebar trigger button on mobile for better accessibility.

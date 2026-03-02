@@ -170,13 +170,13 @@ export default function AppSidebar() {
                                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                             >
                                 <DropdownMenuItem asChild>
-                                    <Link href="/forgot-password">
+                                    <Link href="/forgot-password" onClick={() => setOpenMobile(false)}>
                                         <Lock className="mr-2 h-4 w-4" />
                                         <span>Bytt passord</span>
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href="/dashboard/profile/picture">
+                                  <Link href="/dashboard/profile/picture" onClick={() => setOpenMobile(false)}>
                                     <Camera className="mr-2 h-4 w-4" />
                                     <span>Endre profilbilde</span>
                                   </Link>
