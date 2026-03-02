@@ -46,7 +46,7 @@ const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
-  { href: '/dashboard/admin', icon: Shield, label: 'Admin' },
+  { href: '/dashboard/admin', icon: Shield, label: 'Admin', adminOnly: true },
 ];
 
 export default function AppSidebar() {
@@ -97,6 +97,7 @@ export default function AppSidebar() {
   };
 
   const displayName = dbUser?.name || authUser?.displayName || authUser?.email || 'Bruker';
+  const isAdmin = dbUser?.role === 'admin';
 
   return (
     <Sidebar
@@ -195,6 +196,8 @@ export default function AppSidebar() {
 
         <SidebarMenu>
           {navItems.map((item) => {
+            if (item.adminOnly && !isAdmin) return null;
+            
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton

@@ -8,59 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Full administrative user management**: Admins can now change user roles, toggle account status (Active/Paused), and delete users directly from the admin panel.
+- **Role-Based Access Control (RBAC)**: Restricted the Admin panel to users with the 'admin' role. Drivers (Sjåfør) no longer see the admin link in the sidebar and are redirected if attempting to access the page directly.
+- **Enhanced Image Viewer**: Added a dedicated close button (X) to the full-screen image dialog for better usability.
+- **Improved Invitation Flow**: The invitation page now automatically logs out a currently signed-in user if they are not the intended recipient of the invitation, preventing registration errors.
 - Implemented real-time user list in the admin dashboard using Firestore `onSnapshot`.
 - Created a dedicated `/invite` page for new users to complete their registration.
 - Added a "Remember Me" checkbox on the login page with Firebase Auth persistence control.
 - Added a field for administrator name during organization registration.
 - Implemented a clipboard fallback for the invitation link in the admin dashboard.
 - Implemented profile picture upload functionality.
-- Created `storage.rules` for Firebase Storage security.
-- "Bytt passord" and "Endre profilbilde" items in the user profile dropdown.
-- Image carousel on the place details page.
-- "Beskrivelse & Instruksjoner" and "Lokasjon & Kart" sections on the place details page.
-- Hashtags display on the place details page.
-- Metadata (created by, date created/updated) on the place details page.
-- Organization name display in the sidebar.
-- Real Firebase-backed favorites functionality.
+- Created `storage.rules` for Firebase Storage to restrict access to authenticated users and manage profile picture uploads.
+- Implemented a password confirmation field on the registration page to ensure users enter their intended password correctly.
+- Added "Forgot Password" functionality.
+- Implemented alphabetical sorting (A-Z) for the user list in the admin dashboard.
+- Added a loading skeleton for the user list in the admin dashboard.
+- Empty state for the dashboard when no places have been added.
 - Empty state for the favorites page.
 - **Implemented a full-screen image viewer in the place details page using a dialog.**
 - **Added a star-shaped toggle on the dashboard to filter between all places and favorites.**
 - **Automatic alphabetical sorting (A-Z) of places on the dashboard.**
+- Added a toast notification system for user feedback.
 
 ### Changed
-- Fixed Firestore rules to allow unauthenticated access to individual invitation documents via ID.
-- Improved the invitation flow to ensure new users are correctly linked to their organization.
-- Fixed an issue where browser autofill incorrectly populated the "Name" field on the invite page.
-- Updated `src/lib/auth.ts` and its Firebase implementation to support names and "Remember Me".
-- Improved sidebar performance on mobile by automatically closing it when profile actions are clicked.
-- Fixed avatar image aspect ratio to prevent distortion (`object-cover`).
-- Improved profile picture upload UX (cancel button behavior, error handling).
-- Increased the size of the sidebar trigger button on mobile for better accessibility.
-- Changed the sidebar trigger icon to a hamburger menu on mobile.
-- Updated sidebar navigation to use client-side `Link` for faster transitions.
-- Configured the sidebar to automatically close when a link is clicked on mobile.
-- Fixed the user profile dropdown position on mobile to ensure it stays within the viewport.
-- Replaced user name with email in the sidebar button.
-- Simplified the user profile dropdown to remove redundant user info.
-- Refined the layout and spacing of the place details page.
-- Swapped the order of "Beskrivelse & Instruksjoner" and "Lokasjon & Kart" sections.
-- Redesigned the sidebar header to display the app name on two lines for a more compact look.
-- Improved the alignment and spacing of the logo and app name in the sidebar.
-- Updated `docs/ARCHITECTURE.md` to reflect the latest project structure and data model.
-- Renamed "Hjem" to "Leveringssteder" in the sidebar menu.
-- Removed redundant "Nytt sted" button from the dashboard header.
-- Replaced heart icon with a star icon for favorites.
-- Switched the favorites page to a client-side component for real-time data fetching.
-- **Improved the "Tilbake til oversikt" button to be more prominent with the accent color.**
-- **Fixed the favorites filter on the dashboard to use real-time synchronization with Firestore.**
+- Refactored the Admin panel code for better maintainability, moving content to a dedicated component.
+- Updated Firestore security rules to support administrative actions on user documents.
+- Refactored Firebase initialization into a modular structure within `src/lib/firebase`.
+- Updated the data model to include an `organizationId` in user and place documents.
+- Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
-## [0.1.0] - 2024-05-16
+### Fixed
+- **Fixed permission errors when fetching the user list in the admin panel.**
+- **Resolved an issue where administrators were redirected to their own dashboard when clicking an invite link while logged in.**
+- Resolved an issue where unauthenticated users could briefly see dashboard content before being redirected.
+- Corrected the redirection logic after login to ensure users are sent to the main dashboard page.
+- Ensured that the "Add New Place" button is only visible to admin users.
 
-### Added
-- Created `docs/CHANGELOG.md` to track project changes.
-- Introduced a backend abstraction layer to prepare for future backend migrations. This includes:
-  - Generic interfaces for Database, Authentication, and Storage (`src/lib/database.ts`, `src/lib/auth.ts`, `src/lib/storage.ts`).
-  - Placeholder Firebase implementations for the new interfaces (`src/lib/firebase/database.ts`, `src/lib/firebase/auth.ts`, `src/lib/firebase/storage.ts`).
-
-### Changed
-- Updated `docs/ARCHITECTURE.md` to describe the new backend abstraction layer.
+### Removed
+- Removed placeholder data and integrated live data fetching from Firestore.

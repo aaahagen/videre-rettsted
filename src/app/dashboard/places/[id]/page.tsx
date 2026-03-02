@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2 } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -21,6 +21,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import Image from 'next/image';
 import Link from 'next/link';
@@ -144,7 +145,7 @@ export default function PlaceDetailsPage() {
                                     </div>
                                   </div>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none">
+                                <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
                                   <div className="relative w-full h-[90vh] flex items-center justify-center">
                                     <Image
                                       src={img.url}
@@ -153,6 +154,15 @@ export default function PlaceDetailsPage() {
                                       className="object-contain"
                                       priority
                                     />
+                                    <DialogClose asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm"
+                                      >
+                                        <X className="h-6 w-6" />
+                                      </Button>
+                                    </DialogClose>
                                   </div>
                                   {img.description && (
                                     <div className="absolute bottom-4 left-0 right-0 text-center">
@@ -196,7 +206,7 @@ export default function PlaceDetailsPage() {
                           </div>
                         </div>
                       </DialogTrigger>
-                      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none">
+                      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
                         <div className="relative w-full h-[90vh] flex items-center justify-center">
                           <Image
                             src={place.imageUrl || '/icon.png'}
@@ -205,6 +215,15 @@ export default function PlaceDetailsPage() {
                             className="object-contain"
                             priority
                           />
+                          <DialogClose asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm"
+                            >
+                              <X className="h-6 w-6" />
+                            </Button>
+                          </DialogClose>
                         </div>
                       </DialogContent>
                     </Dialog>

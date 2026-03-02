@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/firebase';
 import { Logo } from '@/components/logo';
@@ -28,15 +28,17 @@ function InviteContent() {
   const [invitationData, setInvitationData] = useState<any>(null);
   const [isLoadingInvitation, setIsLoadingInvitation] = useState(true);
 
+  // If a user is already logged in, log them out so they can register as a new user
   useEffect(() => {
-    if (user && !loading) {
-      router.push('/dashboard');
+    if (user && !loading && invitationData && user.email !== invitationData.email) {
+      signOut(auth);
+    } else if (user && !loading && invitationData && user.email === invitationData.email) {
+       router.push('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, invitationData]);
 
   useEffect(() => {
     const checkInvitation = async () => {
-      console.log("Checking invitation with ID:", inviteId);
       if (!inviteId) {
         setError('Ugyldig invitasjonslenke.');
         setIsLoadingInvitation(false);
@@ -48,14 +50,12 @@ function InviteContent() {
         const invSnap = await getDoc(invRef);
 
         if (!invSnap.exists()) {
-          console.error("Invitation document does not exist in Firestore.");
           setError('Invitasjonen finnes ikke.');
           setIsLoadingInvitation(false);
           return;
         }
 
         const data = invSnap.data();
-        console.log("Invitation data found:", data);
         if (data.status === 'accepted') {
             setError('Denne invitasjonen er allerede brukt.');
             setIsLoadingInvitation(false);
@@ -69,8 +69,8 @@ function InviteContent() {
         }
 
         setInvitationData(data);
-        setEmail(data.email); // Pre-fill email
-        setName(''); // Explicitly ensure name is empty on load
+        setEmail(data.email);
+        setName('');
       } catch (err: any) {
         console.error('Error fetching invitation:', err);
         setError(`En feil oppstod: ${err.message || 'Kunne ikke hente invitasjon'}`);
@@ -100,7 +100,9 @@ function InviteContent() {
         email,
         orgId: invitationData.orgId,
         role: invitationData.role,
-        favorites: []
+        favorites: [],
+        status: 'active',
+        createdAt: new Date()
       });
 
       // 3. Mark invitation as accepted
@@ -110,7 +112,7 @@ function InviteContent() {
         acceptedBy: uid
       });
 
-      // Redirect handled by auth state listener
+      // Redirect is handled by the useEffect watching auth state
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Kunne ikke opprette bruker.');
