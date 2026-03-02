@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Implemented profile picture upload functionality.
+- Created `storage.rules` for Firebase Storage security.
 - "Bytt passord" and "Endre profilbilde" items in the user profile dropdown.
 - Image carousel on the place details page.
 - "Beskrivelse & Instruksjoner" and "Lokasjon & Kart" sections on the place details page.
@@ -18,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Empty state for the favorites page.
 
 ### Changed
+- Fixed avatar image aspect ratio to prevent distortion (`object-cover`).
+- Improved profile picture upload UX (cancel button behavior, error handling).
 - Increased the size of the sidebar trigger button on mobile for better accessibility.
 - Changed the sidebar trigger icon to a hamburger menu on mobile.
 - Updated sidebar navigation to use client-side `Link` for faster transitions.

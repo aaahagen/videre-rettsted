@@ -28,7 +28,7 @@ export type Place = {
   description: string;
   hashtags: string[];
   imageUrl: string; // Keep for backward compatibility (primary image)
-  imageHint: string;
+  imageHint?: string;
   images: PlaceImage[];
   orgId: string;
   createdBy: string;

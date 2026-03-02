@@ -18,6 +18,7 @@ export interface Database {
 
   // Organization and User methods
   getUser(uid: string): Promise<User | null>;
+  updateUser(uid: string, data: Partial<User>): Promise<void>;
   getOrganization(orgId: string): Promise<Organization | null>;
   createOrganization(name: string): Promise<string>;
   createUser(uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void>;

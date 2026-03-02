@@ -175,9 +175,11 @@ export default function AppSidebar() {
                                         <span>Bytt passord</span>
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href="/dashboard/profile/picture">
                                     <Camera className="mr-2 h-4 w-4" />
                                     <span>Endre profilbilde</span>
+                                  </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">

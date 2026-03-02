@@ -26,6 +26,11 @@ const getUser = async (uid: string): Promise<User | null> => {
   return docSnap.exists() ? { ...docSnap.data() as User, id: docSnap.id } : null;
 };
 
+const updateUser = async (uid: string, data: Partial<User>): Promise<void> => {
+  const docRef = doc(db, 'users', uid);
+  await updateDoc(docRef, data);
+};
+
 const createPlace = async (place: Omit<Place, 'id'>): Promise<Place> => {
   const docRef = await addDoc(collection(db, 'places'), {
     ...place,
@@ -165,6 +170,7 @@ export const firebaseDB: Database = {
   getOrganization,
   createUser,
   getUser,
+  updateUser,
   createPlace,
   getPlace,
   getPlaces,

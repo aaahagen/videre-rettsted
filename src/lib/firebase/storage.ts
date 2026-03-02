@@ -4,19 +4,34 @@ import { Storage } from '../storage';
 
 export class FirebaseStorage implements Storage {
   async uploadFile(path: string, file: File): Promise<string> {
-    const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
-    return await getDownloadURL(snapshot.ref);
+    try {
+      const storageRef = ref(storage, path);
+      const snapshot = await uploadBytes(storageRef, file);
+      return await getDownloadURL(snapshot.ref);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
   }
 
   async deleteFile(path: string): Promise<void> {
-    const storageRef = ref(storage, path);
-    await deleteObject(storageRef);
+    try {
+      const storageRef = ref(storage, path);
+      await deleteObject(storageRef);
+    } catch (error) {
+       console.error("Error deleting file:", error);
+       throw error;
+    }
   }
 
   async getDownloadURL(path: string): Promise<string> {
-    const storageRef = ref(storage, path);
-    return await getDownloadURL(storageRef);
+     try {
+      const storageRef = ref(storage, path);
+      return await getDownloadURL(storageRef);
+     } catch (error) {
+       console.error("Error getting download URL:", error);
+       throw error;
+    }
   }
 }
 

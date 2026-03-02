@@ -1,5 +1,5 @@
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail, updateProfile as firebaseUpdateProfile } from 'firebase/auth';
 import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { Auth } from '../auth';
 import { auth, db } from './firebase';
@@ -51,5 +51,11 @@ export const firebaseAuth: Auth = {
 
   getCurrentUser() {
     return auth.currentUser;
+  },
+
+  async updateProfile(profile) {
+    if (auth.currentUser) {
+      await firebaseUpdateProfile(auth.currentUser, profile);
+    }
   },
 };
