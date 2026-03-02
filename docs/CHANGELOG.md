@@ -8,16 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- "Bytt passord" and "Endre profilbilde" items in the user profile dropdown.
 - Image carousel on the place details page.
 - "Beskrivelse & Instruksjoner" and "Lokasjon & Kart" sections on the place details page.
 - Hashtags display on the place details page.
 - Metadata (created by, date created/updated) on the place details page.
 - Organization name display in the sidebar.
-- "Profil" and "Innstillinger" items in the user profile dropdown.
 - Real Firebase-backed favorites functionality.
 - Empty state for the favorites page.
 
 ### Changed
+- Increased the size of the sidebar trigger button on mobile for better accessibility.
+- Changed the sidebar trigger icon to a hamburger menu on mobile.
+- Updated sidebar navigation to use client-side `Link` for faster transitions.
+- Configured the sidebar to automatically close when a link is clicked on mobile.
+- Fixed the user profile dropdown position on mobile to ensure it stays within the viewport.
+- Replaced user name with email in the sidebar button.
+- Simplified the user profile dropdown to remove redundant user info.
 - Refined the layout and spacing of the place details page.
 - Swapped the order of "Beskrivelse & Instruksjoner" and "Lokasjon & Kart" sections.
 - Redesigned the sidebar header to display the app name on two lines for a more compact look.

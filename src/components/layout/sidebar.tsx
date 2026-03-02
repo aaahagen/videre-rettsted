@@ -11,6 +11,8 @@ import {
   Building2,
   ChevronsUpDown,
   PlusCircle,
+  Lock,
+  Camera,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -19,6 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -37,6 +40,7 @@ import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
 import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
+import Link from 'next/link';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
@@ -52,6 +56,7 @@ export default function AppSidebar() {
   const [dbUser, setDbUser] = useState<User | null>(null);
   const [org, setOrg] = useState<Organization | null>(null);
   const [orgLoading, setOrgLoading] = useState(false);
+  const { setOpenMobile, isMobile } = useSidebar();
 
   useEffect(() => {
     async function fetchData() {
@@ -153,44 +158,26 @@ export default function AppSidebar() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                                        <span className="truncate font-semibold">{displayName}</span>
-                                        <span className="truncate text-xs text-muted-foreground">{authUser.email}</span>
+                                        <span className="truncate font-semibold">{authUser.email}</span>
+                                        <span className="truncate text-xs text-muted-foreground">Profilinnstillinger</span>
                                     </div>
                                     <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent 
-                                side="right" 
+                                side={isMobile ? "bottom" : "right"}
                                 align="end" 
                                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                             >
-                                <DropdownMenuLabel className="p-0 font-normal">
-                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                        <Avatar className="h-8 w-8 rounded-lg">
-                                            {(authUser.photoURL || dbUser?.avatarUrl) && (
-                                                <AvatarImage 
-                                                    src={authUser.photoURL || dbUser?.avatarUrl} 
-                                                    alt={displayName} 
-                                                />
-                                            )}
-                                            <AvatarFallback className="rounded-lg">
-                                                {getInitials(displayName)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
-                                            <span className="truncate font-semibold">{displayName}</span>
-                                            <span className="truncate text-xs">{authUser.email}</span>
-                                        </div>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    <span>Profil</span>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/forgot-password">
+                                        <Lock className="mr-2 h-4 w-4" />
+                                        <span>Bytt passord</span>
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    <span>Innstillinger</span>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    <span>Endre profilbilde</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
@@ -212,11 +199,12 @@ export default function AppSidebar() {
                   asChild
                   isActive={pathname === item.href}
                   tooltip={{ children: item.label, className: 'bg-primary' }}
+                  onClick={() => setOpenMobile(false)}
                 >
-                  <a href={item.href}>
+                  <Link href={item.href}>
                     <item.icon />
                     <span>{item.label}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
