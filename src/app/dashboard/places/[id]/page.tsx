@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2 } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2 } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +17,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Image from 'next/image';
 import Link from 'next/link';
 import { Place } from '@/lib/types';
@@ -123,16 +128,41 @@ export default function PlaceDetailsPage() {
                         {place.images.map((img, index) => (
                           <CarouselItem key={index} className="pl-0">
                             <div className="space-y-4">
-                              <div className="relative rounded-2xl overflow-hidden shadow-md border bg-slate-100">
-                                <AspectRatio ratio={16 / 9}>
-                                  <Image
-                                    src={img.url}
-                                    alt={img.description || `Bilde ${index + 1}`}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </AspectRatio>
-                              </div>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <div className="relative rounded-2xl overflow-hidden shadow-md border bg-slate-100 cursor-zoom-in group/img">
+                                    <AspectRatio ratio={16 / 9}>
+                                      <Image
+                                        src={img.url}
+                                        alt={img.description || `Bilde ${index + 1}`}
+                                        fill
+                                        className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                                      />
+                                    </AspectRatio>
+                                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                                      <Maximize2 className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
+                                    </div>
+                                  </div>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none">
+                                  <div className="relative w-full h-[90vh] flex items-center justify-center">
+                                    <Image
+                                      src={img.url}
+                                      alt={img.description || `Bilde ${index + 1}`}
+                                      fill
+                                      className="object-contain"
+                                      priority
+                                    />
+                                  </div>
+                                  {img.description && (
+                                    <div className="absolute bottom-4 left-0 right-0 text-center">
+                                      <span className="bg-black/60 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+                                        {img.description}
+                                      </span>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
                               {img.description && (
                                 <p className="text-center font-medium text-slate-700 italic">
                                   {img.description}
@@ -150,16 +180,34 @@ export default function PlaceDetailsPage() {
                       )}
                     </Carousel>
                   ) : (
-                    <div className="relative rounded-2xl overflow-hidden shadow-lg border">
-                      <AspectRatio ratio={16 / 9}>
-                        <Image
-                          src={place.imageUrl || '/icon.png'}
-                          alt={place.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </AspectRatio>
-                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <div className="relative rounded-2xl overflow-hidden shadow-lg border cursor-zoom-in group/img">
+                          <AspectRatio ratio={16 / 9}>
+                            <Image
+                              src={place.imageUrl || '/icon.png'}
+                              alt={place.name}
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                            />
+                          </AspectRatio>
+                          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+                            <Maximize2 className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none">
+                        <div className="relative w-full h-[90vh] flex items-center justify-center">
+                          <Image
+                            src={place.imageUrl || '/icon.png'}
+                            alt={place.name}
+                            fill
+                            className="object-contain"
+                            priority
+                          />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </div>
               </section>
@@ -250,35 +298,39 @@ export default function PlaceDetailsPage() {
             </div>
             <p className="text-sm mt-2 font-medium text-slate-600">{place.images?.length || 0} av 6 bilder brukt</p>
           </section>
-        </div>
-      </div>
 
-      {/* Action Buttons at the Bottom */}
-      <div className="mt-10 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-        <Button variant="ghost" size="lg" asChild className="w-full sm:w-auto order-2 sm:order-1">
-          <Link href="/dashboard">
-            <ArrowLeft className="mr-2 h-5 w-5" />
-            Tilbake til oversikt
-          </Link>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="lg" 
-          onClick={() => setIsEditing(!isEditing)} 
-          className="w-full sm:w-auto order-1 sm:order-2"
-        >
-          {isEditing ? (
-            <>
-              <Map className="mr-2 h-5 w-5" />
-              Vis Sted
-            </>
-          ) : (
-            <>
-              <Edit3 className="mr-2 h-5 w-5" />
-              Rediger Sted
-            </>
-          )}
-        </Button>
+          {/* Action Buttons in Sidebar for Desktop, Bottom for Mobile */}
+          <div className="flex flex-col gap-3">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => setIsEditing(!isEditing)} 
+              className="w-full h-12 text-lg font-semibold"
+            >
+              {isEditing ? (
+                <>
+                  <Map className="mr-2 h-5 w-5" />
+                  Vis Sted
+                </>
+              ) : (
+                <>
+                  <Edit3 className="mr-2 h-5 w-5" />
+                  Rediger Sted
+                </>
+              )}
+            </Button>
+            <Button 
+              size="lg" 
+              asChild 
+              className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
+            >
+              <Link href="/dashboard">
+                <ArrowLeft className="mr-2 h-5 w-5" />
+                Tilbake til oversikt
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

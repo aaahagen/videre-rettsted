@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Organization name display in the sidebar.
 - Real Firebase-backed favorites functionality.
 - Empty state for the favorites page.
+- **Implemented a full-screen image viewer in the place details page using a dialog.**
+- **Added a star-shaped toggle on the dashboard to filter between all places and favorites.**
+- **Automatic alphabetical sorting (A-Z) of places on the dashboard.**
 
 ### Changed
 - Fixed Firestore rules to allow unauthenticated access to individual invitation documents via ID.
@@ -48,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed redundant "Nytt sted" button from the dashboard header.
 - Replaced heart icon with a star icon for favorites.
 - Switched the favorites page to a client-side component for real-time data fetching.
+- **Improved the "Tilbake til oversikt" button to be more prominent with the accent color.**
+- **Fixed the favorites filter on the dashboard to use real-time synchronization with Firestore.**
 
 ## [0.1.0] - 2024-05-16
 
