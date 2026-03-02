@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export default function RegisterPage() {
     setRegisterError(null);
     setIsSubmitting(true);
     try {
-      await firebaseAuth.registerOrganization(email, password, organizationName);
+      await firebaseAuth.registerOrganization(email, password, organizationName, name);
       // The useEffect will handle the redirect
     } catch (err: any) {
       setRegisterError(err.message || 'Kunne ikke registrere organisasjon. Vennligst prøv igjen.');
@@ -45,6 +46,11 @@ export default function RegisterPage() {
   const handleOrgNameChange = (e: any) => {
     const value = e.target ? e.target.value : e;
     setOrganizationName(value);
+  };
+
+  const handleNameChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setName(value);
   };
 
   const handleEmailChange = (e: any) => {
@@ -97,7 +103,18 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Din E-post (Administrator)</Label>
+              <Label htmlFor="name">Ditt Navn (Administrator)</Label>
+              <Input
+                id="name"
+                placeholder="Ola Nordmann"
+                value={name}
+                onChange={handleNameChange}
+                required
+                className="bg-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Din E-post</Label>
               <Input
                 id="email"
                 type="email"
@@ -117,6 +134,7 @@ export default function RegisterPage() {
                 onChange={handlePasswordChange}
                 required
                 className="bg-white"
+                minLength={6}
               />
             </div>
             {registerError && (

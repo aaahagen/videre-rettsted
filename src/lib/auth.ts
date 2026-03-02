@@ -1,13 +1,13 @@
 
 export interface Auth {
   // Registers a new organization and its first admin user
-  registerOrganization(email: string, password: string, organizationName: string): Promise<{ uid: string; orgId: string }>;
+  registerOrganization(email: string, password: string, organizationName: string, name: string): Promise<{ uid: string; orgId: string }>;
 
   // Creates an invitation and returns the invitation link
   inviteUser(email: string, role: 'driver' | 'admin'): Promise<string>;
 
   // Signs in a user
-  signIn(email: string, password: string): Promise<{ uid: string }>;
+  signIn(email: string, password: string, rememberMe?: boolean): Promise<{ uid: string }>;
 
   // Signs out the current user
   signOut(): Promise<void>;

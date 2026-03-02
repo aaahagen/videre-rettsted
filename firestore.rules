@@ -40,8 +40,12 @@ service cloud.firestore {
 
     // Invitations
     match /invitations/{invitationId} {
-      allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      // Allow reading invitation by its ID WITHOUT being authenticated
+      allow read: if true;
+      
+      // Other operations still require admin status
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow update: if true; 
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 

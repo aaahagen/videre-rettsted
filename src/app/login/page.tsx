@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
@@ -32,7 +34,7 @@ export default function LoginPage() {
     setLoginError(null);
     setIsSubmitting(true);
     try {
-      await firebaseAuth.signIn(email, password);
+      await firebaseAuth.signIn(email, password, rememberMe);
       // The useEffect will handle the redirect
     } catch (err: any) {
       setLoginError(err.message || 'Kunne ikke logge inn. Vennligst sjekk legitimasjonen din.');
@@ -107,6 +109,19 @@ export default function LoginPage() {
                 required
                 className="bg-white"
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="remember" 
+                checked={rememberMe} 
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+              />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Husk meg
+              </label>
             </div>
             {loginError && (
               <p className="text-sm font-medium text-destructive text-center">

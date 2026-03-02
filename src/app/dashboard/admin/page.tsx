@@ -41,6 +41,8 @@ import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
 import { User } from '@/lib/types';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
 
 export default function AdminPage() {
   const [email, setEmail] = useState('');
@@ -55,31 +57,50 @@ export default function AdminPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    fetchUsers();
-  }, []);
+    
+    let unsubscribe: () => void;
 
-  const fetchUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      const currentUser = firebaseAuth.getCurrentUser();
-      if (currentUser) {
-        const userDoc = await firebaseDB.getUser(currentUser.uid);
-        if (userDoc && userDoc.orgId) {
-          const orgUsers = await firebaseDB.getUsers(userDoc.orgId);
-          setUsers(orgUsers);
+    const setupRealtimeUsers = async () => {
+      setIsLoadingUsers(true);
+      try {
+        const currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser) {
+          const userDoc = await firebaseDB.getUser(currentUser.uid);
+          if (userDoc && userDoc.orgId) {
+            const q = query(
+              collection(db, 'users'),
+              where('orgId', '==', userDoc.orgId)
+            );
+            
+            unsubscribe = onSnapshot(q, (snapshot) => {
+              const orgUsers = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id
+              } as User));
+              setUsers(orgUsers);
+              setIsLoadingUsers(false);
+            }, (error) => {
+              console.error("Realtime fetch error:", error);
+              setIsLoadingUsers(false);
+            });
+          } else {
+              setIsLoadingUsers(false);
+          }
+        } else {
+            setIsLoadingUsers(false);
         }
+      } catch (error) {
+        console.error("Error setting up users listener:", error);
+        setIsLoadingUsers(false);
       }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast({
-        title: "Feil ved henting av brukere",
-        description: "Kunne ikke laste inn brukerlisten.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  };
+    };
+
+    setupRealtimeUsers();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +147,6 @@ export default function AdminPage() {
         });
       } catch (err) {
          console.error("Clipboard API failed, fallback to select", err);
-         // Fallback for environments where clipboard API is restricted
          const input = document.getElementById('link') as HTMLInputElement;
          if(input) {
             input.select();
@@ -138,12 +158,6 @@ export default function AdminPage() {
                 title: "Kopiert!",
                 description: "Invitasjonslenken er kopiert til utklippstavlen.",
             });
-         } else {
-             toast({
-                title: "Kopiering feilet",
-                description: "Kunne ikke kopiere lenken automatisk. Vennligst marker og kopier manuelt.",
-                variant: "destructive"
-             });
          }
       }
     }
