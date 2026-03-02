@@ -6,6 +6,7 @@ export type User = {
   role: 'admin' | 'driver';
   orgId: string;
   favorites?: string[];
+  status?: 'active' | 'paused';
 };
 
 export type Organization = {

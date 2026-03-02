@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -37,14 +37,24 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
 import { User } from '@/lib/types';
-import { onSnapshot, collection, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase/firebase';
+import { onSnapshot, collection, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 export default function AdminPage() {
+  const [authUser, loadingAuth] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'driver' | 'admin'>('driver');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,36 +67,43 @@ export default function AdminPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    
+  }, []);
+
+  useEffect(() => {
+    if (loadingAuth || !authUser) return;
+
     let unsubscribe: () => void;
 
     const setupRealtimeUsers = async () => {
       setIsLoadingUsers(true);
       try {
-        const currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser) {
-          const userDoc = await firebaseDB.getUser(currentUser.uid);
-          if (userDoc && userDoc.orgId) {
-            const q = query(
-              collection(db, 'users'),
-              where('orgId', '==', userDoc.orgId)
-            );
-            
-            unsubscribe = onSnapshot(q, (snapshot) => {
-              const orgUsers = snapshot.docs.map(doc => ({
-                ...doc.data(),
-                id: doc.id
-              } as User));
-              setUsers(orgUsers);
-              setIsLoadingUsers(false);
-            }, (error) => {
-              console.error("Realtime fetch error:", error);
-              setIsLoadingUsers(false);
+        const userDoc = await firebaseDB.getUser(authUser.uid);
+        if (userDoc && userDoc.orgId) {
+          const q = query(
+            collection(db, 'users'),
+            where('orgId', '==', userDoc.orgId)
+          );
+          
+          unsubscribe = onSnapshot(q, (snapshot) => {
+            const orgUsers = snapshot.docs.map(doc => ({
+              ...doc.data(),
+              id: doc.id
+            } as User));
+            // Sort by name A-Z
+            orgUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            setUsers(orgUsers);
+            setIsLoadingUsers(false);
+          }, (error) => {
+            console.error("Realtime fetch error:", error);
+            setIsLoadingUsers(false);
+            toast({
+              title: "Kunne ikke hente brukere",
+              description: "Du har kanskje ikke tilgang eller det oppstod en feil.",
+              variant: "destructive"
             });
-          } else {
-              setIsLoadingUsers(false);
-          }
+          });
         } else {
+            console.warn("User has no orgId or doc not found", authUser.uid);
             setIsLoadingUsers(false);
         }
       } catch (error) {
@@ -100,7 +117,7 @@ export default function AdminPage() {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [authUser, loadingAuth, toast]);
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,12 +180,62 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdateRole = async (userId: string, newRole: 'admin' | 'driver') => {
+    try {
+      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      toast({
+        title: "Rolle oppdatert",
+        description: `Brukerens rolle er nå ${newRole === 'admin' ? 'Admin' : 'Sjåfør'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Feil ved oppdatering",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Er du sikker på at du vil slette denne brukeren?')) return;
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      toast({
+        title: "Bruker slettet",
+        description: "Brukeren har blitt fjernet fra organisasjonen.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Feil ved sletting",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleStatus = async (userId: string, currentStatus?: string) => {
+    const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+    try {
+      await updateDoc(doc(db, 'users', userId), { status: newStatus });
+      toast({
+        title: newStatus === 'paused' ? "Bruker satt på pause" : "Bruker aktivert",
+        description: `Brukeren er nå ${newStatus === 'paused' ? 'deaktivert' : 'aktiv'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Feil ved statusendring",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleEmailChange = (e: any) => {
     const value = e.target ? e.target.value : e;
     setEmail(value);
   };
 
-  if (!isMounted) {
+  if (!isMounted || loadingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -264,19 +331,20 @@ export default function AdminPage() {
                     <TableHead>E-post</TableHead>
                     <TableHead>Rolle</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
                         Ingen brukere funnet.
                       </TableCell>
                     </TableRow>
                   ) : (
                     users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="font-medium">{user.name || 'Ikke fullført'}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge
@@ -287,9 +355,59 @@ export default function AdminPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-green-600 border-green-400">
-                            Aktiv
+                          <Badge 
+                            variant="outline" 
+                            className={user.status === 'paused' 
+                              ? "text-amber-600 border-amber-400" 
+                              : "text-green-600 border-green-400"}
+                          >
+                            {user.status === 'paused' ? 'Pauset' : 'Aktiv'}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {user.role === 'admin' ? (
+                                <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'driver')}>
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  Gjør til Sjåfør
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'admin')}>
+                                  <ShieldAlert className="mr-2 h-4 w-4" />
+                                  Gjør til Admin
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
+                                {user.status === 'paused' ? (
+                                  <>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Aktiver
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pause className="mr-2 h-4 w-4" />
+                                    Sett på pause
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteUser(user.id)}
+                              >
+                                <UserX className="mr-2 h-4 w-4" />
+                                Slett Bruker
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))

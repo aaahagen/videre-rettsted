@@ -35,18 +35,19 @@ service cloud.firestore {
       );
       
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        (isAdmin() && isUserInOrg(resource.data.orgId))
+      );
+      allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
     }
 
     // Invitations
     match /invitations/{invitationId} {
-      // Allow reading invitation by its ID WITHOUT being authenticated
       allow read: if true;
-      
-      // Other operations still require admin status
-      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow create: if isAuthenticated() && isAdmin(); 
       allow update: if true; 
-      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
     }
 
     // Places
