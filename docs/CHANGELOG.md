@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Functional Global Search**: Implemented a real-time search bar in the dashboard header that filters places by name, address, description, and hashtags.
 - **Mobile-Optimized Admin Panel**: Redesigned the admin user management interface with a card-based layout for mobile devices, improved touch targets, and responsive dialogs.
 - **User Naming Control**: Admins can now assign a name when inviting a new user and edit names of existing users within the organization.
 - **Full administrative user management**: Admins can now change user roles, toggle account status (Active/Paused), and delete users directly from the admin panel.
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
 ### Fixed
+- **Resolved broken search functionality**: Connected the header search input to the dashboard content using a centralized state store.
 - **Fixed permission errors when fetching the user list in the admin panel.**
 - **Resolved an issue where administrators were redirected to their own dashboard when clicking an invite link while logged in.**
 - Resolved an issue where unauthenticated users could briefly see dashboard content before being redirected.

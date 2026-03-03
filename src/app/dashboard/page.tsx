@@ -7,11 +7,12 @@ import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
-import { Loader2, Star } from 'lucide-react';
+import { Loader2, Star, SearchX } from 'lucide-react';
 import { DeliveryPlace, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { useSearch } from '@/hooks/use-search';
 
 export default function DashboardPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [places, setPlaces] = useState<DeliveryPlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(true);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const { query: searchQuery, setQuery } = useSearch();
   const router = useRouter();
 
   useEffect(() => {
@@ -70,9 +72,20 @@ export default function DashboardPage() {
       result = result.filter((place) => favoriteIds.includes(place.id));
     }
 
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase().trim();
+      result = result.filter(place => 
+        place.name.toLowerCase().includes(lowerQuery) || 
+        place.address.toLowerCase().includes(lowerQuery) ||
+        place.description.toLowerCase().includes(lowerQuery) ||
+        (place.hashtags && place.hashtags.some(tag => tag.toLowerCase().includes(lowerQuery)))
+      );
+    }
+
     // Always sort alphabetically by name
     return result.sort((a, b) => a.name.localeCompare(b.name, 'nb'));
-  }, [places, showOnlyFavorites, userData?.favorites]);
+  }, [places, showOnlyFavorites, userData?.favorites, searchQuery]);
 
   const isLoading = loadingAuth || (loadingPlaces && !places.length);
 
@@ -93,47 +106,61 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h1 className="font-headline text-2xl font-bold tracking-tight text-slate-900">
-            Leveringssteder
+            {searchQuery ? `Søkeresultater for "${searchQuery}"` : 'Leveringssteder'}
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-            className={cn(
-              "rounded-full transition-all duration-200",
-              showOnlyFavorites 
-                ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm scale-110" 
-                : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-            )}
-            title={showOnlyFavorites ? "Vis alle steder" : "Vis kun favoritter"}
-          >
-            <Star 
+          {!searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
               className={cn(
-                "h-6 w-6 transition-colors",
-                showOnlyFavorites ? "fill-current" : "fill-none"
-              )} 
-            />
-          </Button>
+                "rounded-full transition-all duration-200",
+                showOnlyFavorites 
+                  ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm scale-110" 
+                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              )}
+              title={showOnlyFavorites ? "Vis alle steder" : "Vis kun favoritter"}
+            >
+              <Star 
+                className={cn(
+                  "h-6 w-6 transition-colors",
+                  showOnlyFavorites ? "fill-current" : "fill-none"
+                )} 
+              />
+            </Button>
+          )}
         </div>
+        {searchQuery && (
+          <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+            Nullstill søk
+          </Button>
+        )}
       </div>
 
       {displayedPlaces.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-full bg-slate-100 p-6 mb-4">
-            <Star className="h-12 w-12 text-slate-300" />
+            {searchQuery ? <SearchX className="h-12 w-12 text-slate-300" /> : <Star className="h-12 w-12 text-slate-300" />}
           </div>
           <h2 className="text-xl font-semibold text-slate-900">
-            {showOnlyFavorites ? "Ingen favoritter ennå" : "Ingen leveringssteder funnet"}
+            {searchQuery 
+              ? `Ingen steder matchet "${searchQuery}"` 
+              : showOnlyFavorites ? "Ingen favoritter ennå" : "Ingen leveringssteder funnet"}
           </h2>
-          <p className="text-slate-500 mt-2 max-w-xs">
-            {showOnlyFavorites 
-              ? "Klikk på stjernen på et leveringssted for å legge det til i dine favoritter."
-              : "Det er ingen leveringssteder registrert for din organisasjon ennå."}
+          <p className="text-slate-500 mt-2 max-w-xs mx-auto">
+            {searchQuery 
+              ? "Prøv å søke etter noe annet, eller sjekk stavingen."
+              : showOnlyFavorites 
+                ? "Klikk på stjernen på et leveringssted for å legge det til i dine favoritter."
+                : "Det er ingen leveringssteder registrert for din organisasjon ennå."}
           </p>
-          {showOnlyFavorites && (
+          {(showOnlyFavorites || searchQuery) && (
             <Button 
               variant="link" 
-              onClick={() => setShowOnlyFavorites(false)}
+              onClick={() => {
+                setShowOnlyFavorites(false);
+                setQuery('');
+              }}
               className="mt-4"
             >
               Vis alle leveringssteder
