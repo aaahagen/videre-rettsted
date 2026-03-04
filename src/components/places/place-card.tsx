@@ -15,8 +15,10 @@ import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { FavoriteButton } from './favorite-button';
 
-export function PlaceCard({ place }: { place: DeliveryPlace }) {
-  const hasCoordinates = place.coordinates?.lat !== undefined && place.coordinates?.lng !== undefined;
+export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; priority?: boolean }) {
+  // Check if coordinates exist and are not the default (0,0)
+  const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
+  
   const gmapsUrl = hasCoordinates 
     ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates.lat},${place.coordinates.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
@@ -32,6 +34,8 @@ export function PlaceCard({ place }: { place: DeliveryPlace }) {
               fill
               className="object-cover"
               data-ai-hint={place.imageHint}
+              priority={priority}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </AspectRatio>
           <div className="absolute right-2 top-2">

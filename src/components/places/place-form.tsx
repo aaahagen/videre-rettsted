@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -41,6 +41,10 @@ const placeSchema = z.object({
     description: z.string().optional(),
     preview: z.string().optional(),
   })).min(1, 'Minst ett bilde er påkrevd.').max(6, 'Maks 6 bilder tillatt.'),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number(),
+  }).optional(),
 });
 
 type PlaceFormValues = z.infer<typeof placeSchema>;
@@ -50,6 +54,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const { toast } = useToast();
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const initialMainImageIndex = place?.images && place.imageUrl 
     ? place.images.findIndex(img => img.url === place.imageUrl)
@@ -68,6 +73,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         description: img.description || '',
         preview: img.url
       })) || [],
+      coordinates: place?.coordinates || { lat: 0, lng: 0 },
     },
   });
 
@@ -78,24 +84,27 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
   const mainImageIndex = form.watch('mainImageIndex');
 
-  const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = document.createElement('img');
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 1200;
-        const scale = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
+        const scale = Math.min(1, MAX_WIDTH / img.width);
+        canvas.width = img.width * scale;
         canvas.height = img.height * scale;
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const preview = canvas.toDataURL('image/jpeg', 0.8);
-          update(index, { ...fields[index], file, preview, url: undefined });
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+                const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                callback(preview, resizedFile);
+            }
+          }, 'image/jpeg', 0.8);
         }
       };
       if (event.target?.result) {
@@ -103,6 +112,68 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    processFile(file, (preview, resizedFile) => {
+        update(index, { ...fields[index], file: resizedFile, preview, url: undefined });
+    });
+  };
+
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const remainingSlots = 6 - fields.length;
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+
+    filesToProcess.forEach(file => {
+        processFile(file, (preview, resizedFile) => {
+            append({ file: resizedFile, preview, description: '' });
+        });
+    });
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Ikke støttet",
+        description: "Nettleseren din støtter ikke geolokasjon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Henter posisjon...",
+      description: "Vennligst vent mens vi finner koordinatene dine.",
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        form.setValue('coordinates', {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        toast({
+          title: "Posisjon hentet",
+          description: "Koordinater er registrert.",
+        });
+      },
+      (error) => {
+        toast({
+          title: "Feil ved henting av posisjon",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    );
   };
 
   const onSubmit = async (data: PlaceFormValues) => {
@@ -159,6 +230,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             images: finalImages,
             orgId: userDoc.orgId,
             updatedAt: new Date(),
+            coordinates: data.coordinates || { lat: 0, lng: 0 },
         };
 
         if (place) {
@@ -173,7 +245,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 ...placeData,
                 createdBy: authUser.uid,
                 createdAt: new Date(),
-                coordinates: { lat: 0, lng: 0 }
             });
             toast({
               title: 'Sted Opprettet',
@@ -225,6 +296,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         variant="ghost"
                         size="icon"
                         className="absolute right-1 top-1 h-8 w-8"
+                        onClick={handleGetLocation}
+                        title="Hent min posisjon"
                       >
                         <MapPin className="h-4 w-4" />
                       </Button>
@@ -343,15 +416,23 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               ))}
               
               {fields.length < 6 && (
-                <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full h-24 border-dashed border-2 flex flex-col gap-2"
-                    onClick={() => append({ description: '', preview: '' })}
-                >
-                    <Plus className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm">Legg til bilde</span>
-                </Button>
+                <div className="relative">
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full h-24 border-dashed border-2 flex flex-col gap-2"
+                    >
+                        <Plus className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-sm">Legg til bilde</span>
+                    </Button>
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="absolute inset-0 opacity-0 cursor-pointer h-full"
+                        onChange={handleAddImages}
+                    />
+                </div>
               )}
               {form.formState.errors.images && (
                 <p className="text-sm font-medium text-destructive">
@@ -360,7 +441,25 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               )}
             </div>
             
-            <Button type="button" variant="outline" className="w-full">
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              ref={cameraInputRef}
+              onChange={handleAddImages}
+            />
+            
+            <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  cameraInputRef.current?.click();
+                }}
+                disabled={fields.length >= 6}
+            >
               <Camera className="mr-2 h-4 w-4" />
               Bruk Kamera
             </Button>

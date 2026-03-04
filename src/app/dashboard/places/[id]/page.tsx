@@ -139,6 +139,8 @@ export default function PlaceDetailsPage() {
                                         alt={img.description || `Bilde ${index + 1}`}
                                         fill
                                         className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                                        priority={index === 0}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 66vw"
                                       />
                                     </AspectRatio>
                                     <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
@@ -203,6 +205,8 @@ export default function PlaceDetailsPage() {
                               alt={place.name}
                               fill
                               className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                              priority
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 66vw"
                             />
                           </AspectRatio>
                           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">

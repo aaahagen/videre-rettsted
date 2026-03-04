@@ -33,7 +33,7 @@ export default function Home() {
                   Finn frem på første forsøk. Hver gang.
                 </h1>
                 <p className="mt-4 max-w-xl text-lg text-slate-600 md:text-xl">
-                  Spar tid, reduser stress og øk leveringspresisjonen med Videre
+                  Spar tid, reduser stress og øk leveringspresisjonen med VIDERE
                   RettSted. Den visuelle guiden for dine sjåfører.
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -51,7 +51,7 @@ export default function Home() {
                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl overflow-hidden relative">
                       <Image
                         src="/hero-image.png"
-                        alt="Videre RettSted App"
+                        alt="VIDERE RettSted App"
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                         priority
@@ -135,7 +135,7 @@ export default function Home() {
                 <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Løsningen:</h2>
                 <h3 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl mb-6 text-accent">Visuell leveringsstøtte </h3>
                 <p className="text-xl text-primary-foreground/90 mb-8 leading-relaxed">
-                  Videre RettSted er en enkel web-app som gir sjåføren akkurat det bildet og den informasjonen de trenger for å fullføre jobben raskt.
+                  VIDERE RettSted er en enkel web-app som gir sjåføren akkurat det bildet og den informasjonen de trenger for å fullføre jobben raskt.
                 </p>
                 <div className="space-y-4">
                   {[
@@ -155,7 +155,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-2xl">
-                <h3 className="text-2xl font-bold mb-8">Hvorfor velge Videre RettSted?</h3>
+                <h3 className="text-2xl font-bold mb-8">Hvorfor velge VIDERE RettSted?</h3>
                 <div className="grid gap-8">
                   <div className="flex gap-5">
                     <div className="bg-accent text-accent-foreground p-4 rounded-2xl h-fit shadow-lg shadow-accent/20">
@@ -231,7 +231,7 @@ export default function Home() {
                 Klar for en mer effektiv leveringshverdag?
               </h2>
               <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Kontakt oss for en demonstrasjon av Videre RettSted. Bli med på å fjerne usikkerheten i &quot;den siste meteren&quot; av leveransen.
+                Kontakt oss for en demonstrasjon av VIDERE RettSted. Bli med på å fjerne usikkerheten i &quot;den siste meteren&quot; av leveransen.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="px-10 h-16 text-xl shadow-lg hover:shadow-xl transition-all">
@@ -254,7 +254,7 @@ export default function Home() {
                   <div className="bg-white/10 p-2 rounded-lg">
                     <MapPin className="text-white h-6 w-6" />
                   </div>
-                  <h3 className="text-white font-headline font-bold text-2xl tracking-tight">Videre RettSted</h3>
+                  <h3 className="text-white font-headline font-bold text-2xl tracking-tight">VIDERE RettSted</h3>
                </div>
               <p className="max-w-xs text-lg leading-relaxed">Vi hjelper transportbedrifter med å løse utfordringen med &quot;den siste meteren&quot; gjennom visuell støtte og smart deling.</p>
             </div>
@@ -278,7 +278,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm italic">
-            <p>© 2024 Videre RettSted. Utviklet for presisjon.</p>
+            <p>© 2024 VIDERE RettSted. Utviklet for presisjon.</p>
             <div className="flex gap-8">
                 <Link href="#" className="hover:text-white transition-colors">LinkedIn</Link>
                 <Link href="#" className="hover:text-white transition-colors">Facebook</Link>

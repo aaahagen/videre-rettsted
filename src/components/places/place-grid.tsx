@@ -12,8 +12,12 @@ export function PlaceGrid({ places }: { places: DeliveryPlace[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {places.map((place) => (
-        <PlaceCard key={place.id} place={place} />
+      {places.map((place, index) => (
+        <PlaceCard 
+            key={place.id} 
+            place={place} 
+            priority={index < 6} 
+        />
       ))}
     </div>
   );

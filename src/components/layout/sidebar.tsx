@@ -111,7 +111,7 @@ export default function AppSidebar() {
           <Logo className="h-10 w-10 shrink-0 rounded-lg" />
           <div className="flex flex-col justify-center overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="font-headline text-lg font-bold leading-[1.1] tracking-tight text-sidebar-foreground">
-              Videre
+              VIDERE
             </span>
             <span className="font-headline text-lg font-bold leading-[1.1] tracking-tight text-sidebar-foreground">
               RettSted

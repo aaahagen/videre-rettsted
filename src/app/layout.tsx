@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import './globals.css';
@@ -6,10 +6,24 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Videre RettSted',
   description: 'Finn leveringsstedet ditt med letthet.',
+  manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Videre RettSted',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1A237E',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
