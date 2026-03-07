@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Delete Place Functionality**: Admins can now delete places from the place details page. This action requires typing a specific confirmation sentence ("Jeg er ansvarlig og vil slette dette stedet...").
 - **PDF Print Support**: Implemented "Print as PDF" functionality. Users can now print individual places or all their favorites at once. The print layout is optimized for A4 paper and includes images.
 - **Delete Organization Functionality**: Implemented a "Delete Organization" button in the Admin Dashboard with a strict 4-step confirmation process and text verification ("Jeg vil for alltid slette hele organisasjonen..."). This permanently removes all data, users, and the organization itself.
 - **Data Export & Backup**: Added functionality in the Admin Dashboard to export all place data as JSON and backup all images as a ZIP file. The JSON includes references to the backup folder names for easy reconciliation.
@@ -39,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a toast notification system for user feedback.
 
 ### Changed
+- **Default Image Handling**: When saving a place without images, a default placeholder (`ingen.jpg`) is now automatically assigned. When editing such a place, the placeholder is automatically hidden in the form so users can easily add new images.
+- **Image Display Updates**: Places with no images or only the placeholder now explicitly show "Ingen bilder foreløpig" in the details view.
 - **Increased Image Limit**: Increased the maximum number of images per place from 6 to 8.
 - **Accessibility Fix**: Added visually hidden titles to all image dialogs to comply with ARIA standards and resolve console errors.
 - Refactored the Admin panel code for better maintainability, moving content to a dedicated component.

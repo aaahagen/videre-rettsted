@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -23,10 +23,16 @@ import {
   DialogTrigger,
   DialogClose,
   DialogTitle,
+  DialogHeader,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Place, Organization } from '@/lib/types';
+import { Place, Organization, UserProfile } from '@/lib/types'; // Assuming UserProfile exists or similar
 import { format, isValid } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { PlaceForm } from '@/components/places/place-form';
@@ -36,10 +42,17 @@ export default function PlaceDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
   const [place, setPlace] = useState<Place | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [userProfile, setUserProfile] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { id } = params;
+  const { toast } = useToast();
+
+  const requiredDeleteText = "Jeg er ansvarlig og vil slette dette stedet fra databasen. Denne handlingen kan ikke endres";
 
   const fetchPlace = async () => {
     if (id) {
@@ -60,19 +73,51 @@ export default function PlaceDetailsPage() {
     if (user && id) {
       fetchPlace();
       
-      const fetchOrg = async () => {
+      const fetchUserData = async () => {
         const userDoc = await firebaseDB.getUser(user.uid);
+        setUserProfile(userDoc);
         if (userDoc?.orgId) {
           const org = await firebaseDB.getOrganization(userDoc.orgId);
           setOrganization(org);
         }
       };
-      fetchOrg();
+      fetchUserData();
     }
   }, [user, id]);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDeletePlace = async () => {
+    if (deleteConfirmation !== requiredDeleteText) {
+      toast({
+        title: "Feil bekreftelse",
+        description: "Vennligst skriv setningen nøyaktig som vist.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!place) return;
+
+    setIsDeleting(true);
+    try {
+      await firebaseDB.deletePlace(place.id);
+      toast({
+        title: "Sted slettet",
+        description: "Stedet er permanent fjernet.",
+      });
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("Delete place error:", error);
+      toast({
+        title: "Sletting feilet",
+        description: error.message || "Kunne ikke slette stedet.",
+        variant: "destructive"
+      });
+      setIsDeleting(false);
+    }
   };
 
   const formatDate = (dateValue: any) => {
@@ -231,48 +276,10 @@ export default function PlaceDetailsPage() {
                         )}
                       </Carousel>
                     ) : (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <div className="relative rounded-2xl overflow-hidden shadow-lg border cursor-zoom-in group/img">
-                            <AspectRatio ratio={16 / 9}>
-                              <Image
-                                src={place.imageUrl || '/icon.png'}
-                                alt={place.name}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover/img:scale-105"
-                                priority
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 66vw"
-                              />
-                            </AspectRatio>
-                            <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
-                              <Maximize2 className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
-                            </div>
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
-                          <DialogTitle className="sr-only">
-                            Bildevisning for {place.name}
-                          </DialogTitle>
-                          <div className="relative w-full h-[90vh] flex items-center justify-center">
-                            <Image
-                              src={place.imageUrl || '/icon.png'}
-                              alt={place.name}
-                              fill
-                              className="object-contain"
-                              priority
-                            />
-                            <DialogClose asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm"
-                              >
-                                <X className="h-6 w-6" />
-                              </Button>
-                            </DialogClose>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center aspect-video text-slate-400">
+                        <ImageOff className="h-12 w-12 mb-2" />
+                        <span className="text-lg font-medium">Ingen bilder foreløpig</span>
+                      </div>
                     )}
                   </div>
                 </section>
@@ -418,6 +425,68 @@ export default function PlaceDetailsPage() {
                   Tilbake til oversikt
                 </Link>
               </Button>
+
+              {userProfile?.role === 'admin' && (
+                <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="lg" 
+                      className="w-full h-12 text-lg font-semibold mt-4"
+                    >
+                      <Trash2 className="mr-2 h-5 w-5" />
+                      Slett Sted
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Er du sikker?</DialogTitle>
+                      <DialogDescription>
+                        Dette vil permanent slette "{place.name}" og alle tilhørende data.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <Label className="text-destructive font-bold">
+                        Skriv nøyaktig følgende setning for å bekrefte:
+                      </Label>
+                      <div className="p-3 bg-slate-100 rounded text-sm font-mono select-all">
+                        {requiredDeleteText}
+                      </div>
+                      <Input 
+                        value={deleteConfirmation}
+                        onChange={(e) => setDeleteConfirmation(e.target.value)}
+                        placeholder="Skriv setningen her..."
+                        className="border-destructive/30 focus-visible:ring-destructive"
+                        onPaste={(e) => {
+                            e.preventDefault();
+                            toast({
+                                title: "Ingen klipp og lim",
+                                description: "Du må skrive setningen manuelt.",
+                                variant: "destructive"
+                            });
+                        }}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Avbryt</Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleDeletePlace}
+                        disabled={deleteConfirmation !== requiredDeleteText || isDeleting}
+                      >
+                        {isDeleting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sletter...
+                            </>
+                        ) : (
+                            "Slett Sted"
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </div>
         </div>

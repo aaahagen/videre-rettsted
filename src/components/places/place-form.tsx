@@ -41,7 +41,7 @@ const placeSchema = z.object({
     url: z.string().optional(),
     description: z.string().optional(),
     preview: z.string().optional(),
-  })).min(1, 'Minst ett bilde er påkrevd.').max(8, 'Maks 8 bilder tillatt.'),
+  })).min(0, 'Du kan laste opp bilder senere.').max(8, 'Maks 8 bilder tillatt.'),
   coordinates: z.object({
     lat: z.number(),
     lng: z.number(),
@@ -71,7 +71,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       notes: place?.notes || '',
       hashtags: place?.hashtags?.join(', ') || '',
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
-      images: place?.images?.map(img => ({
+      // Filter out the placeholder image so the user starts with an empty list if only placeholder exists
+      images: place?.images?.filter(img => img.url !== '/ingen.jpg').map(img => ({
         url: img.url,
         description: img.description || '',
         preview: img.url
@@ -226,6 +227,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     uploadedAt: new Date()
                 });
             }
+        }
+
+        // Use default image if no images uploaded
+        if (finalImages.length === 0) {
+            finalImages.push({
+                url: '/ingen.jpg',
+                description: '',
+                uploadedAt: new Date()
+            });
         }
 
         const hashtagsArray = data.hashtags 
