@@ -26,13 +26,14 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
 import { firebaseStorage } from '@/lib/firebase/storage';
-import { Place } from '@/lib/types';
+import { Place, Organization } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
   address: z.string().min(5, 'Adresse er påkrevd.'),
   description: z.string().optional(),
+  notes: z.string().optional(),
   hashtags: z.string().optional(),
   mainImageIndex: z.number().default(0),
   images: z.array(z.object({
@@ -40,7 +41,7 @@ const placeSchema = z.object({
     url: z.string().optional(),
     description: z.string().optional(),
     preview: z.string().optional(),
-  })).min(1, 'Minst ett bilde er påkrevd.').max(6, 'Maks 6 bilder tillatt.'),
+  })).min(1, 'Minst ett bilde er påkrevd.').max(8, 'Maks 8 bilder tillatt.'),
   coordinates: z.object({
     lat: z.number(),
     lng: z.number(),
@@ -54,6 +55,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const { toast } = useToast();
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const initialMainImageIndex = place?.images && place.imageUrl 
@@ -66,6 +68,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       name: place?.name || '',
       address: place?.address || '',
       description: place?.description || '',
+      notes: place?.notes || '',
       hashtags: place?.hashtags?.join(', ') || '',
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
       images: place?.images?.map(img => ({
@@ -83,6 +86,19 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   });
 
   const mainImageIndex = form.watch('mainImageIndex');
+
+  useEffect(() => {
+    const fetchOrg = async () => {
+      if (authUser?.uid) {
+        const user = await firebaseDB.getUser(authUser.uid);
+        if (user?.orgId) {
+          const org = await firebaseDB.getOrganization(user.orgId);
+          setOrganization(org);
+        }
+      }
+    };
+    fetchOrg();
+  }, [authUser]);
 
   const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
     const reader = new FileReader();
@@ -127,7 +143,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const remainingSlots = 6 - fields.length;
+    const remainingSlots = 8 - fields.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
     filesToProcess.forEach(file => {
@@ -224,6 +240,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             name: data.name,
             address: data.address,
             description: data.description || '',
+            notes: data.notes || '',
             hashtags: hashtagsArray,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
@@ -263,6 +280,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         setIsSubmitting(false);
     }
   };
+
+  const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
+  const descPlaceholder = organization?.fieldSettings?.description?.placeholder || "f.eks. Ring på klokken for levering. Kode til porten er #1234. Pass deg for hunden.";
+  
+  const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
+  const notesPlaceholder = organization?.fieldSettings?.notes?.placeholder || "f.eks. 'Kunden er ofte ikke hjemme før kl. 16'";
 
   return (
     <Form {...form}>
@@ -312,10 +335,27 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Beskrivelse & Instruksjoner</FormLabel>
+                  <FormLabel>{descLabel}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="f.eks. Ring på klokken for levering. Kode til porten er #1234. Pass deg for hunden."
+                      placeholder={descPlaceholder}
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{notesLabel}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder={notesPlaceholder}
                       className="min-h-[120px]"
                       {...field}
                     />
@@ -344,7 +384,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
           <div className="md:col-span-1 space-y-6">
             <div className="space-y-4">
-              <FormLabel>Bilder (Maks 6)</FormLabel>
+              <FormLabel>Bilder (Maks 8)</FormLabel>
               <FormDescription className="text-xs">
                 Klikk på stjerne-ikonet for å velge hovedbilde til dashbordet.
               </FormDescription>
@@ -415,7 +455,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
               ))}
               
-              {fields.length < 6 && (
+              {fields.length < 8 && (
                 <div className="relative">
                     <Button 
                         type="button" 
@@ -458,7 +498,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   e.preventDefault();
                   cameraInputRef.current?.click();
                 }}
-                disabled={fields.length >= 6}
+                disabled={fields.length >= 8}
             >
               <Camera className="mr-2 h-4 w-4" />
               Bruk Kamera

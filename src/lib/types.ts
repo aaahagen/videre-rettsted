@@ -1,51 +1,56 @@
-export type User = {
-  id: string;
+
+import { FieldValue } from 'firebase/firestore';
+
+export interface UserProfile {
+  uid: string;
   name: string;
   email: string;
-  avatarUrl?: string;
   role: 'admin' | 'driver';
-  orgId: string;
-  favorites?: string[];
-  status?: 'active' | 'paused';
-};
+  organizationId: string;
+  photoURL?: string;
+  disabled?: boolean;
+}
 
-export type Organization = {
+export interface Organization {
   id: string;
   name: string;
-};
+  ownerId: string;
+  fieldSettings?: {
+    description?: {
+      label: string;
+      placeholder: string;
+    };
+    notes?: {
+      label: string;
+      placeholder: string;
+    };
+  };
+}
 
-export type PlaceImage = {
-  url: string;
-  path?: string;
-  description?: string;
-  uploadedAt: Date;
-};
-
-export type Place = {
+export interface Place {
   id: string;
   name: string;
   address: string;
-  coordinates: { lat: number; lng: number };
+  location: {
+    latitude: number;
+    longitude: number;
+  };
   description: string;
+  notes?: string;
   hashtags: string[];
-  imageUrl: string; // Keep for backward compatibility (primary image)
-  imageHint?: string;
-  images: PlaceImage[];
-  orgId: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt?: Date;
-};
+  images: { url: string; caption: string }[];
+  organizationId: string;
+  authorId: string;
+  createdAt: FieldValue;
+  updatedAt: FieldValue;
+  authorName?: string;
+}
 
-export type Route = {
+export interface Invitation {
   id: string;
-  name: string;
-  orgId: string;
-  places: string[]; // array of placeIds
-  driverId?: string;
-  distance?: number;
-  createdAt: Date;
-  updatedAt?: Date;
-};
-
-export type DeliveryPlace = Place;
+  email: string;
+  organizationId: string;
+  role: 'admin' | 'driver';
+  expiresAt: FieldValue;
+  organizationName?: string;
+}

@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from 'next/image';
 import Link from 'next/link';
-import { Place } from '@/lib/types';
+import { Place, Organization } from '@/lib/types';
 import { format, isValid } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { PlaceForm } from '@/components/places/place-form';
@@ -34,6 +34,7 @@ import { PlaceForm } from '@/components/places/place-form';
 export default function PlaceDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
   const [place, setPlace] = useState<Place | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
   const params = useParams();
@@ -57,6 +58,15 @@ export default function PlaceDetailsPage() {
   useEffect(() => {
     if (user && id) {
       fetchPlace();
+      
+      const fetchOrg = async () => {
+        const userDoc = await firebaseDB.getUser(user.uid);
+        if (userDoc?.orgId) {
+          const org = await firebaseDB.getOrganization(userDoc.orgId);
+          setOrganization(org);
+        }
+      };
+      fetchOrg();
     }
   }, [user, id]);
 
@@ -101,6 +111,10 @@ export default function PlaceDetailsPage() {
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(place.address)}`;
   
   const fallbackEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(place.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
+  // Get labels from organization settings or default
+  const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
+  const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -243,11 +257,26 @@ export default function PlaceDetailsPage() {
               </section>
 
               <section className="bg-white p-5 rounded-xl shadow-sm border">
-                <h2 className="text-xl font-semibold mb-3">Beskrivelse & Instruksjoner</h2>
+                <h2 className="text-xl font-semibold mb-3 flex items-center">
+                    <Clipboard className="mr-2 h-5 w-5 text-primary" />
+                    {descLabel}
+                </h2>
                 <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
-                  {place.description || 'Ingen beskrivelse tilgjengelig.'}
+                  {place.description || 'Ingen innhold tilgjengelig.'}
                 </p>
               </section>
+
+              {place.notes && (
+                <section className="bg-white p-5 rounded-xl shadow-sm border">
+                    <h2 className="text-xl font-semibold mb-3 flex items-center">
+                        <FileText className="mr-2 h-5 w-5 text-primary" />
+                        {notesLabel}
+                    </h2>
+                    <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+                        {place.notes}
+                    </p>
+                </section>
+              )}
 
               <section className="bg-white p-5 rounded-xl shadow-sm border">
                 <h2 className="text-xl font-semibold mb-3 flex items-center">
@@ -322,11 +351,11 @@ export default function PlaceDetailsPage() {
           <section className="bg-slate-100 p-4 rounded-xl border text-center shadow-inner">
             <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Bildeoversikt</p>
             <div className="flex justify-center gap-1">
-               {[...Array(6)].map((_, i) => (
+               {[...Array(8)].map((_, i) => (
                  <div key={i} className={`h-1.5 w-6 rounded-full ${i < (place.images?.length || 0) ? 'bg-primary' : 'bg-slate-300'}`} />
                ))}
             </div>
-            <p className="text-sm mt-2 font-medium text-slate-600">{place.images?.length || 0} av 6 bilder brukt</p>
+            <p className="text-sm mt-2 font-medium text-slate-600">{place.images?.length || 0} av 8 bilder brukt</p>
           </section>
 
           {/* Action Buttons in Sidebar for Desktop, Bottom for Mobile */}

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Customizable Place Fields**: Added a second text field to place details. Both text fields now have customizable labels and placeholders manageable via the Admin Panel.
+- **Organization Settings**: New section in Admin Dashboard to configure labels for "Beskrivelse & Instruksjoner 1" and "Beskrivelse & Instruksjoner 2".
 - **Functional Global Search**: Implemented a real-time search bar in the dashboard header that filters places by name, address, description, and hashtags.
 - **Mobile-Optimized Admin Panel**: Redesigned the admin user management interface with a card-based layout for mobile devices, improved touch targets, and responsive dialogs.
 - **User Naming Control**: Admins can now assign a name when inviting a new user and edit names of existing users within the organization.
@@ -34,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a toast notification system for user feedback.
 
 ### Changed
+- **Increased Image Limit**: Increased the maximum number of images per place from 6 to 8.
 - **Accessibility Fix**: Added visually hidden titles to all image dialogs to comply with ARIA standards and resolve console errors.
 - Refactored the Admin panel code for better maintainability, moving content to a dedicated component.
 - Updated Firestore security rules to support administrative actions on user documents.

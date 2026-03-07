@@ -22,9 +22,11 @@ Videre RettSted is a web-based application (deployed as a PWA/App Store wrapper)
 - **Place Details**: Address, text description, image carousel, and Google Maps integration.
 - **Editing**: Drivers can create/update places; only Admins can delete.
 - **History**: Every place tracks `created_at`, `updated_at`, and `author_id`.
+- **Customizable Fields**: Organizations can configure two text fields ("Beskrivelse & Instruksjoner 1" and "Beskrivelse & Instruksjoner 2") with custom labels and placeholders.
 
 ### 4. Media Handling
 - Direct camera upload or gallery selection.
+- **Maximum 8 Images**: Each place can have up to 8 images.
 - **Automatic Downscaling**: Images must be resized client-side before upload to Firestore/Storage.
 - Image descriptions for every photo.
 

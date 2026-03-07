@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2 } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -48,10 +48,63 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
-import { User } from '@/lib/types';
+import { User, Organization } from '@/lib/types';
 import { onSnapshot, collection, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
+
+function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-10 w-10 p-0 hover:bg-slate-100 rounded-full">
+          <MoreVertical className="h-5 w-5" />
+          <span className="sr-only">Meny</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onEditName}>
+          <Edit2 className="mr-2 h-4 w-4" />
+          Endre Navn
+        </DropdownMenuItem>
+        {user.role === 'admin' ? (
+          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'driver')}>
+            <Shield className="mr-2 h-4 w-4" />
+            Gjør til Sjåfør
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'admin')}>
+            <ShieldAlert className="mr-2 h-4 w-4" />
+            Gjør til Admin
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
+          {user.status === 'paused' ? (
+            <>
+              <Play className="mr-2 h-4 w-4" />
+              Aktiver
+            </>
+          ) : (
+            <>
+              <Pause className="mr-2 h-4 w-4" />
+              Sett på pause
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+          onClick={() => handleDeleteUser(user.id)}
+        >
+          <UserX className="mr-2 h-4 w-4" />
+          Slett Bruker
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export default function AdminDashboardContent({ authUser }: { authUser: FirebaseUser }) {
   const [email, setEmail] = useState('');
@@ -66,6 +119,16 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [newName, setNewName] = useState('');
   const { toast } = useToast();
 
+  // Organization Settings State
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [orgSettings, setOrgSettings] = useState({
+    descLabel: '',
+    descPlaceholder: '',
+    notesLabel: '',
+    notesPlaceholder: ''
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   useEffect(() => {
     let unsubscribe: () => void;
 
@@ -74,6 +137,18 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
       try {
         const userDoc = await firebaseDB.getUser(authUser.uid);
         if (userDoc && userDoc.orgId) {
+          // Fetch Organization Details
+          const org = await firebaseDB.getOrganization(userDoc.orgId);
+          setOrganization(org);
+          if (org) {
+            setOrgSettings({
+              descLabel: org.fieldSettings?.description?.label || '',
+              descPlaceholder: org.fieldSettings?.description?.placeholder || '',
+              notesLabel: org.fieldSettings?.notes?.label || '',
+              notesPlaceholder: org.fieldSettings?.notes?.placeholder || ''
+            });
+          }
+
           const q = query(
             collection(db, 'users'),
             where('orgId', '==', userDoc.orgId)
@@ -241,6 +316,39 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!organization) return;
+
+    setIsSavingSettings(true);
+    try {
+      await updateDoc(doc(db, 'organizations', organization.id), {
+        fieldSettings: {
+          description: {
+            label: orgSettings.descLabel,
+            placeholder: orgSettings.descPlaceholder
+          },
+          notes: {
+            label: orgSettings.notesLabel,
+            placeholder: orgSettings.notesPlaceholder
+          }
+        }
+      });
+      toast({
+        title: "Innstillinger lagret",
+        description: "Organisasjonens feltinnstillinger er oppdatert.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Feil ved lagring",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSettings(false);
     }
   };
 
@@ -468,6 +576,80 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="font-headline text-xl sm:text-2xl">
+              Organisasjonsinnstillinger
+            </CardTitle>
+            <CardDescription>
+              Tilpass etiketter og plassholdere for stedsskjemaet. La felt stå tomme for å bruke standardverdier.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6">
+            <form onSubmit={handleSaveSettings} className="space-y-6 max-w-2xl">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Felt 1</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="descLabel">Etikett (Label)</Label>
+                    <Input
+                      id="descLabel"
+                      placeholder="Standard: Beskrivelse & Instruksjoner 1"
+                      value={orgSettings.descLabel}
+                      onChange={(e) => setOrgSettings(s => ({ ...s, descLabel: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="descPlaceholder">Plassholder</Label>
+                    <Input
+                      id="descPlaceholder"
+                      placeholder="Standard: f.eks. Ring på klokken..."
+                      value={orgSettings.descPlaceholder}
+                      onChange={(e) => setOrgSettings(s => ({ ...s, descPlaceholder: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Felt 2</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="notesLabel">Etikett (Label)</Label>
+                    <Input
+                      id="notesLabel"
+                      placeholder="Standard: Beskrivelse & Instruksjoner 2"
+                      value={orgSettings.notesLabel}
+                      onChange={(e) => setOrgSettings(s => ({ ...s, notesLabel: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notesPlaceholder">Plassholder</Label>
+                    <Input
+                      id="notesPlaceholder"
+                      placeholder="Standard: f.eks. 'Kunden er ofte ikke hjemme...'"
+                      value={orgSettings.notesPlaceholder}
+                      onChange={(e) => setOrgSettings(s => ({ ...s, notesPlaceholder: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
+                {isSavingSettings ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Lagrer...
+                  </>
+                ) : (
+                  <>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Lagre Innstillinger
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         {/* Edit Name Dialog */}
         <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
           <DialogContent className="sm:max-w-md w-[95vw] rounded-xl">
@@ -533,58 +715,5 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         </Dialog>
       </div>
     </div>
-  );
-}
-
-function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-10 w-10 p-0 hover:bg-slate-100 rounded-full">
-          <MoreVertical className="h-5 w-5" />
-          <span className="sr-only">Meny</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onEditName}>
-          <Edit2 className="mr-2 h-4 w-4" />
-          Endre Navn
-        </DropdownMenuItem>
-        {user.role === 'admin' ? (
-          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'driver')}>
-            <Shield className="mr-2 h-4 w-4" />
-            Gjør til Sjåfør
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'admin')}>
-            <ShieldAlert className="mr-2 h-4 w-4" />
-            Gjør til Admin
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
-          {user.status === 'paused' ? (
-            <>
-              <Play className="mr-2 h-4 w-4" />
-              Aktiver
-            </>
-          ) : (
-            <>
-              <Pause className="mr-2 h-4 w-4" />
-              Sett på pause
-            </>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-          onClick={() => handleDeleteUser(user.id)}
-        >
-          <UserX className="mr-2 h-4 w-4" />
-          Slett Bruker
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
