@@ -4,6 +4,7 @@ export interface Database {
   createOrganization(name: string): Promise<string>;
   getOrganization(orgId: string): Promise<Organization | null>;
   deleteOrganization(orgId: string): Promise<void>;
+  updateOrganization(orgId: string, data: Partial<Organization>): Promise<void>; // Added this
   
   createUser(uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void>;
   getUser(uid: string): Promise<User | null>;

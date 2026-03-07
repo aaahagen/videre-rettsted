@@ -48,6 +48,11 @@ const deleteOrganization = async (orgId: string): Promise<void> => {
     await deleteDoc(docRef);
 };
 
+const updateOrganization = async (orgId: string, data: Partial<Organization>): Promise<void> => {
+  const docRef = doc(db, 'organizations', orgId);
+  await updateDoc(docRef, data);
+};
+
 const createUser = async (uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void> => {
   await setDoc(doc(db, 'users', uid), { name, email, orgId, role, favorites: [] });
 };
@@ -237,6 +242,7 @@ export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
   deleteOrganization,
+  updateOrganization,
   createUser,
   getUser,
   getUsers,

@@ -12,7 +12,6 @@ import {
   ChevronsUpDown,
   PlusCircle,
   Lock,
-  Camera,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -122,82 +121,58 @@ export default function AppSidebar() {
 
       <SidebarContent className="p-2">
         <SidebarMenu className="mb-4">
-            <SidebarMenuItem>
-                {loading ? (
-                    <div className="flex items-center gap-2 p-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <div className="flex flex-col gap-1 group-data-[collapsible=icon]:hidden">
-                            <Skeleton className="h-3 w-20" />
-                            <Skeleton className="h-2 w-24" />
-                        </div>
-                    </div>
-                ) : authUser ? (
-                    <div className="space-y-1">
-                        {orgLoading ? (
-                            <Skeleton className="ml-2 h-3 w-24" />
-                        ) : org ? (
-                            <div className="ml-2 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-bold group-data-[collapsible=icon]:hidden">
-                                <Building2 className="h-3 w-3" />
-                                <span className="truncate">{org.name}</span>
-                            </div>
-                        ) : null}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton 
-                                    size="lg"
-                                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                                >
-                                    <Avatar className="h-8 w-8 rounded-lg">
-                                        {(authUser.photoURL || dbUser?.avatarUrl) && (
-                                            <AvatarImage 
-                                                src={authUser.photoURL || dbUser?.avatarUrl} 
-                                                alt={displayName} 
-                                            />
-                                        )}
-                                        <AvatarFallback className="rounded-lg">
-                                            {getInitials(displayName)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                                        <span className="truncate font-semibold">{authUser.email}</span>
-                                        <span className="truncate text-xs text-muted-foreground">Profilinnstillinger</span>
-                                    </div>
-                                    <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent 
-                                side={isMobile ? "bottom" : "right"}
-                                align="end" 
-                                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                            >
-                                <DropdownMenuItem asChild>
-                                    <Link href="/forgot-password" onClick={() => setOpenMobile(false)}>
-                                        <Lock className="mr-2 h-4 w-4" />
-                                        <span>Bytt passord</span>
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link href="/dashboard/profile/picture" onClick={() => setOpenMobile(false)}>
-                                    <Camera className="mr-2 h-4 w-4" />
-                                    <span>Endre profilbilde</span>
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Logg ut</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+          <SidebarMenuItem>
+            {loading ? (
+              <div className="flex items-center gap-2 p-2">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex flex-col gap-1 group-data-[collapsible=icon]:hidden">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-2 w-24" />
+                </div>
+              </div>
+            ) : authUser ? (
+              <div className="space-y-1">
+                {orgLoading ? (
+                  <Skeleton className="ml-2 h-3 w-24" />
+                ) : org ? (
+                  <div className="ml-2 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-bold group-data-[collapsible=icon]:hidden">
+                    <Building2 className="h-3 w-3" />
+                    <span className="truncate">{org.name}</span>
+                  </div>
                 ) : null}
-            </SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      size="lg"
+                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    >
+                      <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                        <span className="truncate font-semibold">{displayName}</span>
+                        <span className="truncate text-xs text-muted-foreground">Profilinnstillinger</span>
+                      </div>
+                      <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side={isMobile ? "bottom" : "right"}
+                    align="end"
+                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  >
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logg ut</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : null}
+          </SidebarMenuItem>
         </SidebarMenu>
 
         <SidebarMenu>
           {navItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
-            
+
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton

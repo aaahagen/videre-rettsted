@@ -15,7 +15,6 @@
 *   **Storage**: Cloud Storage for Firebase
 *   **Authentication**: Firebase Authentication
 *   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations)
-*   **AI**: Genkit with Gemini API
 
 ## Backend Abstraction Layer
 

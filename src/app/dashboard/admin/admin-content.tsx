@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -114,16 +114,19 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [role, setRole] = useState<'driver' | 'admin'>('driver');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newName, setNewName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   // Organization Settings State
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgSettings, setOrgSettings] = useState({
+    name: '',
     descLabel: '',
     descPlaceholder: '',
     notesLabel: '',
@@ -144,6 +147,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
           setOrganization(org);
           if (org) {
             setOrgSettings({
+              name: org.name || '',
               descLabel: org.fieldSettings?.description?.label || '',
               descPlaceholder: org.fieldSettings?.description?.placeholder || '',
               notesLabel: org.fieldSettings?.notes?.label || '',
@@ -164,6 +168,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
             // Sort by name A-Z
             orgUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
             setUsers(orgUsers);
+            setFilteredUsers(orgUsers);
             setIsLoadingUsers(false);
           }, (error) => {
             console.error("Realtime fetch error:", error);
@@ -189,6 +194,20 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
       if (unsubscribe) unsubscribe();
     };
   }, [authUser, toast]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = users.filter(user => 
+      (user.name?.toLowerCase().includes(query) || '') ||
+      (user.email?.toLowerCase().includes(query) || '')
+    );
+    setFilteredUsers(filtered);
+  }, [searchQuery, users]);
 
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -327,7 +346,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
     setIsSavingSettings(true);
     try {
-      await updateDoc(doc(db, 'organizations', organization.id), {
+      await firebaseDB.updateOrganization(organization.id, {
+        name: orgSettings.name,
         fieldSettings: {
           description: {
             label: orgSettings.descLabel,
@@ -341,7 +361,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
       });
       toast({
         title: "Innstillinger lagret",
-        description: "Organisasjonens feltinnstillinger er oppdatert.",
+        description: "Organisasjonsinnstillinger er oppdatert.",
       });
     } catch (error: any) {
       toast({
@@ -367,16 +387,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   return (
     <div className="p-2 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
       <div className="space-y-6 sm:space-y-8">
-        <Card className="border-none shadow-none sm:border sm:shadow-sm">
-          <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="font-headline text-2xl sm:text-3xl">
-              Adminpanel
-            </CardTitle>
-            <CardDescription className="text-base">
-              Administrer din organisasjon og brukere.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        
+        <h1 className="text-3xl font-bold font-headline px-1">Adminpanel</h1>
 
         {organization && <AnalyticsDashboard orgId={organization.id} />}
 
@@ -454,10 +466,23 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
         <Card>
           <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="font-headline text-xl sm:text-2xl">
-              Administrer Brukere
-            </CardTitle>
-            <CardDescription>Se og administrer nåværende brukere.</CardDescription>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="font-headline text-xl sm:text-2xl">
+                  Administrer Brukere
+                </CardTitle>
+                <CardDescription>Se og administrer nåværende brukere.</CardDescription>
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Søk etter navn eller e-post..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="px-0 sm:px-6 pb-0">
             {isLoadingUsers ? (
@@ -479,14 +504,14 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {users.length === 0 ? (
+                      {filteredUsers.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                            Ingen brukere funnet.
+                            {searchQuery ? 'Ingen brukere funnet.' : 'Ingen brukere i organisasjonen.'}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        users.map((user) => (
+                        filteredUsers.map((user) => (
                           <TableRow key={user.id}>
                             <TableCell className="font-medium">{user.name || 'Ikke fullført'}</TableCell>
                             <TableCell>{user.email}</TableCell>
@@ -529,12 +554,12 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
                 {/* Mobile View Cards */}
                 <div className="md:hidden divide-y">
-                  {users.length === 0 ? (
+                  {filteredUsers.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
-                      Ingen brukere funnet.
+                      {searchQuery ? 'Ingen brukere funnet.' : 'Ingen brukere i organisasjonen.'}
                     </div>
                   ) : (
-                    users.map((user) => (
+                    filteredUsers.map((user) => (
                       <div key={user.id} className="p-4 space-y-3">
                         <div className="flex justify-between items-start">
                           <div className="space-y-1">
@@ -586,11 +611,30 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
               Organisasjonsinnstillinger
             </CardTitle>
             <CardDescription>
-              Tilpass etiketter og plassholdere for stedsskjemaet. La felt stå tomme for å bruke standardverdier.
+              Tilpass organisasjonsnavn, etiketter og plassholdere for stedsskjemaet.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSaveSettings} className="space-y-6 max-w-2xl">
+              
+              <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Generelt</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="orgName">Organisasjonsnavn</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="orgName"
+                        placeholder="Ditt firmanavn"
+                        value={orgSettings.name}
+                        onChange={(e) => setOrgSettings(s => ({ ...s, name: e.target.value }))}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+              </div>
+
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-4">
                   <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Felt 1</h3>
