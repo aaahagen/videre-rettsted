@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **PDF Print Support**: Implemented "Print as PDF" functionality. Users can now print individual places or all their favorites at once. The print layout is optimized for A4 paper and includes images.
 - **Delete Organization Functionality**: Implemented a "Delete Organization" button in the Admin Dashboard with a strict 4-step confirmation process and text verification ("Jeg vil for alltid slette hele organisasjonen..."). This permanently removes all data, users, and the organization itself.
 - **Data Export & Backup**: Added functionality in the Admin Dashboard to export all place data as JSON and backup all images as a ZIP file. The JSON includes references to the backup folder names for easy reconciliation.
 - **Customizable Place Fields**: Added a second text field to place details. Both text fields now have customizable labels and placeholders manageable via the Admin Panel.
