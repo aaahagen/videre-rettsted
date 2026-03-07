@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Separated Landing Page from App**: The marketing landing page has been moved from the root route (`/`) to `/about`. The root route now acts as the main app entry point, directing logged-in users to the dashboard and logged-out users to the login page for a more streamlined user experience.
 - **Refactored Authentication Flow**: Replaced the server-side `middleware.ts` and session cookie mechanism with a purely client-side authentication management system. This is handled by a new `AuthProvider` component that uses `react-firebase-hooks` to listen to auth state changes and manages route protection via client-side redirects. This resolves complex synchronization issues between the server and client.
 - **Updated Place Creator Attribution**: The system now stores and displays the full name (or internal number) of the user who created a place, rather than just their ID. This is fetched from the user's profile at the time of creation.
 - **Refined Admin Dashboard Monitoring**: Simplified the analytics dashboard to reliably show total users and total places in a unified, robust card view, removing fragile log dependencies.
@@ -40,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed placeholder data and integrated live data fetching from Firestore.
 
 ### Added
+- **Admin-Only Link to Landing Page**: A link to the new `/about` (landing page) has been added to the sidebar, visible only to admin users.
 - **User Search in Admin Panel**: Added a search bar to the "Administrer Brukere" card, allowing admins to quickly filter users by name or email.
 - **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.
 - **Delete Place Functionality**: Admins can now delete places from the place details page. This action requires typing a specific confirmation sentence ("Jeg er ansvarlig og vil slette dette stedet...").

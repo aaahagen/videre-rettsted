@@ -62,19 +62,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoading) return;
 
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite'];
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about'];
     const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
-    if (!user && !isPublicRoute && pathname !== '/') {
-      // Not logged in and trying to access protected route -> redirect to login
+    if (!user && pathname === '/') {
+      // User is at root, not logged in -> redirect to login
       router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password')) {
-      // Logged in and trying to access auth route -> redirect to dashboard
+    } else if (!user && !isPublicRoute) {
+      // User is on a protected route, not logged in -> redirect to login
+      router.push('/login');
+    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/')) {
+      // User is logged in, trying to access auth routes or root -> redirect to dashboard
       router.push('/dashboard');
     }
   }, [user, isLoading, pathname, router]);
 
-  if (isLoading) {
+  if (isLoading && pathname !== '/about') { // Do not show full-page loader for the about page
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

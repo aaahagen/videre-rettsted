@@ -20,7 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function Home() {
+export default function AboutPage() {
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50">
       <main className="flex-1">

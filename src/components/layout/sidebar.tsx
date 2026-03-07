@@ -12,6 +12,7 @@ import {
   ChevronsUpDown,
   PlusCircle,
   Lock,
+  Info,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,59 +41,46 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
 import Link from 'next/link';
+import { useAuth } from '../auth-provider';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
   { href: '/dashboard/admin', icon: Shield, label: 'Admin', adminOnly: true },
+  { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
 ];
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [authUser, loading] = useAuthState(auth);
-  const [dbUser, setDbUser] = useState<User | null>(null);
+  const { user: authUser, loading, dbUser } = useAuth();
   const [org, setOrg] = useState<Organization | null>(null);
   const [orgLoading, setOrgLoading] = useState(false);
   const { setOpenMobile, isMobile } = useSidebar();
 
   useEffect(() => {
     async function fetchData() {
-      if (authUser) {
+      if (dbUser?.orgId) {
         setOrgLoading(true);
         try {
-          const userData = await firebaseDB.getUser(authUser.uid);
-          setDbUser(userData);
-          if (userData?.orgId) {
-            const orgData = await firebaseDB.getOrganization(userData.orgId);
-            setOrg(orgData);
-          }
+          const orgData = await firebaseDB.getOrganization(dbUser.orgId);
+          setOrg(orgData);
         } catch (error) {
-          console.error("Error fetching user/org data:", error);
+          console.error("Error fetching org data:", error);
         } finally {
           setOrgLoading(false);
         }
       } else {
-        setDbUser(null);
         setOrg(null);
       }
     }
     fetchData();
-  }, [authUser]);
+  }, [dbUser]);
 
   const handleLogout = async () => {
     await firebaseAuth.signOut();
     router.push('/');
-  };
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'B';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
   };
 
   const displayName = dbUser?.name || authUser?.displayName || authUser?.email || 'Bruker';
