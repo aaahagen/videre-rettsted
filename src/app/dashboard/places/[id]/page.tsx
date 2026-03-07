@@ -124,6 +124,21 @@ export default function PlaceDetailsPage() {
   return (
     <>
       <div className="container mx-auto px-4 py-8 max-w-5xl print:hidden">
+        
+        {/* Top Back Button */}
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            asChild 
+            className="pl-0 hover:bg-transparent hover:text-primary"
+          >
+            <Link href="/dashboard">
+              <ArrowLeft className="mr-2 h-5 w-5" />
+              Tilbake til oversikt
+            </Link>
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {isEditing ? (
@@ -369,15 +384,6 @@ export default function PlaceDetailsPage() {
               <Button 
                 variant="outline" 
                 size="lg" 
-                onClick={handlePrint}
-                className="w-full h-12 text-lg font-semibold"
-              >
-                <Printer className="mr-2 h-5 w-5" />
-                Skriv ut PDF
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
                 onClick={() => setIsEditing(!isEditing)} 
                 className="w-full h-12 text-lg font-semibold"
               >
@@ -392,6 +398,15 @@ export default function PlaceDetailsPage() {
                     Rediger Sted
                   </>
                 )}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={handlePrint}
+                className="w-full h-12 text-lg font-semibold"
+              >
+                <Printer className="mr-2 h-5 w-5" />
+                Skriv ut PDF
               </Button>
               <Button 
                 size="lg" 
