@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved an issue where unauthenticated users could briefly see dashboard content before being redirected.
 - Corrected the redirection logic after login to ensure users are sent to the main dashboard page.
 - Ensured that the "Add New Place" button is only visible to admin users.
+- **Fixed typo in `about` page component.**
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
@@ -41,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed placeholder data and integrated live data fetching from Firestore.
 
 ### Added
+- **Enhanced Landing Page**: The landing page (`/about`) has been significantly updated to better communicate the app's value proposition to potential customers.
+  - Added sections on data security, NIS2 compliance, and the app's flexible, future-proof architecture.
+  - Included information about the app's cross-platform compatibility and the fact that it requires no installation.
+  - Added a dedicated section for requesting a demo of the app.
+  - Added a new section, "Built by Drivers, for Drivers," to highlight the app's user-centric design.
+  - Added a new footer with branding for the umbrella organization, VIDERE.
+  - Emphasized that drivers are the ones who update the app's data, ensuring its accuracy.
 - **Admin-Only Link to Landing Page**: A link to the new `/about` (landing page) has been added to the sidebar, visible only to admin users.
 - **User Search in Admin Panel**: Added a search bar to the "Administrer Brukere" card, allowing admins to quickly filter users by name or email.
 - **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.
