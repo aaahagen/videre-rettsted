@@ -15,6 +15,7 @@ export function Logo({ className }: { className?: string }) {
         width={96}
         height={96}
         className="h-full w-full object-cover"
+        priority
       />
     </div>
   );

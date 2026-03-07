@@ -1,43 +1,89 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { User } from '@/lib/types';
-import { getUser } from '@/lib/data';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebase/firebase';
+import { User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { User } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null | undefined;
+  dbUser: User | null;
   loading: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
+  user: undefined,
+  dbUser: null,
   loading: true,
+  isAdmin: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, loading, error] = useAuthState(auth);
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    // In a real app, you'd check for a session/token here
-    // and fetch the user data. For now, we just fetch the mock user.
-    const fetchUser = async () => {
-      try {
-        const userData = await getUser();
-        setUser(userData);
-      } catch (error) {
-        console.error("Failed to fetch user", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
+    async function fetchUserData() {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setDbUser(userDoc.data() as User);
+          } else {
+            setDbUser(null);
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          setDbUser(null);
+        }
+      } else {
+        setDbUser(null);
       }
-    };
+      setDataLoading(false);
+    }
 
-    fetchUser();
-  }, []);
+    if (!loading) {
+      fetchUserData();
+    }
+  }, [user, loading]);
+
+  const isLoading = loading || dataLoading;
+  const isAdmin = dbUser?.role === 'admin';
+
+  // Protect routes logic
+  useEffect(() => {
+    if (isLoading) return;
+
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite'];
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
+    if (!user && !isPublicRoute && pathname !== '/') {
+      // Not logged in and trying to access protected route -> redirect to login
+      router.push('/login');
+    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password')) {
+      // Logged in and trying to access auth route -> redirect to dashboard
+      router.push('/dashboard');
+    }
+  }, [user, isLoading, pathname, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, dbUser, loading: isLoading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

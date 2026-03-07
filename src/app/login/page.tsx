@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { firebaseAuth } from '@/lib/firebase/auth';
-import { auth } from '@/lib/firebase/firebase';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +13,6 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const [user, loading] = useAuthState(auth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -23,43 +20,28 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (user && !loading) {
-      router.push('/dashboard');
-    }
-  }, [user, loading, router]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
     setIsSubmitting(true);
     try {
       await firebaseAuth.signIn(email, password, rememberMe);
-      // The useEffect will handle the redirect
+      // AuthProvider will handle redirect
+      router.push('/dashboard');
     } catch (err: any) {
+      console.error('Login error:', err);
       setLoginError(err.message || 'Kunne ikke logge inn. Vennligst sjekk legitimasjonen din.');
-    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEmailChange = (e: any) => {
-    const value = e.target ? e.target.value : e;
-    setEmail(value);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
   };
 
-  const handlePasswordChange = (e: any) => {
-    const value = e.target ? e.target.value : e;
-    setPassword(value);
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
   };
-
-  if (loading || (user && !isSubmitting)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
