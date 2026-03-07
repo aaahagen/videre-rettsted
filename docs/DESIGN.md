@@ -1,4 +1,4 @@
-# Design Guidelines: Videre RettSted
+# Design Guidelines: VIDERE RettSted
 
 ## UI Principles
 - **Touch Targets**: All buttons and interactive elements must be large (minimum 44x44px).
@@ -8,7 +8,7 @@
 ## Screen Layouts (Based on Wireframes)
 
 ### 1. Admin Onboarding & Registration
-- A dedicated landing page (`/`) designed to explain the value proposition of Videre RettSted to potential administrators and organizations.
+- A dedicated landing page (`/`) designed to explain the value proposition of VIDERE RettSted to potential administrators and organizations.
 - This page will feature a clear "Get Started" or "Register Your Organization" call-to-action.
 - The registration form (`/register`) will allow the first user of an organization to create their admin account and define the organization's name. This user automatically becomes the administrator.
 

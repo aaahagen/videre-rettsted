@@ -1,7 +1,7 @@
-# Project Specification: Videre RettSted
+# Project Specification: VIDERE RettSted
 
 ## Project Overview
-Videre RettSted is a web-based application (deployed as a PWA/App Store wrapper) designed for drivers to find precise delivery locations. It solves the "last-meter" delivery problem by providing photos, descriptions, and specific entrance maps that standard GPS often misses.
+VIDERE RettSted is a web-based application (deployed as a PWA/App Store wrapper) designed for drivers to find precise delivery locations. It solves the "last-meter" delivery problem by providing photos, descriptions, and specific entrance maps that standard GPS often misses.
 
 ## Target Audience
 - **Admins (Hjelpefunksjonærer)**: Tech-savvy individuals responsible for setting up organizations and managing users.

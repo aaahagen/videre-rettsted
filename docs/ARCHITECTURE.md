@@ -1,4 +1,4 @@
-# Videre RettSted - Architecture
+# VIDERE RettSted - Architecture
 
 ## Frontend
 
@@ -18,7 +18,7 @@
 
 ## Backend Abstraction Layer
 
-To ensure future flexibility and ease of migration to a different backend, all interactions with the backend (Firebase) will be encapsulated within a dedicated abstraction layer. This layer will expose a set of generic functions to the rest of the application for data operations (CRUD).
+To ensure future flexibility and ease of migration to a different backend, all interactions with the backend (Firebase) will be encapsulated within a dedicated abstraction layer. This layer will expose a set of generic functions to the rest of the application for data operations (CRUD). This architecture also allows for the entire backend to be migrated to a self-hosted or on-premise server if required by the organization's security policies.
 
 - **`src/lib/database.ts`**: Defines a generic interface for all database operations (e.g., `getPlace`, `createPlace`, `updateUser`).
 - **`src/lib/firebase/database.ts`**: The concrete implementation of the database interface using Firebase Firestore.

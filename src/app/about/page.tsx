@@ -1,289 +1,336 @@
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { 
-  CheckCircle2, 
-  Camera, 
-  Share2, 
-  Clock, 
-  PhoneOff, 
-  UserPlus, 
-  Zap, 
-  ShieldCheck, 
-  TrendingUp,
-  MapPin
-} from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle, Globe, Smartphone, DownloadCloud, Eye, Car, DatabaseBackup, Printer, Users } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="w-full bg-white border-b overflow-hidden">
-          <div className="container px-4 py-16 md:px-6 md:py-24 lg:py-32">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
-              <div className="z-10">
-                <h1 className="font-headline text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl text-slate-900 leading-tight">
-                  Finn frem på første forsøk. Hver gang.
-                </h1>
-                <p className="mt-4 max-w-xl text-lg text-slate-600 md:text-xl">
-                  Spar tid, reduser stress og øk leveringspresisjonen med VIDERE
-                  RettSted. Den visuelle guiden for dine sjåfører.
+    <div className="bg-slate-50 text-slate-800">
+      {/* Hero Section */}
+      <section className="relative text-center py-20 md:py-32 bg-gradient-to-br from-slate-900 to-slate-700 text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="/hero-image.png"
+            alt="Bakgrunnsbilde av en lastebil"
+            layout="fill"
+            objectFit="cover"
+            quality={80}
+            className="opacity-20"
+          />
+          <div className="absolute inset-0 bg-black/40"></div>
+        </div>
+        <div className="container mx-auto px-4 relative">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-shadow-lg">
+            Finn frem på første forsøk. Hver gang.
+          </h1>
+          <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-200">
+            Spar tid, reduser stress og øk leveringspresisjonen med VIDERE RettSted – designet for den siste, avgjørende meteren av leveransen.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link href="/register" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
+              Kom i gang
+            </Link>
+            <Link href="/login" className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-white hover:text-slate-900 transition-all">
+              Logg inn
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* The Challenge Section */}
+      <section id="challenge" className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Utfordringen: Den siste, frustrerende meteren</h2>
+            <p className="text-lg text-slate-600 mb-12">
+              Standard GPS tar sjåføren til riktig adresse, men den viser sjelden veien til den spesifikke rampen, den skjulte bakdøren eller den riktige inngangen i en stor bygning. Resultatet er bortkastet tid, unødvendig stress og forsinkede leveranser.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Tidkrevende leting</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Sjåfører kaster bort verdifull tid på å lete etter riktig leveringspunkt, noe som forplanter seg og skaper forsinkelser resten av dagen.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Frustrerte kunder</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Kundeservice må håndtere unødvendige telefoner fra kunder og sjåfører, noe som reduserer effektiviteten.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Treg opplæring</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Nye sjåfører bruker lang tid på å lære seg ruter og spesifikke leveringspunkter som er &quot;selvfølgelige&quot; for veteranene.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* The Solution Section */}
+      <section id="solution" className="py-16 md:py-24 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Løsningen: Visuell leveringsstøtte</h2>
+            <p className="text-lg text-slate-600 mb-12">
+              VIDERE RettSted er en enkel og intuitiv web-app som gir sjåføren akkurat det de trenger for å fullføre jobben effektivt: et bilde av leveringsstedet.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="relative rounded-lg overflow-hidden shadow-2xl">
+              <Image src="/hero-image.png" alt="App-grensesnitt" width={1200} height={800} />
+            </div>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <CheckCircle className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Bilder som fjerner tvil</h3>
+                  <p className="text-slate-600">Sjåførene ser nøyaktige bilder av innganger, ramper og porter. Ingen flere misforståelser eller feil.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <Users className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Alltid Oppdatert Informasjon</h3>
+                  <p className="text-slate-600">Det er sjåførene selv som tar bilder og oppdaterer instruksjoner direkte fra feltet. Dette sikrer at informasjonen alltid er fersk og nøyaktig.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <CheckCircle className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Sømløs navigasjon</h3>
+                  <p className="text-slate-600">Ett enkelt trykk på kartet i appen åpner Google Maps, klar til å lede sjåføren de siste, kritiske meterne.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <CheckCircle className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Bedriftens kunnskapsbase</h3>
+                  <p className="text-slate-600">Bygg opp et verdifullt bibliotek med leveringssteder som blir værende i bedriften, selv når erfarne sjåfører slutter.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* For Drivers, By Drivers Section */}
+      <section id="for-drivers" className="py-20 bg-slate-800 text-white">
+        <div className="container mx-auto px-4 text-center">
+            <div className="max-w-3xl mx-auto">
+                <div className="flex justify-center mb-6">
+                    <div className="p-4 bg-slate-700 rounded-full">
+                        <Car className="w-10 h-10 text-yellow-400" />
+                    </div>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Bygget av Sjåfører, for Sjåfører</h2>
+                <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-300 mb-8">
+                    VIDERE RettSted er ikke laget av et fjernt teknologiselskap. Vi er selv erfarne sjåfører som har kjent på frustrasjonen ved å ikke finne frem. Derfor er appen designet fra grunnen av for å være det verktøyet vi alltid har savnet. Det er sjåførene som er ekspertene, og det er de som bygger opp den verdifulle kunnskapsbasen som gjør hverdagen enklere for alle.
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button asChild size="lg" className="px-8 h-14 text-lg shadow-lg hover:shadow-xl transition-all">
-                    <Link href="/register">Kom i Gang</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline" className="px-8 h-14 text-lg">
-                    <Link href="/login">Logg Inn</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="relative lg:scale-110">
-                <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-[2rem] blur-3xl opacity-50"></div>
-                <div className="relative bg-white p-2 rounded-3xl shadow-2xl border border-slate-100 overflow-hidden group">
-                   <div className="aspect-[4/3] bg-slate-100 rounded-2xl overflow-hidden relative">
-                      <Image
-                        src="/hero-image.png"
-                        alt="VIDERE RettSted App"
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                        priority
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
-                      <div className="absolute bottom-6 left-6 right-6">
-                         <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20">
-                            <div className="bg-accent p-2 rounded-lg">
-                               <MapPin className="text-white h-6 w-6" />
-                            </div>
-                            <div>
-                               <p className="text-white font-bold">Hovedinngang Rampen</p>
-                               <p className="text-white/70 text-sm italic">Bruk dør B4 bak bygget</p>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-              </div>
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Utfordringen Section */}
-        <section className="w-full py-16 md:py-24">
-          <div className="container px-4 md:px-6">
-            <div className="mx-auto max-w-3xl text-center mb-12">
-              <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl text-slate-900 mb-2">Utfordringen:</h2>
-              <h3 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl text-primary">Den &quot;siste meteren&quot; </h3>
-              <p className="mt-4 text-lg text-slate-600">
-                Standard GPS tar sjåføren til adressen, men ikke til den rette
-                rampen, riktig dør eller den skjulte kjellerinngangen.
-              </p>
-            </div>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="bg-destructive/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-4">
-                    <Clock className="h-8 w-8 text-destructive" />
-                  </div>
-                  <CardTitle className="text-xl">Sjåfører kaster bort tid</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Leter etter innganger og kaster bort verdifulle minutter på hvert stopp. Dette fører til forsinkelser i hele ruten.</p>
-                </CardContent>
-              </Card>
-              <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-                <CardHeader>
-                   <div className="bg-destructive/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-4">
-                    <PhoneOff className="h-8 w-8 text-destructive" />
-                  </div>
-                  <CardTitle className="text-xl">Kundeservice belastes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Telefoner om forsinkelser og misforståelser øker stresset for både sjåfører og kontoransatte.</p>
-                </CardContent>
-              </Card>
-              <Card className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-                <CardHeader>
-                   <div className="bg-destructive/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-4">
-                    <UserPlus className="h-8 w-8 text-destructive" />
-                  </div>
-                  <CardTitle className="text-xl">Lang opplæringstid</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Nye sjåfører bruker lang tid på å lære seg ruter og spesifikke leveringspunkter som er &quot;selvfølgelige&quot; for veteranene.</p>
-                </CardContent>
-              </Card>
-            </div>
+      {/* Accessibility Section */}
+      <section id="accessibility" className="py-16 md:py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Tilgjengelig Overalt, Uten Installasjon</h2>
+            <p className="text-lg text-slate-600 mb-12">
+                VIDERE RettSted er en moderne web-app bygget for maksimal tilgjengelighet. Glem App Store og kompliserte oppdateringer – alt du trenger er en nettleser.
+            </p>
           </div>
-        </section>
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-yellow-500">
+              <CardHeader className="flex flex-col items-center">
+                <div className="p-4 bg-yellow-100 rounded-full mb-4">
+                    <Globe className="w-8 h-8 text-yellow-600" />
+                </div>
+                <CardTitle className="text-xl font-semibold">Ingen Installasjon</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Åpne appen direkte i nettleseren på hvilken som helst enhet. Du har alltid tilgang til den nyeste versjonen, helt automatisk.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-yellow-500">
+              <CardHeader className="flex flex-col items-center">
+                <div className="p-4 bg-yellow-100 rounded-full mb-4">
+                    <Smartphone className="w-8 h-8 text-yellow-600" />
+                </div>
+                <CardTitle className="text-xl font-semibold">Fungerer På Alle Enheter</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Enten du bruker PC, Mac, iPhone eller Android, er opplevelsen like god. Appen tilpasser seg skjermen din automatisk.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-yellow-500">
+              <CardHeader className="flex flex-col items-center">
+                <div className="p-4 bg-yellow-100 rounded-full mb-4">
+                    <DownloadCloud className="w-8 h-8 text-yellow-600" />
+                </div>
+                <CardTitle className="text-xl font-semibold">Legg til på Hjem-skjerm</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">For en enda raskere opplevelse kan du legge til VIDERE RettSted på hjem-skjermen din – akkurat som en vanlig app.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
 
-        {/* Løsningen Section */}
-        <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
-          
-          <div className="container px-4 md:px-6 relative z-10">
-            <div className="grid gap-12 lg:grid-cols-2 items-center">
-              <div>
-                <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Løsningen:</h2>
-                <h3 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl mb-6 text-accent">Visuell leveringsstøtte </h3>
-                <p className="text-xl text-primary-foreground/90 mb-8 leading-relaxed">
-                  VIDERE RettSted er en enkel web-app som gir sjåføren akkurat det bildet og den informasjonen de trenger for å fullføre jobben raskt.
+      {/* Security and Compliance Section */}
+      <section id="security" className="py-16 md:py-24 bg-slate-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Trygghet for deg som leder</h2>
+            <p className="text-lg text-slate-600 mb-12">
+              Vi forstår at datasikkerhet og overholdelse av regelverk er avgjørende. Derfor er VIDERE RettSted bygget med trygghet og fleksibilitet i tankene.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Full kontroll på tilgang</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Som administrator styrer du nøyaktig hvem som har tilgang. Nye sjåfører inviteres enkelt via en tidsbegrenset og sikker lenke.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Dine Data, Din Kontroll</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Ta full eierskap over bedriftens data. Med et enkelt klikk kan du eksportere all informasjon for daglig, lokal backup.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Utskrift til Papir</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">For sjåfører som foretrekker papir, kan all viktig informasjon skrives ut som en oversiktlig A4-PDF med bilder og instrukser.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">NIS2-vennlig design</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Appen fungerer frittstående og krever ingen integrasjon med bedriftens kjerne- eller ERP-systemer.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Unngå sensitiv informasjon</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Vi anbefaler å bruke interne koder eller referanser i appen, slik at sensitive data forblir i deres egne, sikre systemer.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Et supplement, ikke et krav</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Se på VIDERE RettSted som et spesialisert effektivitetsverktøy, ikke som et kritisk system for bedriftens leveringsevne.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Fleksibel og Fremtidssikker</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Appens arkitektur er designet for enkel overgang til andre serverløsninger, inkludert en egen, lokal server.</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Kostnadseffektivt</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">Automatisk nedskalering av bilder sparer datatrafikk og lagringskostnader, noe som gjør appen rimelig i drift.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section id="demo" className="py-20 text-center bg-white">
+        <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+                <div className="flex justify-center mb-6">
+                    <div className="p-4 bg-yellow-100 rounded-full">
+                        <Eye className="w-10 h-10 text-yellow-600" />
+                    </div>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Se Appen i Aksjon</h2>
+                <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-600 mb-8">
+                    Den beste måten å forstå kraften i VIDERE RettSted er å se den i bruk. Vi tilbyr en personlig og uforpliktende demo der vi viser hvordan appen kan løse akkurat dine utfordringer.
                 </p>
-                <div className="space-y-4">
-                  {[
-                    "Bilder som forklarer mer enn ord",
-                    "Ekstremt intuitiv og laget for alle",
-                    "Full kontroll for administratorer",
-                    "Sømløs integrasjon med Google Maps",
-                    "Bedriftens eget digitale bibliotek"
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-accent/20 p-1 rounded-full">
-                        <CheckCircle2 className="h-6 w-6 text-accent" />
-                      </div>
-                      <span className="text-lg font-medium">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-2xl">
-                <h3 className="text-2xl font-bold mb-8">Hvorfor velge VIDERE RettSted?</h3>
-                <div className="grid gap-8">
-                  <div className="flex gap-5">
-                    <div className="bg-accent text-accent-foreground p-4 rounded-2xl h-fit shadow-lg shadow-accent/20">
-                      <Zap className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xl mb-1">Økt presisjon</h4>
-                      <p className="text-primary-foreground/70">Ingen flere misforståelser om hvilken dør eller rampe som skal brukes.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-5">
-                    <div className="bg-accent text-accent-foreground p-4 rounded-2xl h-fit shadow-lg shadow-accent/20">
-                      <ShieldCheck className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xl mb-1">Datasikkerhet</h4>
-                      <p className="text-primary-foreground/70">Alt lagres trygt i Google Cloud (Firestore) med din bedrifts private tilgang.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-5">
-                    <div className="bg-accent text-accent-foreground p-4 rounded-2xl h-fit shadow-lg shadow-accent/20">
-                      <TrendingUp className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xl mb-1">Skalerbart</h4>
-                      <p className="text-primary-foreground/70">Fungerer like godt for 2 som for 200 sjåfører. Systemet vokser med deg.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <a 
+                    href="mailto:videre.communication@gmail.com?subject=Forespørsel om demo av VIDERE RettSted"
+                    className="bg-slate-800 text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-slate-700 transition-transform transform hover:scale-105"
+                >
+                    Be om en demo
+                </a>
             </div>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Hvordan det fungerer Section */}
-        <section className="w-full py-16 md:py-24 bg-white">
-          <div className="container px-4 md:px-6">
-            <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl text-center mb-16">
-              Slik fungerer det
-            </h2>
-            <div className="grid gap-12 lg:grid-cols-3">
-              <div className="relative flex flex-col items-center text-center group px-4">
-                <div className="mb-8 bg-slate-50 p-8 rounded-3xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2">
-                  <UserPlus className="h-12 w-12" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 font-headline">1. Registrer</h3>
-                <p className="text-slate-600 leading-relaxed">Administratoren oppretter organisasjonen og inviterer sjåfører enkelt via en sikker, unik lenke.</p>
-              </div>
-              <div className="relative flex flex-col items-center text-center group px-4">
-                <div className="mb-8 bg-slate-50 p-8 rounded-3xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2">
-                  <Camera className="h-12 w-12" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 font-headline">2. Dokumenter</h3>
-                <p className="text-slate-600 leading-relaxed">Sjåføren tar bilde, legger til en kort beskrivelse og knytter det til adressen for fremtiden.</p>
-              </div>
-              <div className="flex flex-col items-center text-center group px-4">
-                <div className="mb-8 bg-slate-50 p-8 rounded-3xl group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm group-hover:shadow-xl group-hover:-translate-y-2">
-                  <Share2 className="h-12 w-12" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 font-headline">3. Del</h3>
-                <p className="text-slate-600 leading-relaxed">Neste sjåfør som skal til samme adresse ser bildene og instruksene med en gang på sin mobil.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* Call to Action */}
+      <section className="py-20 text-center bg-slate-800 text-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Klar for en mer effektiv hverdag?</h2>
+          <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-300 mb-8">
+            Bli med på å fjerne usikkerheten i den siste, avgjøende meteren av leveransen. Registrer din bedrift i dag og opplev forskjellen.
+          </p>
+          <Link href="/register" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
+            Start nå
+          </Link>
+        </div>
+      </section>
 
-        {/* CTA Section */}
-        <section className="w-full py-16 md:py-24 border-t bg-slate-50">
-          <div className="container px-4 md:px-6">
-            <div className="mx-auto max-w-4xl bg-white rounded-[2.5rem] p-8 md:p-16 shadow-2xl text-center border relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
-              <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-5xl mb-6 text-slate-900 leading-tight">
-                Klar for en mer effektiv leveringshverdag?
-              </h2>
-              <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Kontakt oss for en demonstrasjon av VIDERE RettSted. Bli med på å fjerne usikkerheten i &quot;den siste meteren&quot; av leveransen.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="px-10 h-16 text-xl shadow-lg hover:shadow-xl transition-all">
-                  Få en demo
-                </Button>
-                <Button variant="outline" size="lg" className="px-10 h-16 text-xl">
-                  Lær mer
-                </Button>
-              </div>
+      {/* Footer Section */}
+      <footer className="bg-slate-50 py-12">
+        <div className="container mx-auto px-4 text-center text-slate-500">
+            <div className="flex justify-center items-center gap-4 md:gap-6 mb-4">
+                <div className="text-center">
+                    <Image
+                        src="/icon2.png"
+                        alt="VIDERE Logo"
+                        width={60}
+                        height={60}
+                        className="rounded-lg mx-auto bg-white p-1"
+                    />
+                </div>
+                <div className="text-3xl font-thin text-slate-400">+</div>
+                <div className="text-center">
+                    <Image
+                        src="/icon.png"
+                        alt="VIDERE RettSted Logo"
+                        width={60}
+                        height={60}
+                        className="rounded-lg mx-auto"
+                    />
+                </div>
             </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="bg-slate-900 text-slate-400 border-t border-white/5">
-        <div className="container px-4 py-16 md:px-6">
-          <div className="grid gap-12 lg:grid-cols-2">
-            <div>
-               <div className="flex items-center gap-2 mb-6">
-                  <div className="bg-white/10 p-2 rounded-lg">
-                    <MapPin className="text-white h-6 w-6" />
-                  </div>
-                  <h3 className="text-white font-headline font-bold text-2xl tracking-tight">VIDERE RettSted</h3>
-               </div>
-              <p className="max-w-xs text-lg leading-relaxed">Vi hjelper transportbedrifter med å løse utfordringen med &quot;den siste meteren&quot; gjennom visuell støtte og smart deling.</p>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-8">
-               <div className="space-y-4">
-                  <h4 className="text-white font-bold uppercase text-xs tracking-widest">Produkt</h4>
-                  <ul className="space-y-2 text-sm">
-                    <li><Link href="/register" className="hover:text-white transition-colors">Kom i gang</Link></li>
-                    <li><Link href="/login" className="hover:text-white transition-colors">Logg inn</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">Funksjoner</Link></li>
-                  </ul>
-               </div>
-               <div className="space-y-4">
-                  <h4 className="text-white font-bold uppercase text-xs tracking-widest">Selskap</h4>
-                  <ul className="space-y-2 text-sm">
-                    <li><Link href="#" className="hover:text-white transition-colors">Om oss</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">Kontakt</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">Personvern</Link></li>
-                  </ul>
-               </div>
-            </div>
-          </div>
-          <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm italic">
-            <p>© 2024 VIDERE RettSted. Utviklet for presisjon.</p>
-            <div className="flex gap-8">
-                <Link href="#" className="hover:text-white transition-colors">LinkedIn</Link>
-                <Link href="#" className="hover:text-white transition-colors">Facebook</Link>
-            </div>
-          </div>
+            <p className="text-sm">
+                VIDERE RettSted er en del av app-familien fra <span className="font-semibold">VIDERE</span>.
+            </p>
+            <p className="text-xs mt-2 text-slate-400">
+                &copy; {new Date().getFullYear()} VIDERE. Alle rettigheter forbeholdt.
+            </p>
         </div>
       </footer>
     </div>

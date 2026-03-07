@@ -4,7 +4,7 @@ import { AuthProvider } from '@/components/auth-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Videre RettSted',
+  title: 'VIDERE RettSted',
   description: 'Finn leveringsstedet ditt med letthet.',
   manifest: '/manifest.json',
   icons: {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Videre RettSted',
+    title: 'VIDERE RettSted',
   },
 };
 

@@ -1,6 +1,6 @@
-Mal for Landingsside: Videre RettSted
+Mal for Landingsside: VIDERE RettSted
 Overskrift: Finn frem på første forsøk. Hver gang.
-Spar tid, reduser stress og øk leveringspresisjonen med Videre RettSted.
+Spar tid, reduser stress og øk leveringspresisjonen med VIDERE RettSted.
 
 Utfordringen: Den "siste meteren"
 Standard GPS tar sjåføren til adressen, men ikke til den rette rampen, riktig dør eller den skjulte kjellerinngangen.
@@ -12,9 +12,9 @@ Kundeservice får telefoner om forsinkelser.
 Nye sjåfører bruker lang tid på opplæring.
 
 Løsningen: Visuell leveringsstøtte
-Videre RettSted er en enkel web-app som gir sjåføren din nøyaktig det bildet de trenger for å fullføre jobben.
+VIDERE RettSted er en enkel web-app som gir sjåføren din nøyaktig det bildet de trenger for å fullføre jobben.
 
-Hvorfor velge Videre RettSted for din bedrift?
+Hvorfor velge VIDERE RettSted for din bedrift?
 Bilder som forklarer mer enn ord: Sjåførene ser faktiske bilder av innganger og porter. Ingen flere misforståelser.
 
 Laget for alle: Appen er ekstremt intuitiv. Hvis sjåføren kan bruke et kamera, kan de bruke denne appen. Ingen kompliserte menyer.
@@ -42,4 +42,4 @@ Skalerbar: Fungerer like godt for 2 som for 200 sjåfører.
 Fremtidsrettet: Appen er bygd for å vokse med din bedrift.
 
 Klar for en mer effektiv hverdag?
-Kontakt oss for en demonstrasjon av Videre RettSted. Bli med på å fjerne usikkerheten i den siste meteren av leveransen.
+Kontakt oss for en demonstrasjon av VIDERE RettSted. Bli med på å fjerne usikkerheten i den siste meteren av leveransen.

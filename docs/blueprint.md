@@ -1,4 +1,4 @@
-# **App Name**: Videre RettSted
+# **App Name**: VIDERE RettSted
 
 ## Core Features:
 

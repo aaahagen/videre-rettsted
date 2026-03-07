@@ -11,7 +11,7 @@ export function Logo({ className }: { className?: string }) {
     >
       <Image
         src="/icon.png"
-        alt="Videre RettSted Logo"
+        alt="VIDERE RettSted Logo"
         width={96}
         height={96}
         className="h-full w-full object-cover"
