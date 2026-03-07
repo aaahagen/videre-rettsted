@@ -52,6 +52,7 @@ import { User, Organization } from '@/lib/types';
 import { onSnapshot, collection, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
+import { DataExport } from '@/components/admin/data-export';
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -649,6 +650,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
             </form>
           </CardContent>
         </Card>
+
+        {organization && <DataExport orgId={organization.id} />}
 
         {/* Edit Name Dialog */}
         <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
