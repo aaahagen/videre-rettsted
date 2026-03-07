@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **User Search in Admin Panel**: Added a search bar to the "Administrer Brukere" card, allowing admins to quickly filter users by name or email.
 - **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.
 - **Delete Place Functionality**: Admins can now delete places from the place details page. This action requires typing a specific confirmation sentence ("Jeg er ansvarlig og vil slette dette stedet...").
 - **PDF Print Support**: Implemented "Print as PDF" functionality. Users can now print individual places or all their favorites at once. The print layout is optimized for A4 paper and includes images.
@@ -66,4 +67,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured that the "Add New Place" button is only visible to admin users.
 
 ### Removed
+- **Removed Redundant Admin Panel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
 - Removed placeholder data and integrated live data fetching from Firestore.
