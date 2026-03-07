@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.
 - **Delete Place Functionality**: Admins can now delete places from the place details page. This action requires typing a specific confirmation sentence ("Jeg er ansvarlig og vil slette dette stedet...").
 - **PDF Print Support**: Implemented "Print as PDF" functionality. Users can now print individual places or all their favorites at once. The print layout is optimized for A4 paper and includes images.
 - **Delete Organization Functionality**: Implemented a "Delete Organization" button in the Admin Dashboard with a strict 4-step confirmation process and text verification ("Jeg vil for alltid slette hele organisasjonen..."). This permanently removes all data, users, and the organization itself.
