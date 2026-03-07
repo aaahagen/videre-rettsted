@@ -16,6 +16,11 @@ const getOrganization = async (orgId: string): Promise<Organization | null> => {
   return docSnap.exists() ? { ...docSnap.data() as Organization, id: docSnap.id } : null;
 };
 
+const deleteOrganization = async (orgId: string): Promise<void> => {
+    const docRef = doc(db, 'organizations', orgId);
+    await deleteDoc(docRef);
+};
+
 const createUser = async (uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void> => {
   await setDoc(doc(db, 'users', uid), { name, email, orgId, role, favorites: [] });
 };
@@ -38,6 +43,11 @@ const getUsers = async (orgId: string): Promise<User[]> => {
 const updateUser = async (uid: string, data: Partial<User>): Promise<void> => {
   const docRef = doc(db, 'users', uid);
   await updateDoc(docRef, data);
+};
+
+const deleteUser = async (uid: string): Promise<void> => {
+    const docRef = doc(db, 'users', uid);
+    await deleteDoc(docRef);
 };
 
 const createPlace = async (place: Omit<Place, 'id'>): Promise<Place> => {
@@ -177,10 +187,12 @@ export const toggleFavorite = async (userId: string, placeId: string) => {
 export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
+  deleteOrganization,
   createUser,
   getUser,
   getUsers,
   updateUser,
+  deleteUser,
   createPlace,
   getPlace,
   getPlaces,

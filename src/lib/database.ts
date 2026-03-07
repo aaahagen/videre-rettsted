@@ -1,26 +1,25 @@
-
 import { Place, User, Organization, Route } from './types';
 
 export interface Database {
-  // Places
-  getPlace(id: string): Promise<Place | null>;
-  getPlaces(orgId: string): Promise<Place[]>;
-  createPlace(place: Omit<Place, 'id'>): Promise<Place>;
-  updatePlace(id: string, place: Partial<Place>): Promise<Place>;
-  deletePlace(id: string): Promise<void>;
+  createOrganization(name: string): Promise<string>;
+  getOrganization(orgId: string): Promise<Organization | null>;
+  deleteOrganization(orgId: string): Promise<void>;
   
-  // Routes
-  getRoute(id: string): Promise<Route | null>;
-  getRoutes(orgId: string): Promise<Route[]>;
-  createRoute(route: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>): Promise<Route>;
-  updateRoute(id: string, route: Partial<Route>): Promise<Route>;
-  deleteRoute(id: string): Promise<void>;
-
-  // Organization and User methods
+  createUser(uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void>;
   getUser(uid: string): Promise<User | null>;
   getUsers(orgId: string): Promise<User[]>;
   updateUser(uid: string, data: Partial<User>): Promise<void>;
-  getOrganization(orgId: string): Promise<Organization | null>;
-  createOrganization(name: string): Promise<string>;
-  createUser(uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void>;
+  deleteUser(uid: string): Promise<void>;
+
+  createPlace(place: Omit<Place, 'id'>): Promise<Place>;
+  getPlace(id: string): Promise<Place | null>;
+  getPlaces(orgId: string): Promise<Place[]>;
+  updatePlace(id: string, updates: Partial<Place>): Promise<Place>;
+  deletePlace(id: string): Promise<void>;
+
+  createRoute(route: Omit<Route, 'id' | 'createdAt' | 'updatedAt'>): Promise<Route>;
+  getRoute(id: string): Promise<Route | null>;
+  getRoutes(orgId: string): Promise<Route[]>;
+  updateRoute(id: string, updates: Partial<Route>): Promise<Route>;
+  deleteRoute(id: string): Promise<void>;
 }
