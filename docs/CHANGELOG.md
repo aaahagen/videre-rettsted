@@ -40,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a toast notification system for user feedback.
 
 ### Changed
+- **Updated Place Creator Attribution**: The system now stores and displays the full name (or internal number) of the user who created a place, rather than just their ID. This is fetched from the user's profile at the time of creation.
+- **Refined Admin Dashboard Monitoring**: Simplified the analytics dashboard to reliably show total users and total places in a unified, robust card view, removing fragile log dependencies.
+- **Improved Admin User Management**:
+    - Changed the user actions menu trigger from "three dots" icon to a clear "Endre" button.
+    - Updated the "Create User" form label to "Navn eller internnummer" for clarity.
+    - Added security guidance text to the invitation section advising the use of fictitious emails.
 - **Default Image Handling**: When saving a place without images, a default placeholder (`ingen.jpg`) is now automatically assigned. When editing such a place, the placeholder is automatically hidden in the form so users can easily add new images.
 - **Image Display Updates**: Places with no images or only the placeholder now explicitly show "Ingen bilder foreløpig" in the details view.
 - **Increased Image Limit**: Increased the maximum number of images per place from 6 to 8.

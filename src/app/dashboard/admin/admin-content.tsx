@@ -54,14 +54,14 @@ import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
 import { DeleteOrganization } from '@/components/admin/delete-org';
+import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-10 w-10 p-0 hover:bg-slate-100 rounded-full">
-          <MoreVertical className="h-5 w-5" />
-          <span className="sr-only">Meny</span>
+        <Button variant="outline" size="sm">
+          Endre
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -378,19 +378,21 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
           </CardHeader>
         </Card>
 
+        {organization && <AnalyticsDashboard orgId={organization.id} />}
+
         <Card>
           <CardHeader className="px-4 sm:px-6">
             <CardTitle className="font-headline text-xl sm:text-2xl">
               Opprett Ny Bruker
             </CardTitle>
             <CardDescription>
-              Legg til en ny sjåfør eller administrator. De vil motta en invitasjon.
+              Bruk fiktive e-poster. Dette er for sikkerhet. Ingen personlige e-poster eller fulle navn. Dersom en bruker mister påloggingsinformasjon kan du opprette en ny.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleInviteUser} className="space-y-4 max-w-lg">
               <div className="space-y-2">
-                <Label htmlFor="name">Navn (valgfritt)</Label>
+                <Label htmlFor="name">Navn eller internnummer</Label>
                 <div className="relative">
                   <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input

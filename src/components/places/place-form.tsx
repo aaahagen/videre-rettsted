@@ -258,6 +258,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             orgId: userDoc.orgId,
             updatedAt: new Date(),
             coordinates: data.coordinates || { lat: 0, lng: 0 },
+            authorName: userDoc.name || 'Ukjent bruker' // Store author name for display
         };
 
         if (place) {

@@ -361,7 +361,7 @@ export default function PlaceDetailsPage() {
               <div className="space-y-3">
                 <div className="flex items-center text-sm text-slate-600">
                   <UserIcon className="mr-3 h-4 w-4 text-primary" />
-                  <span>Lagt til av: <span className="font-medium text-slate-900">{place.createdBy || 'Ukjent'}</span></span>
+                  <span>Lagt til av: <span className="font-medium text-slate-900">{place.authorName || 'Ukjent bruker'}</span></span>
                 </div>
                 <div className="flex items-center text-sm text-slate-600">
                   <Calendar className="mr-3 h-4 w-4 text-primary" />

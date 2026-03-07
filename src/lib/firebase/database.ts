@@ -1,9 +1,36 @@
 'use client';
 
 import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { Database } from '../database';
-import { Place, User, Organization, Route } from '../types';
+import { Place, User, Organization, Route, LogEntry } from '../types';
+
+export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login', details?: any) => {
+    try {
+        await addDoc(collection(db, 'audit_logs'), {
+            orgId,
+            userId,
+            action,
+            details: details || {},
+            timestamp: serverTimestamp()
+        });
+    } catch (e) {
+        console.error("Failed to log event", e);
+    }
+};
+
+export const getLogs = async (orgId: string): Promise<LogEntry[]> => {
+    const q = query(collection(db, 'audit_logs'), where('orgId', '==', orgId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            ...data,
+            id: doc.id,
+            timestamp: data.timestamp
+        } as LogEntry;
+    });
+};
 
 const createOrganization = async (name: string): Promise<string> => {
   const docRef = await addDoc(collection(db, 'organizations'), { name });
@@ -56,6 +83,15 @@ const createPlace = async (place: Omit<Place, 'id'>): Promise<Place> => {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  // Log event
+  const orgId = place.orgId || place.organizationId;
+  const authorId = place.createdBy || place.authorId;
+  
+  if (orgId && authorId) {
+      logEvent(orgId, authorId, 'create_place', { placeId: docRef.id, name: place.name });
+  }
+
   return { ...place, id: docRef.id } as Place;
 };
 
@@ -104,6 +140,19 @@ const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> 
 
 const deletePlace = async (id: string): Promise<void> => {
   const docRef = doc(db, 'places', id);
+  
+  // Fetch place before delete to log event
+  const placeSnap = await getDoc(docRef);
+  if (placeSnap.exists()) {
+      const placeData = placeSnap.data() as Place;
+      const currentUser = auth.currentUser;
+      const orgId = placeData.orgId || placeData.organizationId;
+      
+      if (currentUser && orgId) {
+          logEvent(orgId, currentUser.uid, 'delete_place', { placeId: id, name: placeData.name });
+      }
+  }
+
   await deleteDoc(docRef);
 };
 
