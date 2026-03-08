@@ -77,7 +77,7 @@ export default function RegisterPage() {
         <Link href="/" className="flex flex-col items-center gap-2">
             <Logo className="h-32 w-32" />
             <h1 className="font-headline text-3xl font-bold tracking-tight text-slate-900">
-            Videre RettSted
+            VIDERE RettSted
             </h1>
         </Link>
       </div>

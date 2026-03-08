@@ -36,7 +36,9 @@ service cloud.firestore {
       
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (
-        request.auth.uid == userId || 
+        (request.auth.uid == userId && 
+         request.resource.data.role == resource.data.role && 
+         request.resource.data.orgId == resource.data.orgId) || 
         (isAdmin() && isUserInOrg(resource.data.orgId))
       );
       allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);

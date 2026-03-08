@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -45,7 +44,7 @@ export default function ForgotPasswordPage() {
             <Logo className="h-32 w-32" />
         </Link>
         <h1 className="font-headline text-3xl font-bold tracking-tight text-slate-900">
-          Videre RettSted
+          VIDERE RettSted
         </h1>
       </div>
 
