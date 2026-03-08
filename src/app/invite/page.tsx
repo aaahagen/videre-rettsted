@@ -133,7 +133,7 @@ function InviteContent() {
       console.error('Registration error:', err);
       let errorMessage = 'Kunne ikke opprette bruker.';
       if (err.code === 'auth/weak-password') {
-          errorMessage = 'Passordet er for svakt. Det bør være minst 6 tegn.';
+          errorMessage = 'Passordet er for svakt. Det bør være minst 8 tegn.'; // Fixed error message
       } else if (err.code === 'auth/email-already-in-use') {
           errorMessage = 'E-postadressen er allerede i bruk.';
       }
