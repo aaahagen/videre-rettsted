@@ -16,6 +16,7 @@ export default function AboutPage() {
             fill
             className="opacity-20 object-cover"
             quality={80}
+            priority
           />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
