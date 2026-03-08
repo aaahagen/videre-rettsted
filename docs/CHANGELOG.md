@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured that the "Add New Place" button is only visible to admin users.
 - **Fixed typo in `about` page component.**
 - **Fixed 404 Flash on Load**: Implemented a dedicated loading page (`src/app/page.tsx`) for the root path to handle authentication checks and redirection gracefully, preventing a brief 404 error flash.
+- **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
+- **Fixed Sidebar Organization Loading**: Implemented a real-time listener for organization data in the sidebar to prevent it from "hanging" or failing to load for newly invited users.
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
