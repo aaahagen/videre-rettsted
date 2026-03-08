@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShieldCheck, Server } from 'lucide-react';
@@ -61,18 +60,17 @@ export default function PricingPage() {
           <Card className="flex flex-col transform hover:scale-105 transition-transform duration-300">
             <CardHeader>
               <CardTitle>Ubegrenset</CardTitle>
-              <CardDescription>Kontakt for pris</CardDescription>
+              <CardDescription>1499,- NOK / mnd</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="list-disc list-inside space-y-2">
                 <li>Ubegrenset antall brukere</li>
                 <li>Ubegrenset antall steder</li>
-                <li>Egen supportavtale</li>
               </ul>
             </CardContent>
             <CardFooter>
-              <Button asChild className="w-full" variant="outline">
-                <a href="mailto:videre-communication@gmail.com?subject=Forespørsel om Ubegrenset plan">Kontakt oss</a>
+              <Button asChild className="w-full">
+                <Link href="/register?plan=ubegrenset">Velg</Link>
               </Button>
             </CardFooter>
           </Card>
@@ -124,30 +122,31 @@ export default function PricingPage() {
                 </div>
             </div>
         </div>
-
-        {/* Secure Payment Info */}
-        <div className="flex items-center justify-center pt-12 mt-8">
-            <div className="flex items-center gap-4">
-                <Image
-                    src="/icon.png"
-                    alt="VIDERE RettSted Logo"
-                    width={50}
-                    height={50}
-                    className="rounded-lg"
-                />
-                <div className="text-2xl font-thin text-gray-400">+</div>
-                <div className="flex items-center gap-3 p-3 border rounded-full bg-white shadow-sm">
-                    <ShieldCheck className="w-8 h-8 text-green-600 flex-shrink-0" />
-                    <div>
-                        <h3 className="text-md font-semibold">Sikker Betaling via Stripe</h3>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Vi lagrer aldri dine kortopplysninger.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
       </div>
+      {/* Secure Payment Section */}
+      <section className="w-full bg-primary mt-16">
+          <div className="container mx-auto max-w-5xl py-8">
+              <div className="flex items-center justify-center gap-4">
+                  <Image
+                      src="/icon.png"
+                      alt="VIDERE RettSted Logo"
+                      width={50}
+                      height={50}
+                      className="rounded-lg"
+                  />
+                  <div className="text-2xl font-thin text-primary-foreground/50">+</div>
+                  <div className="flex items-center gap-3 p-3 border border-gray-200/20 rounded-full bg-white shadow-sm text-slate-800">
+                      <ShieldCheck className="w-8 h-8 text-green-600 flex-shrink-0" />
+                      <div>
+                          <h3 className="text-md font-semibold">Sikker Betaling via Stripe</h3>
+                          <p className="text-xs text-gray-500 mt-1">
+                              Vi lagrer aldri dine kortopplysninger.
+                          </p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </section>
         {/* Footer */}
         <footer className="w-full border-t border-gray-200 py-8 bg-white">
             <div className="container mx-auto max-w-5xl text-center text-gray-500">
