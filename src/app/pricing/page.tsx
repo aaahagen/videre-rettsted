@@ -146,8 +146,17 @@ export default function PricingPage() {
                 </div>
             </div>
         </div>
-
       </div>
+        {/* Footer */}
+        <footer className="w-full mt-16 border-t border-gray-200 py-8 bg-white">
+            <div className="container mx-auto max-w-5xl text-center text-sm text-gray-500">
+                <div className="flex justify-center gap-6 mb-4">
+                <a href="#" className="hover:underline">Om Oss</a>
+                <a href="mailto:videre-communications@gmail.com" className="hover:underline">Kontakt Oss</a>
+                </div>
+                <p>&copy; {new Date().getFullYear()} VIDERE. Alle rettigheter forbeholdt.</p>
+            </div>
+        </footer>
     </div>
   );
 }
