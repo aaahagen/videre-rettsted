@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore'; // Changed getDoc to onSnapshot
+import { doc, onSnapshot } from 'firebase/firestore';
 import { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Replaced one-time fetch with real-time listener to fix race condition during registration
   useEffect(() => {
     let unsubscribe: () => void;
 
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setDbUser(null);
         }
-        setDataLoading(false); // Data is loaded (or confirmed missing)
+        setDataLoading(false);
       }, (err) => {
         console.error('Error listening to user data:', err);
         setDbUser(null);
@@ -67,14 +66,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoading) return;
 
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about', '/']; 
-    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route) && route !== '/');
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about', '/pricing', '/'];
+    const isPublicRoute = publicRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route)));
+
+    // Routes that a logged-in user should be redirected away from
+    const authRoutes = ['/login', '/register', '/forgot-password'];
+    const isOnAuthRoute = authRoutes.includes(pathname);
 
     if (!user && !isPublicRoute) {
       // User is on a protected route, not logged in -> redirect to login
       router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password')) {
-      // User is logged in, trying to access auth routes -> redirect to dashboard
+    } else if (user && isOnAuthRoute) {
+      // User is logged in, trying to access specific auth routes -> redirect to dashboard
       router.push('/dashboard');
     }
   }, [user, isLoading, pathname, router]);
