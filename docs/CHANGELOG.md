@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected the redirection logic after login to ensure users are sent to the main dashboard page.
 - Ensured that the "Add New Place" button is only visible to admin users.
 - **Fixed typo in `about` page component.**
+- **Fixed 404 Flash on Load**: Implemented a dedicated loading page (`src/app/page.tsx`) for the root path to handle authentication checks and redirection gracefully, preventing a brief 404 error flash.
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
@@ -49,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added a new section, "Built by Drivers, for Drivers," to highlight the app's user-centric design.
   - Added a new footer with branding for the umbrella organization, VIDERE.
   - Emphasized that drivers are the ones who update the app's data, ensuring its accuracy.
+- **Security Hardening**:
+  - **Storage Rules**: Added validation for file content type (must be image) and file size (max 5MB) to prevent abuse.
+  - **Firestore Rules**: Restricted access to invitations. Public listing is now denied to prevent scanning; only specific documents can be fetched by ID. Updates to invitations are strictly limited to the acceptance process.
 - **Admin-Only Link to Landing Page**: A link to the new `/about` (landing page) has been added to the sidebar, visible only to admin users.
 - **User Search in Admin Panel**: Added a search bar to the "Administrer Brukere" card, allowing admins to quickly filter users by name or email.
 - **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.

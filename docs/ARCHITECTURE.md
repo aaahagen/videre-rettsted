@@ -67,10 +67,22 @@ To ensure future flexibility and ease of migration to a different backend, all i
 
 - Users can only read/write data within the organization (`orgId`) they belong to.
 - Users can only read/write their own `/users/{userId}` document.
-- **Invitations**: Can only be created/read by an admin of the corresponding `orgId`.
+- **Invitations**: 
+    - `read`: Strictly limited to fetching by ID (`get`). **Listing (scanning) is denied.**
+    - `create`: Only admins can create.
+    - `update`: Strictly limited to the acceptance process (marking as 'accepted' by the claiming user).
 - **Places**:
     - `read`: Any user within the organization.
     - `create`, `update`, `delete`: Only users with the "admin" role.
 - **Routes**:
     - `read`: Any user within the organization.
     - `create`, `update`, `delete`: Only users with the "admin" role.
+
+## Storage Rules (Cloud Storage)
+
+- **Users**: Only the owner can write their profile picture. Any logged-in user can read.
+- **Places**: 
+    - `read`: Any authenticated user.
+    - `write`: Any authenticated user, but strictly validated:
+        - **Content Type**: Must be an image (`image/*`).
+        - **Size**: Must be less than 5MB.
