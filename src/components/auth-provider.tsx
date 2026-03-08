@@ -62,22 +62,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoading) return;
 
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about'];
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about', '/']; // Added '/' to public routes so RootPage can handle it
+    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route) && route !== '/');
 
-    if (!user && pathname === '/') {
-      // User is at root, not logged in -> redirect to login
-      router.push('/login');
-    } else if (!user && !isPublicRoute) {
+    if (!user && !isPublicRoute) {
       // User is on a protected route, not logged in -> redirect to login
       router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/')) {
-      // User is logged in, trying to access auth routes or root -> redirect to dashboard
+    } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password')) {
+      // User is logged in, trying to access auth routes -> redirect to dashboard
+      // Note: We don't redirect from '/' here anymore, RootPage handles it
       router.push('/dashboard');
     }
   }, [user, isLoading, pathname, router]);
 
-  if (isLoading && pathname !== '/about') { // Do not show full-page loader for the about page
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

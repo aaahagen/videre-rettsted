@@ -1,12 +1,27 @@
+'use client';
 
-// This component serves as the loading screen for the root path of the application.
-// It is displayed while the AuthProvider determines the user's authentication
-// status and redirects them to the appropriate page (either the dashboard or the login screen).
-// This prevents the brief flash of a 404 page that would otherwise occur.
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth-provider';
+import { Loader2 } from 'lucide-react';
+
 export default function RootPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        router.push('/about');
+      }
+    }
+  }, [user, loading, router]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 }
