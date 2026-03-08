@@ -50,7 +50,16 @@ service cloud.firestore {
       allow list: if false;
       
       allow create: if isAuthenticated() && isAdmin(); 
-      allow update: if true; // Needs to be writable by the new user accepting it
+      
+      // Update: Strictly limit updates to "Accepting" the invitation
+      allow update: if isAuthenticated() 
+                    && resource.data.status != 'accepted'        // Can't update if already accepted
+                    && request.resource.data.status == 'accepted' // Must be setting status to accepted
+                    && request.resource.data.acceptedBy == request.auth.uid // Must claim it for self
+                    // Ensure critical fields (role, orgId) are NOT changed during acceptance
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.orgId == resource.data.orgId;
+
       allow delete: if isAuthenticated() && isAdmin();
     }
 
