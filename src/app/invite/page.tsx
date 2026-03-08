@@ -163,16 +163,21 @@ function InviteContent() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       <div className="mb-8 flex flex-col items-center gap-2 text-center">
         <Logo className="h-24 w-24" />
-        <h1 className="font-headline text-2xl font-bold tracking-tight text-slate-900">
-          Velkommen til Videre RettSted
-        </h1>
+        <div className="flex flex-col items-center">
+            <h1 className="font-headline text-2xl font-normal tracking-tight text-slate-900">
+            Velkommen til
+            </h1>
+            <h1 className="font-headline text-3xl font-bold tracking-tight text-slate-900">
+            VIDERE RettSted
+            </h1>
+        </div>
       </div>
 
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="font-headline text-xl">Fullfør din registrering</CardTitle>
           <CardDescription>
-            Du har blitt invitert til å bli med i {invitationData?.orgName ? <span className="font-semibold">{invitationData.orgName}</span> : 'en organisasjon'}.
+            Du har blitt invitert til å bli med i {invitationData?.orgName ? <span className="font-semibold text-primary">{invitationData.orgName}</span> : 'en organisasjon'}.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>
