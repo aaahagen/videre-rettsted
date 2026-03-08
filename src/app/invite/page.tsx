@@ -90,6 +90,11 @@ function InviteContent() {
     e.preventDefault();
     if (!inviteId || !invitationData) return;
 
+    if (password.length < 8) {
+        setError('Passordet må være minst 8 tegn langt.');
+        return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -126,7 +131,13 @@ function InviteContent() {
 
     } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err.message || 'Kunne ikke opprette bruker.');
+      let errorMessage = 'Kunne ikke opprette bruker.';
+      if (err.code === 'auth/weak-password') {
+          errorMessage = 'Passordet er for svakt. Det bør være minst 6 tegn.';
+      } else if (err.code === 'auth/email-already-in-use') {
+          errorMessage = 'E-postadressen er allerede i bruk.';
+      }
+      setError(errorMessage);
       setIsSubmitting(false); // Only reset submitting if there was an error
     } 
   };
@@ -174,16 +185,24 @@ function InviteContent() {
       </div>
 
       <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="font-headline text-xl">Fullfør din registrering</CardTitle>
-          <CardDescription>
-            <span className="block mb-1">Du har blitt invitert til å bli med i</span>
+        <CardHeader className="space-y-4 text-center">
+          <div>
+            <CardTitle className="font-headline text-xl mb-2">Fullfør din registrering</CardTitle>
+            <CardDescription className="text-base">
+              Du har blitt invitert til å bli med i
+            </CardDescription>
+          </div>
+          
+          {/* Explicit separate container for the organization name to guarantee new line */}
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
             {invitationData?.orgName ? (
-                <span className="font-bold text-primary text-lg block mt-1">{invitationData.orgName}</span>
+                <span className="font-bold text-primary text-lg block break-words">
+                    {invitationData.orgName}
+                </span>
             ) : (
-                'en organisasjon'
+                <span className="italic text-slate-500">en organisasjon</span>
             )}
-          </CardDescription>
+          </div>
         </CardHeader>
         <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">
@@ -218,9 +237,12 @@ function InviteContent() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="bg-white"
-                minLength={6}
+                minLength={8}
                 autoComplete="new-password"
               />
+              <p className="text-xs text-muted-foreground">
+                Passordet må bestå av minst 8 tegn.
+              </p>
             </div>
           </CardContent>
           <CardFooter>
