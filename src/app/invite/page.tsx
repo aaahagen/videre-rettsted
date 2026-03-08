@@ -30,12 +30,16 @@ function InviteContent() {
 
   // If a user is already logged in, log them out so they can register as a new user
   useEffect(() => {
+    // If we are currently submitting the form (registering), DO NOT redirect yet.
+    // Wait for handleRegister to complete all database operations.
+    if (isSubmitting) return;
+
     if (user && !loading && invitationData && user.email !== invitationData.email) {
       signOut(auth);
     } else if (user && !loading && invitationData && user.email === invitationData.email) {
        router.push('/dashboard');
     }
-  }, [user, loading, router, invitationData]);
+  }, [user, loading, router, invitationData, isSubmitting]);
 
   useEffect(() => {
     const checkInvitation = async () => {
@@ -98,6 +102,7 @@ function InviteContent() {
       await updateProfile(userCredential.user, { displayName: name });
 
       // 3. Create User Profile in Firestore
+      // This is crucial: We must create the user profile BEFORE redirecting.
       await setDoc(doc(db, 'users', uid), {
         name,
         email,
@@ -114,13 +119,16 @@ function InviteContent() {
         acceptedAt: new Date(),
         acceptedBy: uid
       });
+      
+      // 5. Now that everything is done, redirect to dashboard.
+      // The AuthProvider listener will pick up the new user profile instantly.
+      router.push('/dashboard');
 
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(err.message || 'Kunne ikke opprette bruker.');
-    } finally {
-      setIsSubmitting(false);
-    }
+      setIsSubmitting(false); // Only reset submitting if there was an error
+    } 
   };
 
   if (loading || isLoadingInvitation) {
