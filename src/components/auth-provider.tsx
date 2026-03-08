@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore'; // Changed getDoc to onSnapshot
 import { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
@@ -30,30 +30,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Replaced one-time fetch with real-time listener to fix race condition during registration
   useEffect(() => {
-    async function fetchUserData() {
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setDbUser(userDoc.data() as User);
-          } else {
-            setDbUser(null);
-          }
-        } catch (err) {
-          console.error('Error fetching user data:', err);
+    let unsubscribe: () => void;
+
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      unsubscribe = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setDbUser(docSnap.data() as User);
+        } else {
           setDbUser(null);
         }
-      } else {
+        setDataLoading(false); // Data is loaded (or confirmed missing)
+      }, (err) => {
+        console.error('Error listening to user data:', err);
         setDbUser(null);
-      }
+        setDataLoading(false);
+      });
+    } else {
+      setDbUser(null);
       setDataLoading(false);
     }
 
-    if (!loading) {
-      fetchUserData();
-    }
-  }, [user, loading]);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user]);
 
   const isLoading = loading || dataLoading;
   const isAdmin = dbUser?.role === 'admin';
@@ -62,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoading) return;
 
-    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about', '/']; // Added '/' to public routes so RootPage can handle it
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/invite', '/about', '/']; 
     const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route) && route !== '/');
 
     if (!user && !isPublicRoute) {
@@ -70,7 +75,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/login');
     } else if (user && (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password')) {
       // User is logged in, trying to access auth routes -> redirect to dashboard
-      // Note: We don't redirect from '/' here anymore, RootPage handles it
       router.push('/dashboard');
     }
   }, [user, isLoading, pathname, router]);
