@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Pricing Page**: Created a new page at `/pricing` to display SaaS subscription plans and a one-time source code licensing option.
+- The pricing page includes details on different tiers, pricing information, and a section explaining the security of payments handled by Stripe.
+- Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
+
 ### Changed
 - **Separated Landing Page from App**: The marketing landing page has been moved from the root route (`/`) to `/about`. The root route now acts as the main app entry point, directing logged-in users to the dashboard and logged-out users to the login page for a more streamlined user experience.
 - **Refactored Authentication Flow**: Replaced the server-side `middleware.ts` and session cookie mechanism with a purely client-side authentication management system. This is handled by a new `AuthProvider` component that uses `react-firebase-hooks` to listen to auth state changes and manages route protection via client-side redirects. This resolves complex synchronization issues between the server and client.
@@ -27,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
 ### Fixed
+- **Allow Logged-in Users on Public Pages**: Modified the authentication provider to allow logged-in users to visit public pages like `/about` and `/pricing` without being automatically redirected to their dashboard.
 - **Resolved Login Loops and Hangs**: The new client-side `AuthProvider` fixes all previous issues where the user would get stuck in a redirect loop, see an infinite spinner, or be sent back to the login page after a successful login.
 - **Resolved broken search functionality**: Connected the header search input to the dashboard content using a centralized state store.
 - **Fixed permission errors when fetching the user list in the admin panel.**
@@ -44,52 +50,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
 - **Removed Redundant Admin Panel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
 - Removed placeholder data and integrated live data fetching from Firestore.
-
-### Added
-- **Enhanced Landing Page**: The landing page (`/about`) has been significantly updated to better communicate the app's value proposition to potential customers.
-  - Added sections on data security, NIS2 compliance, and the app's flexible, future-proof architecture.
-  - Included information about the app's cross-platform compatibility and the fact that it requires no installation.
-  - Added a dedicated section for requesting a demo of the app.
-  - Added a new section, "Built by Drivers, for Drivers," to highlight the app's user-centric design.
-  - Added a new footer with branding for the umbrella organization, VIDERE.
-  - Emphasized that drivers are the ones who update the app's data, ensuring its accuracy.
-- **Improved Invitation Experience**:
-  - Invitations now include the organization name, which is prominently displayed to the user upon accepting the invite.
-  - The invitation page layout has been refined for better readability, with clear separation of text elements.
-  - **Security**: Enforced a minimum password length of 8 characters during registration with clear user feedback.
-- **Security Hardening**:
-  - **Storage Rules**: Added validation for file content type (must be image) and file size (max 5MB) to prevent abuse.
-  - **Firestore Rules**: Restricted access to invitations. Public listing is now denied to prevent scanning; only specific documents can be fetched by ID. Updates to invitations are strictly limited to the acceptance process.
-- **Admin-Only Link to Landing Page**: A link to the new `/about` (landing page) has been added to the sidebar, visible only to admin users.
-- **User Search in Admin Panel**: Added a search bar to the "Administrer Brukere" card, allowing admins to quickly filter users by name or email.
-- **Admin Dashboard Statistics**: Added an overview card in the Admin Panel displaying real-time counts of total places and users.
-- **Delete Place Functionality**: Admins can now delete places from the place details page. This action requires typing a specific confirmation sentence ("Jeg er ansvarlig og vil slette dette stedet...").
-- **PDF Print Support**: Implemented "Print as PDF" functionality. Users can now print individual places or all their favorites at once. The print layout is optimized for A4 paper and includes images.
-- **Delete Organization Functionality**: Implemented a "Delete Organization" button in the Admin Dashboard with a strict 4-step confirmation process and text verification ("Jeg vil for alltid slette hele organisasjonen..."). This permanently removes all data, users, and the organization itself.
-- **Data Export & Backup**: Added functionality in the Admin Dashboard to export all place data as JSON and backup all images as a ZIP file. The JSON includes references to the backup folder names for easy reconciliation.
-- **Customizable Place Fields**: Added a second text field to place details. Both text fields now have customizable labels and placeholders manageable via the Admin Panel.
-- **Organization Settings**: New section in Admin Dashboard to configure labels for "Beskrivelse & Instruksjoner 1" and "Beskrivelse & Instruksjoner 2".
-- **Functional Global Search**: Implemented a real-time search bar in the dashboard header that filters places by name, address, description, and hashtags.
-- **Mobile-Optimized Admin Panel**: Redesigned the admin user management interface with a card-based layout for mobile devices, improved touch targets, and responsive dialogs.
-- **User Naming Control**: Admins can now assign a name when inviting a new user and edit names of existing users within the organization.
-- **Full administrative user management**: Admins can now change user roles, toggle account status (Active/Paused), and delete users directly from the admin panel.
-- **Role-Based Access Control (RBAC)**: Restricted the Admin panel to users with the 'admin' role. Drivers (Sjåfør) no longer see the admin link in the sidebar and are redirected if attempting to access the page directly.
-- **Enhanced Image Viewer**: Added a dedicated close button (X) to the full-screen image dialog for better usability.
-- **Improved Invitation Flow**: The invitation page now automatically logs out a currently signed-in user if they are not the intended recipient of the invitation, preventing registration errors.
-- Implemented real-time user list in the admin dashboard using Firestore `onSnapshot`.
-- Created a dedicated `/invite` page for new users to complete their registration.
-- Added a "Remember Me" checkbox on the login page with Firebase Auth persistence control.
-- Added a field for administrator name during organization registration.
-- Implemented a clipboard fallback for the invitation link in the admin dashboard.
-- Implemented profile picture upload functionality.
-- Created `storage.rules` for Firebase Storage to restrict access to authenticated users and manage profile picture uploads.
-- Implemented a password confirmation field on the registration page to ensure users enter their intended password correctly.
-- Added "Forgot Password" functionality.
-- Implemented alphabetical sorting (A-Z) for the user list in the admin dashboard.
-- Added a loading skeleton for the user list in the admin dashboard.
-- Empty state for the dashboard when no places have been added.
-- Empty state for the favorites page.
-- **Implemented a full-screen image viewer in the place details page using a dialog.**
-- **Added a star-shaped toggle on the dashboard to filter between all places and favorites.**
-- **Automatic alphabetical sorting (A-Z) of places on the dashboard.**
-- Added a toast notification system for user feedback.

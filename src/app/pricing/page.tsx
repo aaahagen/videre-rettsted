@@ -9,13 +9,6 @@ export default function PricingPage() {
     <div className="bg-slate-50">
       <div className="container mx-auto max-w-5xl py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <Image
-            src="/icon.png"
-            alt="VIDERE RettSted Logo"
-            width={80}
-            height={80}
-            className="mx-auto mb-4 rounded-lg"
-          />
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
             Prisplaner
           </h1>
@@ -133,13 +126,23 @@ export default function PricingPage() {
 
         {/* Secure Payment Info */}
         <div className="flex items-center justify-center pt-12 mt-8">
-            <div className="flex items-center gap-4 p-4 border rounded-full bg-white shadow-sm">
-                <ShieldCheck className="w-8 h-8 text-green-600 flex-shrink-0" />
-                <div>
-                    <h3 className="text-md font-semibold">Sikker Betaling via Stripe</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Vi lagrer aldri dine kortopplysninger.
-                    </p>
+            <div className="flex items-center gap-4">
+                <Image
+                    src="/icon.png"
+                    alt="VIDERE RettSted Logo"
+                    width={50}
+                    height={50}
+                    className="rounded-lg"
+                />
+                <div className="text-2xl font-thin text-gray-400">+</div>
+                <div className="flex items-center gap-3 p-3 border rounded-full bg-white shadow-sm">
+                    <ShieldCheck className="w-8 h-8 text-green-600 flex-shrink-0" />
+                    <div>
+                        <h3 className="text-md font-semibold">Sikker Betaling via Stripe</h3>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Vi lagrer aldri dine kortopplysninger.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
