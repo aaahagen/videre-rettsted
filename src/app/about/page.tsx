@@ -230,10 +230,10 @@ export default function AboutPage() {
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">Unngå sensitiv informasjon</CardTitle>
+                <CardTitle className="text-xl font-semibold">Støtte for Interne Referanser</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">Vi anbefaler å bruke interne koder eller referanser i appen, slik at sensitive data forblir i deres egne, sikre systemer.</p>
+                <p className="text-slate-600">Dere står fritt til å bruke interne koder eller referanser i appen. Dette gjør det mulig å holde sensitive data i egne systemer for de som ønsker å begrense informasjonsspredning.</p>
               </CardContent>
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -292,7 +292,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Klar for en mer effektiv hverdag?</h2>
           <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-300 mb-8">
-            Bli med på å fjerne usikkerheten i den siste, avgjøende meteren av leveransen. Registrer din bedrift i dag og opplev forskjellen.
+            Bli med på å fjerne usikkerheten i den siste, avgjørende meteren av leveransen. Registrer din bedrift i dag og opplev forskjellen.
           </p>
           <Link href="/pricing" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
             Start nå
