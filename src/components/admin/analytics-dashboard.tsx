@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { firebaseDB } from '@/lib/firebase/database';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
 import { Loader2, MapPin, Users } from 'lucide-react';
 
 interface AnalyticsDashboardProps {
@@ -17,27 +18,29 @@ export function AnalyticsDashboard({ orgId }: AnalyticsDashboardProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [places, users] = await Promise.all([
-          firebaseDB.getPlaces(orgId),
-          firebaseDB.getUsers(orgId)
-        ]);
-        
-        setStats({
-          totalPlaces: places.length,
-          totalUsers: users.length
-        });
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!orgId) return;
 
-    if (orgId) {
-      fetchStats();
-    }
+    setLoading(true);
+
+    const placesQuery = query(collection(db, 'places'), where('orgId', '==', orgId));
+    const usersQuery = query(collection(db, 'users'), where('orgId', '==', orgId));
+
+    const unsubscribePlaces = onSnapshot(placesQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, totalPlaces: snapshot.size }));
+      // We don't set loading to false here because we want to wait for both, 
+      // but practically, getting one update is enough to show something.
+      // We'll manage a "ready" state more simply.
+    });
+
+    const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
+      setLoading(false); // Assume if we got users, we're good to show
+    });
+
+    return () => {
+      unsubscribePlaces();
+      unsubscribeUsers();
+    };
   }, [orgId]);
 
   if (loading) {
