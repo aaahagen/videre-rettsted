@@ -28,7 +28,7 @@ export default function AboutPage() {
             Spar tid, reduser stress og øk leveringspresisjonen med VIDERE RettSted – designet for den siste, avgjørende meteren av leveransen.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link href="/register" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
+            <Link href="/pricing" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
               Kom i gang
             </Link>
             <Link href="/login" className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-white hover:text-slate-900 transition-all">
@@ -295,7 +295,7 @@ export default function AboutPage() {
           <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-300 mb-8">
             Bli med på å fjerne usikkerheten i den siste, avgjøende meteren av leveransen. Registrer din bedrift i dag og opplev forskjellen.
           </p>
-          <Link href="/register" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
+          <Link href="/pricing" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
             Start nå
           </Link>
         </div>
