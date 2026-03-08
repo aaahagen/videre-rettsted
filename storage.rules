@@ -2,15 +2,26 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    
+    // Helper function to check if the file is an image and under 5MB
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+          && request.resource.size < 5 * 1024 * 1024;
+    }
+
     // User profile pictures: Only the owner can write, any logged-in user can read
     match /users/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && isValidImage();
     }
     
     // Place images: Any logged-in user can read and write (upload images for delivery locations)
+    // We restrict writes to valid images only to prevent non-image uploads.
     match /places/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isValidImage();
     }
   }
 }
