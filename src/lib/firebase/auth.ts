@@ -46,12 +46,20 @@ export const firebaseAuth: Auth = {
 
     if (!orgId) throw new Error('Ingen organisasjon funnet for brukeren.');
 
+    // Fetch organization name
+    const orgDoc = await getDoc(doc(db, 'organizations', orgId));
+    let orgName = 'Din organisasjon';
+    if (orgDoc.exists()) {
+        orgName = orgDoc.data().name;
+    }
+
     // Create the invitation document
     const invitationRef = await addDoc(collection(db, 'invitations'), {
       email,
       role,
       name: name || null,
       orgId,
+      orgName, // Store organization name in the invitation
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
       createdAt: serverTimestamp(),
       createdBy: user.uid,

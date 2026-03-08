@@ -172,7 +172,7 @@ function InviteContent() {
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="font-headline text-xl">Fullfør din registrering</CardTitle>
           <CardDescription>
-            Du har blitt invitert til å bli med i en organisasjon.
+            Du har blitt invitert til å bli med i {invitationData?.orgName ? <span className="font-semibold">{invitationData.orgName}</span> : 'en organisasjon'}.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>
