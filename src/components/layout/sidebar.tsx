@@ -35,9 +35,9 @@ import {
 import { Logo } from '../logo';
 import { Skeleton } from '../ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase/firebase';
+import { auth, db } from '@/lib/firebase/firebase'; // Added db import
 import { firebaseAuth } from '@/lib/firebase/auth';
-import { firebaseDB } from '@/lib/firebase/database';
+import { doc, onSnapshot } from 'firebase/firestore'; // Added onSnapshot
 import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
 import Link from 'next/link';
@@ -59,23 +59,37 @@ export default function AppSidebar() {
   const [orgLoading, setOrgLoading] = useState(false);
   const { setOpenMobile, isMobile } = useSidebar();
 
+  // Changed to real-time listener to handle permission propagation delays
   useEffect(() => {
-    async function fetchData() {
-      if (dbUser?.orgId) {
-        setOrgLoading(true);
-        try {
-          const orgData = await firebaseDB.getOrganization(dbUser.orgId);
-          setOrg(orgData);
-        } catch (error) {
-          console.error("Error fetching org data:", error);
-        } finally {
-          setOrgLoading(false);
+    let unsubscribe: () => void;
+
+    if (dbUser?.orgId) {
+      setOrgLoading(true);
+      const orgRef = doc(db, 'organizations', dbUser.orgId);
+      
+      unsubscribe = onSnapshot(orgRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setOrg({ ...docSnap.data(), id: docSnap.id } as Organization);
+        } else {
+          setOrg(null);
         }
-      } else {
-        setOrg(null);
-      }
+        setOrgLoading(false);
+      }, (error) => {
+        console.error("Error listening to org data:", error);
+        // Don't setOrg(null) immediately on error, might be temporary permission issue
+        // But do stop loading to prevent infinite skeleton
+        setOrgLoading(false);
+      });
+    } else {
+      setOrg(null);
+      setOrgLoading(false);
     }
-    fetchData();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [dbUser]);
 
   const handleLogout = async () => {
