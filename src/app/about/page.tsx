@@ -13,10 +13,9 @@ export default function AboutPage() {
           <Image
             src="/hero-image.png"
             alt="Bakgrunnsbilde av en lastebil"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="opacity-20 object-cover"
             quality={80}
-            className="opacity-20"
           />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
@@ -300,14 +299,35 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
+      
       {/* Footer */}
-      <footer className="w-full mt-16 border-t border-gray-200 py-8 bg-white">
-            <div className="container mx-auto max-w-5xl text-center text-sm text-gray-500">
-                <div className="flex justify-center gap-6 mb-4">
-                <a href="#" className="hover:underline">Om Oss</a>
-                <a href="mailto:videre-communications@gmail.com" className="hover:underline">Kontakt Oss</a>
+      <footer className="w-full border-t border-gray-200 py-8 bg-white">
+            <div className="container mx-auto max-w-5xl text-center text-gray-500">
+                <div className="flex justify-center items-center gap-4 md:gap-6 mb-4">
+                    <Image
+                        src="/icon2.png"
+                        alt="VIDERE Logo"
+                        width={60}
+                        height={60}
+                        className="rounded-lg bg-white p-1"
+                    />
+                    <div className="text-3xl font-thin text-slate-400">+</div>
+                    <Image
+                        src="/icon.png"
+                        alt="VIDERE RettSted Logo"
+                        width={60}
+                        height={60}
+                        className="rounded-lg"
+                    />
                 </div>
-                <p>&copy; {new Date().getFullYear()} VIDERE. Alle rettigheter forbeholdt.</p>
+                <p className="text-sm">
+                    VIDERE RettSted er en del av app-familien fra <span className="font-semibold">VIDERE</span>.
+                </p>
+                <div className="flex justify-center gap-6 my-4 text-sm">
+                    <a href="#" className="hover:underline">Om Oss</a>
+                    <a href="mailto:videre-communications@gmail.com" className="hover:underline">Kontakt Oss</a>
+                </div>
+                <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} VIDERE. Alle rettigheter forbeholdt.</p>
             </div>
         </footer>
     </div>
