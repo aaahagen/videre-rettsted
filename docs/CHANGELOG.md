@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed 404 Flash on Load**: Implemented a dedicated loading page (`src/app/page.tsx`) for the root path to handle authentication checks and redirection gracefully, preventing a brief 404 error flash.
 - **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
 - **Fixed Sidebar Organization Loading**: Implemented a real-time listener for organization data in the sidebar to prevent it from "hanging" or failing to load for newly invited users.
+- **Fixed Admin Analytics Updates**: Updated the admin analytics dashboard to use real-time listeners, ensuring user and place counts update immediately upon deletion or creation.
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
@@ -52,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added a new section, "Built by Drivers, for Drivers," to highlight the app's user-centric design.
   - Added a new footer with branding for the umbrella organization, VIDERE.
   - Emphasized that drivers are the ones who update the app's data, ensuring its accuracy.
+- **Improved Invitation Experience**:
+  - Invitations now include the organization name, which is prominently displayed to the user upon accepting the invite.
+  - The invitation page layout has been refined for better readability, with clear separation of text elements.
+  - **Security**: Enforced a minimum password length of 8 characters during registration with clear user feedback.
 - **Security Hardening**:
   - **Storage Rules**: Added validation for file content type (must be image) and file size (max 5MB) to prevent abuse.
   - **Firestore Rules**: Restricted access to invitations. Public listing is now denied to prevent scanning; only specific documents can be fetched by ID. Updates to invitations are strictly limited to the acceptance process.
