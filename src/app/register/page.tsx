@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
@@ -21,6 +22,8 @@ export default function RegisterPage() {
   const [organizationName, setOrganizationName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [hasAcceptedLegal, setHasAcceptedLegal] = useState(false);
+  const [legalError, setLegalError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,6 +35,13 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError(null);
+    setLegalError(false);
+
+    if (!hasAcceptedLegal) {
+      setLegalError(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await firebaseAuth.registerOrganization(email, password, organizationName, name);
@@ -137,6 +147,43 @@ export default function RegisterPage() {
                 minLength={6}
               />
             </div>
+
+            <div className={`p-4 rounded-md ${legalError ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="legal" 
+                  checked={hasAcceptedLegal} 
+                  onCheckedChange={(checked) => {
+                    setHasAcceptedLegal(checked === true);
+                    if (checked) setLegalError(false);
+                  }}
+                  className="mt-1 flex-shrink-0"
+                />
+                <label
+                  htmlFor="legal"
+                  className="text-sm font-medium leading-tight cursor-pointer"
+                >
+                  Jeg aksepterer{' '}
+                  <Link href="/legal/vilkar" className="font-semibold text-primary hover:underline" target="_blank">
+                    Brukervilkårene
+                  </Link>{' '}
+                  og{' '}
+                  <Link href="/legal/dpa" className="font-semibold text-primary hover:underline" target="_blank">
+                    Databehandleravtalen
+                  </Link>{' '}
+                  på vegne av min bedrift, og bekrefter at jeg har lest{' '}
+                  <Link href="/legal/personvern" className="font-semibold text-primary hover:underline" target="_blank">
+                    Personvernerklæringen
+                  </Link>.
+                </label>
+              </div>
+              {legalError && (
+                <p className="text-xs font-medium text-destructive mt-2 pl-6">
+                  Du må akseptere vilkårene for å opprette en organisasjon.
+                </p>
+              )}
+            </div>
+
             {registerError && (
               <p className="text-sm font-medium text-destructive text-center">
                 {registerError}
@@ -159,16 +206,6 @@ export default function RegisterPage() {
               <Link href="/login" className="font-semibold text-primary hover:underline">
                 Logg inn her
               </Link>
-            </div>
-            <div className="text-center text-xs text-slate-500 mt-4">
-              Ved å opprette en konto aksepterer du vår{' '}
-              <Link href="/legal/personvern" className="font-semibold text-primary hover:underline">
-                personvernerklæring
-              </Link>
-              {' '}og våre{' '}
-              <Link href="/legal/vilkar" className="font-semibold text-primary hover:underline">
-                brukervilkår
-              </Link>.
             </div>
           </CardFooter>
         </form>
