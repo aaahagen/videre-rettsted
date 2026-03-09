@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,6 +28,8 @@ function InviteContent() {
   const [error, setError] = useState<string | null>(null);
   const [invitationData, setInvitationData] = useState<any>(null);
   const [isLoadingInvitation, setIsLoadingInvitation] = useState(true);
+  const [hasAcceptedPrivacyPolicy, setHasAcceptedPrivacyPolicy] = useState(false);
+  const [privacyError, setPrivacyError] = useState(false);
 
   // If a user is already logged in, log them out so they can register as a new user
   useEffect(() => {
@@ -90,13 +93,20 @@ function InviteContent() {
     e.preventDefault();
     if (!inviteId || !invitationData) return;
 
+    setError(null);
+    setPrivacyError(false);
+
+    if (!hasAcceptedPrivacyPolicy) {
+      setPrivacyError(true);
+      return;
+    }
+
     if (password.length < 8) {
         setError('Passordet må være minst 8 tegn langt.');
         return;
     }
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       // 1. Create Authentication User
@@ -244,6 +254,40 @@ function InviteContent() {
                 Passordet må bestå av minst 8 tegn.
               </p>
             </div>
+            
+            <div className={`p-4 rounded-md ${privacyError ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="privacy" 
+                  checked={hasAcceptedPrivacyPolicy} 
+                  onCheckedChange={(checked) => {
+                    setHasAcceptedPrivacyPolicy(checked === true);
+                    if (checked) setPrivacyError(false);
+                  }}
+                  className="mt-1"
+                />
+                <label
+                  htmlFor="privacy"
+                  className="text-sm font-medium leading-tight cursor-pointer"
+                >
+                  Jeg bekrefter at jeg har lest og forstått{' '}
+                  <Link href="/legal/personvern" className="font-semibold text-primary hover:underline" target="_blank">
+                    personvernerklæringen
+                  </Link>.
+                </label>
+              </div>
+              {privacyError && (
+                <p className="text-xs font-medium text-destructive mt-2 pl-6">
+                  Du må bekrefte at du har lest personvernerklæringen for å registrere deg.
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <p className="text-sm font-medium text-destructive text-center">
+                {error}
+              </p>
+            )}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
