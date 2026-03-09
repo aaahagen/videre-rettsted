@@ -174,6 +174,11 @@ export default function PricingPage() {
                     <a href="#" className="hover:underline">Om Oss</a>
                     <a href="mailto:videre-communications@gmail.com" className="hover:underline">Kontakt Oss</a>
                 </div>
+                <div className="flex justify-center gap-4 my-4 text-xs text-slate-500">
+                    <Link href="/legal/personvern" className="hover:underline">Personvern</Link>
+                    <Link href="/legal/vilkar" className="hover:underline">Vilkår</Link>
+                    <Link href="/legal/dpa" className="hover:underline">Databehandleravtale</Link>
+                </div>
                 <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} VIDERE. Alle rettigheter forbeholdt.</p>
             </div>
         </footer>

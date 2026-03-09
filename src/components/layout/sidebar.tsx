@@ -13,6 +13,7 @@ import {
   PlusCircle,
   Lock,
   Info,
+  Scale
 } from 'lucide-react';
 import {
   Sidebar,
@@ -191,6 +192,31 @@ export default function AppSidebar() {
               </SidebarMenuItem>
             );
           })}
+           {isAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuItem>
+                  <SidebarMenuButton tooltip={{ children: 'Juridisk', className: 'bg-primary' }}>
+                    <Scale className="h-4 w-4" />
+                    <span>Juridisk</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className="w-56">
+                <DropdownMenuLabel>Juridiske dokumenter</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/legal/personvern" className="w-full cursor-pointer">Personvernerklæring</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/legal/vilkar" className="w-full cursor-pointer">Brukervilkår og lisensavtale</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/legal/dpa" className="w-full cursor-pointer">Databehandleravtale (DPA)</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>

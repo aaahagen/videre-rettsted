@@ -160,6 +160,16 @@ export default function RegisterPage() {
                 Logg inn her
               </Link>
             </div>
+            <div className="text-center text-xs text-slate-500 mt-4">
+              Ved å opprette en konto aksepterer du vår{' '}
+              <Link href="/legal/personvern" className="font-semibold text-primary hover:underline">
+                personvernerklæring
+              </Link>
+              {' '}og våre{' '}
+              <Link href="/legal/vilkar" className="font-semibold text-primary hover:underline">
+                brukervilkår
+              </Link>.
+            </div>
           </CardFooter>
         </form>
       </Card>

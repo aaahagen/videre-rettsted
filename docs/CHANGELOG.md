@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Legal Documents**: Created dedicated pages for Privacy Policy (`/legal/personvern`), Terms and Conditions (`/legal/vilkar`), and a Data Processing Agreement (`/legal/dpa`) to comply with Norwegian and EU laws.
+- **Legal Navigation**: Added links to the legal documents in the footers of the `/about` and `/pricing` pages.
+- **Admin Legal Menu**: Added a "Juridisk" dropdown menu to the sidebar, specifically visible to admin users, containing links to the legal documents.
+- **Privacy Policy Consent**: Added a mandatory checkbox to the login page, requiring users to explicitly confirm they have read and understood the privacy policy before logging in.
 - **Pricing Page**: Created a new page at `/pricing` to display SaaS subscription plans and a one-time source code licensing option.
 - The pricing page includes details on different tiers, pricing information, and a section explaining the security of payments handled by Stripe.
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
