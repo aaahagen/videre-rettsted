@@ -13,7 +13,8 @@ import {
   PlusCircle,
   Lock,
   Info,
-  Scale
+  Scale,
+  ChevronDown
 } from 'lucide-react';
 import {
   Sidebar,
@@ -33,6 +34,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Logo } from '../logo';
 import { Skeleton } from '../ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -59,6 +65,7 @@ export default function AppSidebar() {
   const [org, setOrg] = useState<Organization | null>(null);
   const [orgLoading, setOrgLoading] = useState(false);
   const { setOpenMobile, isMobile } = useSidebar();
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
 
   // Changed to real-time listener to handle permission propagation delays
   useEffect(() => {
@@ -193,29 +200,38 @@ export default function AppSidebar() {
             );
           })}
            {isAdmin && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuItem>
+            <Collapsible
+              open={isLegalOpen}
+              onOpenChange={setIsLegalOpen}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={{ children: 'Juridisk', className: 'bg-primary' }}>
                     <Scale className="h-4 w-4" />
                     <span>Juridisk</span>
+                    <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isLegalOpen ? 'rotate-180' : ''}`} />
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="start" className="w-56">
-                <DropdownMenuLabel>Juridiske dokumenter</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/legal/personvern" className="w-full cursor-pointer">Personvernerklæring</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/legal/vilkar" className="w-full cursor-pointer">Brukervilkår og lisensavtale</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/legal/dpa" className="w-full cursor-pointer">Databehandleravtale (DPA)</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 px-4 py-2">
+                  <SidebarMenuButton asChild className="h-8 text-sm">
+                    <Link href="/legal/personvern" onClick={() => setOpenMobile(false)}>
+                      Personvern
+                    </Link>
+                  </SidebarMenuButton>
+                  <SidebarMenuButton asChild className="h-8 text-sm">
+                    <Link href="/legal/vilkar" onClick={() => setOpenMobile(false)}>
+                      Brukervilkår
+                    </Link>
+                  </SidebarMenuButton>
+                  <SidebarMenuButton asChild className="h-8 text-sm">
+                    <Link href="/legal/dpa" onClick={() => setOpenMobile(false)}>
+                      DPA
+                    </Link>
+                  </SidebarMenuButton>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
           )}
         </SidebarMenu>
       </SidebarContent>
