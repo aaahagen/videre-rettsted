@@ -86,3 +86,15 @@ To ensure future flexibility and ease of migration to a different backend, all i
     - `write`: Any authenticated user, but strictly validated:
         - **Content Type**: Must be an image (`image/*`).
         - **Size**: Must be less than 5MB.
+
+## Future Development Recommendations
+
+The codebase is in excellent health and follows modern best practices. The following recommendations are not urgent fixes but are intended to guide future development to maintain a high standard of quality.
+
+### 1. Form State Management
+- **Current State**: Simple forms use standard React `useState` hooks for state management, which is perfectly acceptable for their current complexity.
+- **Recommendation**: For new, more complex forms, consider adopting a dedicated form management library like **`react-hook-form`** in combination with a validation library like **`zod`**. This will help centralize form logic, streamline validation, reduce boilerplate code, and improve the user experience with more robust error handling.
+
+### 2. Internationalization (i18n)
+- **Current State**: User-facing text (labels, button text, error messages) is currently hardcoded directly within the components.
+- **Recommendation**: To prepare for potential future language support and to make managing text easier, consider centralizing all user-facing strings into resource files (e.g., `/locales/en.json`, `/locales/no.json`). This practice, known as internationalization (i18n), decouples text from the code and simplifies updates and translations.
