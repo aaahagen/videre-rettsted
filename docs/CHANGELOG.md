@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Sticky Dashboard Header**: Modified the dashboard layout (`src/app/dashboard/layout.tsx`) to keep the header (search bar, menu, "Nytt Sted" button) fixed at the top of the screen while scrolling through places. Added a blur and shadow effect for better visibility.
+- **Improved Toast Notifications**: Updated the `use-toast` hook to automatically dismiss success and error notifications (toasts) after 4 seconds, eliminating the need for users to manually click them away.
 - **Separated Landing Page from App**: The marketing landing page has been moved from the root route (`/`) to `/about`. The root route now acts as the main app entry point, directing logged-in users to the dashboard and logged-out users to the login page for a more streamlined user experience.
 - **Refactored Authentication Flow**: Replaced the server-side `middleware.ts` and session cookie mechanism with a purely client-side authentication management system. This is handled by a new `AuthProvider` component that uses `react-firebase-hooks` to listen to auth state changes and manages route protection via client-side redirects. This resolves complex synchronization issues between the server and client.
 - **Updated Place Creator Attribution**: The system now stores and displays the full name (or internal number) of the user who created a place, rather than just their ID. This is fetched from the user's profile at the time of creation.

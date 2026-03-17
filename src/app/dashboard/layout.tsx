@@ -19,8 +19,8 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+        <div className="flex flex-1 flex-col relative">
+          <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b bg-background px-4 sm:px-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <SidebarTrigger className="md:hidden" />
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -54,7 +54,7 @@ export default function DashboardLayout({
               </Button>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto bg-slate-50/50">
+          <main className="flex-1 bg-slate-50/50">
             {children}
           </main>
         </div>
