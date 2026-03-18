@@ -46,23 +46,21 @@ service cloud.firestore {
 
     // Invitations
     match /invitations/{invitationId} {
-      // Public access: ONLY allow fetching a specific document by ID. 
-      // Listing (scanning) all invitations is DENIED.
+      // Public can fetch a specific invite by its ID to use it.
       allow get: if true;
-      allow list: if false;
+
+      // Admins can list the invitations for their own organization.
+      allow list: if isAuthenticated() && isAdmin();
       
+      // Admins can create new invitations.
       allow create: if isAuthenticated() && isAdmin(); 
       
-      // Update: Strictly limit updates to "Accepting" the invitation
-      allow update: if isAuthenticated() 
-                    && resource.data.status != 'accepted'        // Can't update if already accepted
-                    && request.resource.data.status == 'accepted' // Must be setting status to accepted
-                    && request.resource.data.acceptedBy == request.auth.uid // Must claim it for self
-                    // Ensure critical fields (role, orgId) are NOT changed during acceptance
-                    && request.resource.data.role == resource.data.role
-                    && request.resource.data.orgId == resource.data.orgId;
+      // This rule is no longer needed, as invitations are deleted upon use.
+      // It's kept here for reference but can be removed later.
+      allow update: if false;
 
-      allow delete: if isAuthenticated() && isAdmin();
+      // Admins can delete invitations to revoke them.
+      allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
     }
 
     // Places

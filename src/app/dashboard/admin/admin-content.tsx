@@ -55,6 +55,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
+import { PendingInvitations } from '@/components/admin/pending-invitations';
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -463,6 +464,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
             </form>
           </CardContent>
         </Card>
+
+        {organization && <PendingInvitations orgId={organization.id} />}
 
         <Card>
           <CardHeader className="px-4 sm:px-6">

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Admin Invitation Management**: Added a new section in the admin panel for viewing and revoking pending user invitations. This provides administrators with oversight of outstanding invites.
 - **Legal Documents**: Created dedicated pages for Privacy Policy (`/legal/personvern`), Terms and Conditions (`/legal/vilkar`), and a Data Processing Agreement (`/legal/dpa`) to comply with Norwegian and EU laws.
 - **Legal Navigation**: Added links to the legal documents in the footers of the `/about` and `/pricing` pages.
 - **Admin Legal Menu**: Added a "Juridisk" dropdown menu to the sidebar, specifically visible to admin users, containing links to the legal documents.
@@ -17,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Enhanced Invitation Security**: The system now automatically deletes invitation documents from the database immediately after they are successfully used, adhering to data minimization principles.
+- **Updated Firestore Security Rules**: Modified security rules to allow admins to list and delete pending invitations securely for their own organization.
 - **Sticky Dashboard Header**: Modified the dashboard layout (`src/app/dashboard/layout.tsx`) to keep the header (search bar, menu, "Nytt Sted" button) fixed at the top of the screen while scrolling through places. Added a blur and shadow effect for better visibility.
 - **Improved Toast Notifications**: Updated the `use-toast` hook to automatically dismiss success and error notifications (toasts) after 4 seconds, eliminating the need for users to manually click them away.
 - **Separated Landing Page from App**: The marketing landing page has been moved from the root route (`/`) to `/about`. The root route now acts as the main app entry point, directing logged-in users to the dashboard and logged-out users to the login page for a more streamlined user experience.

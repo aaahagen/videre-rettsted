@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/firebase';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
@@ -128,12 +128,8 @@ function InviteContent() {
         createdAt: new Date()
       });
 
-      // 4. Mark invitation as accepted
-      await updateDoc(doc(db, 'invitations', inviteId), {
-        status: 'accepted',
-        acceptedAt: new Date(),
-        acceptedBy: uid
-      });
+      // 4. Delete the invitation now that it has been used
+      await deleteDoc(doc(db, 'invitations', inviteId));
       
       // 5. Now that everything is done, redirect to dashboard.
       // The AuthProvider listener will pick up the new user profile instantly.
