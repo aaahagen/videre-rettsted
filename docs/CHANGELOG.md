@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Secure Organization Deletion API**: Implemented a comprehensive server-side Cloud Function (`deleteOrganization`) to handle the "FARESONE: Slett Organisasjon" action. This securely deletes the organization document, all associated users (including Firebase Auth accounts), all places, all routes, all invitations, and empties the Firebase Storage bucket for that organization.
 - **Customizable Form Fields**: Implemented dynamic visibility controls (toggle switches) for the text fields in the "Nytt Sted" (New Place) form. Administrators can now choose exactly which fields are enabled (up to three) from the Admin Panel.
 - **"Felt 3" (Third Custom Field)**: Added a third customizable text field to the place schema and forms. Like the first two fields, its label, placeholder, and visibility can be completely customized by the administrator.
 - **Admin Panel Pagination**: Added pagination to both the "Utestående Invitasjoner" (Pending Invitations) and "Administrer Brukere" (Manage Users) tables in the Admin Dashboard. Lists are now limited to 5 items per page, with intuitive previous/next controls, preventing the dashboard from becoming cluttered as an organization grows.

@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { firebaseDB } from '@/lib/firebase/database';
 import { Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase/firebase';
+import app, { auth } from '@/lib/firebase/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     Dialog,
     DialogContent,
@@ -47,30 +47,18 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
 
         setIsDeleting(true);
         try {
-            // 1. Get all places for the organization
-            const places = await firebaseDB.getPlaces(orgId);
+            const functions = getFunctions(app);
+            const deleteOrgCallable = httpsCallable(functions, 'deleteOrganization');
 
-            // 2. Delete all images associated with places (skipped due to client-side complexity, see comments)
-            // Ideally should be handled by Cloud Function trigger on place deletion.
-
-            // 3. Delete all places
-            const deletePlacePromises = places.map(place => firebaseDB.deletePlace(place.id));
-            await Promise.all(deletePlacePromises);
-
-            // 4. Delete all users in the organization (Firestore docs only)
-            const users = await firebaseDB.getUsers(orgId);
-            const deleteUserPromises = users.map(user => firebaseDB.deleteUser(user.id));
-            await Promise.all(deleteUserPromises);
-
-            // 5. Delete the organization document
-            await firebaseDB.deleteOrganization(orgId);
+            await deleteOrgCallable();
 
             toast({
                 title: "Organisasjon slettet",
                 description: "Du blir nå logget ut.",
             });
 
-            // Sign out
+            // The user's Auth account has been deleted by the cloud function,
+            // but we still call signOut to clear the client state cleanly.
             await auth.signOut();
             router.push('/');
 
@@ -78,10 +66,9 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
             console.error("Delete org error:", error);
             toast({
                 title: "Sletting feilet",
-                description: error.message || "En feil oppstod under sletting.",
+                description: error.message || "En feil oppstod under sletting av organisasjonen.",
                 variant: "destructive"
             });
-        } finally {
             setIsDeleting(false);
         }
     };
@@ -99,7 +86,7 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
                     Faresone: Slett Organisasjon
                 </CardTitle>
                 <CardDescription className="text-destructive/80">
-                    Dette vil permanent slette organisasjonen, alle brukere, steder og bilder. Handlingen kan ikke angres.
+                    Dette vil permanent slette organisasjonen, alle brukere (inkludert din innlogging), steder, ruter og bilder. Handlingen kan ikke angres.
                 </CardDescription>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
@@ -123,9 +110,10 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
                                 <p>Du er i ferd med å slette <strong>hele organisasjonen</strong>. Dette vil slette:</p>
                                 <ul className="list-disc list-inside text-sm text-muted-foreground">
                                     <li>Alle steder og lokasjoner</li>
-                                    <li>Alle opplastede bilder</li>
-                                    <li>Alle brukerkontoer tilknyttet organisasjonen</li>
-                                    <li>Din egen tilgang</li>
+                                    <li>Alle ruter og lister</li>
+                                    <li>Alle opplastede bilder i skyen</li>
+                                    <li>Alle brukerkontoer (inkludert innloggingsinformasjon)</li>
+                                    <li>Din egen administratortilgang</li>
                                 </ul>
                                 <Button className="w-full" variant="secondary" onClick={() => setStep(2)}>
                                     Jeg forstår konsekvensene
@@ -136,7 +124,7 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
                         {step === 2 && (
                             <div className="space-y-4">
                                 <p className="font-semibold text-destructive">Er du helt sikker?</p>
-                                <p>Det finnes ingen "angre"-knapp. Dataene vil være borte for alltid.</p>
+                                <p>Det finnes ingen "angre"-knapp. Både data og innlogginger vil være borte for alltid.</p>
                                 <div className="flex gap-2">
                                     <Button className="w-full" variant="outline" onClick={reset}>Avbryt</Button>
                                     <Button className="w-full" variant="destructive" onClick={() => setStep(3)}>
@@ -148,7 +136,7 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
 
                         {step === 3 && (
                             <div className="space-y-4">
-                                <p>Siste sjanse. Er du administrator og har myndighet til dette?</p>
+                                <p>Siste sjanse. Er du administrator og har myndighet til å utføre denne slettingen?</p>
                                 <div className="flex gap-2">
                                     <Button className="w-full" variant="outline" onClick={reset}>Nei, avbryt</Button>
                                     <Button className="w-full" variant="destructive" onClick={() => setStep(4)}>
@@ -189,7 +177,7 @@ export function DeleteOrganization({ orgId }: DeleteOrganizationProps) {
                                     {isDeleting ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Sletter alt...
+                                            Sletter alt (dette kan ta tid)...
                                         </>
                                     ) : (
                                         "SLETT ALT NÅ"
