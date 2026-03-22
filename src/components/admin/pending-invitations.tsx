@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, UserX } from 'lucide-react';
+import { Loader2, Mail, UserX, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -51,9 +51,13 @@ interface Invitation {
   expiresAt: Date;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export function PendingInvitations({ orgId }: { orgId: string }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeletingExpired, setIsDeletingExpired] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const fetchInvitations = async () => {
@@ -78,6 +82,10 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
 
       parsedInvitations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setInvitations(parsedInvitations);
+      // Reset to page 1 on refresh if the current page would be empty
+      if (parsedInvitations.length <= (currentPage - 1) * ITEMS_PER_PAGE) {
+         setCurrentPage(1);
+      }
     } catch (error: any) {
       console.error("Error fetching invitations via function:", error);
       toast({
@@ -113,6 +121,32 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
     }
   };
 
+  const handleDeleteExpired = async () => {
+    setIsDeletingExpired(true);
+    const now = new Date();
+    const expiredInvites = invitations.filter(inv => inv.expiresAt.getTime() - now.getTime() < 0);
+    
+    try {
+      const deletePromises = expiredInvites.map(inv => deleteDoc(doc(db, 'invitations', inv.id)));
+      await Promise.all(deletePromises);
+      
+      toast({
+        title: "Utløpte invitasjoner slettet",
+        description: `${expiredInvites.length} utløpte invitasjoner ble fjernet.`,
+      });
+      
+      fetchInvitations();
+    } catch (error: any) {
+      toast({
+        title: "Feil",
+        description: "Kunne ikke slette alle utløpte invitasjoner.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingExpired(false);
+    }
+  };
+
   const formatRemainingTime = (expiryDate: Date) => {
     const now = new Date();
     const diff = expiryDate.getTime() - now.getTime();
@@ -127,6 +161,17 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
     return { text: "Mindre enn en time", color: "text-amber-600" };
   };
 
+  const hasExpiredInvitations = invitations.some(inv => {
+      const diff = inv.expiresAt.getTime() - new Date().getTime();
+      return diff < 0;
+  });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(invitations.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentInvitations = invitations.slice(startIndex, endIndex);
+
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6">
@@ -134,9 +179,38 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
             <CardTitle className="font-headline text-xl sm:text-2xl">
             Utestående Invitasjoner
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={fetchInvitations} disabled={isLoading}>
-                Oppdater
-            </Button>
+            <div className="flex items-center gap-2">
+                {hasExpiredInvitations && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" disabled={isDeletingExpired}>
+                                {isDeletingExpired ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                <span className="hidden sm:inline">Slett utløpte</span>
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Slett utløpte invitasjoner?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Dette vil permanent fjerne alle invitasjoner som har passert utløpsdatoen.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                            <AlertDialogAction
+                                className="bg-destructive hover:bg-destructive/90"
+                                onClick={handleDeleteExpired}
+                            >
+                                Ja, slett utløpte
+                            </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+                <Button variant="outline" size="sm" onClick={fetchInvitations} disabled={isLoading}>
+                    Oppdater
+                </Button>
+            </div>
         </div>
         <CardDescription>
           Her er invitasjonene som er sendt ut, men ikke er blitt brukt enda. De utløper etter 72 timer.
@@ -171,7 +245,7 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {invitations.map((invite) => {
+                      {currentInvitations.map((invite) => {
                           const expiry = formatRemainingTime(invite.expiresAt);
                           return (
                             <TableRow key={invite.id}>
@@ -219,7 +293,7 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
 
               {/* Mobile View */}
               <div className="md:hidden divide-y">
-                {invitations.map((invite) => {
+                {currentInvitations.map((invite) => {
                    const expiry = formatRemainingTime(invite.expiresAt);
                    return (
                       <div key={invite.id} className="p-4 flex justify-between items-center">
@@ -264,6 +338,34 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                    )
                 })}
               </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-4 border-t">
+                     <span className="text-sm text-muted-foreground">
+                        Viser {startIndex + 1}-{Math.min(endIndex, invitations.length)} av {invitations.length}
+                     </span>
+                     <div className="flex gap-2">
+                         <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                         >
+                            <ChevronLeft className="h-4 w-4" />
+                         </Button>
+                         <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                         >
+                            <ChevronRight className="h-4 w-4" />
+                         </Button>
+                     </div>
+                  </div>
+              )}
+
              </>
             )}
           </div>

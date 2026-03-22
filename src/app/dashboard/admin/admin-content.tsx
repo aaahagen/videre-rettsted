@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2, CheckCircle2 } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -109,6 +109,8 @@ function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handl
   );
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function AdminDashboardContent({ authUser }: { authUser: FirebaseUser }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -122,6 +124,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newName, setNewName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   // Organization Settings State
@@ -201,15 +204,15 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredUsers(users);
-      return;
+    } else {
+      const queryText = searchQuery.toLowerCase();
+      const filtered = users.filter(user => 
+        (user.name?.toLowerCase().includes(queryText) || '') ||
+        (user.email?.toLowerCase().includes(queryText) || '')
+      );
+      setFilteredUsers(filtered);
     }
-
-    const query = searchQuery.toLowerCase();
-    const filtered = users.filter(user => 
-      (user.name?.toLowerCase().includes(query) || '') ||
-      (user.email?.toLowerCase().includes(query) || '')
-    );
-    setFilteredUsers(filtered);
+    setCurrentPage(1); // Reset to page 1 on search
   }, [searchQuery, users]);
 
   const handleInviteUser = async (e: React.FormEvent) => {
@@ -399,6 +402,12 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
     });
   };
 
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
   return (
     <div className="p-2 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
       <div className="space-y-6 sm:space-y-8">
@@ -521,14 +530,14 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.length === 0 ? (
+                      {currentUsers.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                             {searchQuery ? 'Ingen brukere funnet.' : 'Ingen brukere i organisasjonen.'}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredUsers.map((user) => (
+                        currentUsers.map((user) => (
                           <TableRow key={user.id}>
                             <TableCell className="font-medium">{user.name || 'Ikke fullført'}</TableCell>
                             <TableCell>{user.email}</TableCell>
@@ -571,12 +580,12 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
                 {/* Mobile View Cards */}
                 <div className="md:hidden divide-y">
-                  {filteredUsers.length === 0 ? (
+                  {currentUsers.length === 0 ? (
                     <div className="p-8 text-center text-muted-foreground">
                       {searchQuery ? 'Ingen brukere funnet.' : 'Ingen brukere i organisasjonen.'}
                     </div>
                   ) : (
-                    filteredUsers.map((user) => (
+                    currentUsers.map((user) => (
                       <div key={user.id} className="p-4 space-y-3">
                         <div className="flex justify-between items-start">
                           <div className="space-y-1">
@@ -617,6 +626,33 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                     ))
                   )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-4 border-t">
+                        <span className="text-sm text-muted-foreground">
+                        Viser {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} av {filteredUsers.length}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            >
+                            <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            >
+                            <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
               </div>
             )}
           </CardContent>

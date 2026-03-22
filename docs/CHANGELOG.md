@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Admin Panel Pagination**: Added pagination to both the "Utestående Invitasjoner" (Pending Invitations) and "Administrer Brukere" (Manage Users) tables in the Admin Dashboard. Lists are now limited to 5 items per page, with intuitive previous/next controls, preventing the dashboard from becoming cluttered as an organization grows.
+- **Bulk Delete Expired Invitations**: Added a "Slett utløpte" (Delete Expired) button to the pending invitations panel. This smart button only appears when expired invitations exist, allowing administrators to clean up all expired links with a single click via batch deletion.
+- **Secure Invitation Acceptance API**: Created a secure server-side Cloud Function (`acceptInvitation`) to handle the entire user registration process via invite links. This guarantees atomic transactions (creating the Auth user, creating the Firestore profile, and deleting the invitation simultaneously), preventing ghost accounts or orphaned invitations.
 - **Databehandleravtale (DPA) Log**: Implemented a robust electronic logging system for DPA acceptances during organization registration. The system records the acceptance timestamp, the user's ID and email, and the DPA version directly into the organization's Firestore document.
 - **Organization Number Field**: Added a new field for "Organisasjonsnummer" to the `/register` page and the Admin Panel's organization settings to strengthen the validity of the DPA.
 - **Admin DPA Status View**: Added a "Juridisk Status" (Legal Status) section to the bottom of the "Organisasjonsinnstillinger" card in the Admin Panel. This section provides the administrator with clear visibility and proof of their organization's signed DPA.
@@ -48,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
 ### Fixed
+- **Invitation Deletion Bug**: Fixed an issue where accepted invitations were not being deleted from the database because new users lacked the admin permissions required by Firestore rules to perform the deletion. The new `acceptInvitation` Cloud Function resolves this.
 - **Admin Invitation Fetch Error**: Resolved the "Kunne ikke hente invitasjoner" error in the Admin Panel by transitioning the invitation fetching logic from a direct client-side query (which was blocked by strict Firestore rules) to a secure server-side Cloud Function.
 - **Allow Logged-in Users on Public Pages**: Modified the authentication provider to allow logged-in users to visit public pages like `/about` and `/pricing` without being automatically redirected to their dashboard.
 - **Resolved Login Loops and Hangs**: The new client-side `AuthProvider` fixes all previous issues where the user would get stuck in a redirect loop, see an infinite spinner, or be sent back to the login page after a successful login.

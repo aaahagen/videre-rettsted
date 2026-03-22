@@ -3,9 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/firebase';
+import { signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app, { auth, db } from '@/lib/firebase/firebase';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +35,6 @@ function InviteContent() {
   // If a user is already logged in, log them out so they can register as a new user
   useEffect(() => {
     // If we are currently submitting the form (registering), DO NOT redirect yet.
-    // Wait for handleRegister to complete all database operations.
     if (isSubmitting) return;
 
     if (user && !loading && invitationData && user.email !== invitationData.email) {
@@ -109,42 +109,37 @@ function InviteContent() {
     setIsSubmitting(true);
 
     try {
-      // 1. Create Authentication User
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-
-      // 2. Update display name in Auth
-      await updateProfile(userCredential.user, { displayName: name });
-
-      // 3. Create User Profile in Firestore
-      // This is crucial: We must create the user profile BEFORE redirecting.
-      await setDoc(doc(db, 'users', uid), {
-        name,
-        email,
-        orgId: invitationData.orgId,
-        role: invitationData.role,
-        favorites: [],
-        status: 'active',
-        createdAt: new Date()
+      const functions = getFunctions(app);
+      const acceptInvitationCallable = httpsCallable(functions, 'acceptInvitation');
+      
+      await acceptInvitationCallable({
+        inviteId,
+        password,
+        name
       });
 
-      // 4. Delete the invitation now that it has been used
-      await deleteDoc(doc(db, 'invitations', inviteId));
-      
-      // 5. Now that everything is done, redirect to dashboard.
-      // The AuthProvider listener will pick up the new user profile instantly.
+      // After successful creation, sign the user in directly
+      // because the cloud function creates them, but doesn't log them in on this client
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // AuthProvider listener will pick up the new user profile instantly.
       router.push('/dashboard');
 
     } catch (err: any) {
       console.error('Registration error:', err);
       let errorMessage = 'Kunne ikke opprette bruker.';
-      if (err.code === 'auth/weak-password') {
-          errorMessage = 'Passordet er for svakt. Det bør være minst 8 tegn.'; // Fixed error message
-      } else if (err.code === 'auth/email-already-in-use') {
-          errorMessage = 'E-postadressen er allerede i bruk.';
+      if (err.message) {
+         if (err.message.includes('already in use') || err.message.includes('already-exists')) {
+            errorMessage = 'E-postadressen er allerede i bruk.';
+         } else if (err.message.includes('characters') || err.message.includes('invalid-argument')) {
+            errorMessage = 'Passordet må være minst 6 tegn.';
+         } else {
+             errorMessage = err.message;
+         }
       }
       setError(errorMessage);
-      setIsSubmitting(false); // Only reset submitting if there was an error
+      setIsSubmitting(false);
     } 
   };
 
