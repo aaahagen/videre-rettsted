@@ -7,6 +7,7 @@ import { FilePlus2, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardLayout({
   children,
@@ -14,6 +15,19 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { query, setQuery } = useSearch();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    
+    // If the user starts typing and they are NOT on the main dashboard page,
+    // redirect them to the main dashboard so they can actually see the search results.
+    if (value && pathname !== '/dashboard') {
+        router.push('/dashboard');
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -29,7 +43,7 @@ export default function DashboardLayout({
                 placeholder="Søk etter steder..."
                 className="w-full rounded-full bg-secondary/50 pl-10 pr-10 border-none focus-visible:ring-primary h-10"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={handleSearchChange}
               />
               {query && (
                 <button 

@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Global Search Redirect**: Improved the global search bar behavior. If a user initiates a search while viewing a specific place's details (or any sub-page like `/dashboard/new`), the app will now automatically redirect them to the main dashboard view (`/dashboard`) so they can immediately see the search results in the grid.
 - **Dynamic Place Display & Printing**: The place details view and the PDF print view have been updated to respect the new custom field settings. Only the fields enabled by the administrator will be shown to drivers, ensuring a clean, relevant interface.
 - **Redesigned Auth Pages**: Completely overhauled the design of both the `/login` and `/register` pages. Implemented a cleaner layout with a subtle light blue theme for the input forms, improved spacing, and clear visual separation for legal consent checkboxes.
 - **Logo Component Update**: Updated the `Logo` component (`src/components/logo.tsx`) to use a transparent background (`bg-transparent`) instead of a solid color, and changed the image fit from `object-cover` to `object-contain` for better display across different backgrounds.
