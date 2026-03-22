@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Menu Styling**: Increased the size and touch area of all sidebar menu buttons for better usability, particularly on mobile devices. Added a background color and distinct text styling for the active state to clearly indicate the current page.
+- **UI Tweaks**: Hid the native browser clear (`x`) button in the search input since a custom one is provided. Increased the visibility of toggle switches in the Admin Panel by changing their "unchecked" background color to a darker shade.
 - **Global Search Redirect**: Improved the global search bar behavior. If a user initiates a search while viewing a specific place's details (or any sub-page like `/dashboard/new`), the app will now automatically redirect them to the main dashboard view (`/dashboard`) so they can immediately see the search results in the grid.
 - **Dynamic Place Display & Printing**: The place details view and the PDF print view have been updated to respect the new custom field settings. Only the fields enabled by the administrator will be shown to drivers, ensuring a clean, relevant interface.
 - **Redesigned Auth Pages**: Completely overhauled the design of both the `/login` and `/register` pages. Implemented a cleaner layout with a subtle light blue theme for the input forms, improved spacing, and clear visual separation for legal consent checkboxes.
