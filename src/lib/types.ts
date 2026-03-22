@@ -20,10 +20,17 @@ export interface Organization {
     description?: {
       label: string;
       placeholder: string;
+      enabled?: boolean;
     };
     notes?: {
       label: string;
       placeholder: string;
+      enabled?: boolean;
+    };
+    field3?: {
+      label: string;
+      placeholder: string;
+      enabled?: boolean;
     };
   };
   legal?: {
@@ -44,8 +51,9 @@ export interface Place {
   id: string;
   name: string;
   address: string;
-  description: string;
-  notes?: string;
+  description: string; // Used for "description"
+  notes?: string;      // Used for "notes"
+  field3?: string;     // New field
   hashtags?: string[];
   
   // Images

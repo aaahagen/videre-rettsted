@@ -1,7 +1,7 @@
 'use client';
 
 import { Place, Organization } from '@/lib/types';
-import { MapPin, Clipboard, FileText, Tag, User } from 'lucide-react';
+import { MapPin, Clipboard, FileText, Tag, User, Info } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -12,8 +12,14 @@ interface PrintPlaceProps {
 }
 
 export function PrintPlace({ place, organization }: PrintPlaceProps) {
+  const descEnabled = organization?.fieldSettings?.description?.enabled ?? true;
   const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
+  
+  const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
+
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
 
   const formatDate = (dateValue: any) => {
     if (!dateValue) return '';
@@ -38,17 +44,20 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           
           {/* Left Column: Text Info */}
           <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
-                <Clipboard className="mr-2 h-4 w-4" />
-                {descLabel}
-              </h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                {place.description || 'Ingen info.'}
-              </p>
-            </div>
+            
+            {descEnabled && (place.description || !place.notes) && (
+                <div>
+                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
+                    <Clipboard className="mr-2 h-4 w-4" />
+                    {descLabel}
+                </h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {place.description || 'Ingen info.'}
+                </p>
+                </div>
+            )}
 
-            {place.notes && (
+            {notesEnabled && place.notes && (
               <div>
                 <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
                   <FileText className="mr-2 h-4 w-4" />
@@ -56,6 +65,18 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
                 </h2>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
                   {place.notes}
+                </p>
+              </div>
+            )}
+
+            {field3Enabled && place.field3 && (
+              <div>
+                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
+                  <Info className="mr-2 h-4 w-4" />
+                  {field3Label}
+                </h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {place.field3}
                 </p>
               </div>
             )}

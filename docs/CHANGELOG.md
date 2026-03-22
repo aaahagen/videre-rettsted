@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Customizable Form Fields**: Implemented dynamic visibility controls (toggle switches) for the text fields in the "Nytt Sted" (New Place) form. Administrators can now choose exactly which fields are enabled (up to three) from the Admin Panel.
+- **"Felt 3" (Third Custom Field)**: Added a third customizable text field to the place schema and forms. Like the first two fields, its label, placeholder, and visibility can be completely customized by the administrator.
 - **Admin Panel Pagination**: Added pagination to both the "Utestående Invitasjoner" (Pending Invitations) and "Administrer Brukere" (Manage Users) tables in the Admin Dashboard. Lists are now limited to 5 items per page, with intuitive previous/next controls, preventing the dashboard from becoming cluttered as an organization grows.
 - **Bulk Delete Expired Invitations**: Added a "Slett utløpte" (Delete Expired) button to the pending invitations panel. This smart button only appears when expired invitations exist, allowing administrators to clean up all expired links with a single click via batch deletion.
 - **Secure Invitation Acceptance API**: Created a secure server-side Cloud Function (`acceptInvitation`) to handle the entire user registration process via invite links. This guarantees atomic transactions (creating the Auth user, creating the Firestore profile, and deleting the invitation simultaneously), preventing ghost accounts or orphaned invitations.
@@ -26,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Dynamic Place Display & Printing**: The place details view and the PDF print view have been updated to respect the new custom field settings. Only the fields enabled by the administrator will be shown to drivers, ensuring a clean, relevant interface.
 - **Redesigned Auth Pages**: Completely overhauled the design of both the `/login` and `/register` pages. Implemented a cleaner layout with a subtle light blue theme for the input forms, improved spacing, and clear visual separation for legal consent checkboxes.
 - **Logo Component Update**: Updated the `Logo` component (`src/components/logo.tsx`) to use a transparent background (`bg-transparent`) instead of a solid color, and changed the image fit from `object-cover` to `object-contain` for better display across different backgrounds.
 - **Enhanced Invitation Security**: The system now automatically deletes invitation documents from the database immediately after they are successfully used, adhering to data minimization principles.

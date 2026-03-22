@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,7 +8,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -163,8 +162,14 @@ export default function PlaceDetailsPage() {
   const fallbackEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(place.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
   // Get labels from organization settings or default
+  const descEnabled = organization?.fieldSettings?.description?.enabled ?? true;
   const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
+
+  const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
+
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
 
   return (
     <>
@@ -284,17 +289,19 @@ export default function PlaceDetailsPage() {
                   </div>
                 </section>
 
-                <section className="bg-white p-5 rounded-xl shadow-sm border">
-                  <h2 className="text-xl font-semibold mb-3 flex items-center">
-                      <Clipboard className="mr-2 h-5 w-5 text-primary" />
-                      {descLabel}
-                  </h2>
-                  <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
-                    {place.description || 'Ingen innhold tilgjengelig.'}
-                  </p>
-                </section>
+                {descEnabled && (place.description || !place.notes) && (
+                  <section className="bg-white p-5 rounded-xl shadow-sm border">
+                    <h2 className="text-xl font-semibold mb-3 flex items-center">
+                        <Clipboard className="mr-2 h-5 w-5 text-primary" />
+                        {descLabel}
+                    </h2>
+                    <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+                      {place.description || 'Ingen innhold tilgjengelig.'}
+                    </p>
+                  </section>
+                )}
 
-                {place.notes && (
+                {notesEnabled && place.notes && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
                           <FileText className="mr-2 h-5 w-5 text-primary" />
@@ -302,6 +309,18 @@ export default function PlaceDetailsPage() {
                       </h2>
                       <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
                           {place.notes}
+                      </p>
+                  </section>
+                )}
+
+                {field3Enabled && place.field3 && (
+                  <section className="bg-white p-5 rounded-xl shadow-sm border">
+                      <h2 className="text-xl font-semibold mb-3 flex items-center">
+                          <Info className="mr-2 h-5 w-5 text-primary" />
+                          {field3Label}
+                      </h2>
+                      <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+                          {place.field3}
                       </p>
                   </section>
                 )}

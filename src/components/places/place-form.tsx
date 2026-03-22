@@ -25,8 +25,8 @@ import Image from 'next/image';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
-import { firebaseStorage } from '@/lib/firebase/storage';
 import { Place, Organization } from '@/lib/types';
+import { firebaseStorage } from '@/lib/firebase/storage';
 import { cn } from '@/lib/utils';
 
 const placeSchema = z.object({
@@ -34,6 +34,7 @@ const placeSchema = z.object({
   address: z.string().min(5, 'Adresse er påkrevd.'),
   description: z.string().optional(),
   notes: z.string().optional(),
+  field3: z.string().optional(),
   hashtags: z.string().optional(),
   mainImageIndex: z.number().default(0),
   images: z.array(z.object({
@@ -69,6 +70,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       address: place?.address || '',
       description: place?.description || '',
       notes: place?.notes || '',
+      field3: place?.field3 || '',
       hashtags: place?.hashtags?.join(', ') || '',
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
       // Filter out the placeholder image so the user starts with an empty list if only placeholder exists
@@ -251,6 +253,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             address: data.address,
             description: data.description || '',
             notes: data.notes || '',
+            field3: data.field3 || '',
             hashtags: hashtagsArray,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
@@ -292,11 +295,17 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
   };
 
+  const descEnabled = organization?.fieldSettings?.description?.enabled ?? true;
   const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
   const descPlaceholder = organization?.fieldSettings?.description?.placeholder || "f.eks. Ring på klokken for levering. Kode til porten er #1234. Pass deg for hunden.";
   
+  const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
   const notesPlaceholder = organization?.fieldSettings?.notes?.placeholder || "f.eks. 'Kunden er ofte ikke hjemme før kl. 16'";
+
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
+  const field3Placeholder = organization?.fieldSettings?.field3?.placeholder || "Skriv inn info her...";
 
   return (
     <Form {...form}>
@@ -341,40 +350,67 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{descLabel}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={descPlaceholder}
-                      className="min-h-[120px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{notesLabel}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={notesPlaceholder}
-                      className="min-h-[120px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
+            {descEnabled && (
+                <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{descLabel}</FormLabel>
+                    <FormControl>
+                        <Textarea
+                        placeholder={descPlaceholder}
+                        className="min-h-[120px]"
+                        {...field}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            )}
+            
+            {notesEnabled && (
+                <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{notesLabel}</FormLabel>
+                    <FormControl>
+                        <Textarea
+                        placeholder={notesPlaceholder}
+                        className="min-h-[120px]"
+                        {...field}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            )}
+
+            {field3Enabled && (
+                <FormField
+                control={form.control}
+                name="field3"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>{field3Label}</FormLabel>
+                    <FormControl>
+                        <Textarea
+                        placeholder={field3Placeholder}
+                        className="min-h-[120px]"
+                        {...field}
+                        />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            )}
+            
             <FormField
               control={form.control}
               name="hashtags"

@@ -21,6 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -132,10 +133,15 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [orgSettings, setOrgSettings] = useState({
     name: '',
     orgNumber: '',
+    descEnabled: true,
     descLabel: '',
     descPlaceholder: '',
+    notesEnabled: true,
     notesLabel: '',
-    notesPlaceholder: ''
+    notesPlaceholder: '',
+    field3Enabled: false,
+    field3Label: '',
+    field3Placeholder: ''
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -154,10 +160,15 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
             setOrgSettings({
               name: org.name || '',
               orgNumber: org.orgNumber || '',
+              descEnabled: org.fieldSettings?.description?.enabled ?? true,
               descLabel: org.fieldSettings?.description?.label || '',
               descPlaceholder: org.fieldSettings?.description?.placeholder || '',
+              notesEnabled: org.fieldSettings?.notes?.enabled ?? true,
               notesLabel: org.fieldSettings?.notes?.label || '',
-              notesPlaceholder: org.fieldSettings?.notes?.placeholder || ''
+              notesPlaceholder: org.fieldSettings?.notes?.placeholder || '',
+              field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
+              field3Label: org.fieldSettings?.field3?.label || '',
+              field3Placeholder: org.fieldSettings?.field3?.placeholder || ''
             });
           }
 
@@ -357,12 +368,19 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         orgNumber: orgSettings.orgNumber,
         fieldSettings: {
           description: {
+            enabled: orgSettings.descEnabled,
             label: orgSettings.descLabel,
             placeholder: orgSettings.descPlaceholder
           },
           notes: {
+            enabled: orgSettings.notesEnabled,
             label: orgSettings.notesLabel,
             placeholder: orgSettings.notesPlaceholder
+          },
+          field3: {
+            enabled: orgSettings.field3Enabled,
+            label: orgSettings.field3Label,
+            placeholder: orgSettings.field3Placeholder
           }
         }
       });
@@ -664,11 +682,11 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
               Organisasjonsinnstillinger
             </CardTitle>
             <CardDescription>
-              Tilpass organisasjonsnavn, etiketter og plassholdere for stedsskjemaet.
+              Tilpass organisasjonsnavn, etiketter og plassholdere for stedsskjemaet. Du kan også velge hvilke felt som skal vises for sjåførene.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
-            <form onSubmit={handleSaveSettings} className="space-y-6 max-w-2xl">
+            <form onSubmit={handleSaveSettings} className="space-y-8 max-w-3xl">
               
               <div className="space-y-4">
                   <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Generelt</h3>
@@ -703,50 +721,104 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                   </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Felt 1</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="descLabel">Etikett (Label)</Label>
-                    <Input
-                      id="descLabel"
-                      placeholder="Standard: Beskrivelse & Instruksjoner 1"
-                      value={orgSettings.descLabel}
-                      onChange={(e) => setOrgSettings(s => ({ ...s, descLabel: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="descPlaceholder">Plassholder</Label>
-                    <Input
-                      id="descPlaceholder"
-                      placeholder="Standard: f.eks. Ring på klokken..."
-                      value={orgSettings.descPlaceholder}
-                      onChange={(e) => setOrgSettings(s => ({ ...s, descPlaceholder: e.target.value }))}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-4">
+                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider border-b pb-2">Tilpass Skjema for "Nytt Sted"</h3>
+                 <div className="grid gap-8 md:grid-cols-3">
+                    
+                    {/* Felt 1 */}
+                    <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                         <Label className="text-base font-semibold">Felt 1</Label>
+                         <Switch 
+                            checked={orgSettings.descEnabled} 
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, descEnabled: checked }))} 
+                         />
+                      </div>
+                      <div className={`space-y-4 ${!orgSettings.descEnabled && 'opacity-50 pointer-events-none'}`}>
+                        <div className="space-y-2">
+                          <Label htmlFor="descLabel" className="text-xs">Etikett (Label)</Label>
+                          <Input
+                            id="descLabel"
+                            placeholder="F.eks. Beskrivelse"
+                            value={orgSettings.descLabel}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, descLabel: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="descPlaceholder" className="text-xs">Plassholder</Label>
+                          <Input
+                            id="descPlaceholder"
+                            placeholder="F.eks. Ring på klokken..."
+                            value={orgSettings.descPlaceholder}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, descPlaceholder: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Felt 2</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="notesLabel">Etikett (Label)</Label>
-                    <Input
-                      id="notesLabel"
-                      placeholder="Standard: Beskrivelse & Instruksjoner 2"
-                      value={orgSettings.notesLabel}
-                      onChange={(e) => setOrgSettings(s => ({ ...s, notesLabel: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notesPlaceholder">Plassholder</Label>
-                    <Input
-                      id="notesPlaceholder"
-                      placeholder="Standard: f.eks. 'Kunden er ofte ikke hjemme...'"
-                      value={orgSettings.notesPlaceholder}
-                      onChange={(e) => setOrgSettings(s => ({ ...s, notesPlaceholder: e.target.value }))}
-                    />
-                  </div>
-                </div>
+                    {/* Felt 2 */}
+                    <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                         <Label className="text-base font-semibold">Felt 2</Label>
+                         <Switch 
+                            checked={orgSettings.notesEnabled} 
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, notesEnabled: checked }))} 
+                         />
+                      </div>
+                      <div className={`space-y-4 ${!orgSettings.notesEnabled && 'opacity-50 pointer-events-none'}`}>
+                        <div className="space-y-2">
+                          <Label htmlFor="notesLabel" className="text-xs">Etikett (Label)</Label>
+                          <Input
+                            id="notesLabel"
+                            placeholder="F.eks. Intern info"
+                            value={orgSettings.notesLabel}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, notesLabel: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="notesPlaceholder" className="text-xs">Plassholder</Label>
+                          <Input
+                            id="notesPlaceholder"
+                            placeholder="F.eks. Kunden er ofte ikke hjemme..."
+                            value={orgSettings.notesPlaceholder}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, notesPlaceholder: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Felt 3 */}
+                    <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                         <Label className="text-base font-semibold">Felt 3</Label>
+                         <Switch 
+                            checked={orgSettings.field3Enabled} 
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, field3Enabled: checked }))} 
+                         />
+                      </div>
+                      <div className={`space-y-4 ${!orgSettings.field3Enabled && 'opacity-50 pointer-events-none'}`}>
+                        <div className="space-y-2">
+                          <Label htmlFor="field3Label" className="text-xs">Etikett (Label)</Label>
+                          <Input
+                            id="field3Label"
+                            placeholder="F.eks. Kode til port"
+                            value={orgSettings.field3Label}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, field3Label: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="field3Placeholder" className="text-xs">Plassholder</Label>
+                          <Input
+                            id="field3Placeholder"
+                            placeholder="F.eks. 1234*"
+                            value={orgSettings.field3Placeholder}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, field3Placeholder: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                 </div>
               </div>
 
               <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
