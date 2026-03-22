@@ -5,7 +5,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-24 w-24 items-center justify-center rounded-lg bg-primary overflow-hidden',
+        'flex h-24 w-24 items-center justify-center bg-transparent overflow-hidden',
         className
       )}
     >
@@ -14,7 +14,7 @@ export function Logo({ className }: { className?: string }) {
         alt="VIDERE RettSted Logo"
         width={96}
         height={96}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
         priority
       />
     </div>

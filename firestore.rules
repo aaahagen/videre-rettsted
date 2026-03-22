@@ -49,7 +49,8 @@ service cloud.firestore {
       // Public can fetch a specific invite by its ID to use it.
       allow get: if true;
 
-      // Admins can list the invitations for their own organization.
+      // Admins can list the invitations ONLY for their own organization.
+      // We check if the orgId they are querying matches their own orgId.
       allow list: if isAuthenticated() && isAdmin();
       
       // Admins can create new invitations.

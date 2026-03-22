@@ -14,7 +14,8 @@ export interface UserProfile {
 export interface Organization {
   id: string;
   name: string;
-  ownerId: string;
+  orgNumber?: string;
+  ownerId?: string;
   fieldSettings?: {
     description?: {
       label: string;
@@ -24,6 +25,18 @@ export interface Organization {
       label: string;
       placeholder: string;
     };
+  };
+  legal?: {
+    dpaAcceptedAt?: {
+      toDate: () => Date;
+    };
+    dpaAcceptedBy?: string;
+    dpaAcceptedByEmail?: string;
+    dpaVersion?: string;
+    termsAcceptedAt?: {
+      toDate: () => Date;
+    };
+    termsVersion?: string;
   };
 }
 

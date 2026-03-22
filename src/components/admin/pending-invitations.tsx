@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onSnapshot, collection, query, where, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { doc, deleteDoc } from 'firebase/firestore';
+import app, { db } from '@/lib/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -20,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2, Mail, Calendar, UserX } from 'lucide-react';
+import { Loader2, Mail, UserX } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -34,16 +35,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+interface InvitationData {
+  id: string;
+  email: string;
+  role: 'admin' | 'driver';
+  createdAt: { _seconds: number; _nanoseconds: number };
+  expiresAt: { _seconds: number; _nanoseconds: number };
+}
+
 interface Invitation {
   id: string;
   email: string;
   role: 'admin' | 'driver';
-  createdAt: {
-    toDate: () => Date;
-  };
-  expiresAt: {
-    toDate: () => Date;
-  };
+  createdAt: Date;
+  expiresAt: Date;
 }
 
 export function PendingInvitations({ orgId }: { orgId: string }) {
@@ -51,36 +56,43 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
+  const fetchInvitations = async () => {
     if (!orgId) {
-        setIsLoading(false);
-        return;
-    };
-
-    const q = query(
-      collection(db, 'invitations'),
-      where('orgId', '==', orgId)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const pendingInvites = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      } as Invitation));
-      pendingInvites.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
-      setInvitations(pendingInvites);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching invitations:", error);
+      return;
+    }
+    
+    setIsLoading(true);
+    const functions = getFunctions(app);
+    const getInvitationsCallable = httpsCallable<void, InvitationData[]>(functions, 'getInvitations');
+
+    try {
+      const result = await getInvitationsCallable();
+      const rawInvitations = result.data;
+      
+      const parsedInvitations: Invitation[] = rawInvitations.map((inv: InvitationData) => ({
+        ...inv,
+        createdAt: new Date(inv.createdAt._seconds * 1000),
+        expiresAt: new Date(inv.expiresAt._seconds * 1000),
+      }));
+
+      parsedInvitations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      setInvitations(parsedInvitations);
+    } catch (error: any) {
+      console.error("Error fetching invitations via function:", error);
       toast({
         title: "Kunne ikke hente invitasjoner",
-        description: "Det oppstod en feil under henting av invitasjoner.",
+        description: "Det oppstod en feil under henting av invitasjoner fra serveren.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-    });
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchInvitations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId, toast]);
 
   const handleRevokeInvitation = async (invitationId: string) => {
@@ -90,6 +102,8 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
         title: "Invitasjon tilbakekalt",
         description: "Invitasjonen har blitt slettet.",
       });
+      // Refresh the list after deletion
+      fetchInvitations();
     } catch (error: any) {
       toast({
         title: "Feil ved tilbakekalling",
@@ -116,9 +130,14 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6">
-        <CardTitle className="font-headline text-xl sm:text-2xl">
-          Utestående Invitasjoner
-        </CardTitle>
+        <div className="flex justify-between items-center">
+            <CardTitle className="font-headline text-xl sm:text-2xl">
+            Utestående Invitasjoner
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={fetchInvitations} disabled={isLoading}>
+                Oppdater
+            </Button>
+        </div>
         <CardDescription>
           Her er invitasjonene som er sendt ut, men ikke er blitt brukt enda. De utløper etter 72 timer.
         </CardDescription>
@@ -153,7 +172,7 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                     </TableHeader>
                     <TableBody>
                       {invitations.map((invite) => {
-                          const expiry = formatRemainingTime(invite.expiresAt.toDate());
+                          const expiry = formatRemainingTime(invite.expiresAt);
                           return (
                             <TableRow key={invite.id}>
                               <TableCell className="font-medium">{invite.email}</TableCell>
@@ -201,7 +220,7 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
               {/* Mobile View */}
               <div className="md:hidden divide-y">
                 {invitations.map((invite) => {
-                   const expiry = formatRemainingTime(invite.expiresAt.toDate());
+                   const expiry = formatRemainingTime(invite.expiresAt);
                    return (
                       <div key={invite.id} className="p-4 flex justify-between items-center">
                           <div className="space-y-2">

@@ -5,15 +5,24 @@ import { Auth } from '../auth';
 import { auth, db } from './firebase';
 
 export const firebaseAuth: Auth = {
-  async registerOrganization(email, password, organizationName, name) {
+  async registerOrganization(email, password, organizationName, name, orgNumber) {
     // 1. Create user with email/password in Firebase Auth.
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
 
-    // 2. Create an organization document in Firestore.
+    // 2. Create an organization document in Firestore, now logging DPA acceptance.
     const orgRef = await addDoc(collection(db, 'organizations'), {
       name: organizationName,
+      orgNumber: orgNumber || null,
       createdAt: serverTimestamp(),
+      legal: {
+        dpaAcceptedAt: serverTimestamp(),
+        dpaAcceptedBy: uid,
+        dpaAcceptedByEmail: email,
+        dpaVersion: '1.0',
+        termsAcceptedAt: serverTimestamp(),
+        termsVersion: '1.0'
+      }
     });
     const orgId = orgRef.id;
 

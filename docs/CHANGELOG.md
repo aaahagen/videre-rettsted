@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Databehandleravtale (DPA) Log**: Implemented a robust electronic logging system for DPA acceptances during organization registration. The system records the acceptance timestamp, the user's ID and email, and the DPA version directly into the organization's Firestore document.
+- **Organization Number Field**: Added a new field for "Organisasjonsnummer" to the `/register` page and the Admin Panel's organization settings to strengthen the validity of the DPA.
+- **Admin DPA Status View**: Added a "Juridisk Status" (Legal Status) section to the bottom of the "Organisasjonsinnstillinger" card in the Admin Panel. This section provides the administrator with clear visibility and proof of their organization's signed DPA.
+- **Firebase Cloud Functions Initialization**: Initialized and deployed a Firebase Cloud Functions environment (`/functions`) configured with TypeScript.
+- **Secure Invitation Fetching**: Created and deployed a server-side Cloud Function (`getInvitations`) to securely fetch pending invitations for an admin's organization, replacing the previous client-side fetch method.
 - **Admin Invitation Management**: Added a new section in the admin panel for viewing and revoking pending user invitations. This provides administrators with oversight of outstanding invites.
 - **Legal Documents**: Created dedicated pages for Privacy Policy (`/legal/personvern`), Terms and Conditions (`/legal/vilkar`), and a Data Processing Agreement (`/legal/dpa`) to comply with Norwegian and EU laws.
 - **Legal Navigation**: Added links to the legal documents in the footers of the `/about` and `/pricing` pages.
@@ -18,8 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linked the "Kom i gang" and "Start nå" buttons on the `/about` page to the new pricing page.
 
 ### Changed
+- **Redesigned Auth Pages**: Completely overhauled the design of both the `/login` and `/register` pages. Implemented a cleaner layout with a subtle light blue theme for the input forms, improved spacing, and clear visual separation for legal consent checkboxes.
+- **Logo Component Update**: Updated the `Logo` component (`src/components/logo.tsx`) to use a transparent background (`bg-transparent`) instead of a solid color, and changed the image fit from `object-cover` to `object-contain` for better display across different backgrounds.
 - **Enhanced Invitation Security**: The system now automatically deletes invitation documents from the database immediately after they are successfully used, adhering to data minimization principles.
-- **Updated Firestore Security Rules**: Modified security rules to allow admins to list and delete pending invitations securely for their own organization.
+- **Updated Firestore Security Rules**: Modified security rules to enforce that admins can only perform list/read operations for invitations within their own organization.
 - **Sticky Dashboard Header**: Modified the dashboard layout (`src/app/dashboard/layout.tsx`) to keep the header (search bar, menu, "Nytt Sted" button) fixed at the top of the screen while scrolling through places. Added a blur and shadow effect for better visibility.
 - **Improved Toast Notifications**: Updated the `use-toast` hook to automatically dismiss success and error notifications (toasts) after 4 seconds, eliminating the need for users to manually click them away.
 - **Separated Landing Page from App**: The marketing landing page has been moved from the root route (`/`) to `/about`. The root route now acts as the main app entry point, directing logged-in users to the dashboard and logged-out users to the login page for a more streamlined user experience.
@@ -41,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
 ### Fixed
+- **Admin Invitation Fetch Error**: Resolved the "Kunne ikke hente invitasjoner" error in the Admin Panel by transitioning the invitation fetching logic from a direct client-side query (which was blocked by strict Firestore rules) to a secure server-side Cloud Function.
 - **Allow Logged-in Users on Public Pages**: Modified the authentication provider to allow logged-in users to visit public pages like `/about` and `/pricing` without being automatically redirected to their dashboard.
 - **Resolved Login Loops and Hangs**: The new client-side `AuthProvider` fixes all previous issues where the user would get stuck in a redirect loop, see an infinite spinner, or be sent back to the login page after a successful login.
 - **Resolved broken search functionality**: Connected the header search input to the dashboard content using a centralized state store.

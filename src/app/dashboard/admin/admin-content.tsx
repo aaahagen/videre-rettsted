@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2 } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2, CheckCircle2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -128,6 +128,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgSettings, setOrgSettings] = useState({
     name: '',
+    orgNumber: '',
     descLabel: '',
     descPlaceholder: '',
     notesLabel: '',
@@ -149,6 +150,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
           if (org) {
             setOrgSettings({
               name: org.name || '',
+              orgNumber: org.orgNumber || '',
               descLabel: org.fieldSettings?.description?.label || '',
               descPlaceholder: org.fieldSettings?.description?.placeholder || '',
               notesLabel: org.fieldSettings?.notes?.label || '',
@@ -349,6 +351,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
     try {
       await firebaseDB.updateOrganization(organization.id, {
         name: orgSettings.name,
+        orgNumber: orgSettings.orgNumber,
         fieldSettings: {
           description: {
             label: orgSettings.descLabel,
@@ -383,6 +386,17 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const handleNameChange = (e: any) => {
     const value = e.target ? e.target.value : e;
     setName(value);
+  };
+
+  const formatLegalDate = (timestamp: any) => {
+    if (!timestamp || !timestamp.toDate) return 'Ukjent dato';
+    return timestamp.toDate().toLocaleDateString('no-NO', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -622,18 +636,33 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
               
               <div className="space-y-4">
                   <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Generelt</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="orgName">Organisasjonsnavn</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="orgName"
-                        placeholder="Ditt firmanavn"
-                        value={orgSettings.name}
-                        onChange={(e) => setOrgSettings(s => ({ ...s, name: e.target.value }))}
-                        className="pl-10"
-                        required
-                      />
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="orgName">Organisasjonsnavn</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="orgName"
+                          placeholder="Ditt firmanavn"
+                          value={orgSettings.name}
+                          onChange={(e) => setOrgSettings(s => ({ ...s, name: e.target.value }))}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="orgNumber">Organisasjonsnummer</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="orgNumber"
+                          placeholder="F.eks. 987654321"
+                          value={orgSettings.orgNumber}
+                          onChange={(e) => setOrgSettings(s => ({ ...s, orgNumber: e.target.value }))}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
                   </div>
               </div>
@@ -698,6 +727,28 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                 )}
               </Button>
             </form>
+
+            {/* Legal Status Section */}
+            {organization?.legal && (
+               <div className="mt-8 pt-6 border-t border-slate-200">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider mb-4">Juridisk Status</h3>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-sm">Databehandleravtale (DPA) v{organization.legal.dpaVersion || '1.0'} er elektronisk akseptert.</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Akseptert av: {organization.legal.dpaAcceptedByEmail || 'Administrator'}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          Dato: {formatLegalDate(organization.legal.dpaAcceptedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+            )}
+            
           </CardContent>
         </Card>
 
