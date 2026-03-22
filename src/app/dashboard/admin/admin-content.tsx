@@ -54,6 +54,7 @@ import { onSnapshot, collection, query, where, doc, updateDoc, deleteDoc } from 
 import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
+import { DataImport } from '@/components/admin/data-import';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
@@ -862,7 +863,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
         {organization && (
             <>
-                <DataExport orgId={organization.id} />
+                 <DataExport orgId={organization.id} />
+                <DataImport orgId={organization.id} />
                 <DeleteOrganization orgId={organization.id} />
             </>
         )}
