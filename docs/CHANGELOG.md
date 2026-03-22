@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced the `useAuth` hook to provide more comprehensive user authentication state and organization details.
 
 ### Fixed
+- **Complete Place Deletion**: Updated the "Slett Sted" (Delete Place) functionality to ensure that when a place is deleted from the database, all associated images stored in Firebase Storage are also permanently deleted. This prevents orphaned files from consuming storage space over time.
 - **Invitation Deletion Bug**: Fixed an issue where accepted invitations were not being deleted from the database because new users lacked the admin permissions required by Firestore rules to perform the deletion. The new `acceptInvitation` Cloud Function resolves this.
 - **Admin Invitation Fetch Error**: Resolved the "Kunne ikke hente invitasjoner" error in the Admin Panel by transitioning the invitation fetching logic from a direct client-side query (which was blocked by strict Firestore rules) to a secure server-side Cloud Function.
 - **Allow Logged-in Users on Public Pages**: Modified the authentication provider to allow logged-in users to visit public pages like `/about` and `/pricing` without being automatically redirected to their dashboard.

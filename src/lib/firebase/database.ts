@@ -2,6 +2,7 @@
 
 import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import { firebaseStorage } from './storage';
 import { Database } from '../database';
 import { Place, User, Organization, Route, LogEntry } from '../types';
 
@@ -146,18 +147,41 @@ const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> 
 const deletePlace = async (id: string): Promise<void> => {
   const docRef = doc(db, 'places', id);
   
-  // Fetch place before delete to log event
+  // Fetch place before delete to log event and get image URLs
   const placeSnap = await getDoc(docRef);
   if (placeSnap.exists()) {
       const placeData = placeSnap.data() as Place;
       const currentUser = auth.currentUser;
       const orgId = placeData.orgId || placeData.organizationId;
       
+      // 1. Delete associated images from Firebase Storage
+      if (placeData.images && Array.isArray(placeData.images)) {
+          for (const image of placeData.images) {
+              if (image.url && !image.url.includes('placeholder')) {
+                  try {
+                      // Attempt to delete using the URL directly, or extract the path if needed by your storage class.
+                      // Usually FirebaseStorage.deleteFile expects a path. If you only have a download URL, 
+                      // you can create a ref from the URL in firebase storage, but your wrapper takes a path.
+                      // Let's use the standard firebase/storage method directly for safety here to parse the URL.
+                      const { ref, getStorage } = await import('firebase/storage');
+                      const storageRef = ref(getStorage(), image.url);
+                      const { deleteObject } = await import('firebase/storage');
+                      await deleteObject(storageRef);
+                  } catch (imgError) {
+                      console.error(`Failed to delete image ${image.url} for place ${id}:`, imgError);
+                      // Continue deleting the place even if an image fails (e.g., already deleted)
+                  }
+              }
+          }
+      }
+
+      // 2. Log event
       if (currentUser && orgId) {
           logEvent(orgId, currentUser.uid, 'delete_place', { placeId: id, name: placeData.name });
       }
   }
 
+  // 3. Delete the document
   await deleteDoc(docRef);
 };
 
