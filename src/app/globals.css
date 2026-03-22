@@ -75,3 +75,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide the native search clear button in webkit browsers since we provide a custom one */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
