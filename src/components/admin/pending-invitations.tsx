@@ -156,9 +156,9 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
 
-    if (days > 0) return { text: `ca. ${days} dag${days > 1 ? 'er' : ''}`, color: "text-muted-foreground" };
-    if (hours > 0) return { text: `ca. ${hours} time${hours > 1 ? 'r' : ''}`, color: "text-amber-600" };
-    return { text: "Mindre enn en time", color: "text-amber-600" };
+    if (days > 0) return { text: `ca. ${days} dag${days > 1 ? 'er' : ''} igjen`, color: "text-muted-foreground" };
+    if (hours > 0) return { text: `ca. ${hours} time${hours > 1 ? 'r' : ''} igjen`, color: "text-amber-600" };
+    return { text: "Mindre enn en time igjen", color: "text-amber-600" };
   };
 
   const hasExpiredInvitations = invitations.some(inv => {
@@ -213,7 +213,7 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
             </div>
         </div>
         <CardDescription>
-          Her er invitasjonene som er sendt ut, men ikke er blitt brukt enda. De utløper etter 72 timer.
+          Her er invitasjonene som er sendt ut, men ikke er blitt brukt enda. De utløper etter 7 dager.
         </CardDescription>
       </CardHeader>
       <CardContent className="px-0 sm:px-6 pb-0">
