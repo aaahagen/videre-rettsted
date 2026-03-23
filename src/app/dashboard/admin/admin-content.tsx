@@ -50,7 +50,7 @@ import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
 import { User, Organization } from '@/lib/types';
-import { onSnapshot, collection, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { onSnapshot, collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
@@ -325,17 +325,19 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Er du sikker på at du vil slette denne brukeren?')) return;
+    if (!confirm('Er du sikker på at du vil slette denne brukeren? Handlingen kan ikke angres.')) return;
+    
     try {
-      await deleteDoc(doc(db, 'users', userId));
+      await firebaseAuth.deleteUser(userId);
       toast({
-        title: "Bruker slettet",
-        description: "Brukeren har blitt fjernet fra organisasjonen.",
+        title: "Bruker Slettet",
+        description: "Brukeren er permanent fjernet fra systemet.",
       });
     } catch (error: any) {
+      console.error('Error deleting user from admin panel:', error);
       toast({
-        title: "Feil ved sletting",
-        description: error.message,
+        title: "Sletting Mislyktes",
+        description: error.message || "En feil oppstod under sletting av brukeren.",
         variant: "destructive",
       });
     }

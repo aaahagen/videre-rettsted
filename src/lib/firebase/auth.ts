@@ -2,7 +2,10 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail, updateProfile as firebaseUpdateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { doc, setDoc, addDoc, collection, getDoc, serverTimestamp } from 'firebase/firestore';
 import { Auth } from '../auth';
-import { auth, db } from './firebase';
+import { auth, db, functions } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+
+const deleteUser = httpsCallable(functions, 'deleteUser');
 
 export const firebaseAuth: Auth = {
   async registerOrganization(email, password, organizationName, name, orgNumber) {
@@ -103,6 +106,15 @@ export const firebaseAuth: Auth = {
   async updateProfile(profile) {
     if (auth.currentUser) {
       await firebaseUpdateProfile(auth.currentUser, profile);
+    }
+  },
+
+  async deleteUser(userId: string) {
+    try {
+      await deleteUser({ userId });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
     }
   },
 };

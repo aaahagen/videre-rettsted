@@ -20,4 +20,7 @@ export interface Auth {
 
   // Updates the current user's profile
   updateProfile(profile: { displayName?: string; photoURL?: string }): Promise<void>;
+
+  // Deletes a user from the system
+  deleteUser(userId: string): Promise<void>;
 }
