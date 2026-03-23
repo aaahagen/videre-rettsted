@@ -145,15 +145,15 @@ function InviteContent() {
 
   if (loading || isLoadingInvitation) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F4F8]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1A237E]" />
       </div>
     );
   }
 
   if (error) {
      return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[#F0F4F8] p-4">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-destructive text-center">Feil</CardTitle>
@@ -172,20 +172,20 @@ function InviteContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F0F4F8] p-4">
       <div className="mb-8 flex flex-col items-center gap-2 text-center">
-        <Logo className="h-24 w-24" />
+        <Logo className="h-32 w-32" />
         <div className="flex flex-col items-center space-y-1">
-            <span className="font-headline text-2xl font-normal tracking-tight text-slate-900 block">
+            <span className="font-headline text-2xl font-normal tracking-tight text-[#1A237E] block">
             Velkommen til
             </span>
-            <span className="font-headline text-3xl font-bold tracking-tight text-slate-900 block">
+            <span className="font-headline text-3xl font-bold tracking-tight text-[#1A237E] block">
             VIDERE RettSted
             </span>
         </div>
       </div>
 
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="w-full max-w-md shadow-lg border-none bg-white">
         <CardHeader className="space-y-4 text-center">
           <div>
             <CardTitle className="font-headline text-xl mb-2">Fullfør din registrering</CardTitle>
@@ -195,9 +195,9 @@ function InviteContent() {
           </div>
           
           {/* Explicit separate container for the organization name to guarantee new line */}
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <div className="bg-[#F0F4F8] p-3 rounded-lg border border-slate-100">
             {invitationData?.orgName ? (
-                <span className="font-bold text-primary text-lg block break-words">
+                <span className="font-bold text-[#1A237E] text-lg block break-words">
                     {invitationData.orgName}
                 </span>
             ) : (
@@ -206,38 +206,39 @@ function InviteContent() {
           </div>
         </CardHeader>
         <form onSubmit={handleRegister}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+             <div className="space-y-4 bg-blue-50/50 p-5 rounded-xl border border-blue-100">
              <div className="space-y-2">
-              <Label htmlFor="name">Fullt Navn</Label>
+              <Label htmlFor="name" className="text-[#1A237E] font-medium">Fullt Navn</Label>
               <Input
                 id="name"
                 placeholder="Ola Nordmann"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="bg-white"
+                className="bg-white border-blue-200 focus-visible:ring-[#1A237E]"
                 autoComplete="name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-post</Label>
+              <Label htmlFor="email" className="text-[#1A237E] font-medium">E-post</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 disabled
-                className="bg-slate-100"
+                className="bg-slate-100 border-blue-200"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Velg Passord</Label>
+              <Label htmlFor="password" className="text-[#1A237E] font-medium">Velg Passord</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white"
+                className="bg-white border-blue-200 focus-visible:ring-[#1A237E]"
                 minLength={8}
                 autoComplete="new-password"
               />
@@ -246,7 +247,8 @@ function InviteContent() {
               </p>
             </div>
             
-            <div className={`p-4 rounded-md ${privacyError ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
+            </div>
+            <div className={`p-4 rounded-xl ${privacyError ? 'bg-red-50 border border-red-200' : 'bg-slate-50 border border-slate-200'}`}>
               <div className="flex items-start space-x-2">
                 <Checkbox 
                   id="privacy" 
@@ -255,14 +257,14 @@ function InviteContent() {
                     setHasAcceptedPrivacyPolicy(checked === true);
                     if (checked) setPrivacyError(false);
                   }}
-                  className="mt-1"
+                  className={`mt-0.5 ${!privacyError && 'border-slate-300 data-[state=checked]:bg-[#1A237E] data-[state=checked]:border-[#1A237E]'}`}
                 />
                 <label
                   htmlFor="privacy"
                   className="text-sm font-medium leading-tight cursor-pointer"
                 >
                   Jeg bekrefter at jeg har lest og forstått{' '}
-                  <Link href="/legal/personvern" className="font-semibold text-primary hover:underline" target="_blank">
+                  <Link href="/legal/personvern" className="font-semibold text-[#1A237E] hover:underline" target="_blank">
                     personvernerklæringen
                   </Link>.
                 </label>
@@ -281,7 +283,7 @@ function InviteContent() {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full text-lg h-12 bg-[#1A237E] hover:bg-[#1A237E]/90 text-white rounded-xl" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -300,7 +302,7 @@ function InviteContent() {
 
 export default function InvitePage() {
     return (
-        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-50"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#F0F4F8]"><Loader2 className="h-8 w-8 animate-spin text-[#1A237E]" /></div>}>
             <InviteContent />
         </Suspense>
     )
