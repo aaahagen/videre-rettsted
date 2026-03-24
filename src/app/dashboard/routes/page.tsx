@@ -76,7 +76,7 @@ export default function RoutesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {route.distance ? `${route.distance} km` : 'Ingen distanse angitt'}
+                  {route.places?.length || 0} stopp
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   Opprettet: {route.createdAt?.toLocaleDateString()}
