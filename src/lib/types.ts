@@ -12,7 +12,7 @@ export interface UserProfile {
 }
 
 export interface Organization {
-  id: string;
+  id:string;
   name: string;
   orgNumber?: string;
   ownerId?: string;
@@ -92,6 +92,7 @@ export interface Route {
   organizationId?: string;
   places: string[]; // array of placeIds
   driverId?: string;
+  distance?: number; // in kilometers
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }

@@ -1,32 +1,66 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { calculateRouteDistance } from '@/lib/distance';
+import { Place, Route } from '@/lib/types';
 
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
-  const [routes, setRoutes] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [distances, setDistances] = useState<{ [key: string]: string }>({});
+  const [isCalculating, setIsCalculating] = useState(false);
   const router = useRouter();
+
+  const calculateDistances = useCallback(async (routesToProcess: Route[]) => {
+    if (routesToProcess.length === 0) return;
+    setIsCalculating(true);
+    const newDistances: { [key: string]: string } = {};
+
+    for (const route of routesToProcess) {
+      if (route.places && route.places.length > 1) {
+        try {
+          const placeDocs = await Promise.all(
+            route.places.map(placeId => firebaseDB.getPlace(placeId))
+          );
+          const validPlaces = placeDocs.filter(p => p !== null && p.coordinates) as Place[];
+          if (validPlaces.length > 1) {
+            const distance = calculateRouteDistance(validPlaces);
+            newDistances[route.id] = `${distance.toFixed(1)} km`;
+          } else {
+            newDistances[route.id] = 'N/A';
+          }
+        } catch (error) {
+          console.error(`Error calculating distance for route ${route.id}:`, error);
+          newDistances[route.id] = 'Error';
+        }
+      } else {
+        newDistances[route.id] = 'N/A';
+      }
+    }
+    setDistances(newDistances);
+    setIsCalculating(false);
+  }, []);
 
   useEffect(() => {
     if (user) {
-      // In a real app, you would get the orgId from the user's claims
-      // or from a document in Firestore. For now, we'll hardcode it.
       firebaseDB.getUser(user.uid).then(userDoc => {
         if (userDoc?.orgId) {
-          firebaseDB.getRoutes(userDoc.orgId).then(setRoutes);
+          firebaseDB.getRoutes(userDoc.orgId).then(fetchedRoutes => {
+            setRoutes(fetchedRoutes);
+            calculateDistances(fetchedRoutes);
+          });
         }
       });
     }
-  }, [user]);
+  }, [user, calculateDistances]);
 
   const handleCreateRoute = () => {
     router.push('/dashboard/routes/new');
@@ -46,7 +80,7 @@ export default function RoutesPage() {
 
   if (!user) {
     router.push('/login');
-    return null; 
+    return null;
   }
 
   return (
@@ -78,8 +112,11 @@ export default function RoutesPage() {
                 <p className="text-muted-foreground">
                   {route.places?.length || 0} stopp
                 </p>
+                <p className="text-sm font-semibold mt-2">
+                  Distanse: {isCalculating && !distances[route.id] ? <Loader2 className="h-4 w-4 animate-spin inline-block" /> : distances[route.id] || 'N/A'}
+                </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Opprettet: {route.createdAt?.toLocaleDateString()}
+                  Opprettet: {new Date(route.createdAt as any).toLocaleDateString()}
                 </p>
               </CardContent>
             </Card>

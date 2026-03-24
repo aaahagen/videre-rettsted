@@ -14,7 +14,6 @@ import { Loader2 } from 'lucide-react';
 export default function NewRoutePage() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState('');
-  const [distance, setDistance] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -49,11 +48,6 @@ export default function NewRoutePage() {
     setName(value);
   };
 
-  const handleDistanceChange = (e: any) => {
-    const value = e.target ? e.target.value : e;
-    setDistance(value);
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -82,17 +76,6 @@ export default function NewRoutePage() {
             onChange={handleNameChange}
             required
             placeholder="F.eks. Oslo - Bergen"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="distance">Distanse (i km)</Label>
-          <Input
-            type="number"
-            id="distance"
-            value={distance}
-            onChange={handleDistanceChange}
-            required
-            placeholder="0.0"
           />
         </div>
         <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg">
