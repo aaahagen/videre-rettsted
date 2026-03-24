@@ -98,7 +98,7 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
             <div className="pt-8 text-xs text-gray-500">
                 <p>Utskriftsdato: {new Date().toLocaleDateString('nb-NO')}</p>
                 <p>Opprettet: {formatDate(place.createdAt)}</p>
-                {place.coordinates && (
+                {place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0) && (
                     <p>GPS: {place.coordinates.lat.toFixed(5)}, {place.coordinates.lng.toFixed(5)}</p>
                 )}
             </div>
