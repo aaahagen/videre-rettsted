@@ -31,8 +31,10 @@ export default function NewRoutePage() {
       try {
         // In a real app, you would get the orgId from the user's claims
         // or from a document in Firestore. For now, we'll hardcode it.
-        const orgId = 'mock-org-id'; 
-        await firebaseDB.createRoute({ name, distance: parseFloat(distance), orgId });
+        const userDoc = await firebaseDB.getUser(user.uid);
+        const orgId = userDoc?.orgId;
+        if(!orgId) throw new Error('No orgId'); 
+        await firebaseDB.createRoute({ name, places: [], orgId });
         router.push('/dashboard/routes');
       } catch (err) {
         console.error(err);

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Star,
+  Route,
   Home,
   LogOut,
   Settings,
@@ -54,6 +55,7 @@ const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
+  { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
   { href: '/dashboard/admin', icon: Shield, label: 'Admin', adminOnly: true },
   { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
 ];

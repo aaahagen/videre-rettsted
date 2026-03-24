@@ -20,8 +20,11 @@ export default function RoutesPage() {
     if (user) {
       // In a real app, you would get the orgId from the user's claims
       // or from a document in Firestore. For now, we'll hardcode it.
-      const orgId = 'mock-org-id'; 
-      firebaseDB.getRoutes(orgId).then(setRoutes);
+      firebaseDB.getUser(user.uid).then(userDoc => {
+        if (userDoc?.orgId) {
+          firebaseDB.getRoutes(userDoc.orgId).then(setRoutes);
+        }
+      });
     }
   }, [user]);
 
