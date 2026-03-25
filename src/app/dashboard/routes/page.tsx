@@ -13,6 +13,7 @@ import { Route } from '@/lib/types';
 
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
+  const [userData, setUserData] = useState<any>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   const router = useRouter();
@@ -20,13 +21,22 @@ export default function RoutesPage() {
   useEffect(() => {
     if (user) {
       firebaseDB.getUser(user.uid).then(userDoc => {
-        if (userDoc?.orgId) {
-          firebaseDB.getRoutes(userDoc.orgId).then(setRoutes);
-          firebaseDB.getUsers(userDoc.orgId).then(setOrganizationUsers);
+        if (userDoc) {
+          setUserData(userDoc);
+          if (userDoc.orgId) {
+            firebaseDB.getRoutes(userDoc.orgId).then(setRoutes);
+            firebaseDB.getUsers(userDoc.orgId).then(setOrganizationUsers);
+          }
         }
       });
     }
   }, [user]);
+  
+  const displayedRoutes = routes.filter(route => {
+    if (!userData) return false;
+    if (userData.role === 'admin') return true; // Admins see all routes
+    return route.driverId === userData.id; // Drivers only see their own routes
+  });
 
   const handleCreateRoute = () => {
     router.push('/dashboard/routes/new');
@@ -53,19 +63,21 @@ export default function RoutesPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Ruter</h1>
-        <Button onClick={handleCreateRoute}>
-          <Plus className="mr-2 h-4 w-4" />
-          Opprett Rute
-        </Button>
+        {userData?.role === 'admin' && (
+          <Button onClick={handleCreateRoute}>
+            <Plus className="mr-2 h-4 w-4" />
+            Opprett Rute
+          </Button>
+        )}
       </div>
       
-      {routes.length === 0 ? (
+      {displayedRoutes.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p>Ingen ruter funnet. Opprett din første rute for å komme i gang.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {routes.map(route => (
+          {displayedRoutes.map(route => (
             <Card 
               key={route.id} 
               className="cursor-pointer hover:shadow-lg transition-shadow"
