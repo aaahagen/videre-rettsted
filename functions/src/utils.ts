@@ -8,9 +8,9 @@ import { defineSecret } from 'firebase-functions/params';
 const googleMapsApiKeySecret = defineSecret('GOOGLE_MAPS_API_KEY');
 const mapsClient = new Client({});
 
-export async function getDrivingDistance(waypoints: (LatLng | string)[]): Promise<{ distance: number; waypointOrder: number[] }> {
+export async function getDrivingDistance(waypoints: (LatLng | string)[]): Promise<{ distance: number; duration: number; waypointOrder: number[] }> {
   if (waypoints.length < 2) {
-    return { distance: 0, waypointOrder: [] };
+    return { distance: 0, duration: 0, waypointOrder: [] };
   }
 
   const origin = waypoints[0];
@@ -40,9 +40,13 @@ export async function getDrivingDistance(waypoints: (LatLng | string)[]): Promis
       (total, leg) => total + (leg.distance?.value || 0),
       0
     );
+    const totalDurationSeconds = response.data.routes[0].legs.reduce(
+      (total, leg) => total + (leg.duration?.value || 0),
+      0
+    );
 
     const waypointOrder = response.data.routes[0].waypoint_order || [];
-    return { distance: totalDistanceMeters / 1000, waypointOrder };
+    return { distance: totalDistanceMeters / 1000, duration: totalDurationSeconds, waypointOrder };
   } catch (error: any) {
     // Enhanced error logging
     console.error('Google Maps API Error Object:', error);

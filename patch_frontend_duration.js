@@ -1,264 +1,64 @@
+const fs = require('fs');
 
-'use client';
+let content = fs.readFileSync('src/app/dashboard/routes/[id]/page.tsx', 'utf8');
 
-import { useEffect, useState, useMemo } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter, useParams } from 'next/navigation';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car } from 'lucide-react';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+// Add duration state
+content = content.replace(
+  /const \[distance, setDistance\] = useState\('N\/A'\);/g,
+  `const [distance, setDistance] = useState('N/A');
+  const [duration, setDuration] = useState('N/A');`
+);
 
-import { firebaseDB } from '@/lib/firebase/database';
-import { auth } from '@/lib/firebase/firebase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Place, Route } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+content = content.replace(
+  /import \{ Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft \} from 'lucide-react';/g,
+  `import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car } from 'lucide-react';`
+);
 
-function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<F>): Promise<ReturnType<F>> =>
-    new Promise(resolve => {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => resolve(func(...args)), waitFor);
-    });
-}
-
-function SortableItem({ id, children }: { id: string, children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center">
-      <GripVertical className="cursor-grab mr-2 text-muted-foreground" />
-      {children}
-    </div>
-  );
-}
-
-export default function RouteDetailsPage() {
-  const [user, loading, error] = useAuthState(auth);
-  const [userData, setUserData] = useState<any>(null);
-  const [route, setRoute] = useState<Route | null>(null);
-  const [allPlaces, setAllPlaces] = useState<Place[]>([]);
-  const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
-  const [routePlaces, setRoutePlaces] = useState<Place[]>([]);
-  const [distance, setDistance] = useState('N/A');
-  const [duration, setDuration] = useState('N/A');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-
-  const router = useRouter();
-  const params = useParams();
-  const routeId = params.id as string;
-  const { toast } = useToast();
-  const sensors = useSensors(useSensor(PointerSensor));
-
-  const debouncedCalculateDistance = useMemo(
-    () =>
-      debounce(async (places: Place[]) => {
-        const functions = getFunctions();
-        const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
-        if (places.length < 2) {
+content = content.replace(
+  /        if \(places\.length < 2\) \{\n          setDistance\('N\/A'\);\n          return;\n        \}/g,
+  `        if (places.length < 2) {
           setDistance('N/A');
           setDuration('N/A');
           return;
-        }
-        setIsCalculating(true);
-        try {
-          const placeIds = places.map((p) => p.id);
-          const result = await calculateDistanceFn({ placeIds });
-          const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
-          setDistance(`${data.distance.toFixed(1)} km`);
+        }`
+);
+
+content = content.replace(
+  /          const data = result\.data as \{ distance: number, waypointOrder: number\[\] \};\n          setDistance\(\`\$\{data\.distance\.toFixed\(1\)\} km\`\);/g,
+  `          const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
+          setDistance(\`\${data.distance.toFixed(1)} km\`);
           
           if (data.duration) {
             const hours = Math.floor(data.duration / 3600);
             const minutes = Math.floor((data.duration % 3600) / 60);
             if (hours > 0) {
-              setDuration(`${hours} t ${minutes} min`);
+              setDuration(\`\${hours} t \${minutes} min\`);
             } else {
-              setDuration(`${minutes} min`);
+              setDuration(\`\${minutes} min\`);
             }
           } else {
             setDuration('N/A');
-          }
-        } catch (err: any) {
-          console.error('Detailed error calculating distance:', err);
-          setDistance('Error');
-          toast({
-            title: 'Error Calculating Distance',
-            description: err.details?.error_message || err.message || 'An unknown error occurred.',
-            variant: 'destructive',
-          });
-        } finally {
-          setIsCalculating(false);
-        }
-      }, 500),
-    [toast]
-  );
+          }`
+);
 
-  useEffect(() => {
-    if (user && routeId) {
-      const fetchData = async () => {
-        setIsDataLoading(true);
-        try {
-          const userDoc = await firebaseDB.getUser(user.uid);
-          if (userDoc) {
-            setUserData(userDoc);
-          }
-          if (userDoc?.orgId) {
-            const [routeData, placesData, usersData] = await Promise.all([
-              firebaseDB.getRoute(routeId),
-              firebaseDB.getPlaces(userDoc.orgId),
-              firebaseDB.getUsers(userDoc.orgId),
-            ]);
-            setOrganizationUsers(usersData);
-            
-            setRoute(routeData);
-            setAllPlaces(placesData);
-
-            if (routeData?.places) {
-              const orderedPlaces = routeData.places
-                .map(placeId => placesData.find(p => p.id === placeId))
-                .filter((p): p is Place => p !== undefined);
-              setRoutePlaces(orderedPlaces);
-              debouncedCalculateDistance(orderedPlaces);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching route data:', err);
-          toast({ title: 'Feil', description: 'Kunne ikke laste rutedata.', variant: 'destructive' });
-        } finally {
-          setIsDataLoading(false);
-        }
-      };
-      fetchData();
-    }
-  }, [user, routeId, toast]);
-
-  const updateRoutePlaces = (newPlaces: Place[]) => {
-    setRoutePlaces(newPlaces);
-    debouncedCalculateDistance(newPlaces);
-  };
-
-  const handleAddPlace = (placeId: string) => {
-    const placeToAdd = allPlaces.find(p => p.id === placeId);
-    if (placeToAdd && !routePlaces.some(p => p.id === placeId)) {
-      updateRoutePlaces([...routePlaces, placeToAdd]);
-    }
-  };
-
-  const handleRemovePlace = (placeId: string) => {
-    updateRoutePlaces(routePlaces.filter(p => p.id !== placeId));
-  };
-
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      const oldIndex = routePlaces.findIndex(item => item.id === active.id);
-      const newIndex = routePlaces.findIndex(item => item.id === over.id);
-      updateRoutePlaces(arrayMove(routePlaces, oldIndex, newIndex));
-    }
-  };
-
-  const handleOptimizeRoute = async () => {
-    if (routePlaces.length <= 2) {
-      toast({ title: 'Info', description: 'Du trenger minst 3 stopp for å optimere ruten.' });
-      return;
-    }
-    
-    if (routePlaces.length > 27) { // API limit is 25 intermediate + 2 endpoints
-        toast({ 
-            title: 'For mange stopp', 
-            description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', 
-            variant: 'destructive' 
-        });
-        return;
-    }
-
-    setIsOptimizing(true);
-    try {
-      const placeIds = routePlaces.map(p => p.id);
-      const functions = getFunctions();
-      const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
-      const result = await calculateDistanceFn({ placeIds });
-      const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
+content = content.replace(
+  /      const data = result\.data as \{ distance: number, waypointOrder: number\[\] \};\n      \n      setDistance\(\`\$\{data\.distance\.toFixed\(1\)\} km\`\);/g,
+  `      const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
-      setDistance(`${data.distance.toFixed(1)} km`);
+      setDistance(\`\${data.distance.toFixed(1)} km\`);
       if (data.duration) {
         const hours = Math.floor(data.duration / 3600);
         const minutes = Math.floor((data.duration % 3600) / 60);
         if (hours > 0) {
-          setDuration(`${hours} t ${minutes} min`);
+          setDuration(\`\${hours} t \${minutes} min\`);
         } else {
-          setDuration(`${minutes} min`);
+          setDuration(\`\${minutes} min\`);
         }
-      }
-      
-      if (data.waypointOrder && data.waypointOrder.length > 0) {
-        // Reconstruct the array based on waypoint_order from Google Maps
-        // Note: waypoint_order ONLY contains intermediate points.
-        // The first point (origin) and last point (destination) remain unchanged.
-        const origin = routePlaces[0];
-        const destination = routePlaces[routePlaces.length - 1];
-        const intermediatePoints = routePlaces.slice(1, -1);
-        
-        const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-        
-        const optimizedPlaces = [origin, ...optimizedIntermediate, destination];
-        setRoutePlaces(optimizedPlaces);
-        
-        toast({ title: 'Suksess', description: 'Ruten ble optimalisert for korteste kjøretid!' });
-      } else {
-         toast({ title: 'Info', description: 'Ruten er allerede optimal.' });
-      }
-    } catch (err: any) {
-      console.error('Error optimizing:', err);
-      toast({ title: 'Feil', description: 'Kunne ikke optimalisere ruten.', variant: 'destructive' });
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
+      }`
+);
 
-  const handleSave = async () => {
-    if (!route) return;
-    setIsSaving(true);
-    try {
-      const updatedRoute = {
-        ...route,
-        places: routePlaces.map(p => p.id),
-      };
-      await firebaseDB.updateRoute(routeId, updatedRoute);
-      toast({ title: 'Suksess', description: 'Ruten er lagret.' });
-      router.push('/dashboard/routes');
-    } catch (err) {
-      console.error('Error saving route:', err);
-      toast({ title: 'Feil', description: 'Kunne ikke lagre ruten.', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (loading || isDataLoading) {
-    return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
-  if (error || !user) {
-    router.push('/login');
-    return null;
-  }
-  if (!route) {
-    return <div className="text-center py-12">Ruten ble ikke funnet.</div>;
-  }
-
-
+// Completely rewrite the UI Layout
+const newLayout = `
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
       {/* Back button */}
@@ -299,7 +99,7 @@ export default function RouteDetailsPage() {
                   {isCalculating ? (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
                   ) : (
-                    <span className={`font-bold text-lg ${distance === 'Error' ? 'text-destructive' : ''}`}>
+                    <span className={\`font-bold text-lg \${distance === 'Error' ? 'text-destructive' : ''}\`}>
                       {distance === 'Error' ? 'Feil' : distance}
                     </span>
                   )}
@@ -350,7 +150,7 @@ export default function RouteDetailsPage() {
               </Select>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-100 px-4 py-2 rounded-md font-medium border border-slate-200">
-                    {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name || 'Ukjent sjåfør') : 'Ikke tildelt'}
+                    {organizationUsers.find(u => u.id === route.driverId)?.name || 'Ikke tildelt'}
                 </div>
               )}
           </div>
@@ -456,4 +256,12 @@ export default function RouteDetailsPage() {
         </Card>
       </div>
     </div>
-  );}
+  );`;
+
+// We will split the file on the "return (" to replace the entire bottom part safely
+const parts = content.split(/  return \(\n    <div className="container mx-auto/);
+if (parts.length === 2) {
+   const newFileContent = parts[0] + newLayout;
+   fs.writeFileSync('src/app/dashboard/routes/[id]/page.tsx', newFileContent);
+}
+

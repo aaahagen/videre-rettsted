@@ -57,7 +57,7 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
     
     const result = await getDrivingDistance(waypoints);
 
-    return { distance: result.distance, waypointOrder: result.waypointOrder };
+    return { distance: result.distance, duration: result.duration, waypointOrder: result.waypointOrder };
   } catch (error) {
     console.error('Error calculating route distance:', JSON.stringify(error, null, 2));
     // Re-throw the original error to preserve the detailed message from getDrivingDistance
