@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability. The new design features a top card for primary route info (name, stops, distance, time), a dedicated card for driver assignment, and a two-column layout for adding/viewing stops.
 
 ### Changed
+- **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service. This was necessary to support the server-side rendering capabilities of the Next.js application and resolve deployment failures that were preventing new updates from going live.
 - **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
 
 ### Fixed
@@ -38,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured that the "Add New Place" button is only visible to admin users.
 - **Fixed typo in `about` page component.**
 - **Fixed 404 Flash on Load**: Implemented a dedicated loading page (`src/app/page.tsx`) for the root path to handle authentication checks and redirection gracefully, preventing a brief 404 error flash.
-- **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
+- **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
 - **Fixed Sidebar Organization Loading**: Implemented a real-time listener for organization data in the sidebar to prevent it from "hanging" or failing to load for newly invited users.
 - **Fixed Admin Analytics Updates**: Updated the admin analytics dashboard to use real-time listeners, ensuring user and place counts update immediately upon deletion or creation.
 
