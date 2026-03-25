@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Update Notification:** Implemented a non-intrusive notification system that alerts users when a new version of the application is available. A small banner appears at the top of the screen, allowing users to reload the page at their convenience to get the latest features and bug fixes. This prevents issues with stale, cached versions of the app on mobile devices and desktops.
 - **Estimated Driving Time:** The detailed route view now includes the total estimated driving time, calculated by the backend using the Google Maps Directions API. The frontend displays this in a human-readable format (e.g., "1 t 23 min").
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability. The new design features a top card for primary route info (name, stops, distance, time), a dedicated card for driver assignment, and a two-column layout for adding/viewing stops.
 
@@ -37,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured that the "Add New Place" button is only visible to admin users.
 - **Fixed typo in `about` page component.**
 - **Fixed 404 Flash on Load**: Implemented a dedicated loading page (`src/app/page.tsx`) for the root path to handle authentication checks and redirection gracefully, preventing a brief 404 error flash.
-- **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
+- **Fixed Invitation Race Condition**: Prevented premature redirects in the invitation flow and and switched to real-time listeners for user profiles. This ensures new users are correctly associated with their organization immediately upon registration.
 - **Fixed Sidebar Organization Loading**: Implemented a real-time listener for organization data in the sidebar to prevent it from "hanging" or failing to load for newly invited users.
 - **Fixed Admin Analytics Updates**: Updated the admin analytics dashboard to use real-time listeners, ensuring user and place counts update immediately upon deletion or creation.
 
