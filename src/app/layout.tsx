@@ -6,7 +6,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'VIDERE RettSted',
   description: 'Finn leveringsstedet ditt med letthet.',
-  manifest: '/manifest.json',
+  // manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
