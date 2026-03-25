@@ -3,11 +3,12 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, Search, X } from 'lucide-react';
+import { FilePlus2, Search, X, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
 import { usePathname, useRouter } from 'next/navigation';
+import useUpdateNotifier from '@/hooks/useUpdateNotifier';
 
 export default function DashboardLayout({
   children,
@@ -17,13 +18,12 @@ export default function DashboardLayout({
   const { query, setQuery } = useSearch();
   const pathname = usePathname();
   const router = useRouter();
+  const { isUpdateAvailable, refreshPage } = useUpdateNotifier();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     
-    // If the user starts typing and they are NOT on the main dashboard page,
-    // redirect them to the main dashboard so they can actually see the search results.
     if (value && pathname !== '/dashboard') {
         router.push('/dashboard');
     }
@@ -34,6 +34,20 @@ export default function DashboardLayout({
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col relative">
+          {isUpdateAvailable && (
+            <div className="bg-primary text-primary-foreground text-center p-2 flex items-center justify-center">
+              <p className="text-sm font-medium">En ny versjon er tilgjengelig.</p>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="ml-4 hover:bg-primary-foreground/10"
+                onClick={refreshPage}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Last inn på nytt
+              </Button>
+            </div>
+          )}
           <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b bg-background px-4 sm:px-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <SidebarTrigger className="md:hidden" />
             <div className="relative flex-1 max-w-md">
