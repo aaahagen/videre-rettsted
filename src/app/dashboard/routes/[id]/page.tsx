@@ -46,6 +46,7 @@ export default function RouteDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
   const [route, setRoute] = useState<Route | null>(null);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
+  const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   const [routePlaces, setRoutePlaces] = useState<Place[]>([]);
   const [distance, setDistance] = useState('N/A');
   const [isSaving, setIsSaving] = useState(false);
@@ -96,10 +97,12 @@ export default function RouteDetailsPage() {
         try {
           const userDoc = await firebaseDB.getUser(user.uid);
           if (userDoc?.orgId) {
-            const [routeData, placesData] = await Promise.all([
+            const [routeData, placesData, usersData] = await Promise.all([
               firebaseDB.getRoute(routeId),
               firebaseDB.getPlaces(userDoc.orgId),
+              firebaseDB.getUsers(userDoc.orgId),
             ]);
+            setOrganizationUsers(usersData);
             
             setRoute(routeData);
             setAllPlaces(placesData);
@@ -251,7 +254,24 @@ export default function RouteDetailsPage() {
               />
             </div>
             
-            <div className="flex flex-wrap items-center gap-4 text-sm px-2">
+            <div className="mt-2 pl-14">
+              <Select 
+                value={route.driverId || "unassigned"} 
+                onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
+              >
+                <SelectTrigger className="w-[280px] h-9 bg-background/50 backdrop-blur-sm border-slate-200 shadow-sm text-sm">
+                  <SelectValue placeholder="Tildel til sjåfør..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                  {organizationUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm px-2 mt-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">{routePlaces.length} {routePlaces.length === 1 ? 'stopp' : 'stopp'}</span>
