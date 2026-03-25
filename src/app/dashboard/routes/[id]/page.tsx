@@ -214,7 +214,13 @@ export default function RouteDetailsPage() {
         const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
         
         const optimizedPlaces = [origin, ...optimizedIntermediate, destination];
-        setRoutePlaces(optimizedPlaces);
+        
+        // Ensure state is updated correctly by checking array length
+        if (optimizedPlaces.length === routePlaces.length) {
+            setRoutePlaces(optimizedPlaces);
+        } else {
+            console.error('Mismatch in optimized places array length', optimizedPlaces, routePlaces);
+        }
         
         toast({ title: 'Suksess', description: 'Ruten ble optimalisert for korteste kjøretid!' });
       } else {
