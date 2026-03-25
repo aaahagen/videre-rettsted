@@ -5,7 +5,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2 } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -226,25 +229,76 @@ export default function RouteDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <Input className="text-3xl font-bold" value={route.name} onChange={(e) => setRoute({...route, name: e.target.value})}/>
-        <div className="flex items-center gap-4">
-          {isCalculating ? <Loader2 className="h-6 w-6 animate-spin" /> : <span className="text-xl font-bold">{distance}</span>}
-          {routePlaces.length > 2 && (
-             <Button variant="outline" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving}>
-               {isOptimizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-               Optimer
-             </Button>
-          )}
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Lagre'}
-          </Button>
+    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
+      {/* Header Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-muted-foreground mb-4 hover:text-foreground transition-colors w-fit">
+          <ChevronLeft className="h-4 w-4" />
+          <Link href="/dashboard/routes" className="text-sm font-medium">Tilbake til Ruter</Link>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <RouteIcon className="h-8 w-8 text-primary" />
+              </div>
+              <Input 
+                className="text-3xl font-bold h-auto py-2 border-transparent hover:border-input focus:border-input bg-transparent shadow-none" 
+                value={route.name} 
+                onChange={(e) => setRoute({...route, name: e.target.value})}
+                placeholder="Navn på rute..."
+              />
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm px-2">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{routePlaces.length} {routePlaces.length === 1 ? 'stopp' : 'stopp'}</span>
+              </div>
+              <Separator orientation="vertical" className="h-4 hidden sm:block" />
+              <div className="flex items-center gap-2">
+                {isCalculating ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <Badge variant={distance === 'Error' ? 'destructive' : 'secondary'} className="text-sm px-3 py-1">
+                    {distance === 'Error' ? 'Kunne ikke beregne' : distance}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 self-start">
+            {routePlaces.length > 2 && (
+               <Button 
+                 variant="outline" 
+                 size="lg"
+                 className="shadow-sm font-semibold"
+                 onClick={handleOptimizeRoute} 
+                 disabled={isOptimizing || isSaving}
+               >
+                 {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
+                 Optimer Rute
+               </Button>
+            )}
+            <Button 
+              size="lg" 
+              className="shadow-sm font-semibold px-8"
+              onClick={handleSave} 
+              disabled={isSaving}
+            >
+              {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+              Lagre Endringer
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
+      <Separator />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <Card className="lg:col-span-5 h-fit sticky top-6 border-slate-200 shadow-sm">
           <CardHeader><CardTitle>Legg til Stopp</CardTitle></CardHeader>
           <CardContent>
             <Select onValueChange={handleAddPlace}>
@@ -260,7 +314,7 @@ export default function RouteDetailsPage() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="lg:col-span-5 h-fit sticky top-6 border-slate-200 shadow-sm">
           <CardHeader><CardTitle>Stopp på Ruten</CardTitle></CardHeader>
           <CardContent>
             {routePlaces.length === 0 ? (
@@ -272,8 +326,13 @@ export default function RouteDetailsPage() {
                     {routePlaces.map((place, index) => (
                       <SortableItem key={place.id} id={place.id}>
                         <li className="flex-grow flex items-center justify-between p-2 rounded-md bg-secondary">
-                          <span>{index + 1}. {place.name}</span>
-                          <Button variant="ghost" size="sm" onClick={() => handleRemovePlace(place.id)}>
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <span className="flex items-center justify-center bg-background rounded-full h-6 w-6 text-xs font-medium text-muted-foreground shrink-0 border shadow-sm">
+                              {index + 1}
+                            </span>
+                            <span className="font-medium truncate">{place.name}</span>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-slate-400 hover:text-destructive hover:bg-destructive/10 shrink-0" onClick={() => handleRemovePlace(place.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </li>
