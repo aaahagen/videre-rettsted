@@ -59,7 +59,7 @@ export interface Place {
   // Images
   imageUrl?: string;
   imageHint?: string;
-  images?: { url: string; description: string; uploadedAt?: any }[];
+  images?: { url: string; description?: string; uploadedAt?: any }[];
 
   // Location
   coordinates?: {
@@ -107,6 +107,7 @@ export interface Invitation {
 }
 
 export interface User {
+  avatarUrl?: string;
   id: string;
   name: string;
   email: string;

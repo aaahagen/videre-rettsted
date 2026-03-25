@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2 } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -48,6 +48,7 @@ export default function RouteDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -68,7 +69,7 @@ export default function RouteDetailsPage() {
         try {
           const placeIds = places.map((p) => p.id);
           const result = await calculateDistanceFn({ placeIds });
-          const data = result.data as { distance: number };
+          const data = result.data as { distance: number, waypointOrder: number[] };
           setDistance(`${data.distance.toFixed(1)} km`);
         } catch (err: any) {
           console.error('Detailed error calculating distance:', err);
@@ -144,6 +145,56 @@ export default function RouteDetailsPage() {
     }
   };
 
+  const handleOptimizeRoute = async () => {
+    if (routePlaces.length <= 2) {
+      toast({ title: 'Info', description: 'Du trenger minst 3 stopp for å optimere ruten.' });
+      return;
+    }
+    
+    if (routePlaces.length > 27) { // API limit is 25 intermediate + 2 endpoints
+        toast({ 
+            title: 'For mange stopp', 
+            description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', 
+            variant: 'destructive' 
+        });
+        return;
+    }
+
+    setIsOptimizing(true);
+    try {
+      const placeIds = routePlaces.map(p => p.id);
+      const functions = getFunctions();
+      const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
+      const result = await calculateDistanceFn({ placeIds });
+      const data = result.data as { distance: number, waypointOrder: number[] };
+      
+      setDistance(`${data.distance.toFixed(1)} km`);
+      
+      if (data.waypointOrder && data.waypointOrder.length > 0) {
+        // Reconstruct the array based on waypoint_order from Google Maps
+        // Note: waypoint_order ONLY contains intermediate points.
+        // The first point (origin) and last point (destination) remain unchanged.
+        const origin = routePlaces[0];
+        const destination = routePlaces[routePlaces.length - 1];
+        const intermediatePoints = routePlaces.slice(1, -1);
+        
+        const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+        
+        const optimizedPlaces = [origin, ...optimizedIntermediate, destination];
+        setRoutePlaces(optimizedPlaces);
+        
+        toast({ title: 'Suksess', description: 'Ruten ble optimalisert for korteste kjøretid!' });
+      } else {
+         toast({ title: 'Info', description: 'Ruten er allerede optimal.' });
+      }
+    } catch (err: any) {
+      console.error('Error optimizing:', err);
+      toast({ title: 'Feil', description: 'Kunne ikke optimalisere ruten.', variant: 'destructive' });
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!route) return;
     setIsSaving(true);
@@ -180,6 +231,12 @@ export default function RouteDetailsPage() {
         <Input className="text-3xl font-bold" value={route.name} onChange={(e) => setRoute({...route, name: e.target.value})}/>
         <div className="flex items-center gap-4">
           {isCalculating ? <Loader2 className="h-6 w-6 animate-spin" /> : <span className="text-xl font-bold">{distance}</span>}
+          {routePlaces.length > 2 && (
+             <Button variant="outline" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving}>
+               {isOptimizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+               Optimer
+             </Button>
+          )}
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Lagre'}
           </Button>

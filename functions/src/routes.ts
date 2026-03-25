@@ -55,9 +55,9 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
       throw new functions.https.HttpsError('not-found', 'Could not find valid coordinates for at least two places.');
     }
     
-    const distance = await getDrivingDistance(waypoints);
+    const result = await getDrivingDistance(waypoints);
 
-    return { distance };
+    return { distance: result.distance, waypointOrder: result.waypointOrder };
   } catch (error) {
     console.error('Error calculating route distance:', JSON.stringify(error, null, 2));
     // Re-throw the original error to preserve the detailed message from getDrivingDistance

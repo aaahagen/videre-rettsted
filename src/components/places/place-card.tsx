@@ -20,7 +20,7 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
   const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
   
   const gmapsUrl = hasCoordinates 
-    ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates.lat},${place.coordinates.lng}`
+    ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates?.lat},${place.coordinates?.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
 
   return (

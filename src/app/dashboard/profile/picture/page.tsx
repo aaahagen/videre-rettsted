@@ -52,7 +52,7 @@ export default function ProfilePicturePage() {
       const url = await firebaseStorage.uploadFile(path, file);
 
       await firebaseAuth.updateProfile({ photoURL: url });
-      await firebaseDB.updateUser(currentUser.uid, { avatarUrl: url });
+      await firebaseDB.updateUser(currentUser.uid, { photoURL: url } as any);
 
       toast({
         title: 'Profilbilde oppdatert',
