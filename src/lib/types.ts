@@ -93,6 +93,10 @@ export interface Route {
   places: string[]; // array of placeIds
   driverId?: string;
   distance?: number; // in kilometers
+  prepTimeStart?: number; // in minutes
+  prepTimeEnd?: number; // in minutes
+  breakTime?: number; // in minutes
+  fuelServiceTime?: number; // in minutes
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }
