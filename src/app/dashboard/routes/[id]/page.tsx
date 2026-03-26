@@ -375,6 +375,14 @@ export default function RouteDetailsPage() {
                   <SelectItem value="20">20 min</SelectItem>
                   <SelectItem value="25">25 min</SelectItem>
                   <SelectItem value="30">30 min</SelectItem>
+                  <SelectItem value="35">35 min</SelectItem>
+                  <SelectItem value="40">40 min</SelectItem>
+                  <SelectItem value="45">45 min</SelectItem>
+                  <SelectItem value="50">50 min</SelectItem>
+                  <SelectItem value="55">55 min</SelectItem>
+                  <SelectItem value="60">60 min</SelectItem>
+                  <SelectItem value="75">75 min</SelectItem>
+                  <SelectItem value="90">90 min</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -395,6 +403,14 @@ export default function RouteDetailsPage() {
                   <SelectItem value="20">20 min</SelectItem>
                   <SelectItem value="25">25 min</SelectItem>
                   <SelectItem value="30">30 min</SelectItem>
+                  <SelectItem value="35">35 min</SelectItem>
+                  <SelectItem value="40">40 min</SelectItem>
+                  <SelectItem value="45">45 min</SelectItem>
+                  <SelectItem value="50">50 min</SelectItem>
+                  <SelectItem value="55">55 min</SelectItem>
+                  <SelectItem value="60">60 min</SelectItem>
+                  <SelectItem value="75">75 min</SelectItem>
+                  <SelectItem value="90">90 min</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -413,6 +429,8 @@ export default function RouteDetailsPage() {
                   <SelectItem value="30">30 min</SelectItem>
                   <SelectItem value="45">45 min</SelectItem>
                   <SelectItem value="60">60 min</SelectItem>
+                  <SelectItem value="75">75 min</SelectItem>
+                  <SelectItem value="90">90 min</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -439,40 +457,7 @@ export default function RouteDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Middle Box: Driver Assignment */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-             <h3 className="font-semibold text-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Tildelt Sjåfør
-             </h3>
-             <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
-          </div>
-          <div>
-              {userData?.role === 'admin' ? (
-              <Select 
-                value={route.driverId || "unassigned"} 
-                onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
-              >
-                <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
-                  <SelectValue placeholder="Velg sjåfør..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                  {organizationUsers.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-100 px-4 py-2 rounded-md font-medium border border-slate-200">
-                    {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name || 'Ukjent sjåfør') : 'Ikke tildelt'}
-                </div>
-              )}
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Main Content: Places Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -499,30 +484,7 @@ export default function RouteDetailsPage() {
             </CardContent>
           </Card>
           
-          {/* Action Buttons Moved Here for better flow */}
-          <Card className="border-slate-200 shadow-sm bg-slate-50/50">
-             <CardContent className="p-6 space-y-4">
-                {routePlaces.length > 2 && (
-                   <Button 
-                     variant="outline" 
-                     className="w-full shadow-sm font-semibold h-12 bg-white"
-                     onClick={handleOptimizeRoute} 
-                     disabled={isOptimizing || isSaving}
-                   >
-                     {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
-                     Optimer Rekkefølge
-                   </Button>
-                )}
-                <Button 
-                  className="w-full shadow-sm font-bold h-12 text-md"
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                >
-                  {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-                  Lagre Rute
-                </Button>
-             </CardContent>
-          </Card>
+          
         </div>
         
         {/* Right Col: Current Route */}
@@ -572,5 +534,66 @@ export default function RouteDetailsPage() {
           </CardContent>
         </Card>
       </div>
+{/* Driver Assignment */}
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+             <h3 className="font-semibold text-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Tildelt Sjåfør
+             </h3>
+             <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
+          </div>
+          <div>
+              {userData?.role === 'admin' ? (
+              <Select 
+                value={route.driverId || "unassigned"} 
+                onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
+              >
+                <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
+                  <SelectValue placeholder="Velg sjåfør..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                  {organizationUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-100 px-4 py-2 rounded-md font-medium border border-slate-200">
+                    {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name || 'Ukjent sjåfør') : 'Ikke tildelt'}
+                </div>
+              )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+
+          <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+             <CardContent className="p-6 space-y-4">
+                {routePlaces.length > 2 && (
+                   <Button 
+                     variant="outline" 
+                     className="w-full shadow-sm font-semibold h-12 bg-white"
+                     onClick={handleOptimizeRoute} 
+                     disabled={isOptimizing || isSaving}
+                   >
+                     {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
+                     Optimer Rekkefølge
+                   </Button>
+                )}
+                <Button 
+                  className="w-full shadow-sm font-bold h-12 text-md"
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                >
+                  {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                  Lagre Rute
+                </Button>
+             </CardContent>
+          </Card>
+
     </div>
   );}
