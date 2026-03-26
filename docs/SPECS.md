@@ -35,6 +35,13 @@ VIDERE RettSted is a web-based application (deployed as a PWA/App Store wrapper)
 - Search by name, address, or hashtag.
 - "Favorite" system for individual users.
 
+### 6. Route Management
+- Admins can create and delete delivery routes.
+- Routes consist of an ordered list of places.
+- Admins can assign a specific driver to a route.
+- The route details page shows total estimated distance and time.
+- Integrated route optimization to automatically re-order stops for the shortest travel time using Google Maps Directions API.
+
 ## Language Support
 - Primary: Norwegian (Bokmål).
 - Architecture must support i18n (English and other languages planned).

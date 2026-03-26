@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,20 @@ export default function RoutesPage() {
     if (userData.role === 'admin') return true; // Admins see all routes
     return route.driverId === userData.id; // Drivers only see their own routes
   });
+
+  
+  const handleDeleteRoute = async (e: React.MouseEvent, routeId: string) => {
+    e.stopPropagation();
+    if (confirm('Er du sikker på at du vil slette denne ruten?')) {
+      try {
+        await firebaseDB.deleteRoute(routeId);
+        setRoutes(routes.filter(r => r.id !== routeId));
+      } catch (err) {
+        console.error('Error deleting route:', err);
+        alert('Kunne ikke slette ruten.');
+      }
+    }
+  };
 
   const handleCreateRoute = () => {
     router.push('/dashboard/routes/new');
@@ -83,8 +97,19 @@ export default function RoutesPage() {
               className="cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => router.push(`/dashboard/routes/${route.id}`)}
             >
-              <CardHeader>
+              
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-xl">{route.name}</CardTitle>
+                {userData?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 -mr-2 -mt-2"
+                    onClick={(e) => handleDeleteRoute(e, route.id as string)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center gap-2">

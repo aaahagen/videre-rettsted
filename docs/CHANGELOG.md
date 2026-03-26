@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Route Deletion:** Added the ability for admin users to delete routes directly from the routes overview page.
 - **Update Notification:** Implemented a non-intrusive notification system that alerts users when a new version of the application is available. A small banner appears at the top of the screen, allowing users to reload the page at their convenience to get the latest features and bug fixes. This prevents issues with stale, cached versions of the app on mobile devices and desktops.
 - **Estimated Driving Time:** The detailed route view now includes the total estimated driving time, calculated by the backend using the Google Maps Directions API. The frontend displays this in a human-readable format (e.g., "1 t 23 min").
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability. The new design features a top card for primary route info (name, stops, distance, time), a dedicated card for driver assignment, and a two-column layout for adding/viewing stops.
