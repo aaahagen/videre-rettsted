@@ -156,8 +156,14 @@ export default function RouteDetailsPage() {
 
 
   useEffect(() => {
-    if (baseDurationSeconds > 0) {
+    if (routePlaces.length >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
       const totalSeconds = baseDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
+      
+      if(totalSeconds === 0) {
+         setDuration('N/A');
+         return;
+      }
+
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
       if (hours > 0) {
@@ -168,7 +174,7 @@ export default function RouteDetailsPage() {
     } else {
       setDuration('N/A');
     }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime]);
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routePlaces.length]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
