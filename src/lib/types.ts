@@ -93,6 +93,7 @@ export interface Route {
   places: string[]; // array of placeIds
   driverId?: string;
   distance?: number; // in kilometers
+  distanceString?: string; // e.g. "10.5 km"
   duration?: string; // e.g., "1 t 23 min"
   prepTimeStart?: number; // in minutes
   prepTimeEnd?: number; // in minutes
