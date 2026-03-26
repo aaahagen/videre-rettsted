@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock } from 'lucide-react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
@@ -94,41 +94,80 @@ export default function RoutesPage() {
           {displayedRoutes.map(route => (
             <Card 
               key={route.id} 
-              className="cursor-pointer hover:shadow-lg transition-shadow"
+              className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-slate-200 overflow-hidden flex flex-col h-full bg-white hover:-translate-y-1"
               onClick={() => router.push(`/dashboard/routes/${route.id}`)}
             >
-              
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xl">{route.name}</CardTitle>
+              <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+              <CardHeader className="flex flex-row items-start justify-between pb-2 pt-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    <RouteIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                      {route.name}
+                    </CardTitle>
+                    <p className="text-xs text-slate-400 font-medium mt-1">
+                      Opprettet {new Date(route.createdAt as any).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
                 {userData?.role === 'admin' && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 -mr-2 -mt-2"
+                    className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 -mr-2 -mt-2 opacity-0 group-hover:opacity-100 transition-all"
                     onClick={(e) => handleDeleteRoute(e, route.id as string)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center gap-2">
-                   <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                   <p className="text-sm font-medium">{route.places?.length || 0} stopp</p>
+              
+              <CardContent className="space-y-4 pt-4 flex-grow flex flex-col justify-between">
+                
+                {/* Stats Row */}
+                <div className="flex items-center gap-6 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-indigo-400" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Stopp</span>
+                      <span className="text-lg font-bold text-slate-700 leading-none">{route.places?.length || 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="w-px h-8 bg-slate-200" />
+                  
+                  <div className="flex items-center gap-2">
+                    <Car className="h-5 w-5 text-emerald-400" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sjåfør</span>
+                      <span className="text-sm font-semibold text-slate-700 leading-none truncate max-w-[100px]" title={organizationUsers.find(u => u.id === route.driverId)?.name || 'Ingen'}>
+                         {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name?.split(' ')[0] || 'Tildelt') : <span className="text-amber-500 italic">Mangler</span>}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                {route.driverId ? (
-                   <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-100 w-fit px-2 py-1 rounded-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-4 w-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      {organizationUsers.find(u => u.id === route.driverId)?.name || 'Ukjent sjåfør'}
-                   </div>
-                ) : (
-                   <div className="flex items-center gap-2 text-sm text-slate-400 italic">
-                      Ikke tildelt sjåfør
-                   </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  Opprettet: {new Date(route.createdAt as any).toLocaleDateString()}
-                </p>
+
+                {/* Status Indicator */}
+                <div className="pt-2">
+                   {route.places?.length === 0 ? (
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200">
+                         <Clock className="h-3.5 w-3.5 mr-1" />
+                         Tom rute - krever oppsett
+                      </div>
+                   ) : route.driverId ? (
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+                         Klar for kjøring
+                      </div>
+                   ) : (
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                         Venter på sjåfør
+                      </div>
+                   )}
+                </div>
+
               </CardContent>
             </Card>
           ))}
