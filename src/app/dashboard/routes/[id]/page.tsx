@@ -261,7 +261,8 @@ export default function RouteDetailsPage() {
         prepTimeStart,
         prepTimeEnd,
         breakTime,
-        fuelServiceTime
+        fuelServiceTime,
+        duration: duration === 'N/A' ? null : duration,
       };
       await firebaseDB.updateRoute(routeId, updatedRoute);
       toast({ title: 'Suksess', description: 'Ruten er lagret.' });
