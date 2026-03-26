@@ -100,11 +100,11 @@ export default function RoutesPage() {
               <div className="h-2 w-full bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500" />
               <CardHeader className="flex flex-row items-start justify-between pb-2 pt-5">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <div className="p-2.5 bg-slate-100 text-slate-800 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
                     <RouteIcon className="h-6 w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold text-slate-800 line-clamp-1 group-hover:text-blue-700 transition-colors">
+                    <CardTitle className="text-xl font-bold text-slate-800 line-clamp-1 transition-colors">
                       {route.name}
                     </CardTitle>
                     <p className="text-xs text-slate-400 font-medium mt-1">
