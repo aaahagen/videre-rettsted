@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Globe, Smartphone, DownloadCloud, Eye, Car, DatabaseBackup, Printer, Users } from "lucide-react";
+import { CheckCircle, Globe, Smartphone, DownloadCloud, Eye, Car, Route as RouteIcon, Users, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -25,7 +25,7 @@ export default function AboutPage() {
             Finn frem på første forsøk. Hver gang.
           </h1>
           <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-200">
-            Spar tid, reduser stress og øk leveringspresisjonen med VIDERE RettSted – designet for den siste, avgjørende meteren av leveransen.
+            Spar tid, reduser stress og øk leveringspresisjonen med VIDERE RettSted – designet for den siste, avgjørende meteren av leveransen og smidig ruteplanlegging.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/pricing" className="bg-yellow-500 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
@@ -44,7 +44,7 @@ export default function AboutPage() {
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Utfordringen: Den siste, frustrerende meteren</h2>
             <p className="text-lg text-slate-600 mb-12">
-              Standard GPS tar sjåføren til riktig adresse, men den viser sjelden veien til den spesifikke rampen, den skjulte bakdøren eller den riktige inngangen i en stor bygning. Resultatet er bortkastet tid, unødvendig stress og forsinkede leveranser.
+              Standard GPS tar sjåføren til riktig adresse, men den viser sjelden veien til den spesifikke rampen, den skjulte bakdøren eller den riktige inngangen i en stor bygning. Samtidig er det krevende å estimere hvor lang tid en hel rute med flere stopp faktisk vil ta.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 text-center">
@@ -58,10 +58,10 @@ export default function AboutPage() {
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">Frustrerte kunder</CardTitle>
+                <CardTitle className="text-xl font-semibold">Uforutsigbare ruter</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">Kundeservice må håndtere unødvendige telefoner fra kunder og sjåfører, noe som reduserer effektiviteten.</p>
+                <p className="text-slate-600">Planleggere mangler ofte presise estimater for hvor lang tid sjåføren faktisk bruker på hvert leveringssted, noe som gjør ruteplanlegging til ren gjetting.</p>
               </CardContent>
             </Card>
             <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -80,9 +80,9 @@ export default function AboutPage() {
       <section id="solution" className="py-16 md:py-24 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Løsningen: Visuell leveringsstøtte</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Løsningen: Visuell støtte og smart ruteplanlegging</h2>
             <p className="text-lg text-slate-600 mb-12">
-              VIDERE RettSted er en enkel og intuitiv web-app som gir sjåføren akkurat det de trenger for å fullføre jobben effektivt: et bilde av leveringsstedet.
+              VIDERE RettSted kombinerer nøyaktig stedsdetaljer med et kraftig verktøy for å planlegge, optimalisere og estimere arbeidsdagen.
             </p>
           </div>
           <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -98,24 +98,24 @@ export default function AboutPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4">
+                <RouteIcon className="w-8 h-8 text-blue-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Ruteplanlegging med Google Maps</h3>
+                  <p className="text-slate-600">Bygg ruter og la systemet automatisk optimalisere rekkefølgen for kortest mulig kjøretid mellom stoppene.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <Clock className="w-8 h-8 text-amber-500 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-bold">Presise tidsestimater</h3>
+                  <p className="text-slate-600">Legg inn forventet leveringstid per sted, pauser, klargjøring og kjøretid. Få et nøyaktig tidsestimat for hele arbeidsdagen.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
                 <Users className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="text-xl font-bold">Alltid Oppdatert Informasjon</h3>
-                  <p className="text-slate-600">Det er sjåførene selv som tar bilder og oppdaterer instruksjoner direkte fra feltet. Dette sikrer at informasjonen alltid er fersk og nøyaktig.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <CheckCircle className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="text-xl font-bold">Sømløs navigasjon</h3>
-                  <p className="text-slate-600">Ett enkelt trykk på kartet i appen åpner Google Maps, klar til å lede sjåføren de siste, kritiske meterne.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <CheckCircle className="w-8 h-8 text-green-500 mt-1 flex-shrink-0" />
-                <div>
                   <h3 className="text-xl font-bold">Bedriftens kunnskapsbase</h3>
-                  <p className="text-slate-600">Bygg opp et verdifullt bibliotek med leveringssteder som blir værende i bedriften, selv når erfarne sjåfører slutter.</p>
+                  <p className="text-slate-600">Sjåførene oppdaterer bilder og instruksjoner selv. Kunnskapen blir værende i bedriften, selv når erfarne sjåfører slutter.</p>
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Bygget av Sjåfører, for Sjåfører</h2>
                 <p className="text-lg md:text-xl max-w-3xl mx-auto text-slate-300 mb-8">
-                    VIDERE RettSted er ikke laget av et fjernt teknologiselskap. Vi er selv erfarne sjåfører som har kjent på frustrasjonen ved å ikke finne frem. Derfor er appen designet fra grunnen av for å være det verktøyet vi alltid har savnet. Det er sjåførene som er ekspertene, og det er de som bygger opp den verdifulle kunnskapsbasen som gjør hverdagen enklere for alle.
+                    VIDERE RettSted er ikke laget av et fjernt teknologiselskap. Vi er selv erfarne sjåfører som har kjent på frustrasjonen ved å ikke finne frem, og utfordringen med urealistiske kjøreplaner. Derfor er appen designet fra grunnen av for å være det verktøyet vi alltid har savnet.
                 </p>
             </div>
         </div>
