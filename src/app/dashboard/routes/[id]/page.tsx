@@ -273,8 +273,18 @@ export default function RouteDetailsPage() {
     if (startAddress) totalPoints++;
     if (endAddress) totalPoints++;
 
-    if (totalPoints >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
-      const totalSeconds = baseDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
+    // Calculate total duration from places
+    const totalPlacesDeliveryTimeMinutes = routeItems
+        .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
+        .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
+
+    if (totalPoints >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0 || totalPlacesDeliveryTimeMinutes > 0) {
+      const totalSeconds = baseDurationSeconds 
+        + (prepTimeStart * 60) 
+        + (prepTimeEnd * 60) 
+        + (breakTime * 60) 
+        + (fuelServiceTime * 60)
+        + (totalPlacesDeliveryTimeMinutes * 60);
       
       if(totalSeconds === 0) {
          setDuration('N/A');
@@ -436,7 +446,18 @@ export default function RouteDetailsPage() {
       
       // Calculate new duration string immediately for auto-save
       let newDurationString = 'N/A';
-      const totalSeconds = newDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
+      
+      const totalPlacesDeliveryTimeMinutes = routeItems
+        .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
+        .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
+
+      const totalSeconds = newDurationSeconds 
+        + (prepTimeStart * 60) 
+        + (prepTimeEnd * 60) 
+        + (breakTime * 60) 
+        + (fuelServiceTime * 60)
+        + (totalPlacesDeliveryTimeMinutes * 60);
+
       if (totalSeconds > 0) {
           const hours = Math.floor(totalSeconds / 3600);
           const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -874,8 +895,14 @@ export default function RouteDetailsPage() {
                               </div>
                             </div>
                             
-                            {/* Right Side: Actions */}
+                            {/* Right Side: Actions & Badge */}
                             <div className="flex items-center gap-1 shrink-0 ml-2">
+                               {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
+                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 hidden sm:flex items-center gap-1">
+                                       <Clock className="h-3 w-3" />
+                                       {item.placeData.estimatedDeliveryTime} min
+                                   </Badge>
+                               ) : null}
                                <Link href={`/dashboard/places/${item.placeId}`} passHref>
                                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10">
                                     <ExternalLink className="h-4 w-4" />
