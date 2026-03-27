@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -21,15 +21,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Place, Route } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-
-function debounce<F extends (...args: any[]) => any>(func: F, waitFor: number) {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<F>): Promise<ReturnType<F>> =>
-    new Promise(resolve => {
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => resolve(func(...args)), waitFor);
-    });
-}
 
 function SortableItem({ id, children }: { id: string, children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -71,9 +62,15 @@ export default function RouteDetailsPage() {
   const { toast } = useToast();
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const debouncedCalculateDistance = useMemo(
-    () =>
-      debounce(async (places: Place[]) => {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedCalculateDistance = useMemo(() => {
+    return async (places: Place[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(async () => {
         const functions = getFunctions();
         const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
         if (places.length < 2) {
@@ -104,9 +101,18 @@ export default function RouteDetailsPage() {
         } finally {
           setIsCalculating(false);
         }
-      }, 500),
-    [toast]
-  );
+      }, 500);
+    };
+  }, [toast]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (user && routeId) {
@@ -158,7 +164,7 @@ export default function RouteDetailsPage() {
       };
       fetchData();
     }
-  }, [user, routeId, toast]);
+  }, [user, routeId, toast, debouncedCalculateDistance]);
 
   const updateRoutePlaces = (newPlaces: Place[]) => {
     setRoutePlaces(newPlaces);
@@ -170,7 +176,6 @@ export default function RouteDetailsPage() {
     if (route && userData?.role !== 'admin') {
       try {
         const placeIds = newPlaces.map(p => p.id);
-        const updateData: Partial<Route> = { places: placeIds };
         
         // Wait briefly for distance calculation to catch up if not provided directly
         if (!newDistance || !newDuration) {
