@@ -898,7 +898,7 @@ export default function RouteDetailsPage() {
                             {/* Right Side: Actions & Badge */}
                             <div className="flex items-center gap-1 shrink-0 ml-2">
                                {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
-                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 hidden sm:flex items-center gap-1">
+                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 flex items-center gap-1">
                                        <Clock className="h-3 w-3" />
                                        {item.placeData.estimatedDeliveryTime} min
                                    </Badge>
