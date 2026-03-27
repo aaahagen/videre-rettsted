@@ -164,6 +164,38 @@ export default function RouteDetailsPage() {
     setRoutePlaces(newPlaces);
     debouncedCalculateDistance(newPlaces);
   };
+  
+  // Helper function to auto-save route places and stats for drivers
+  const autoSaveRouteStructure = async (newPlaces: Place[], newDistance?: string, newDuration?: string) => {
+    if (route && userData?.role !== 'admin') {
+      try {
+        const placeIds = newPlaces.map(p => p.id);
+        const updateData: Partial<Route> = { places: placeIds };
+        
+        // Wait briefly for distance calculation to catch up if not provided directly
+        if (!newDistance || !newDuration) {
+           setTimeout(async () => {
+               const latestDistance = distance === 'N/A' || distance === 'Error' ? undefined : distance;
+               const latestDuration = duration === 'N/A' ? undefined : duration;
+               await firebaseDB.updateRoute(routeId, { 
+                   places: placeIds,
+                   distanceString: latestDistance,
+                   duration: latestDuration
+               });
+           }, 1000); // Give debounce a chance to finish
+        } else {
+             await firebaseDB.updateRoute(routeId, { 
+                 places: placeIds,
+                 distanceString: newDistance === 'N/A' || newDistance === 'Error' ? undefined : newDistance,
+                 duration: newDuration === 'N/A' ? undefined : newDuration
+             });
+        }
+      } catch (err) {
+        console.error('Error auto-saving route structure:', err);
+        toast({ title: 'Feil', description: 'Kunne ikke lagre ruteendringene automatisk.', variant: 'destructive' });
+      }
+    }
+  };
 
 
   useEffect(() => {
@@ -190,12 +222,16 @@ export default function RouteDetailsPage() {
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
     if (placeToAdd && !routePlaces.some(p => p.id === placeId)) {
-      updateRoutePlaces([...routePlaces, placeToAdd]);
+      const newPlaces = [...routePlaces, placeToAdd];
+      updateRoutePlaces(newPlaces);
+      autoSaveRouteStructure(newPlaces);
     }
   };
 
   const handleRemovePlace = (placeId: string) => {
-    updateRoutePlaces(routePlaces.filter(p => p.id !== placeId));
+    const newPlaces = routePlaces.filter(p => p.id !== placeId);
+    updateRoutePlaces(newPlaces);
+    autoSaveRouteStructure(newPlaces);
   };
   
   const toggleStopCompletion = async (placeId: string, event: React.MouseEvent) => {
@@ -237,7 +273,9 @@ export default function RouteDetailsPage() {
     if (active.id !== over.id) {
       const oldIndex = routePlaces.findIndex(item => item.id === active.id);
       const newIndex = routePlaces.findIndex(item => item.id === over.id);
-      updateRoutePlaces(arrayMove(routePlaces, oldIndex, newIndex));
+      const newPlaces = arrayMove(routePlaces, oldIndex, newIndex);
+      updateRoutePlaces(newPlaces);
+      autoSaveRouteStructure(newPlaces);
     }
   };
 
@@ -264,28 +302,42 @@ export default function RouteDetailsPage() {
       const result = await calculateDistanceFn({ placeIds });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
-      setDistance(`${data.distance.toFixed(1)} km`);
+      const newDistanceString = `${data.distance.toFixed(1)} km`;
+      setDistance(newDistanceString);
+      
+      let newDurationSeconds = 0;
       if (data.duration) {
         setBaseDurationSeconds(data.duration);
+        newDurationSeconds = data.duration;
       } else {
         setBaseDurationSeconds(0);
       }
       
+      // Calculate new duration string immediately for auto-save
+      let newDurationString = 'N/A';
+      const totalSeconds = newDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
+      if (totalSeconds > 0) {
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          if (hours > 0) {
+             newDurationString = `${hours} t ${minutes} min`;
+          } else {
+             newDurationString = `${minutes} min`;
+          }
+      }
+      
       if (data.waypointOrder && data.waypointOrder.length > 0) {
-        // Reconstruct the array based on waypoint_order from Google Maps
-        // Note: waypoint_order ONLY contains intermediate points.
-        // The first point (origin) and last point (destination) remain unchanged.
         const origin = routePlaces[0];
         const destination = routePlaces[routePlaces.length - 1];
         const intermediatePoints = routePlaces.slice(1, -1);
         
         const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-        
         const optimizedPlaces = [origin, ...optimizedIntermediate, destination];
         
-        // Ensure state is updated correctly by checking array length
         if (optimizedPlaces.length === routePlaces.length) {
             setRoutePlaces(optimizedPlaces);
+            // Pass the calculated strings to ensure they are saved, rather than waiting for state
+            autoSaveRouteStructure(optimizedPlaces, newDistanceString, newDurationString);
         } else {
             console.error('Mismatch in optimized places array length', optimizedPlaces, routePlaces);
         }
