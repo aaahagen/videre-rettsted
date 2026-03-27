@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Place, Route } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 type RouteItemType = 'place' | 'start' | 'end' | 'break' | 'service';
 
@@ -61,6 +62,7 @@ export default function RouteDetailsPage() {
   
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
+  const [routeNotes, setRouteNotes] = useState('');
   const [prepTimeStart, setPrepTimeStart] = useState<number>(0);
   const [prepTimeEnd, setPrepTimeEnd] = useState<number>(0);
   const [breakTime, setBreakTime] = useState<number>(0);
@@ -167,6 +169,7 @@ export default function RouteDetailsPage() {
             
             setRoute(routeData);
             setAllPlaces(placesData);
+            setRouteNotes(routeData?.notes || '');
             
             // Handle backwards compatibility for 'baseAddress'
             const legacyBaseAddress = (routeData as any).baseAddress || '';
@@ -191,8 +194,6 @@ export default function RouteDetailsPage() {
             }
 
             // Construct RouteItems array based on saved places
-            // In a more robust implementation, the order of places AND intervals would be saved in DB.
-            // For backward compatibility, we'll construct the list here.
             let initialItems: RouteItem[] = [];
             
             if (routeData?.prepTimeStart && routeData.prepTimeStart > 0) {
@@ -549,6 +550,7 @@ export default function RouteDetailsPage() {
         places: placeIds,
         startAddress,
         endAddress,
+        notes: routeNotes,
         completedStops: currentCompletedStops,
         prepTimeStart,
         prepTimeEnd,
@@ -809,7 +811,23 @@ export default function RouteDetailsPage() {
             </CardContent>
           </Card>
           
-          
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Info className="h-5 w-5 text-slate-400" />
+                Viktig Ruteinformasjon
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea 
+                value={routeNotes}
+                onChange={(e) => setRouteNotes(e.target.value)}
+                placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
+                className="min-h-[120px]"
+                readOnly={!isAdmin}
+              />
+            </CardContent>
+          </Card>
         </div>
         
         {/* Right Col: Current Route */}
