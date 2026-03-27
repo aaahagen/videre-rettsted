@@ -12,8 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Update Notification:** Implemented a non-intrusive notification system that alerts users when a new version of the application is available. A small banner appears at the top of the screen, allowing users to reload the page at their convenience to get the latest features and bug fixes. This prevents issues with stale, cached versions of the app on mobile devices and desktops.
 - **Estimated Driving Time:** The detailed route view now includes the total estimated driving time, calculated by the backend using the Google Maps Directions API. The frontend displays this in a human-readable format (e.g., "1 t 23 min").
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability. The new design features a top card for primary route info (name, stops, distance, time), a dedicated card for driver assignment, and a two-column layout for adding/viewing stops.
+- **Driver Route View Enhancements:** 
+    - Added the ability for drivers to mark stops as completed using a toggleable circle icon. Completed stops are styled distinctly (green tint, strikethrough text).
+    - Included the place's address below its name in the stop list for better context.
+    - Added an external link icon to each stop that navigates directly to the detailed view of the specific place.
 
 ### Changed
+- **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
 - **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service. This was necessary to support the server-side rendering capabilities of the Next.js application and resolve deployment failures that were preventing new updates from going live.
 - **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
 

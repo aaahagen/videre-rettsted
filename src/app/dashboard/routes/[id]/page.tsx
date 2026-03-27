@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -35,8 +35,8 @@ function SortableItem({ id, children }: { id: string, children: React.ReactNode 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center">
-      <GripVertical className="cursor-grab mr-2 text-muted-foreground" />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center w-full">
+      <GripVertical className="cursor-grab mr-2 text-muted-foreground shrink-0" />
       {children}
     </div>
   );
@@ -56,6 +56,9 @@ export default function RouteDetailsPage() {
   const [breakTime, setBreakTime] = useState<number>(0);
   const [fuelServiceTime, setFuelServiceTime] = useState<number>(0);
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
+  
+  // Track completed stops
+  const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -186,6 +189,14 @@ export default function RouteDetailsPage() {
   const handleRemovePlace = (placeId: string) => {
     updateRoutePlaces(routePlaces.filter(p => p.id !== placeId));
   };
+  
+  const toggleStopCompletion = (placeId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent drag from triggering
+    setCompletedStops(prev => ({
+      ...prev,
+      [placeId]: !prev[placeId]
+    }));
+  };
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
@@ -293,6 +304,7 @@ export default function RouteDetailsPage() {
     return <div className="text-center py-12">Ruten ble ikke funnet.</div>;
   }
 
+  const isAdmin = userData?.role === 'admin';
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
@@ -315,6 +327,7 @@ export default function RouteDetailsPage() {
                 value={route.name} 
                 onChange={(e) => setRoute({...route, name: e.target.value})}
                 placeholder="Navn på rute..."
+                readOnly={!isAdmin}
               />
             </div>
             
@@ -357,114 +370,114 @@ export default function RouteDetailsPage() {
         </CardContent>
       </Card>
 
-
-      {/* Time Settings Box */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-             <Clock className="h-5 w-5 text-slate-500" />
-             Tidsinnstillinger
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Klargjøring (start)</label>
-              <Select 
-                value={prepTimeStart.toString()} 
-                onValueChange={(val) => setPrepTimeStart(Number(val))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Velg tid" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0 min</SelectItem>
-                  <SelectItem value="5">5 min</SelectItem>
-                  <SelectItem value="10">10 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="20">20 min</SelectItem>
-                  <SelectItem value="25">25 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="35">35 min</SelectItem>
-                  <SelectItem value="40">40 min</SelectItem>
-                  <SelectItem value="45">45 min</SelectItem>
-                  <SelectItem value="50">50 min</SelectItem>
-                  <SelectItem value="55">55 min</SelectItem>
-                  <SelectItem value="60">60 min</SelectItem>
-                  <SelectItem value="75">75 min</SelectItem>
-                  <SelectItem value="90">90 min</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Time Settings Box - Only for Admins */}
+      {isAdmin && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
+              <Clock className="h-5 w-5 text-slate-500" />
+              Tidsinnstillinger
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Klargjøring (start)</label>
+                <Select 
+                  value={prepTimeStart.toString()} 
+                  onValueChange={(val) => setPrepTimeStart(Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Velg tid" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 min</SelectItem>
+                    <SelectItem value="5">5 min</SelectItem>
+                    <SelectItem value="10">10 min</SelectItem>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="20">20 min</SelectItem>
+                    <SelectItem value="25">25 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="35">35 min</SelectItem>
+                    <SelectItem value="40">40 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="50">50 min</SelectItem>
+                    <SelectItem value="55">55 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                    <SelectItem value="75">75 min</SelectItem>
+                    <SelectItem value="90">90 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Ferdigstilling (slutt)</label>
+                <Select 
+                  value={prepTimeEnd.toString()} 
+                  onValueChange={(val) => setPrepTimeEnd(Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Velg tid" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 min</SelectItem>
+                    <SelectItem value="5">5 min</SelectItem>
+                    <SelectItem value="10">10 min</SelectItem>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="20">20 min</SelectItem>
+                    <SelectItem value="25">25 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="35">35 min</SelectItem>
+                    <SelectItem value="40">40 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="50">50 min</SelectItem>
+                    <SelectItem value="55">55 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                    <SelectItem value="75">75 min</SelectItem>
+                    <SelectItem value="90">90 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pause</label>
+                <Select 
+                  value={breakTime.toString()} 
+                  onValueChange={(val) => setBreakTime(Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Velg tid" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 min</SelectItem>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                    <SelectItem value="75">75 min</SelectItem>
+                    <SelectItem value="90">90 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Drivstoff / Service</label>
+                <Select 
+                  value={fuelServiceTime.toString()} 
+                  onValueChange={(val) => setFuelServiceTime(Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Velg tid" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0 min</SelectItem>
+                    <SelectItem value="5">5 min</SelectItem>
+                    <SelectItem value="10">10 min</SelectItem>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="20">20 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Ferdigstilling (slutt)</label>
-              <Select 
-                value={prepTimeEnd.toString()} 
-                onValueChange={(val) => setPrepTimeEnd(Number(val))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Velg tid" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0 min</SelectItem>
-                  <SelectItem value="5">5 min</SelectItem>
-                  <SelectItem value="10">10 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="20">20 min</SelectItem>
-                  <SelectItem value="25">25 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="35">35 min</SelectItem>
-                  <SelectItem value="40">40 min</SelectItem>
-                  <SelectItem value="45">45 min</SelectItem>
-                  <SelectItem value="50">50 min</SelectItem>
-                  <SelectItem value="55">55 min</SelectItem>
-                  <SelectItem value="60">60 min</SelectItem>
-                  <SelectItem value="75">75 min</SelectItem>
-                  <SelectItem value="90">90 min</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Pause</label>
-              <Select 
-                value={breakTime.toString()} 
-                onValueChange={(val) => setBreakTime(Number(val))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Velg tid" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                  <SelectItem value="45">45 min</SelectItem>
-                  <SelectItem value="60">60 min</SelectItem>
-                  <SelectItem value="75">75 min</SelectItem>
-                  <SelectItem value="90">90 min</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Drivstoff / Service</label>
-              <Select 
-                value={fuelServiceTime.toString()} 
-                onValueChange={(val) => setFuelServiceTime(Number(val))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Velg tid" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0 min</SelectItem>
-                  <SelectItem value="5">5 min</SelectItem>
-                  <SelectItem value="10">10 min</SelectItem>
-                  <SelectItem value="15">15 min</SelectItem>
-                  <SelectItem value="20">20 min</SelectItem>
-                  <SelectItem value="30">30 min</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+          </CardContent>
+        </Card>
+      )}
       
 
       {/* Main Content: Places Grid */}
@@ -496,7 +509,7 @@ export default function RouteDetailsPage() {
         </div>
         
         {/* Right Col: Current Route */}
-        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col h-[600px]">
+        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px]">
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Rekkefølge</CardTitle>
@@ -514,26 +527,53 @@ export default function RouteDetailsPage() {
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={routePlaces.map(p => p.id)} strategy={verticalListSortingStrategy}>
                   <ul className="space-y-3">
-                    {routePlaces.map((place, index) => (
-                      <SortableItem key={place.id} id={place.id}>
-                        <li className="flex-grow flex items-center justify-between p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-colors group">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
-                              {index + 1}
-                            </span>
-                            <span className="font-semibold text-slate-700 truncate">{place.name}</span>
-                          </div>
-                          <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             className="text-slate-300 hover:text-destructive hover:bg-destructive/10 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" 
-                             onClick={() => handleRemovePlace(place.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </li>
-                      </SortableItem>
-                    ))}
+                    {routePlaces.map((place, index) => {
+                      const isCompleted = completedStops[place.id];
+                      return (
+                        <SortableItem key={place.id} id={place.id}>
+                          <li className={`flex-grow flex items-center justify-between p-3 rounded-lg bg-white border shadow-sm transition-all group w-full ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
+                            
+                            {/* Left Side: Completion Toggle & Info */}
+                            <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleStopCompletion(place.id, e)}>
+                               <button 
+                                 type="button" 
+                                 className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
+                               >
+                                  {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                               </button>
+
+                              <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
+                                {index + 1}
+                              </span>
+                              <div className="flex flex-col truncate">
+                                <span className={`font-semibold truncate transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                  {place.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate">{place.address}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Right Side: Actions */}
+                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                               <Link href={`/dashboard/places/${place.id}`} passHref>
+                                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                               </Link>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="text-slate-300 hover:text-destructive hover:bg-destructive/10 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" 
+                                 onClick={(e) => { e.stopPropagation(); handleRemovePlace(place.id); }}
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                            </div>
+
+                          </li>
+                        </SortableItem>
+                      )
+                    })}
                   </ul>
                 </SortableContext>
               </DndContext>
@@ -542,56 +582,53 @@ export default function RouteDetailsPage() {
           </CardContent>
         </Card>
       </div>
-{/* Driver Assignment */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-             <h3 className="font-semibold text-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Tildelt Sjåfør
-             </h3>
-             <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
-          </div>
-          <div>
-              {userData?.role === 'admin' ? (
-              <Select 
-                value={route.driverId || "unassigned"} 
-                onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
-              >
-                <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
-                  <SelectValue placeholder="Velg sjåfør..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                  {organizationUsers.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-100 px-4 py-2 rounded-md font-medium border border-slate-200">
-                    {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name || 'Ukjent sjåfør') : 'Ikke tildelt'}
-                </div>
-              )}
-          </div>
-        </CardContent>
-      </Card>
+
+      {/* Driver Assignment - Only for Admins */}
+      {isAdmin && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+               <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Tildelt Sjåfør
+               </h3>
+               <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
+            </div>
+            <div>
+                <Select 
+                  value={route.driverId || "unassigned"} 
+                  onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
+                >
+                  <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
+                    <SelectValue placeholder="Velg sjåfør..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                    {organizationUsers.map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Action Buttons */}
-
-          <Card className="border-slate-200 shadow-sm bg-slate-50/50">
-             <CardContent className="p-6 space-y-4">
-                {routePlaces.length > 2 && (
-                   <Button 
-                     variant="outline" 
-                     className="w-full shadow-sm font-semibold h-12 bg-white"
-                     onClick={handleOptimizeRoute} 
-                     disabled={isOptimizing || isSaving}
-                   >
-                     {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
-                     Optimer Rekkefølge
-                   </Button>
-                )}
+      <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+         <CardContent className="p-6 space-y-4">
+            {routePlaces.length > 2 && (
+               <Button 
+                 variant="outline" 
+                 className="w-full shadow-sm font-semibold h-12 bg-white"
+                 onClick={handleOptimizeRoute} 
+                 disabled={isOptimizing || isSaving}
+               >
+                 {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
+                 Optimer Rekkefølge
+               </Button>
+            )}
+            {isAdmin && (
                 <Button 
                   className="w-full shadow-sm font-bold h-12 text-md"
                   onClick={handleSave} 
@@ -600,8 +637,10 @@ export default function RouteDetailsPage() {
                   {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
                   Lagre Rute
                 </Button>
-             </CardContent>
-          </Card>
+            )}
+         </CardContent>
+      </Card>
 
     </div>
-  );}
+  );
+}
