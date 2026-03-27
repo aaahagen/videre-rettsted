@@ -94,20 +94,19 @@ export default function RouteDetailsPage() {
            .filter(item => item.type === 'place' && item.placeId)
            .map(item => item.placeId!);
            
-        // If there is a base address, we want to include it at the start and end of the calculation
-        // However, the backend function currently only accepts placeIds.
-        // For a true implementation of baseAddress routing, the backend `calculateRouteDistance` 
-        // needs to be modified to accept an array of mixed placeIds and string addresses.
-        // For now, we will just calculate distance between the places.
-           
-        if (placesToCalculate.length < 2) {
+        // We only require 1 place if a base address is set, otherwise 2 places
+        if (placesToCalculate.length === 0 || (placesToCalculate.length === 1 && !currentBaseAddress)) {
           setDistance('N/A');
           setDuration('N/A');
           return;
         }
+
         setIsCalculating(true);
         try {
-          const result = await calculateDistanceFn({ placeIds: placesToCalculate });
+          const result = await calculateDistanceFn({ 
+              placeIds: placesToCalculate,
+              baseAddress: currentBaseAddress 
+          });
           const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
           setDistance(`${data.distance.toFixed(1)} km`);
           
@@ -255,7 +254,7 @@ export default function RouteDetailsPage() {
 
   useEffect(() => {
     const placesCount = routeItems.filter(i => i.type === 'place').length;
-    if (placesCount >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
+    if (placesCount >= 2 || (placesCount >= 1 && baseAddress) || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
       const totalSeconds = baseDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
       
       if(totalSeconds === 0) {
@@ -273,7 +272,7 @@ export default function RouteDetailsPage() {
     } else {
       setDuration('N/A');
     }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems, baseAddress]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
@@ -323,6 +322,7 @@ export default function RouteDetailsPage() {
      }
      
      setRouteItems(newItems);
+     debouncedCalculateDistance(newItems, baseAddress);
      
      if (type === 'start') setPrepTimeStart(value);
      if (type === 'end') setPrepTimeEnd(value);
@@ -397,8 +397,10 @@ export default function RouteDetailsPage() {
       const functions = getFunctions();
       const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
       
-      // Note: Optimization currently only works on Place IDs.
-      const result = await calculateDistanceFn({ placeIds });
+      const result = await calculateDistanceFn({ 
+          placeIds,
+          baseAddress
+      });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
       const newDistanceString = `${data.distance.toFixed(1)} km`;
@@ -426,13 +428,22 @@ export default function RouteDetailsPage() {
       }
       
       if (data.waypointOrder && data.waypointOrder.length > 0) {
-        // Reconstruct place order
-        const origin = placeItems[0];
-        const destination = placeItems[placeItems.length - 1];
-        const intermediatePoints = placeItems.slice(1, -1);
+        // Reconstruct place order.
+        // Google Maps waypointOrder applies to the intermediate waypoints provided.
+        // If we passed baseAddress as origin and destination, the placeItems are ALL intermediate.
+        let optimizedPlaceItems: RouteItem[] = [];
         
-        const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-        const optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
+        if (baseAddress) {
+             // If baseAddress was used, ALL placeItems were intermediate waypoints
+             optimizedPlaceItems = data.waypointOrder.map(index => placeItems[index]);
+        } else {
+             // If no baseAddress, the first and last placeItems were origin/destination
+             const origin = placeItems[0];
+             const destination = placeItems[placeItems.length - 1];
+             const intermediatePoints = placeItems.slice(1, -1);
+             const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+             optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
+        }
         
         // Re-integrate optimized places into the main routeItems array, keeping special items in place
         // This is a naive merge: it simply replaces the place items in their original relative positions

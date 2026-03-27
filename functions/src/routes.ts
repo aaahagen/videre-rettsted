@@ -25,8 +25,10 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
   }
 
   const placeIds = data.placeIds;
-  if (!Array.isArray(placeIds) || placeIds.length < 2) {
-    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with an array of at least two place IDs.');
+  const baseAddress = data.baseAddress;
+
+  if (!Array.isArray(placeIds)) {
+    throw new functions.https.HttpsError('invalid-argument', 'The function must be called with an array of place IDs.');
   }
 
   try {
@@ -34,7 +36,7 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
       placeIds.map((id) => db.collection('places').doc(id).get())
     );
 
-    const waypoints = placeDocs
+    let waypoints = placeDocs
       .map((doc) => {
         const place = doc.data();
         if (place?.coordinates && place.coordinates.lat !== 0 && place.coordinates.lng !== 0) {
@@ -51,8 +53,14 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
         console.warn('Some place IDs could not be found or were missing coordinates.');
     }
 
+    // Add base address to the start and end of the waypoints array if it exists
+    if (baseAddress && typeof baseAddress === 'string' && baseAddress.trim() !== '') {
+        waypoints.unshift(baseAddress.trim());
+        waypoints.push(baseAddress.trim());
+    }
+
     if (waypoints.length < 2) {
-      throw new functions.https.HttpsError('not-found', 'Could not find valid coordinates for at least two places.');
+      throw new functions.https.HttpsError('not-found', 'Could not find valid coordinates for at least two locations (places or base address).');
     }
     
     const result = await getDrivingDistance(waypoints);
