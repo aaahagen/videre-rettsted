@@ -1,4 +1,3 @@
-
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { getDrivingDistance } from './utils';
@@ -25,7 +24,8 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
   }
 
   const placeIds = data.placeIds;
-  const baseAddress = data.baseAddress;
+  const startAddress = data.startAddress;
+  const endAddress = data.endAddress;
 
   if (!Array.isArray(placeIds)) {
     throw new functions.https.HttpsError('invalid-argument', 'The function must be called with an array of place IDs.');
@@ -53,10 +53,14 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
         console.warn('Some place IDs could not be found or were missing coordinates.');
     }
 
-    // Add base address to the start and end of the waypoints array if it exists
-    if (baseAddress && typeof baseAddress === 'string' && baseAddress.trim() !== '') {
-        waypoints.unshift(baseAddress.trim());
-        waypoints.push(baseAddress.trim());
+    // Add start address to the beginning
+    if (startAddress && typeof startAddress === 'string' && startAddress.trim() !== '') {
+        waypoints.unshift(startAddress.trim());
+    }
+
+    // Add end address to the end
+    if (endAddress && typeof endAddress === 'string' && endAddress.trim() !== '') {
+        waypoints.push(endAddress.trim());
     }
 
     if (waypoints.length < 2) {
@@ -77,5 +81,3 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
     throw new functions.https.HttpsError('internal', errorMessage, (error instanceof Error) ? error.stack : error);
   }
 });
-
-// Forced redeploy to pick up new API key secret.

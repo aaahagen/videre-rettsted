@@ -5,13 +5,14 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { deleteField } from 'firebase/firestore';
 
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
@@ -56,7 +57,8 @@ export default function RouteDetailsPage() {
   const [distance, setDistance] = useState('N/A');
   const [duration, setDuration] = useState('N/A');
   
-  const [baseAddress, setBaseAddress] = useState('');
+  const [startAddress, setStartAddress] = useState('');
+  const [endAddress, setEndAddress] = useState('');
   const [prepTimeStart, setPrepTimeStart] = useState<number>(0);
   const [prepTimeEnd, setPrepTimeEnd] = useState<number>(0);
   const [breakTime, setBreakTime] = useState<number>(0);
@@ -80,7 +82,7 @@ export default function RouteDetailsPage() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedCalculateDistance = useMemo(() => {
-    return async (items: RouteItem[], currentBaseAddress: string) => {
+    return async (items: RouteItem[], currentStartAddress: string, currentEndAddress: string) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -94,8 +96,12 @@ export default function RouteDetailsPage() {
            .filter(item => item.type === 'place' && item.placeId)
            .map(item => item.placeId!);
            
-        // We only require 1 place if a base address is set, otherwise 2 places
-        if (placesToCalculate.length === 0 || (placesToCalculate.length === 1 && !currentBaseAddress)) {
+        // Calculate how many total points we have (places + start + end)
+        let totalPoints = placesToCalculate.length;
+        if (currentStartAddress) totalPoints++;
+        if (currentEndAddress) totalPoints++;
+
+        if (totalPoints < 2) {
           setDistance('N/A');
           setDuration('N/A');
           return;
@@ -105,7 +111,8 @@ export default function RouteDetailsPage() {
         try {
           const result = await calculateDistanceFn({ 
               placeIds: placesToCalculate,
-              baseAddress: currentBaseAddress 
+              startAddress: currentStartAddress,
+              endAddress: currentEndAddress
           });
           const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
           setDistance(`${data.distance.toFixed(1)} km`);
@@ -158,7 +165,15 @@ export default function RouteDetailsPage() {
             
             setRoute(routeData);
             setAllPlaces(placesData);
-            setBaseAddress(routeData?.baseAddress || '');
+            
+            // Handle backwards compatibility for 'baseAddress'
+            const legacyBaseAddress = (routeData as any).baseAddress || '';
+            const savedStart = routeData?.startAddress || legacyBaseAddress;
+            const savedEnd = routeData?.endAddress || legacyBaseAddress;
+
+            setStartAddress(savedStart);
+            setEndAddress(savedEnd);
+            
             setPrepTimeStart(routeData?.prepTimeStart || 0);
             setPrepTimeEnd(routeData?.prepTimeEnd || 0);
             setBreakTime(routeData?.breakTime || 0);
@@ -202,7 +217,7 @@ export default function RouteDetailsPage() {
             }
 
             setRouteItems(initialItems);
-            debouncedCalculateDistance(initialItems, routeData?.baseAddress || '');
+            debouncedCalculateDistance(initialItems, savedStart, savedEnd);
           }
         } catch (err) {
           console.error('Error fetching route data:', err);
@@ -217,7 +232,7 @@ export default function RouteDetailsPage() {
 
   const updateRouteItems = (newItems: RouteItem[]) => {
     setRouteItems(newItems);
-    debouncedCalculateDistance(newItems, baseAddress);
+    debouncedCalculateDistance(newItems, startAddress, endAddress);
   };
   
   // Helper function to auto-save route structure for drivers
@@ -254,7 +269,11 @@ export default function RouteDetailsPage() {
 
   useEffect(() => {
     const placesCount = routeItems.filter(i => i.type === 'place').length;
-    if (placesCount >= 2 || (placesCount >= 1 && baseAddress) || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
+    let totalPoints = placesCount;
+    if (startAddress) totalPoints++;
+    if (endAddress) totalPoints++;
+
+    if (totalPoints >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
       const totalSeconds = baseDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
       
       if(totalSeconds === 0) {
@@ -272,7 +291,7 @@ export default function RouteDetailsPage() {
     } else {
       setDuration('N/A');
     }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems, baseAddress]);
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems, startAddress, endAddress]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
@@ -322,7 +341,7 @@ export default function RouteDetailsPage() {
      }
      
      setRouteItems(newItems);
-     debouncedCalculateDistance(newItems, baseAddress);
+     debouncedCalculateDistance(newItems, startAddress, endAddress);
      
      if (type === 'start') setPrepTimeStart(value);
      if (type === 'end') setPrepTimeEnd(value);
@@ -399,7 +418,8 @@ export default function RouteDetailsPage() {
       
       const result = await calculateDistanceFn({ 
           placeIds,
-          baseAddress
+          startAddress,
+          endAddress
       });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
@@ -429,15 +449,37 @@ export default function RouteDetailsPage() {
       
       if (data.waypointOrder && data.waypointOrder.length > 0) {
         // Reconstruct place order.
-        // Google Maps waypointOrder applies to the intermediate waypoints provided.
-        // If we passed baseAddress as origin and destination, the placeItems are ALL intermediate.
         let optimizedPlaceItems: RouteItem[] = [];
         
-        if (baseAddress) {
-             // If baseAddress was used, ALL placeItems were intermediate waypoints
+        // Count how many address strings we injected into the waypoints list on the backend
+        let addedAddresses = 0;
+        if (startAddress) addedAddresses++;
+        if (endAddress) addedAddresses++;
+        
+        if (addedAddresses === 2) {
+             // Both start and end addresses were used: ALL placeItems were intermediate
              optimizedPlaceItems = data.waypointOrder.map(index => placeItems[index]);
+        } else if (addedAddresses === 1) {
+            // One address was used. The logic depends on WHICH address was used.
+            if (startAddress && !endAddress) {
+                // startAddress was origin. The FIRST placeItem was NOT origin. The LAST placeItem was destination.
+                // data.waypointOrder only covers the elements BETWEEN origin and destination.
+                // So, data.waypointOrder covers placeItems from index 0 to length-2.
+                // The last element is destination and remains at the end.
+                const destination = placeItems[placeItems.length - 1];
+                const intermediatePoints = placeItems.slice(0, -1);
+                const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+                optimizedPlaceItems = [...optimizedIntermediate, destination];
+            } else {
+                // endAddress was destination. The FIRST placeItem WAS origin.
+                // data.waypointOrder covers placeItems from index 1 to length-1.
+                const origin = placeItems[0];
+                const intermediatePoints = placeItems.slice(1);
+                const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+                optimizedPlaceItems = [origin, ...optimizedIntermediate];
+            }
         } else {
-             // If no baseAddress, the first and last placeItems were origin/destination
+             // No base addresses: first and last placeItems were origin/destination
              const origin = placeItems[0];
              const destination = placeItems[placeItems.length - 1];
              const intermediatePoints = placeItems.slice(1, -1);
@@ -445,8 +487,7 @@ export default function RouteDetailsPage() {
              optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
         }
         
-        // Re-integrate optimized places into the main routeItems array, keeping special items in place
-        // This is a naive merge: it simply replaces the place items in their original relative positions
+        // Re-integrate optimized places into the main routeItems array
         let optimizedIndex = 0;
         const newItems = routeItems.map(item => {
             if (item.type === 'place') {
@@ -480,12 +521,11 @@ export default function RouteDetailsPage() {
         
       const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
 
-      // Note: A full implementation would save the entire structure of routeItems
-      // to maintain the order of special stops. For now we save the core data.
       const updatedRoute: Partial<Route> = {
         ...route,
         places: placeIds,
-        baseAddress,
+        startAddress,
+        endAddress,
         completedStops: currentCompletedStops,
         prepTimeStart,
         prepTimeEnd,
@@ -494,6 +534,9 @@ export default function RouteDetailsPage() {
         duration: duration === 'N/A' ? undefined : duration,
         distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
+      // For backward compatibility, also remove baseAddress if we are saving new schema
+      (updatedRoute as any).baseAddress = deleteField();
+      
       await firebaseDB.updateRoute(routeId, updatedRoute);
       toast({ title: 'Suksess', description: 'Ruten er lagret.' });
       router.push('/dashboard/routes');
@@ -545,15 +588,27 @@ export default function RouteDetailsPage() {
             </div>
             
             {isAdmin && (
-                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
-                    <Home className="h-4 w-4 text-slate-400 ml-2 shrink-0" />
-                    <Input 
-                        value={baseAddress}
-                        onChange={(e) => setBaseAddress(e.target.value)}
-                        onBlur={() => debouncedCalculateDistance(routeItems, baseAddress)}
-                        placeholder="Sett baseadresse for oppstart og avslutning (f.eks. Terminalveien 1, Oslo)"
-                        className="border-0 shadow-none focus-visible:ring-0 px-2 h-8"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
+                        <Home className="h-4 w-4 text-blue-400 ml-2 shrink-0" />
+                        <Input 
+                            value={startAddress}
+                            onChange={(e) => setStartAddress(e.target.value)}
+                            onBlur={() => debouncedCalculateDistance(routeItems, startAddress, endAddress)}
+                            placeholder="Startadresse (valgfritt)"
+                            className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
+                        <Flag className="h-4 w-4 text-indigo-400 ml-2 shrink-0" />
+                        <Input 
+                            value={endAddress}
+                            onChange={(e) => setEndAddress(e.target.value)}
+                            onBlur={() => debouncedCalculateDistance(routeItems, startAddress, endAddress)}
+                            placeholder="Sluttadresse (valgfritt)"
+                            className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
+                        />
+                    </div>
                 </div>
             )}
             
@@ -762,7 +817,7 @@ export default function RouteDetailsPage() {
                          let title = '';
                          let colorClass = 'text-slate-500 bg-slate-50';
                          if (item.type === 'start') { title = 'Klargjøring'; icon = <Home className="h-4 w-4 text-blue-500" />; colorClass = 'bg-blue-50/50 border-blue-100'; }
-                         if (item.type === 'end') { title = 'Ferdigstilling'; icon = <Home className="h-4 w-4 text-indigo-500" />; colorClass = 'bg-indigo-50/50 border-indigo-100'; }
+                         if (item.type === 'end') { title = 'Ferdigstilling'; icon = <Flag className="h-4 w-4 text-indigo-500" />; colorClass = 'bg-indigo-50/50 border-indigo-100'; }
                          if (item.type === 'break') { title = 'Pause'; icon = <Coffee className="h-4 w-4 text-amber-500" />; colorClass = 'bg-amber-50/50 border-amber-100'; }
                          if (item.type === 'service') { title = 'Drivstoff / Service'; icon = <Wrench className="h-4 w-4 text-slate-500" />; colorClass = 'bg-slate-50 border-slate-200'; }
                          
@@ -778,8 +833,11 @@ export default function RouteDetailsPage() {
                                   </div>
                                   <div className="flex flex-col truncate">
                                     <span className={`font-semibold text-sm truncate ${isCompleted ? 'line-through' : ''}`}>{title}</span>
-                                    {item.type === 'start' || item.type === 'end' ? (
-                                       <span className="text-xs text-muted-foreground truncate">{baseAddress || 'Baseadresse ikke satt'}</span>
+                                    {item.type === 'start' ? (
+                                       <span className="text-xs text-muted-foreground truncate">{startAddress || 'Startadresse ikke satt'}</span>
+                                    ) : null}
+                                    {item.type === 'end' ? (
+                                       <span className="text-xs text-muted-foreground truncate">{endAddress || 'Sluttadresse ikke satt'}</span>
                                     ) : null}
                                   </div>
                                 </div>
