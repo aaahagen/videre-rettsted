@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Place, Organization } from '@/lib/types';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
@@ -36,6 +37,7 @@ const placeSchema = z.object({
   notes: z.string().optional(),
   field3: z.string().optional(),
   hashtags: z.string().optional(),
+  estimatedDeliveryTime: z.number().optional(),
   mainImageIndex: z.number().default(0),
   images: z.array(z.object({
     file: z.any().optional(),
@@ -72,6 +74,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       notes: place?.notes || '',
       field3: place?.field3 || '',
       hashtags: place?.hashtags?.join(', ') || '',
+      estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
       // Filter out the placeholder image so the user starts with an empty list if only placeholder exists
       images: place?.images?.filter(img => img.url !== '/ingen.jpg').map(img => ({
@@ -255,6 +258,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             notes: data.notes || '',
             field3: data.field3 || '',
             hashtags: hashtagsArray,
+            estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
@@ -325,31 +329,72 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Adresse</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1 h-8 w-8"
-                        onClick={handleGetLocation}
-                        title="Hent min posisjon"
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                    <FormItem className="md:col-span-1">
+                    <FormLabel>Full Adresse</FormLabel>
+                    <FormControl>
+                        <div className="relative">
+                        <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1 h-8 w-8"
+                            onClick={handleGetLocation}
+                            title="Hent min posisjon"
+                        >
+                            <MapPin className="h-4 w-4" />
+                        </Button>
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+
+                <FormField
+                control={form.control}
+                name="estimatedDeliveryTime"
+                render={({ field }) => (
+                    <FormItem className="md:col-span-1">
+                    <FormLabel className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-slate-500" />
+                        Tidsbruk for levering
+                    </FormLabel>
+                    <FormControl>
+                        <Select 
+                            value={field.value?.toString() || "0"} 
+                            onValueChange={(val) => field.onChange(Number(val))}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Velg tid" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0">0 min (Kun kjøring)</SelectItem>
+                                <SelectItem value="5">5 min</SelectItem>
+                                <SelectItem value="10">10 min</SelectItem>
+                                <SelectItem value="15">15 min</SelectItem>
+                                <SelectItem value="20">20 min</SelectItem>
+                                <SelectItem value="25">25 min</SelectItem>
+                                <SelectItem value="30">30 min</SelectItem>
+                                <SelectItem value="45">45 min</SelectItem>
+                                <SelectItem value="60">60 min</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormControl>
+                    <FormDescription>
+                        Beregnet tid brukt på stedet (for ruteplanlegging).
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
             
             {descEnabled && (
                 <FormField

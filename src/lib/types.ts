@@ -55,6 +55,9 @@ export interface Place {
   field3?: string;     // New field
   hashtags?: string[];
   
+  // Delivery stats
+  estimatedDeliveryTime?: number; // estimated time to complete delivery at this place in minutes
+  
   // Images
   imageUrl?: string;
   imageHint?: string;

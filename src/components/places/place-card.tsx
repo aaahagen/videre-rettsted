@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Map, Edit } from 'lucide-react';
+import { Map, Edit, Clock } from 'lucide-react';
 import type { DeliveryPlace } from '@/lib/types';
 import {
   Card,
@@ -56,23 +56,33 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
           ))}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2 p-4 pt-0">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/dashboard/places/${place.id}`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Se mer
-          </Link>
-        </Button>
-        <Button
-          size="sm"
-          asChild
-          className="bg-accent text-accent-foreground hover:bg-accent/90"
-        >
-          <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
-            <Map className="mr-2 h-4 w-4" />
-            Naviger
-          </a>
-        </Button>
+      <CardFooter className="flex justify-between items-center p-4 pt-0">
+        <div className="flex items-center text-sm font-medium text-slate-500">
+            {place.estimatedDeliveryTime && place.estimatedDeliveryTime > 0 ? (
+                <>
+                    <Clock className="mr-1.5 h-4 w-4" />
+                    {place.estimatedDeliveryTime} min
+                </>
+            ) : null}
+        </div>
+        <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/places/${place.id}`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Se mer
+            </Link>
+            </Button>
+            <Button
+            size="sm"
+            asChild
+            className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+            <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
+                <Map className="mr-2 h-4 w-4" />
+                Naviger
+            </a>
+            </Button>
+        </div>
       </CardFooter>
     </Card>
   );
