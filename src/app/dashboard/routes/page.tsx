@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock } from 'lucide-react';
+import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock, SearchX } from 'lucide-react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Route } from '@/lib/types';
+import { useSearch } from '@/hooks/use-search';
 
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -21,6 +22,7 @@ export default function RoutesPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
+  const { query: searchQuery, setQuery } = useSearch();
   const router = useRouter();
 
   useEffect(() => {
@@ -37,11 +39,27 @@ export default function RoutesPage() {
     }
   }, [user]);
   
-  const displayedRoutes = routes.filter(route => {
-    if (!userData) return false;
-    if (userData.role === 'admin') return true; // Admins see all routes
-    return route.driverId === userData.id; // Drivers only see their own routes
-  });
+  const displayedRoutes = useMemo(() => {
+    if (!userData) return [];
+
+    let filtered = routes;
+
+    // Filter by driver if not admin
+    if (userData.role !== 'admin') {
+        filtered = filtered.filter(route => route.driverId === userData.id);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+        const lowerQuery = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(route => 
+            route.name.toLowerCase().includes(lowerQuery) ||
+            (route.driverId && organizationUsers.find(u => u.id === route.driverId)?.name?.toLowerCase().includes(lowerQuery))
+        );
+    }
+
+    return filtered;
+  }, [routes, userData, searchQuery, organizationUsers]);
 
   
   const handleDeleteClick = (e: React.MouseEvent, route: Route) => {
@@ -89,18 +107,40 @@ export default function RoutesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Ruter</h1>
-        {userData?.role === 'admin' && (
-          <Button onClick={handleCreateRoute}>
-            <Plus className="mr-2 h-4 w-4" />
-            Opprett Rute
+        <h1 className="text-3xl font-bold">
+          {searchQuery ? `Søkeresultater for "${searchQuery}"` : 'Ruter'}
+        </h1>
+        {searchQuery && (
+          <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+            Nullstill søk
           </Button>
         )}
       </div>
       
       {displayedRoutes.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>Ingen ruter funnet. Opprett din første rute for å komme i gang.</p>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="rounded-full bg-slate-100 p-6 mb-4">
+            {searchQuery ? <SearchX className="h-12 w-12 text-slate-300" /> : <RouteIcon className="h-12 w-12 text-slate-300" />}
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900">
+            {searchQuery 
+              ? `Ingen ruter matchet "${searchQuery}"` 
+              : "Ingen ruter funnet"}
+          </h2>
+          <p className="text-slate-500 mt-2 max-w-xs mx-auto">
+            {searchQuery 
+              ? "Prøv å søke etter et annet rutenavn eller sjåfør."
+              : userData?.role === 'admin' ? "Opprett din første rute for å komme i gang." : "Du har ingen ruter tildelt deg ennå."}
+          </p>
+          {(searchQuery) && (
+            <Button 
+              variant="link" 
+              onClick={() => setQuery('')}
+              className="mt-4"
+            >
+              Vis alle ruter
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
