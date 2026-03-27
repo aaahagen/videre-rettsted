@@ -813,7 +813,7 @@ export default function RouteDetailsPage() {
         </div>
         
         {/* Right Col: Current Route */}
-        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px]">
+        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto">
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Rekkefølge</CardTitle>
@@ -822,7 +822,7 @@ export default function RouteDetailsPage() {
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1">
             {routeItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8">
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8 min-h-[400px]">
                  <MapPin className="h-12 w-12 text-slate-200" />
                  <p className="text-center">Ingen stopp er lagt til enda. <br/>Bruk menyen til venstre for å bygge ruten.</p>
               </div>
@@ -854,13 +854,13 @@ export default function RouteDetailsPage() {
                                   <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shrink-0 shadow-sm border border-slate-100">
                                     {icon}
                                   </div>
-                                  <div className="flex flex-col truncate min-w-0">
-                                    <span className={`font-semibold text-sm truncate ${isCompleted ? 'line-through' : ''}`}>{title}</span>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className={`font-semibold text-sm ${isCompleted ? 'line-through' : ''}`}>{title}</span>
                                     {item.type === 'start' ? (
-                                       <span className="text-xs text-muted-foreground truncate">{startAddress || 'Startadresse ikke satt'}</span>
+                                       <span className="text-xs text-muted-foreground break-words">{startAddress || 'Startadresse ikke satt'}</span>
                                     ) : null}
                                     {item.type === 'end' ? (
-                                       <span className="text-xs text-muted-foreground truncate">{endAddress || 'Sluttadresse ikke satt'}</span>
+                                       <span className="text-xs text-muted-foreground break-words">{endAddress || 'Sluttadresse ikke satt'}</span>
                                     ) : null}
                                   </div>
                                 </div>
@@ -889,11 +889,10 @@ export default function RouteDetailsPage() {
                               <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
                                 {index + 1}
                               </span>
-                              <div className="flex flex-col truncate min-w-0">
-                                <span className={`font-semibold truncate transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                              <div className="flex flex-col min-w-0">
+                                <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                                   {item.placeData?.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate">{item.placeData?.address}</span>
                               </div>
                             </div>
                             
