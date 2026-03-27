@@ -272,15 +272,15 @@ export default function RouteDetailsPage() {
     if (!route) return;
     setIsSaving(true);
     try {
-      const updatedRoute = {
+      const updatedRoute: Partial<Route> = {
         ...route,
         places: routePlaces.map(p => p.id),
         prepTimeStart,
         prepTimeEnd,
         breakTime,
         fuelServiceTime,
-        duration: duration === 'N/A' ? null : duration,
-        distanceString: distance === 'N/A' || distance === 'Error' ? null : distance,
+        duration: duration === 'N/A' ? undefined : duration,
+        distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
       await firebaseDB.updateRoute(routeId, updatedRoute);
       toast({ title: 'Suksess', description: 'Ruten er lagret.' });
