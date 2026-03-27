@@ -110,7 +110,7 @@ export default function RoutesPage() {
               className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-slate-200 overflow-hidden flex flex-col h-full bg-white hover:-translate-y-1"
               onClick={() => router.push(`/dashboard/routes/${route.id}`)}
             >
-              <div className="h-2 w-full bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500" />
+              <div className="h-2 w-full bg-gradient-to-r from-slate-300 via-slate-400 to-slate-500" />
               <CardHeader className="flex flex-row items-start justify-between pb-2 pt-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-slate-100 text-slate-800 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
@@ -144,7 +144,7 @@ export default function RoutesPage() {
                   {/* Row 1: Stops & Distance */}
                   <div className="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-100 w-full">
                     <div className="flex-1 flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-blue-400 shrink-0" />
+                      <MapPin className="h-5 w-5 text-slate-400 shrink-0" />
                       <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Stopp</span>
                         <span className="text-sm font-bold text-slate-700 leading-none">{route.places?.length || 0}</span>
@@ -154,7 +154,7 @@ export default function RoutesPage() {
                     <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
                     
                     <div className="flex-1 flex items-center gap-2 justify-start">
-                      <RouteIcon className="h-5 w-5 text-cyan-500 shrink-0" />
+                      <RouteIcon className="h-5 w-5 text-slate-500 shrink-0" />
                       <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Distanse</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none">
@@ -167,7 +167,7 @@ export default function RoutesPage() {
                   {/* Row 2: Time & Driver */}
                   <div className="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-100 w-full">
                     <div className="flex-1 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-amber-400 shrink-0" />
+                      <Clock className="h-5 w-5 text-slate-400 shrink-0" />
                       <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Est. Tid</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none">
@@ -179,7 +179,7 @@ export default function RoutesPage() {
                     <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
                     
                     <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <Car className="h-5 w-5 text-emerald-400 shrink-0" />
+                      <Car className="h-5 w-5 text-slate-400 shrink-0" />
                       <div className="flex flex-col min-w-0">
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sjåfør</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none truncate" title={organizationUsers.find(u => u.id === route.driverId)?.name || 'Ingen'}>
