@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 export default function NewRoutePage() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState('');
+  const [shipmentNumber, setShipmentNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -28,12 +29,10 @@ export default function NewRoutePage() {
     if (user) {
       setIsSubmitting(true);
       try {
-        // In a real app, you would get the orgId from the user's claims
-        // or from a document in Firestore. For now, we'll hardcode it.
         const userDoc = await firebaseDB.getUser(user.uid);
         const orgId = userDoc?.orgId;
         if(!orgId) throw new Error('No orgId'); 
-        await firebaseDB.createRoute({ name, places: [], orgId });
+        await firebaseDB.createRoute({ name, shipmentNumber, places: [], orgId });
         router.push('/dashboard/routes');
       } catch (err) {
         console.error(err);
@@ -46,6 +45,11 @@ export default function NewRoutePage() {
   const handleNameChange = (e: any) => {
     const value = e.target ? e.target.value : e;
     setName(value);
+  };
+  
+  const handleShipmentNumberChange = (e: any) => {
+    const value = e.target ? e.target.value : e;
+    setShipmentNumber(value);
   };
 
   if (loading) {
@@ -69,13 +73,22 @@ export default function NewRoutePage() {
       <h1 className="text-3xl font-bold mb-6">Opprett Ny Rute</h1>
       <form onSubmit={handleCreateRoute} className="max-w-md mx-auto space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="name">Navn</Label>
+          <Label htmlFor="name">Rutenavn</Label>
           <Input
             id="name"
             value={name}
             onChange={handleNameChange}
             required
             placeholder="F.eks. Oslo - Bergen"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="shipmentNumber">Fraktnummer (valgfritt)</Label>
+          <Input
+            id="shipmentNumber"
+            value={shipmentNumber}
+            onChange={handleShipmentNumberChange}
+            placeholder="F.eks. SH-12345"
           />
         </div>
         <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg">

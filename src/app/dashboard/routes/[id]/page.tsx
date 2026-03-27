@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -599,17 +599,29 @@ export default function RouteDetailsPage() {
       <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary/10 rounded-xl shrink-0">
-                <RouteIcon className="h-8 w-8 text-primary" />
-              </div>
-              <Input 
-                className="text-3xl font-bold h-auto py-2 px-3 bg-white/50 border-slate-200 hover:border-slate-300 focus:bg-white shadow-sm" 
-                value={route.name} 
-                onChange={(e) => setRoute({...route, name: e.target.value})}
-                placeholder="Navn på rute..."
-                readOnly={!isAdmin}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-xl shrink-0">
+                    <RouteIcon className="h-8 w-8 text-primary" />
+                  </div>
+                  <Input 
+                    className="text-3xl font-bold h-auto py-2 px-3 bg-white/50 border-slate-200 hover:border-slate-300 focus:bg-white shadow-sm" 
+                    value={route.name} 
+                    onChange={(e) => setRoute({...route, name: e.target.value})}
+                    placeholder="Navn på rute..."
+                    readOnly={!isAdmin}
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
+                    <FileText className="h-4 w-4 text-slate-400 ml-2 shrink-0" />
+                    <Input 
+                        value={route.shipmentNumber || ''}
+                        onChange={(e) => setRoute({...route, shipmentNumber: e.target.value})}
+                        placeholder="Fraktnummer (valgfritt)"
+                        className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
+                        readOnly={!isAdmin}
+                    />
+                </div>
             </div>
             
             {isAdmin && (

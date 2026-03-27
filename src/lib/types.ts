@@ -90,6 +90,7 @@ export type DeliveryPlace = Place;
 export interface Route {
   id: string;
   name: string;
+  shipmentNumber?: string;
   orgId: string; // Database field is orgId
   organizationId?: string;
   places: string[]; // array of placeIds
