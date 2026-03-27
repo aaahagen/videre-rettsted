@@ -38,7 +38,9 @@ function SortableItem({ id, children }: { id: string, children: React.ReactNode 
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center w-full">
-      <GripVertical className="cursor-grab mr-2 text-muted-foreground shrink-0" />
+      <div className="p-3 cursor-grab hover:bg-slate-100 rounded-md shrink-0 self-stretch flex items-center">
+         <GripVertical className="text-muted-foreground" />
+      </div>
       {children}
     </div>
   );
@@ -844,7 +846,7 @@ export default function RouteDetailsPage() {
                          
                          return (
                             <SortableItem key={item.id} id={item.id}>
-                              <li className={`flex-grow flex items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
+                              <div className={`flex-grow flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
                                 <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
                                   <button type="button" className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}>
                                     {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
@@ -852,7 +854,7 @@ export default function RouteDetailsPage() {
                                   <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shrink-0 shadow-sm border border-slate-100">
                                     {icon}
                                   </div>
-                                  <div className="flex flex-col truncate">
+                                  <div className="flex flex-col truncate min-w-0">
                                     <span className={`font-semibold text-sm truncate ${isCompleted ? 'line-through' : ''}`}>{title}</span>
                                     {item.type === 'start' ? (
                                        <span className="text-xs text-muted-foreground truncate">{startAddress || 'Startadresse ikke satt'}</span>
@@ -862,10 +864,10 @@ export default function RouteDetailsPage() {
                                     ) : null}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0 ml-2">
-                                  <Badge variant="secondary" className="bg-white/60">{item.duration} min</Badge>
+                                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
+                                  <Badge variant="secondary" className="bg-white/60 shrink-0">{item.duration} min</Badge>
                                 </div>
-                              </li>
+                              </div>
                             </SortableItem>
                          );
                       }
@@ -873,7 +875,7 @@ export default function RouteDetailsPage() {
                       // Regular Place Item
                       return (
                         <SortableItem key={item.id} id={item.id}>
-                          <li className={`flex-grow flex items-center justify-between p-3 rounded-lg bg-white border shadow-sm transition-all group w-full ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
+                          <div className={`flex-grow flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
                             
                             {/* Left Side: Completion Toggle & Info */}
                             <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
@@ -887,7 +889,7 @@ export default function RouteDetailsPage() {
                               <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
                                 {index + 1}
                               </span>
-                              <div className="flex flex-col truncate">
+                              <div className="flex flex-col truncate min-w-0">
                                 <span className={`font-semibold truncate transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                                   {item.placeData?.name}
                                 </span>
@@ -896,29 +898,33 @@ export default function RouteDetailsPage() {
                             </div>
                             
                             {/* Right Side: Actions & Badge */}
-                            <div className="flex items-center gap-1 shrink-0 ml-2">
-                               {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
-                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 flex items-center gap-1">
-                                       <Clock className="h-3 w-3" />
-                                       {item.placeData.estimatedDeliveryTime} min
-                                   </Badge>
-                               ) : null}
-                               <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </Button>
-                               </Link>
-                               <Button 
-                                 variant="ghost" 
-                                 size="icon" 
-                                 className="text-slate-300 hover:text-destructive hover:bg-destructive/10 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" 
-                                 onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                               >
-                                 <Trash2 className="h-4 w-4" />
-                               </Button>
+                            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
+                               <div className="flex items-center gap-1">
+                                   {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
+                                       <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 flex items-center gap-1 shrink-0">
+                                           <Clock className="h-3 w-3" />
+                                           {item.placeData.estimatedDeliveryTime} min
+                                       </Badge>
+                                   ) : null}
+                               </div>
+                               <div className="flex items-center gap-1 shrink-0">
+                                   <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                        <ExternalLink className="h-4 w-4" />
+                                      </Button>
+                                   </Link>
+                                   <Button 
+                                     variant="ghost" 
+                                     size="icon" 
+                                     className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" 
+                                     onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                   >
+                                     <Trash2 className="h-4 w-4" />
+                                   </Button>
+                               </div>
                             </div>
 
-                          </li>
+                          </div>
                         </SortableItem>
                       )
                     })}
