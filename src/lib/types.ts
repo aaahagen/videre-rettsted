@@ -92,6 +92,7 @@ export interface Route {
   organizationId?: string;
   places: string[]; // array of placeIds
   completedStops?: string[]; // array of placeIds that are marked as complete
+  baseAddress?: string; // The starting/ending address of the route
   driverId?: string;
   distance?: number; // in kilometers
   distanceString?: string; // e.g. "10.5 km"

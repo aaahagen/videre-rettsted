@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +21,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Place, Route } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+
+type RouteItemType = 'place' | 'start' | 'end' | 'break' | 'service';
+
+interface RouteItem {
+  id: string; // Unique ID for DnD
+  type: RouteItemType;
+  placeId?: string; // Only for 'place'
+  placeData?: Place; // Only for 'place'
+  duration?: number; // Only for non-'place'
+}
 
 function SortableItem({ id, children }: { id: string, children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -39,16 +49,21 @@ export default function RouteDetailsPage() {
   const [route, setRoute] = useState<Route | null>(null);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
-  const [routePlaces, setRoutePlaces] = useState<Place[]>([]);
+  
+  // The combined list of places and special intervals
+  const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
+  
   const [distance, setDistance] = useState('N/A');
   const [duration, setDuration] = useState('N/A');
+  
+  const [baseAddress, setBaseAddress] = useState('');
   const [prepTimeStart, setPrepTimeStart] = useState<number>(0);
   const [prepTimeEnd, setPrepTimeEnd] = useState<number>(0);
   const [breakTime, setBreakTime] = useState<number>(0);
   const [fuelServiceTime, setFuelServiceTime] = useState<number>(0);
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
   
-  // Track completed stops
+  // Track completed stops (using the RouteItem id)
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
 
   const [isSaving, setIsSaving] = useState(false);
@@ -65,7 +80,7 @@ export default function RouteDetailsPage() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedCalculateDistance = useMemo(() => {
-    return async (places: Place[]) => {
+    return async (items: RouteItem[], currentBaseAddress: string) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -73,15 +88,26 @@ export default function RouteDetailsPage() {
       timeoutRef.current = setTimeout(async () => {
         const functions = getFunctions();
         const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
-        if (places.length < 2) {
+        
+        // Filter only actual places for Google Maps
+        const placesToCalculate = items
+           .filter(item => item.type === 'place' && item.placeId)
+           .map(item => item.placeId!);
+           
+        // If there is a base address, we want to include it at the start and end of the calculation
+        // However, the backend function currently only accepts placeIds.
+        // For a true implementation of baseAddress routing, the backend `calculateRouteDistance` 
+        // needs to be modified to accept an array of mixed placeIds and string addresses.
+        // For now, we will just calculate distance between the places.
+           
+        if (placesToCalculate.length < 2) {
           setDistance('N/A');
           setDuration('N/A');
           return;
         }
         setIsCalculating(true);
         try {
-          const placeIds = places.map((p) => p.id);
-          const result = await calculateDistanceFn({ placeIds });
+          const result = await calculateDistanceFn({ placeIds: placesToCalculate });
           const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
           setDistance(`${data.distance.toFixed(1)} km`);
           
@@ -133,6 +159,7 @@ export default function RouteDetailsPage() {
             
             setRoute(routeData);
             setAllPlaces(placesData);
+            setBaseAddress(routeData?.baseAddress || '');
             setPrepTimeStart(routeData?.prepTimeStart || 0);
             setPrepTimeEnd(routeData?.prepTimeEnd || 0);
             setBreakTime(routeData?.breakTime || 0);
@@ -147,13 +174,36 @@ export default function RouteDetailsPage() {
               setCompletedStops(stopsMap);
             }
 
-            if (routeData?.places) {
-              const orderedPlaces = routeData.places
-                .map(placeId => placesData.find(p => p.id === placeId))
-                .filter((p): p is Place => p !== undefined);
-              setRoutePlaces(orderedPlaces);
-              debouncedCalculateDistance(orderedPlaces);
+            // Construct RouteItems array based on saved places
+            // In a more robust implementation, the order of places AND intervals would be saved in DB.
+            // For backward compatibility, we'll construct the list here.
+            let initialItems: RouteItem[] = [];
+            
+            if (routeData?.prepTimeStart && routeData.prepTimeStart > 0) {
+               initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
             }
+            
+            if (routeData?.places) {
+              routeData.places.forEach(placeId => {
+                  const placeData = placesData.find(p => p.id === placeId);
+                  if (placeData) {
+                      initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
+                  }
+              });
+            }
+            
+            if (routeData?.breakTime && routeData.breakTime > 0) {
+               initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
+            }
+            if (routeData?.fuelServiceTime && routeData.fuelServiceTime > 0) {
+               initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
+            }
+            if (routeData?.prepTimeEnd && routeData.prepTimeEnd > 0) {
+               initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
+            }
+
+            setRouteItems(initialItems);
+            debouncedCalculateDistance(initialItems, routeData?.baseAddress || '');
           }
         } catch (err) {
           console.error('Error fetching route data:', err);
@@ -166,16 +216,16 @@ export default function RouteDetailsPage() {
     }
   }, [user, routeId, toast, debouncedCalculateDistance]);
 
-  const updateRoutePlaces = (newPlaces: Place[]) => {
-    setRoutePlaces(newPlaces);
-    debouncedCalculateDistance(newPlaces);
+  const updateRouteItems = (newItems: RouteItem[]) => {
+    setRouteItems(newItems);
+    debouncedCalculateDistance(newItems, baseAddress);
   };
   
-  // Helper function to auto-save route places and stats for drivers
-  const autoSaveRouteStructure = async (newPlaces: Place[], newDistance?: string, newDuration?: string) => {
+  // Helper function to auto-save route structure for drivers
+  const autoSaveRouteStructure = async (newItems: RouteItem[], newDistance?: string, newDuration?: string) => {
     if (route && userData?.role !== 'admin') {
       try {
-        const placeIds = newPlaces.map(p => p.id);
+        const placeIds = newItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
         
         // Wait briefly for distance calculation to catch up if not provided directly
         if (!newDistance || !newDuration) {
@@ -204,7 +254,8 @@ export default function RouteDetailsPage() {
 
 
   useEffect(() => {
-    if (routePlaces.length >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
+    const placesCount = routeItems.filter(i => i.type === 'place').length;
+    if (placesCount >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0) {
       const totalSeconds = baseDurationSeconds + (prepTimeStart * 60) + (prepTimeEnd * 60) + (breakTime * 60) + (fuelServiceTime * 60);
       
       if(totalSeconds === 0) {
@@ -222,30 +273,70 @@ export default function RouteDetailsPage() {
     } else {
       setDuration('N/A');
     }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routePlaces.length]);
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
-    if (placeToAdd && !routePlaces.some(p => p.id === placeId)) {
-      const newPlaces = [...routePlaces, placeToAdd];
-      updateRoutePlaces(newPlaces);
-      autoSaveRouteStructure(newPlaces);
+    if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.placeId === placeId)) {
+      const newItem: RouteItem = { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd };
+      const newItems = [...routeItems, newItem];
+      updateRouteItems(newItems);
+      autoSaveRouteStructure(newItems);
     }
   };
 
-  const handleRemovePlace = (placeId: string) => {
-    const newPlaces = routePlaces.filter(p => p.id !== placeId);
-    updateRoutePlaces(newPlaces);
-    autoSaveRouteStructure(newPlaces);
+  const handleRemoveItem = (itemId: string) => {
+    const newItems = routeItems.filter(i => i.id !== itemId);
+    updateRouteItems(newItems);
+    autoSaveRouteStructure(newItems);
   };
   
-  const toggleStopCompletion = async (placeId: string, event: React.MouseEvent) => {
+  // Sync Time Settings with RouteItems
+  const handleTimeSettingChange = (type: RouteItemType, value: number) => {
+     let newItems = [...routeItems];
+     
+     if (value > 0) {
+         // Add or update
+         const existingIndex = newItems.findIndex(i => i.type === type);
+         if (existingIndex >= 0) {
+             newItems[existingIndex].duration = value;
+         } else {
+             // Add to list (start at top, end at bottom, others before end)
+             const newItem: RouteItem = { id: `special_${type}`, type, duration: value };
+             if (type === 'start') {
+                 newItems.unshift(newItem);
+             } else if (type === 'end') {
+                 newItems.push(newItem);
+             } else {
+                 // Insert before 'end' if it exists, otherwise at the end
+                 const endIndex = newItems.findIndex(i => i.type === 'end');
+                 if (endIndex >= 0) {
+                     newItems.splice(endIndex, 0, newItem);
+                 } else {
+                     newItems.push(newItem);
+                 }
+             }
+         }
+     } else {
+         // Remove
+         newItems = newItems.filter(i => i.type !== type);
+     }
+     
+     setRouteItems(newItems);
+     
+     if (type === 'start') setPrepTimeStart(value);
+     if (type === 'end') setPrepTimeEnd(value);
+     if (type === 'break') setBreakTime(value);
+     if (type === 'service') setFuelServiceTime(value);
+  };
+
+  const toggleItemCompletion = async (itemId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent drag from triggering
-    const isNowCompleted = !completedStops[placeId];
+    const isNowCompleted = !completedStops[itemId];
     
     setCompletedStops(prev => ({
       ...prev,
-      [placeId]: isNowCompleted
+      [itemId]: isNowCompleted
     }));
 
     // Auto-save completion status for drivers
@@ -253,7 +344,7 @@ export default function RouteDetailsPage() {
       try {
         const currentCompletedStops = Object.entries({
           ...completedStops,
-          [placeId]: isNowCompleted
+          [itemId]: isNowCompleted
         })
         .filter(([_, isCompleted]) => isCompleted)
         .map(([id]) => id);
@@ -266,7 +357,7 @@ export default function RouteDetailsPage() {
         // Revert local state on failure
         setCompletedStops(prev => ({
           ...prev,
-          [placeId]: !isNowCompleted
+          [itemId]: !isNowCompleted
         }));
         toast({ title: 'Feil', description: 'Kunne ikke lagre status. Sjekk nettilkoblingen.', variant: 'destructive' });
       }
@@ -276,21 +367,22 @@ export default function RouteDetailsPage() {
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (active.id !== over.id) {
-      const oldIndex = routePlaces.findIndex(item => item.id === active.id);
-      const newIndex = routePlaces.findIndex(item => item.id === over.id);
-      const newPlaces = arrayMove(routePlaces, oldIndex, newIndex);
-      updateRoutePlaces(newPlaces);
-      autoSaveRouteStructure(newPlaces);
+      const oldIndex = routeItems.findIndex(item => item.id === active.id);
+      const newIndex = routeItems.findIndex(item => item.id === over.id);
+      const newItems = arrayMove(routeItems, oldIndex, newIndex);
+      updateRouteItems(newItems);
+      autoSaveRouteStructure(newItems);
     }
   };
 
   const handleOptimizeRoute = async () => {
-    if (routePlaces.length <= 2) {
+    const placeItems = routeItems.filter(i => i.type === 'place');
+    if (placeItems.length <= 2) {
       toast({ title: 'Info', description: 'Du trenger minst 3 stopp for å optimere ruten.' });
       return;
     }
     
-    if (routePlaces.length > 27) { // API limit is 25 intermediate + 2 endpoints
+    if (placeItems.length > 27) {
         toast({ 
             title: 'For mange stopp', 
             description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', 
@@ -301,9 +393,11 @@ export default function RouteDetailsPage() {
 
     setIsOptimizing(true);
     try {
-      const placeIds = routePlaces.map(p => p.id);
+      const placeIds = placeItems.map(p => p.placeId!);
       const functions = getFunctions();
       const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
+      
+      // Note: Optimization currently only works on Place IDs.
       const result = await calculateDistanceFn({ placeIds });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
@@ -332,20 +426,26 @@ export default function RouteDetailsPage() {
       }
       
       if (data.waypointOrder && data.waypointOrder.length > 0) {
-        const origin = routePlaces[0];
-        const destination = routePlaces[routePlaces.length - 1];
-        const intermediatePoints = routePlaces.slice(1, -1);
+        // Reconstruct place order
+        const origin = placeItems[0];
+        const destination = placeItems[placeItems.length - 1];
+        const intermediatePoints = placeItems.slice(1, -1);
         
         const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-        const optimizedPlaces = [origin, ...optimizedIntermediate, destination];
+        const optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
         
-        if (optimizedPlaces.length === routePlaces.length) {
-            setRoutePlaces(optimizedPlaces);
-            // Pass the calculated strings to ensure they are saved, rather than waiting for state
-            autoSaveRouteStructure(optimizedPlaces, newDistanceString, newDurationString);
-        } else {
-            console.error('Mismatch in optimized places array length', optimizedPlaces, routePlaces);
-        }
+        // Re-integrate optimized places into the main routeItems array, keeping special items in place
+        // This is a naive merge: it simply replaces the place items in their original relative positions
+        let optimizedIndex = 0;
+        const newItems = routeItems.map(item => {
+            if (item.type === 'place') {
+                return optimizedPlaceItems[optimizedIndex++];
+            }
+            return item;
+        });
+        
+        setRouteItems(newItems);
+        autoSaveRouteStructure(newItems, newDistanceString, newDurationString);
         
         toast({ title: 'Suksess', description: 'Ruten ble optimalisert for korteste kjøretid!' });
       } else {
@@ -366,10 +466,15 @@ export default function RouteDetailsPage() {
       const currentCompletedStops = Object.entries(completedStops)
         .filter(([_, isCompleted]) => isCompleted)
         .map(([id]) => id);
+        
+      const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
 
+      // Note: A full implementation would save the entire structure of routeItems
+      // to maintain the order of special stops. For now we save the core data.
       const updatedRoute: Partial<Route> = {
         ...route,
-        places: routePlaces.map(p => p.id),
+        places: placeIds,
+        baseAddress,
         completedStops: currentCompletedStops,
         prepTimeStart,
         prepTimeEnd,
@@ -401,6 +506,7 @@ export default function RouteDetailsPage() {
   }
 
   const isAdmin = userData?.role === 'admin';
+  const placesCount = routeItems.filter(i => i.type === 'place').length;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
@@ -427,12 +533,25 @@ export default function RouteDetailsPage() {
               />
             </div>
             
+            {isAdmin && (
+                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
+                    <Home className="h-4 w-4 text-slate-400 ml-2 shrink-0" />
+                    <Input 
+                        value={baseAddress}
+                        onChange={(e) => setBaseAddress(e.target.value)}
+                        onBlur={() => debouncedCalculateDistance(routeItems, baseAddress)}
+                        placeholder="Sett baseadresse for oppstart og avslutning (f.eks. Terminalveien 1, Oslo)"
+                        className="border-0 shadow-none focus-visible:ring-0 px-2 h-8"
+                    />
+                </div>
+            )}
+            
             <div className="flex flex-wrap items-center gap-6 text-sm bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-indigo-500" />
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Stopp</span>
-                  <span className="font-bold text-lg">{routePlaces.length}</span>
+                  <span className="font-bold text-lg">{placesCount}</span>
                 </div>
               </div>
               <Separator orientation="vertical" className="h-8 hidden sm:block bg-slate-200" />
@@ -479,7 +598,7 @@ export default function RouteDetailsPage() {
                 <label className="text-sm font-medium">Klargjøring (start)</label>
                 <Select 
                   value={prepTimeStart.toString()} 
-                  onValueChange={(val) => setPrepTimeStart(Number(val))}
+                  onValueChange={(val) => handleTimeSettingChange('start', Number(val))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Velg tid" />
@@ -507,7 +626,7 @@ export default function RouteDetailsPage() {
                 <label className="text-sm font-medium">Ferdigstilling (slutt)</label>
                 <Select 
                   value={prepTimeEnd.toString()} 
-                  onValueChange={(val) => setPrepTimeEnd(Number(val))}
+                  onValueChange={(val) => handleTimeSettingChange('end', Number(val))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Velg tid" />
@@ -535,7 +654,7 @@ export default function RouteDetailsPage() {
                 <label className="text-sm font-medium">Pause</label>
                 <Select 
                   value={breakTime.toString()} 
-                  onValueChange={(val) => setBreakTime(Number(val))}
+                  onValueChange={(val) => handleTimeSettingChange('break', Number(val))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Velg tid" />
@@ -555,7 +674,7 @@ export default function RouteDetailsPage() {
                 <label className="text-sm font-medium">Drivstoff / Service</label>
                 <Select 
                   value={fuelServiceTime.toString()} 
-                  onValueChange={(val) => setFuelServiceTime(Number(val))}
+                  onValueChange={(val) => handleTimeSettingChange('service', Number(val))}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Velg tid" />
@@ -592,7 +711,7 @@ export default function RouteDetailsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {allPlaces.map(place => (
-                    <SelectItem key={place.id} value={place.id} disabled={routePlaces.some(p => p.id === place.id)}>
+                    <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
                       {place.name}
                     </SelectItem>
                   ))}
@@ -613,7 +732,7 @@ export default function RouteDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1">
-            {routePlaces.length === 0 ? (
+            {routeItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8">
                  <MapPin className="h-12 w-12 text-slate-200" />
                  <p className="text-center">Ingen stopp er lagt til enda. <br/>Bruk menyen til venstre for å bygge ruten.</p>
@@ -621,16 +740,53 @@ export default function RouteDetailsPage() {
             ) : (
               <div className="p-4">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={routePlaces.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={routeItems.map(p => p.id)} strategy={verticalListSortingStrategy}>
                   <ul className="space-y-3">
-                    {routePlaces.map((place, index) => {
-                      const isCompleted = completedStops[place.id];
+                    {routeItems.map((item, index) => {
+                      const isCompleted = completedStops[item.id];
+                      
+                      // Special handling for time settings
+                      if (item.type !== 'place') {
+                         let icon = <Clock className="h-4 w-4" />;
+                         let title = '';
+                         let colorClass = 'text-slate-500 bg-slate-50';
+                         if (item.type === 'start') { title = 'Klargjøring'; icon = <Home className="h-4 w-4 text-blue-500" />; colorClass = 'bg-blue-50/50 border-blue-100'; }
+                         if (item.type === 'end') { title = 'Ferdigstilling'; icon = <Home className="h-4 w-4 text-indigo-500" />; colorClass = 'bg-indigo-50/50 border-indigo-100'; }
+                         if (item.type === 'break') { title = 'Pause'; icon = <Coffee className="h-4 w-4 text-amber-500" />; colorClass = 'bg-amber-50/50 border-amber-100'; }
+                         if (item.type === 'service') { title = 'Drivstoff / Service'; icon = <Wrench className="h-4 w-4 text-slate-500" />; colorClass = 'bg-slate-50 border-slate-200'; }
+                         
+                         return (
+                            <SortableItem key={item.id} id={item.id}>
+                              <li className={`flex-grow flex items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
+                                <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
+                                  <button type="button" className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}>
+                                    {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                                  </button>
+                                  <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shrink-0 shadow-sm border border-slate-100">
+                                    {icon}
+                                  </div>
+                                  <div className="flex flex-col truncate">
+                                    <span className={`font-semibold text-sm truncate ${isCompleted ? 'line-through' : ''}`}>{title}</span>
+                                    {item.type === 'start' || item.type === 'end' ? (
+                                       <span className="text-xs text-muted-foreground truncate">{baseAddress || 'Baseadresse ikke satt'}</span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                  <Badge variant="secondary" className="bg-white/60">{item.duration} min</Badge>
+                                </div>
+                              </li>
+                            </SortableItem>
+                         );
+                      }
+                      
+                      // Regular Place Item
                       return (
-                        <SortableItem key={place.id} id={place.id}>
+                        <SortableItem key={item.id} id={item.id}>
                           <li className={`flex-grow flex items-center justify-between p-3 rounded-lg bg-white border shadow-sm transition-all group w-full ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
                             
                             {/* Left Side: Completion Toggle & Info */}
-                            <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleStopCompletion(place.id, e)}>
+                            <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
                                <button 
                                  type="button" 
                                  className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
@@ -643,15 +799,15 @@ export default function RouteDetailsPage() {
                               </span>
                               <div className="flex flex-col truncate">
                                 <span className={`font-semibold truncate transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                                  {place.name}
+                                  {item.placeData?.name}
                                 </span>
-                                <span className="text-xs text-muted-foreground truncate">{place.address}</span>
+                                <span className="text-xs text-muted-foreground truncate">{item.placeData?.address}</span>
                               </div>
                             </div>
                             
                             {/* Right Side: Actions */}
                             <div className="flex items-center gap-1 shrink-0 ml-2">
-                               <Link href={`/dashboard/places/${place.id}`} passHref>
+                               <Link href={`/dashboard/places/${item.placeId}`} passHref>
                                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10">
                                     <ExternalLink className="h-4 w-4" />
                                   </Button>
@@ -660,7 +816,7 @@ export default function RouteDetailsPage() {
                                  variant="ghost" 
                                  size="icon" 
                                  className="text-slate-300 hover:text-destructive hover:bg-destructive/10 shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" 
-                                 onClick={(e) => { e.stopPropagation(); handleRemovePlace(place.id); }}
+                                 onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
                                >
                                  <Trash2 className="h-4 w-4" />
                                </Button>
@@ -713,7 +869,7 @@ export default function RouteDetailsPage() {
       {/* Action Buttons */}
       <Card className="border-slate-200 shadow-sm bg-slate-50/50">
          <CardContent className="p-6 space-y-4">
-            {routePlaces.length > 2 && (
+            {placesCount > 2 && (
                <Button 
                  variant="outline" 
                  className="w-full shadow-sm font-semibold h-12 bg-white"
