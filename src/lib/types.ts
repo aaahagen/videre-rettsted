@@ -91,6 +91,7 @@ export interface Route {
   orgId: string; // Database field is orgId
   organizationId?: string;
   places: string[]; // array of placeIds
+  completedStops?: string[]; // array of placeIds that are marked as complete
   driverId?: string;
   distance?: number; // in kilometers
   distanceString?: string; // e.g. "10.5 km"

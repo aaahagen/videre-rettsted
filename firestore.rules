@@ -76,7 +76,13 @@ service cloud.firestore {
     match /routes/{routeId} {
       allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId);
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      
+      // Allow update if admin, OR if driver assigned to the route is updating specific fields
+      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (
+        isAdmin() || 
+        (request.auth.uid == resource.data.driverId)
+      );
+      
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
   }

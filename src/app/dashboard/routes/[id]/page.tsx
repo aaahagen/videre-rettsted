@@ -132,6 +132,14 @@ export default function RouteDetailsPage() {
             setBreakTime(routeData?.breakTime || 0);
             setFuelServiceTime(routeData?.fuelServiceTime || 0);
 
+            // Initialize completed stops from database
+            if (routeData?.completedStops) {
+              const stopsMap: Record<string, boolean> = {};
+              routeData.completedStops.forEach(id => {
+                stopsMap[id] = true;
+              });
+              setCompletedStops(stopsMap);
+            }
 
             if (routeData?.places) {
               const orderedPlaces = routeData.places
@@ -190,12 +198,38 @@ export default function RouteDetailsPage() {
     updateRoutePlaces(routePlaces.filter(p => p.id !== placeId));
   };
   
-  const toggleStopCompletion = (placeId: string, event: React.MouseEvent) => {
+  const toggleStopCompletion = async (placeId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent drag from triggering
+    const isNowCompleted = !completedStops[placeId];
+    
     setCompletedStops(prev => ({
       ...prev,
-      [placeId]: !prev[placeId]
+      [placeId]: isNowCompleted
     }));
+
+    // Auto-save completion status for drivers
+    if (route && userData?.role !== 'admin') {
+      try {
+        const currentCompletedStops = Object.entries({
+          ...completedStops,
+          [placeId]: isNowCompleted
+        })
+        .filter(([_, isCompleted]) => isCompleted)
+        .map(([id]) => id);
+
+        await firebaseDB.updateRoute(routeId, {
+          completedStops: currentCompletedStops
+        });
+      } catch (err) {
+        console.error('Error auto-saving completed stop:', err);
+        // Revert local state on failure
+        setCompletedStops(prev => ({
+          ...prev,
+          [placeId]: !isNowCompleted
+        }));
+        toast({ title: 'Feil', description: 'Kunne ikke lagre status. Sjekk nettilkoblingen.', variant: 'destructive' });
+      }
+    }
   };
 
   const handleDragEnd = (event: any) => {
@@ -272,9 +306,14 @@ export default function RouteDetailsPage() {
     if (!route) return;
     setIsSaving(true);
     try {
+      const currentCompletedStops = Object.entries(completedStops)
+        .filter(([_, isCompleted]) => isCompleted)
+        .map(([id]) => id);
+
       const updatedRoute: Partial<Route> = {
         ...route,
         places: routePlaces.map(p => p.id),
+        completedStops: currentCompletedStops,
         prepTimeStart,
         prepTimeEnd,
         breakTime,
