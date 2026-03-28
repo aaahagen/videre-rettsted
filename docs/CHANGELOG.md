@@ -23,8 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on saved Place IDs.
 - **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service.
 - **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
+- **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Mobile Route Item Display:** Corrected a layout bug in the detailed route view that caused the estimated delivery time badge for each place to be hidden on smaller mobile screens.
+- **Dynamic Route Recalculation:** Fixed an issue where the total estimated route time failed to update instantly when a user manually dragged and dropped stops to reorder them. The UI now reliably recalculates driving distance and total duration upon every physical route alteration.
+- **Android Touch Support:** Resolved a bug preventing drag-and-drop reordering of route items on Android devices by implementing a dedicated `TouchSensor` with an activation delay.
+- **Optimization API Lock:** Corrected a bug in the backend `calculateRouteDistance` function where Google Maps was permanently instructed to "optimize" the route. It now correctly respects manual user ordering during a standard calculation and only invokes the optimization engine when the explicit "Optimer Rekkefølge" button is pressed.
 - **Memory Leak in Route Calculation:** Resolved a memory leak caused by unresolved Promises in the debounce function used for distance calculations on the route page.
 - **Route Optimization Logic:** Fixed a bug where the "Optimer Rekkefølge" (Optimize Order) button would fail to update the visual order of the stops on the screen.
 - **Frontend Build Error:** Fixed a syntax error in the `page.tsx` file for the detailed route view.
