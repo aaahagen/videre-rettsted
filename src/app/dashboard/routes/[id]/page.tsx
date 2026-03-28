@@ -9,7 +9,7 @@ import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin,
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { deleteField } from 'firebase/firestore';
@@ -38,8 +38,8 @@ function SortableItem({ id, children }: { id: string, children: React.ReactNode 
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="flex items-center w-full">
-      <div className="p-3 cursor-grab hover:bg-slate-100 rounded-md shrink-0 self-stretch flex items-center">
+    <div ref={setNodeRef} style={style} {...attributes} className="flex items-center w-full">
+      <div {...listeners} style={{ touchAction: 'none' }} className="p-3 cursor-grab hover:bg-slate-100 rounded-md shrink-0 self-stretch flex items-center">
          <GripVertical className="text-muted-foreground" />
       </div>
       {children}
@@ -81,7 +81,16 @@ export default function RouteDetailsPage() {
   const params = useParams();
   const routeId = params.id as string;
   const { toast } = useToast();
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, {
+      // Press and hold for 250ms before dragging
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -259,7 +268,7 @@ export default function RouteDetailsPage() {
              await firebaseDB.updateRoute(routeId, { 
                  places: placeIds,
                  distanceString: newDistance === 'N/A' || newDistance === 'Error' ? undefined : newDistance,
-                 duration: newDuration === 'N/A' ? undefined : newDuration
+                 duration: newDuration === 'N/A' || newDuration === 'Error' ? undefined : newDuration
              });
         }
       } catch (err) {
@@ -271,40 +280,31 @@ export default function RouteDetailsPage() {
 
 
   useEffect(() => {
-    const placesCount = routeItems.filter(i => i.type === 'place').length;
-    let totalPoints = placesCount;
-    if (startAddress) totalPoints++;
-    if (endAddress) totalPoints++;
-
     // Calculate total duration from places
     const totalPlacesDeliveryTimeMinutes = routeItems
         .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
         .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
 
-    if (totalPoints >= 2 || baseDurationSeconds > 0 || prepTimeStart > 0 || prepTimeEnd > 0 || breakTime > 0 || fuelServiceTime > 0 || totalPlacesDeliveryTimeMinutes > 0) {
-      const totalSeconds = baseDurationSeconds 
-        + (prepTimeStart * 60) 
-        + (prepTimeEnd * 60) 
-        + (breakTime * 60) 
-        + (fuelServiceTime * 60)
-        + (totalPlacesDeliveryTimeMinutes * 60);
-      
-      if(totalSeconds === 0) {
-         setDuration('N/A');
-         return;
-      }
-
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      if (hours > 0) {
-        setDuration(`${hours} t ${minutes} min`);
-      } else {
-        setDuration(`${minutes} min`);
-      }
-    } else {
-      setDuration('N/A');
+    const totalSeconds = baseDurationSeconds 
+      + (prepTimeStart * 60) 
+      + (prepTimeEnd * 60) 
+      + (breakTime * 60) 
+      + (fuelServiceTime * 60)
+      + (totalPlacesDeliveryTimeMinutes * 60);
+    
+    if(totalSeconds === 0) {
+       setDuration('N/A');
+       return;
     }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems, startAddress, endAddress]);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (hours > 0) {
+      setDuration(`${hours} t ${minutes} min`);
+    } else {
+      setDuration(`${minutes} min`);
+    }
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
@@ -927,30 +927,26 @@ export default function RouteDetailsPage() {
                             </div>
                             
                             {/* Right Side: Actions & Badge */}
-                            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
-                               <div className="flex items-center gap-1">
-                                   {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
-                                       <Badge variant="secondary" className="bg-slate-100 text-slate-500 mr-2 border-slate-200 flex items-center gap-1 shrink-0">
-                                           <Clock className="h-3 w-3" />
-                                           {item.placeData.estimatedDeliveryTime} min
-                                       </Badge>
-                                   ) : null}
-                               </div>
-                               <div className="flex items-center gap-1 shrink-0">
-                                   <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
-                                        <ExternalLink className="h-4 w-4" />
-                                      </Button>
-                                   </Link>
-                                   <Button 
-                                     variant="ghost" 
-                                     size="icon" 
-                                     className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" 
-                                     onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                   >
-                                     <Trash2 className="h-4 w-4" />
-                                   </Button>
-                               </div>
+                            <div className="flex items-center justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
+                               {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
+                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
+                                       <Clock className="h-3 w-3" />
+                                       {item.placeData.estimatedDeliveryTime} min
+                                   </Badge>
+                               ) : null}
+                               <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                               </Link>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" 
+                                 onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                               >
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
                             </div>
 
                           </div>
