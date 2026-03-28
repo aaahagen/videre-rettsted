@@ -54,9 +54,7 @@ export default function RouteDetailsPage() {
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   
-  // The combined list of places and special intervals
   const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
-  
   const [distance, setDistance] = useState('N/A');
   const [duration, setDuration] = useState('N/A');
   
@@ -69,7 +67,6 @@ export default function RouteDetailsPage() {
   const [fuelServiceTime, setFuelServiceTime] = useState<number>(0);
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
   
-  // Track completed stops (using the RouteItem id)
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
 
   const [isSaving, setIsSaving] = useState(false);
@@ -84,11 +81,7 @@ export default function RouteDetailsPage() {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(TouchSensor, {
-      // Press and hold for 250ms before dragging
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+      activationConstraint: { delay: 250, tolerance: 5 },
     })
   );
 
@@ -96,22 +89,15 @@ export default function RouteDetailsPage() {
 
   const debouncedCalculateDistance = useMemo(() => {
     return (items: RouteItem[], currentStartAddress: string, currentEndAddress: string) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      setIsCalculating(true); // Start calculating immediately
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsCalculating(true);
 
       timeoutRef.current = setTimeout(async () => {
         const functions = getFunctions();
         const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
         
-        const placesToCalculate = items
-           .filter(item => item.type === 'place' && item.placeId)
-           .map(item => item.placeId!);
-           
-        let totalPoints = placesToCalculate.length;
-        if (currentStartAddress) totalPoints++;
-        if (currentEndAddress) totalPoints++;
+        const placesToCalculate = items.filter(item => item.type === 'place' && item.placeId).map(item => item.placeId!);
+        let totalPoints = placesToCalculate.length + (currentStartAddress ? 1 : 0) + (currentEndAddress ? 1 : 0);
 
         if (totalPoints < 2) {
           setDistance('N/A');
@@ -121,11 +107,7 @@ export default function RouteDetailsPage() {
         }
 
         try {
-          const result = await calculateDistanceFn({ 
-              placeIds: placesToCalculate,
-              startAddress: currentStartAddress,
-              endAddress: currentEndAddress
-          });
+          const result = await calculateDistanceFn({ placeIds: placesToCalculate, startAddress: currentStartAddress, endAddress: currentEndAddress });
           const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
           setDistance(`${data.distance.toFixed(1)} km`);
           setBaseDurationSeconds(data.duration || 0);
@@ -133,11 +115,7 @@ export default function RouteDetailsPage() {
           console.error('Detailed error calculating distance:', err);
           setDistance('Error');
           setBaseDurationSeconds(0);
-          toast({
-            title: 'Error Calculating Distance',
-            description: err.details?.error_message || err.message || 'An unknown error occurred.',
-            variant: 'destructive',
-          });
+          toast({ title: 'Error Calculating Distance', description: err.details?.error_message || err.message || 'An unknown error occurred.', variant: 'destructive' });
         } finally {
           setIsCalculating(false);
         }
@@ -145,13 +123,8 @@ export default function RouteDetailsPage() {
     };
   }, [toast]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, []);
 
   useEffect(() => {
@@ -160,27 +133,22 @@ export default function RouteDetailsPage() {
         setIsDataLoading(true);
         try {
           const userDoc = await firebaseDB.getUser(user.uid);
-          if (userDoc) {
-            setUserData(userDoc);
-          }
           if (userDoc?.orgId) {
+            setUserData(userDoc);
             const [routeData, placesData, usersData] = await Promise.all([
               firebaseDB.getRoute(routeId),
               firebaseDB.getPlaces(userDoc.orgId),
               firebaseDB.getUsers(userDoc.orgId),
             ]);
-            setOrganizationUsers(usersData);
             
             setRoute(routeData);
             setAllPlaces(placesData);
+            setOrganizationUsers(usersData);
             setRouteNotes(routeData?.notes || '');
             
             const legacyBaseAddress = (routeData as any).baseAddress || '';
-            const savedStart = routeData?.startAddress || legacyBaseAddress;
-            const savedEnd = routeData?.endAddress || legacyBaseAddress;
-
-            setStartAddress(savedStart);
-            setEndAddress(savedEnd);
+            setStartAddress(routeData?.startAddress || legacyBaseAddress);
+            setEndAddress(routeData?.endAddress || legacyBaseAddress);
             
             setPrepTimeStart(routeData?.prepTimeStart || 0);
             setPrepTimeEnd(routeData?.prepTimeEnd || 0);
@@ -189,36 +157,24 @@ export default function RouteDetailsPage() {
 
             if (routeData?.completedStops) {
               const stopsMap: Record<string, boolean> = {};
-              routeData.completedStops.forEach(id => {
-                stopsMap[id] = true;
-              });
+              routeData.completedStops.forEach(id => { stopsMap[id] = true; });
               setCompletedStops(stopsMap);
             }
 
             let initialItems: RouteItem[] = [];
-            if (routeData?.prepTimeStart && routeData.prepTimeStart > 0) {
-               initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
-            }
+            if (routeData?.prepTimeStart > 0) initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
             if (routeData?.places) {
               routeData.places.forEach(placeId => {
-                  const placeData = placesData.find(p => p.id === placeId);
-                  if (placeData) {
-                      initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
-                  }
+                const placeData = placesData.find(p => p.id === placeId);
+                if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
               });
             }
-            if (routeData?.breakTime && routeData.breakTime > 0) {
-               initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
-            }
-            if (routeData?.fuelServiceTime && routeData.fuelServiceTime > 0) {
-               initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
-            }
-            if (routeData?.prepTimeEnd && routeData.prepTimeEnd > 0) {
-               initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
-            }
+            if (routeData?.breakTime > 0) initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
+            if (routeData?.fuelServiceTime > 0) initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
+            if (routeData?.prepTimeEnd > 0) initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
 
             setRouteItems(initialItems);
-            debouncedCalculateDistance(initialItems, savedStart, savedEnd);
+            debouncedCalculateDistance(initialItems, routeData?.startAddress || legacyBaseAddress, routeData?.endAddress || legacyBaseAddress);
           }
         } catch (err) {
           console.error('Error fetching route data:', err);
@@ -237,89 +193,58 @@ export default function RouteDetailsPage() {
   };
 
   useEffect(() => {
-    const totalPlacesDeliveryTimeMinutes = routeItems
-        .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
-        .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
-
-    const totalSeconds = baseDurationSeconds 
-      + (prepTimeStart * 60) 
-      + (prepTimeEnd * 60) 
-      + (breakTime * 60) 
-      + (fuelServiceTime * 60)
-      + (totalPlacesDeliveryTimeMinutes * 60);
+    const totalPlacesDeliveryTimeMinutes = routeItems.filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime).reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
+    const totalSeconds = baseDurationSeconds + ((prepTimeStart + prepTimeEnd + breakTime + fuelServiceTime + totalPlacesDeliveryTimeMinutes) * 60);
     
     if(totalSeconds === 0) {
        setDuration('N/A');
        return;
     }
-
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    if (hours > 0) {
-      setDuration(`${hours}t ${minutes}m`);
-    } else {
-      setDuration(`${minutes}m`);
-    }
+    setDuration(hours > 0 ? `${hours}t ${minutes}m` : `${minutes}m`);
   }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
-    if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.placeId === placeId)) {
-      const newItem: RouteItem = { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd };
-      const newItems = [...routeItems, newItem];
-      updateRouteItems(newItems);
+    if (placeToAdd && !routeItems.some(i => i.placeId === placeId)) {
+      updateRouteItems([...routeItems, { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd }]);
     }
   };
 
   const handleRemoveItem = (itemId: string) => {
-    const newItems = routeItems.filter(i => i.id !== itemId);
-    updateRouteItems(newItems);
+    updateRouteItems(routeItems.filter(i => i.id !== itemId));
   };
   
-  const handleTimeSettingChange = (type: RouteItemType, value: number) => {
-     let newItems = [...routeItems];
-     if (value > 0) {
-         const existingIndex = newItems.findIndex(i => i.type === type);
-         if (existingIndex >= 0) {
-             newItems[existingIndex].duration = value;
-         } else {
-             const newItem: RouteItem = { id: `special_${type}`, type, duration: value };
-             if (type === 'start') newItems.unshift(newItem);
-             else if (type === 'end') newItems.push(newItem);
-             else {
-                 const endIndex = newItems.findIndex(i => i.type === 'end');
-                 if (endIndex >= 0) newItems.splice(endIndex, 0, newItem);
-                 else newItems.push(newItem);
-             }
-         }
-     } else {
-         newItems = newItems.filter(i => i.type !== type);
-     }
-     
-     setRouteItems(newItems);
-     debouncedCalculateDistance(newItems, startAddress, endAddress);
-     
-     if (type === 'start') setPrepTimeStart(value);
-     if (type === 'end') setPrepTimeEnd(value);
-     if (type === 'break') setBreakTime(value);
-     if (type === 'service') setFuelServiceTime(value);
+  const handleTimeSettingChange = (type: 'start' | 'end' | 'break' | 'service', value: number) => {
+    let newItems = routeItems.filter(i => i.type !== type);
+    if (value > 0) {
+      const newItem: RouteItem = { id: `special_${type}`, type, duration: value };
+      if (type === 'start') newItems.unshift(newItem);
+      else if (type === 'end') newItems.push(newItem);
+      else {
+        const endIndex = newItems.findIndex(i => i.type === 'end');
+        endIndex >= 0 ? newItems.splice(endIndex, 0, newItem) : newItems.push(newItem);
+      }
+    }
+    setRouteItems(newItems);
+    debouncedCalculateDistance(newItems, startAddress, endAddress);
+    
+    if (type === 'start') setPrepTimeStart(value);
+    if (type === 'end') setPrepTimeEnd(value);
+    if (type === 'break') setBreakTime(value);
+    if (type === 'service') setFuelServiceTime(value);
   };
 
   const toggleItemCompletion = async (itemId: string) => {
-    const isNowCompleted = !completedStops[itemId];
-    const newCompletedStops = { ...completedStops, [itemId]: isNowCompleted };
+    const newCompletedStops = { ...completedStops, [itemId]: !completedStops[itemId] };
     setCompletedStops(newCompletedStops);
-
-    // Persist completion status immediately, without waiting for main save
     try {
-      const completedIds = Object.entries(newCompletedStops)
-        .filter(([_, isCompleted]) => isCompleted)
-        .map(([id]) => id);
+      const completedIds = Object.keys(newCompletedStops).filter(id => newCompletedStops[id]);
       await firebaseDB.updateRoute(routeId, { completedStops: completedIds });
     } catch (err) {
-      console.error('Error saving completed stop:', err);
       setCompletedStops(completedStops); // Revert on failure
-      toast({ title: 'Feil', description: 'Kunne ikke lagre status. Sjekk nettilkoblingen.', variant: 'destructive' });
+      toast({ title: 'Feil', description: 'Kunne ikke lagre status.', variant: 'destructive' });
     }
   };
 
@@ -328,8 +253,7 @@ export default function RouteDetailsPage() {
     if (over && active.id !== over.id) {
       const oldIndex = routeItems.findIndex(item => item.id === active.id);
       const newIndex = routeItems.findIndex(item => item.id === over.id);
-      const newItems = arrayMove(routeItems, oldIndex, newIndex);
-      updateRouteItems(newItems);
+      updateRouteItems(arrayMove(routeItems, oldIndex, newIndex));
     }
   };
 
@@ -356,21 +280,10 @@ export default function RouteDetailsPage() {
       setDistance(`${data.distance.toFixed(1)} km`);
       setBaseDurationSeconds(data.duration || 0);
       
-      if (data.waypointOrder && data.waypointOrder.length > 0) {
-        let optimizedPlaceItems: RouteItem[];
-        let addedAddresses = (startAddress ? 1 : 0) + (endAddress ? 1 : 0);
-
-        if (addedAddresses === 2 || (startAddress && placeItems.length > 1)) {
-            optimizedPlaceItems = data.waypointOrder.map(index => placeItems[index]);
-            if (startAddress && !endAddress && placeItems.length > 0) {
-                 optimizedPlaceItems.push(placeItems[placeItems.length - 1]);
-            }
-        } else {
-             const origin = placeItems[0];
-             const destination = placeItems[placeItems.length - 1];
-             const intermediatePoints = placeItems.slice(1, -1);
-             const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-             optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
+      if (data.waypointOrder?.length > 0) {
+        const optimizedPlaceItems = data.waypointOrder.map(index => placeItems[index]);
+        if (startAddress && !endAddress && placeItems.length > data.waypointOrder.length) {
+            optimizedPlaceItems.push(placeItems[placeItems.length - 1]);
         }
         
         let optimizedIndex = 0;
@@ -381,7 +294,6 @@ export default function RouteDetailsPage() {
          toast({ title: 'Info', description: 'Ruten er allerede optimal.' });
       }
     } catch (err: any) {
-      console.error('Error optimizing:', err);
       toast({ title: 'Feil', description: err.message || 'Kunne ikke optimalisere ruten.', variant: 'destructive' });
     } finally {
       setIsOptimizing(false);
@@ -392,213 +304,141 @@ export default function RouteDetailsPage() {
     if (!route || isCalculating) return;
     setIsSaving(true);
     try {
-      const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
-      const completedIds = Object.entries(completedStops)
-        .filter(([_, isCompleted]) => isCompleted)
-        .map(([id]) => id);
-
       const updatedRoute: Partial<Route> = {
         name: route.name,
         shipmentNumber: route.shipmentNumber,
         driverId: route.driverId,
-        places: placeIds,
-        startAddress,
-        endAddress,
-        notes: routeNotes,
-        completedStops: completedIds,
-        prepTimeStart,
-        prepTimeEnd,
-        breakTime,
-        fuelServiceTime,
+        places: routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!),
+        completedStops: Object.keys(completedStops).filter(id => completedStops[id]),
+        startAddress, endAddress, notes: routeNotes,
+        prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime,
         duration: duration === 'N/A' ? undefined : duration,
         distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
-      (updatedRoute as any).baseAddress = deleteField(); // Backwards compatibility
+      (updatedRoute as any).baseAddress = deleteField();
       
       await firebaseDB.updateRoute(routeId, updatedRoute);
       toast({ title: 'Suksess', description: 'Ruten er oppdatert.' });
     } catch (err) {
-      console.error('Error saving route:', err);
       toast({ title: 'Feil', description: 'Kunne ikke lagre ruten.', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (loading || isDataLoading) {
-    return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
-  if (error || !user) {
-    router.push('/login');
-    return null;
-  }
-  if (!route) {
-    return <div className="text-center py-12">Ruten ble ikke funnet.</div>;
-  }
+  if (loading || isDataLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!user || error) { router.push('/login'); return null; }
+  if (!route) return <div className="text-center py-12">Ruten ble ikke funnet.</div>;
 
   const isAdmin = userData?.role === 'admin';
   const placesCount = routeItems.filter(i => i.type === 'place').length;
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
-      <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-2">
-        <ChevronLeft className="h-4 w-4" />
-        <Link href="/dashboard/routes" className="text-sm font-medium">Tilbake til Ruter</Link>
-      </div>
+      <Link href="/dashboard/routes" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-2 text-sm font-medium">
+        <ChevronLeft className="h-4 w-4" />Tilbake til Ruter
+      </Link>
 
-      <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-6">
+      <Card className="border-slate-200 shadow-md">
+        <CardContent className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-xl"><RouteIcon className="h-8 w-8 text-primary" /></div>
+                <Input className="text-3xl font-bold h-auto py-2 px-3" value={route.name} onChange={(e) => setRoute({...route, name: e.target.value})} placeholder="Navn på rute..." readOnly={!isAdmin} />
+              </div>
+              <div className="flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm w-full">
+                  <FileText className="h-4 w-4 text-slate-400 ml-2" />
+                  <Input value={route.shipmentNumber || ''} onChange={(e) => setRoute({...route, shipmentNumber: e.target.value})} placeholder="Fraktnummer (valgfritt)" className="border-0 shadow-none focus-visible:ring-0 h-8" readOnly={!isAdmin} />
+              </div>
+          </div>
+          
+          {isAdmin && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-xl shrink-0">
-                    <RouteIcon className="h-8 w-8 text-primary" />
+                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm w-full">
+                    <Home className="h-4 w-4 text-blue-400 ml-2" />
+                    <Input value={startAddress} onChange={(e) => setStartAddress(e.target.value)} onBlur={(e) => debouncedCalculateDistance(routeItems, e.target.value, endAddress)} placeholder="Startadresse (valgfritt)" className="border-0 shadow-none focus-visible:ring-0 h-8" />
+                </div>
+                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border shadow-sm w-full">
+                    <Flag className="h-4 w-4 text-indigo-400 ml-2" />
+                    <Input value={endAddress} onChange={(e) => setEndAddress(e.target.value)} onBlur={(e) => debouncedCalculateDistance(routeItems, startAddress, e.target.value)} placeholder="Sluttadresse (valgfritt)" className="border-0 shadow-none focus-visible:ring-0 h-8" />
+                </div>
+            </div>
+          )}
+            
+          <div className="flex flex-wrap items-center gap-6 text-sm bg-white p-4 rounded-lg border shadow-sm">
+            {[
+              { icon: MapPin, label: 'Stopp', value: placesCount },
+              { icon: Car, label: 'Distanse', value: distance, loading: isCalculating },
+              { icon: Clock, label: 'Est. Tid', value: duration, loading: isCalculating }
+            ].map((item, index) => (
+              <>
+                {index > 0 && <Separator orientation="vertical" className="h-8 hidden sm:block" />}
+                <div key={item.label} className="flex items-center gap-2">
+                  <item.icon className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <span className="text-xs text-muted-foreground uppercase font-semibold">{item.label}</span>
+                    {item.loading ? <Loader2 className="h-5 w-5 animate-spin mt-1" /> : <span className={`block font-bold text-lg ${item.value === 'Error' ? 'text-destructive' : ''}`}>{item.value}</span>}
                   </div>
-                  <Input 
-                    className="text-3xl font-bold h-auto py-2 px-3 bg-white/50 border-slate-200 hover:border-slate-300 focus:bg-white shadow-sm" 
-                    value={route.name} 
-                    onChange={(e) => setRoute({...route, name: e.target.value})}
-                    placeholder="Navn på rute..."
-                    readOnly={!isAdmin}
-                  />
                 </div>
-                <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
-                    <FileText className="h-4 w-4 text-slate-400 ml-2 shrink-0" />
-                    <Input 
-                        value={route.shipmentNumber || ''}
-                        onChange={(e) => setRoute({...route, shipmentNumber: e.target.value})}
-                        placeholder="Fraktnummer (valgfritt)"
-                        className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
-                        readOnly={!isAdmin}
-                    />
-                </div>
-            </div>
-            
-            {isAdmin && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
-                        <Home className="h-4 w-4 text-blue-400 ml-2 shrink-0" />
-                        <Input 
-                            value={startAddress}
-                            onChange={(e) => setStartAddress(e.target.value)}
-                            onBlur={() => debouncedCalculateDistance(routeItems, e.target.value, endAddress)}
-                            placeholder="Startadresse (valgfritt)"
-                            className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
-                        />
-                    </div>
-                    <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-100 shadow-sm w-full">
-                        <Flag className="h-4 w-4 text-indigo-400 ml-2 shrink-0" />
-                        <Input 
-                            value={endAddress}
-                            onChange={(e) => setEndAddress(e.target.value)}
-                            onBlur={() => debouncedCalculateDistance(routeItems, startAddress, e.target.value)}
-                            placeholder="Sluttadresse (valgfritt)"
-                            className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
-                        />
-                    </div>
-                </div>
-            )}
-            
-            <div className="flex flex-wrap items-center gap-6 text-sm bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-indigo-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Stopp</span>
-                  <span className="font-bold text-lg">{placesCount}</span>
-                </div>
-              </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block bg-slate-200" />
-              <div className="flex items-center gap-2">
-                <Car className="h-5 w-5 text-emerald-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Distanse</span>
-                  {isCalculating ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
-                  ) : (
-                    <span className={`font-bold text-lg ${distance === 'Error' ? 'text-destructive' : ''}`}>
-                      {distance === 'Error' ? 'Feil' : distance}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block bg-slate-200" />
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-amber-500" />
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Est. Tid</span>
-                  {isCalculating ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
-                  ) : (
-                    <span className="font-bold text-lg">{duration}</span>
-                  )}
-                </div>
-              </div>
-            </div>
+              </>
+            ))}
           </div>
         </CardContent>
       </Card>
 
       {isAdmin && (
-        <Card className="border-slate-200 shadow-sm">
+        <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-              <Clock className="h-5 w-5 text-slate-500" />
-              Tidsinnstillinger
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Time Setting Selects */}
+            <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><Clock className="h-5 w-5" />Tidsinnstillinger</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Klargjøring (start)', type: 'start', value: prepTimeStart },
+                { label: 'Ferdigstilling (slutt)', type: 'end', value: prepTimeEnd },
+                { label: 'Pause', type: 'break', value: breakTime },
+                { label: 'Service', type: 'service', value: fuelServiceTime }
+              ].map(setting => (
+                <div key={setting.type} className="space-y-2">
+                  <label className="text-sm font-medium">{setting.label}</label>
+                  <Select value={String(setting.value)} onValueChange={(val) => handleTimeSettingChange(setting.type as any, Number(val))}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      {[0, 5, 10, 15, 20, 25, 30, 45, 60, 90].map(min => <SelectItem key={min} value={String(min)}>{min} min</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4"><CardTitle className="text-lg">Legg til Stopp</CardTitle></CardHeader>
+        <div className="lg:col-span-5 space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Legg til Stopp</CardTitle></CardHeader>
             <CardContent>
               <Select onValueChange={handleAddPlace}>
-                <SelectTrigger className="shadow-sm"><SelectValue placeholder="Søk og velg et sted..." /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Søk og velg et sted..." /></SelectTrigger>
                 <SelectContent>
-                  {allPlaces.map(place => (
-                    <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
-                      {place.name}
-                    </SelectItem>
-                  ))}
+                  {allPlaces.map(place => <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.placeId === place.id)}>{place.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </CardContent>
           </Card>
           
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2"><Info className="h-5 w-5 text-slate-400" />Viktig Ruteinformasjon</CardTitle>
-            </CardHeader>
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Info />Viktig Ruteinformasjon</CardTitle></CardHeader>
             <CardContent>
-              <Textarea 
-                value={routeNotes}
-                onChange={(e) => setRouteNotes(e.target.value)}
-                placeholder="Skriv inn viktig informasjon for sjåføren her..."
-                className="min-h-[120px]"
-                readOnly={!isAdmin}
-              />
+              <Textarea value={routeNotes} onChange={(e) => setRouteNotes(e.target.value)} placeholder="Skriv inn viktig informasjon for sjåføren her..." readOnly={!isAdmin} />
             </CardContent>
           </Card>
         </div>
         
-        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto">
-          <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Rekkefølge</CardTitle>
-              <span className="text-xs text-muted-foreground">Dra og slipp for å endre</span>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0 overflow-y-auto flex-1">
+        <Card className="lg:col-span-7">
+          <CardHeader><CardTitle>Rekkefølge</CardTitle></CardHeader>
+          <CardContent className="p-0">
             {routeItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
-                 <MapPin className="h-12 w-12 text-slate-200" />
-                 <p className="text-center">Ingen stopp er lagt til.</p>
-              </div>
+              <div className="flex items-center justify-center h-full text-muted-foreground p-8"><MapPin className="h-12 w-12" /><p>Ingen stopp er lagt til.</p></div>
             ) : (
               <div className="p-4">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -606,7 +446,20 @@ export default function RouteDetailsPage() {
                   <ul className="space-y-3">
                     {routeItems.map((item, index) => (
                       <SortableItem key={item.id} id={item.id}>
-                        {/* Item rendering logic here */}
+                        <div className={`flex-grow p-3 rounded-lg border shadow-sm w-full group ${completedStops[item.id] ? 'bg-green-50/50' : 'bg-white'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 overflow-hidden" onClick={() => toggleItemCompletion(item.id)}>
+                              <button className={completedStops[item.id] ? 'text-green-500' : 'text-slate-300'}><CheckCircle2 className="h-6 w-6" /></button>
+                              <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold">{index + 1}</span>
+                              <span className={`font-semibold ${completedStops[item.id] ? 'line-through' : ''}`}>{item.placeData?.name || item.type}</span>
+                            </div>
+                            <div className="flex items-center">
+                              {item.placeData?.estimatedDeliveryTime && <Badge variant="secondary" className="mr-2"><Clock className="h-3 w-3 mr-1" />{item.placeData.estimatedDeliveryTime} min</Badge>}
+                              <Link href={`/dashboard/places/${item.placeId}`}><Button variant="ghost" size="icon"><ExternalLink className="h-4 w-4" /></Button></Link>
+                              <Button variant="ghost" size="icon" className="sm:opacity-0 group-hover:opacity-100" onClick={() => handleRemoveItem(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          </div>
+                        </div>
                       </SortableItem>
                     ))}
                   </ul>
@@ -619,48 +472,29 @@ export default function RouteDetailsPage() {
       </div>
 
       {isAdmin && (
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-               <h3 className="font-semibold text-lg flex items-center gap-2">Tildelt Sjåfør</h3>
-               <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
-            </div>
-            <Select 
-              value={route.driverId || "unassigned"} 
-              onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
-            >
-              <SelectTrigger className="w-full sm:w-[300px] h-10"><SelectValue placeholder="Velg sjåfør..." /></SelectTrigger>
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+             <h3 className="font-semibold">Tildelt Sjåfør</h3>
+            <Select value={route.driverId || "unassigned"} onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}>
+              <SelectTrigger className="w-[300px]"><SelectValue placeholder="Velg sjåfør..." /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                {organizationUsers.map(u => (
-                  <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                ))}
+                <SelectItem value="unassigned">Ikke tildelt</SelectItem>
+                {organizationUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>)}
               </SelectContent>
             </Select>
           </CardContent>
         </Card>
       )}
 
-      <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+      <Card>
          <CardContent className="p-6 space-y-4">
             {placesCount > 2 && (
-               <Button 
-                 variant="outline" 
-                 className="w-full shadow-sm font-semibold h-12 bg-white"
-                 onClick={handleOptimizeRoute} 
-                 disabled={isOptimizing || isSaving || isCalculating}
-               >
-                 {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
-                 Optimer Rekkefølge
+               <Button variant="outline" className="w-full h-12" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving || isCalculating}>
+                 {isOptimizing ? <Loader2 className="mr-2 animate-spin" /> : <Wand2 className="mr-2" />}Optimer Rekkefølge
                </Button>
             )}
-            <Button 
-              className="w-full shadow-sm font-bold h-12 text-md"
-              onClick={handleSave} 
-              disabled={isSaving || isCalculating}
-            >
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-              {isCalculating ? 'Kalkulerer...' : 'Lagre Rute'}
+            <Button className="w-full h-12" onClick={handleSave} disabled={isSaving || isCalculating}>
+              {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}{isCalculating ? 'Kalkulerer...' : 'Lagre Rute'}
             </Button>
          </CardContent>
       </Card>
