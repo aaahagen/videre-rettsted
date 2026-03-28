@@ -140,41 +140,43 @@ export default function RouteDetailsPage() {
               firebaseDB.getPlaces(userDoc.orgId),
               firebaseDB.getUsers(userDoc.orgId),
             ]);
-            
-            setRoute(routeData);
-            setAllPlaces(placesData);
-            setOrganizationUsers(usersData);
-            setRouteNotes(routeData?.notes || '');
-            
-            const legacyBaseAddress = (routeData as any).baseAddress || '';
-            setStartAddress(routeData?.startAddress || legacyBaseAddress);
-            setEndAddress(routeData?.endAddress || legacyBaseAddress);
-            
-            setPrepTimeStart(routeData?.prepTimeStart || 0);
-            setPrepTimeEnd(routeData?.prepTimeEnd || 0);
-            setBreakTime(routeData?.breakTime || 0);
-            setFuelServiceTime(routeData?.fuelServiceTime || 0);
 
-            if (routeData?.completedStops) {
-              const stopsMap: Record<string, boolean> = {};
-              routeData.completedStops.forEach(id => { stopsMap[id] = true; });
-              setCompletedStops(stopsMap);
+            if (routeData) {
+              setRoute(routeData);
+              setAllPlaces(placesData);
+              setOrganizationUsers(usersData);
+              setRouteNotes(routeData.notes || '');
+              
+              const legacyBaseAddress = (routeData as any).baseAddress || '';
+              setStartAddress(routeData.startAddress || legacyBaseAddress);
+              setEndAddress(routeData.endAddress || legacyBaseAddress);
+              
+              setPrepTimeStart(routeData.prepTimeStart || 0);
+              setPrepTimeEnd(routeData.prepTimeEnd || 0);
+              setBreakTime(routeData.breakTime || 0);
+              setFuelServiceTime(routeData.fuelServiceTime || 0);
+
+              if (routeData.completedStops) {
+                const stopsMap: Record<string, boolean> = {};
+                routeData.completedStops.forEach(id => { stopsMap[id] = true; });
+                setCompletedStops(stopsMap);
+              }
+
+              let initialItems: RouteItem[] = [];
+              if (routeData.prepTimeStart && routeData.prepTimeStart > 0) initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
+              if (routeData.places) {
+                routeData.places.forEach(placeId => {
+                  const placeData = placesData.find(p => p.id === placeId);
+                  if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
+                });
+              }
+              if (routeData.breakTime && routeData.breakTime > 0) initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
+              if (routeData.fuelServiceTime && routeData.fuelServiceTime > 0) initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
+              if (routeData.prepTimeEnd && routeData.prepTimeEnd > 0) initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
+
+              setRouteItems(initialItems);
+              debouncedCalculateDistance(initialItems, routeData.startAddress || legacyBaseAddress, routeData.endAddress || legacyBaseAddress);
             }
-
-            let initialItems: RouteItem[] = [];
-            if (routeData?.prepTimeStart > 0) initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
-            if (routeData?.places) {
-              routeData.places.forEach(placeId => {
-                const placeData = placesData.find(p => p.id === placeId);
-                if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
-              });
-            }
-            if (routeData?.breakTime > 0) initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
-            if (routeData?.fuelServiceTime > 0) initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
-            if (routeData?.prepTimeEnd > 0) initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
-
-            setRouteItems(initialItems);
-            debouncedCalculateDistance(initialItems, routeData?.startAddress || legacyBaseAddress, routeData?.endAddress || legacyBaseAddress);
           }
         } catch (err) {
           console.error('Error fetching route data:', err);
@@ -438,7 +440,11 @@ export default function RouteDetailsPage() {
           <CardHeader><CardTitle>Rekkefølge</CardTitle></CardHeader>
           <CardContent className="p-0">
             {routeItems.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground p-8"><MapPin className="h-12 w-12" /><p>Ingen stopp er lagt til.</p></div>
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 space-y-2">
+                <MapPin className="h-12 w-12 text-slate-200" />
+                <p className="font-semibold">Ingen stopp er lagt til</p>
+                <p className="text-sm text-center">Bruk menyen til venstre for å bygge ruten.</p>
+              </div>
             ) : (
               <div className="p-4">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -446,19 +452,27 @@ export default function RouteDetailsPage() {
                   <ul className="space-y-3">
                     {routeItems.map((item, index) => (
                       <SortableItem key={item.id} id={item.id}>
-                        <div className={`flex-grow p-3 rounded-lg border shadow-sm w-full group ${completedStops[item.id] ? 'bg-green-50/50' : 'bg-white'}`}>
+                        <div className={`flex-grow p-3 rounded-lg border shadow-sm w-full group ${completedStops[item.id] ? 'bg-green-50/50 border-green-200' : 'bg-white'}`}>
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 overflow-hidden" onClick={() => toggleItemCompletion(item.id)}>
-                              <button className={completedStops[item.id] ? 'text-green-500' : 'text-slate-300'}><CheckCircle2 className="h-6 w-6" /></button>
-                              <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold">{index + 1}</span>
-                              <span className={`font-semibold ${completedStops[item.id] ? 'line-through' : ''}`}>{item.placeData?.name || item.type}</span>
+                            <div className="flex items-center gap-3 overflow-hidden cursor-pointer" onClick={() => toggleItemCompletion(item.id)}>
+                              <button className={`transition-colors ${completedStops[item.id] ? 'text-green-500' : 'text-slate-300 hover:text-slate-400'}`}>
+                                {completedStops[item.id] ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                              </button>
+                              <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold shrink-0">{index + 1}</span>
+                              <div className="flex flex-col">
+                                <span className={`font-semibold ${completedStops[item.id] ? 'line-through text-muted-foreground' : ''}`}>{item.placeData?.name || item.type}</span>
+                                {item.placeData?.address && <span className="text-xs text-muted-foreground truncate">{item.placeData.address}</span>}
+                              </div>
                             </div>
-                            <div className="flex items-center">
-                              {item.placeData?.estimatedDeliveryTime && <Badge variant="secondary" className="mr-2"><Clock className="h-3 w-3 mr-1" />{item.placeData.estimatedDeliveryTime} min</Badge>}
-                              <Link href={`/dashboard/places/${item.placeId}`}><Button variant="ghost" size="icon"><ExternalLink className="h-4 w-4" /></Button></Link>
-                              <Button variant="ghost" size="icon" className="sm:opacity-0 group-hover:opacity-100" onClick={() => handleRemoveItem(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                            <div className="flex items-center shrink-0">
+                              {item.placeData?.estimatedDeliveryTime && <Badge variant="secondary" className="mr-2 hidden sm:flex"><Clock className="h-3 w-3 mr-1" />{item.placeData.estimatedDeliveryTime} min</Badge>}
+                              <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"><ExternalLink className="h-4 w-4" /></Button>
+                              </Link>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive sm:opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}><Trash2 className="h-4 w-4" /></Button>
                             </div>
                           </div>
+                          {item.placeData?.estimatedDeliveryTime && <div className="pl-16 mt-2 sm:hidden"><Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{item.placeData.estimatedDeliveryTime} min</Badge></div>}
                         </div>
                       </SortableItem>
                     ))}
@@ -473,12 +487,15 @@ export default function RouteDetailsPage() {
 
       {isAdmin && (
         <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-             <h3 className="font-semibold">Tildelt Sjåfør</h3>
+          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+             <div className="self-start">
+               <h3 className="font-semibold text-lg flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Tildelt Sjåfør</h3>
+               <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre ruten.</p>
+             </div>
             <Select value={route.driverId || "unassigned"} onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}>
-              <SelectTrigger className="w-[300px]"><SelectValue placeholder="Velg sjåfør..." /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[300px] h-10"><SelectValue placeholder="Velg sjåfør..." /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="unassigned">Ikke tildelt</SelectItem>
+                <SelectItem value="unassigned" className="italic text-muted-foreground">Ikke tildelt</SelectItem>
                 {organizationUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -489,11 +506,11 @@ export default function RouteDetailsPage() {
       <Card>
          <CardContent className="p-6 space-y-4">
             {placesCount > 2 && (
-               <Button variant="outline" className="w-full h-12" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving || isCalculating}>
+               <Button variant="outline" className="w-full h-12 font-semibold" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving || isCalculating}>
                  {isOptimizing ? <Loader2 className="mr-2 animate-spin" /> : <Wand2 className="mr-2" />}Optimer Rekkefølge
                </Button>
             )}
-            <Button className="w-full h-12" onClick={handleSave} disabled={isSaving || isCalculating}>
+            <Button className="w-full h-12 font-bold text-md" onClick={handleSave} disabled={isSaving || isCalculating}>
               {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}{isCalculating ? 'Kalkulerer...' : 'Lagre Rute'}
             </Button>
          </CardContent>
