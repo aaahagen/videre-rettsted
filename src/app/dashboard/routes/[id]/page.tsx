@@ -67,11 +67,10 @@ export default function RouteDetailsPage() {
   const [fuelServiceTime, setFuelServiceTime] = useState<number>(0);
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
   
+  const [isCalculating, setIsCalculating] = useState(false);
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
-
   const [isSaving, setIsSaving] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const [isCalculating, setIsCalculating] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
 
   const router = useRouter();
@@ -86,20 +85,50 @@ export default function RouteDetailsPage() {
   );
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCalculatedPlaceIdsRef = useRef<string>('');
 
-  // --- Calculation Logic ---
-
-  // Triggers a debounced calculation whenever relevant state changes
+  // --- 1. Fast Local UI Update for Total Time ---
+  // This runs instantly whenever any time component changes, without waiting for the backend.
   useEffect(() => {
-    if (isDataLoading) return; // Don't calculate while initial data is loading
+    const totalPlacesDeliveryTimeMinutes = routeItems
+      .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
+      .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
+      
+    const totalSeconds = baseDurationSeconds + ((prepTimeStart + prepTimeEnd + breakTime + fuelServiceTime + totalPlacesDeliveryTimeMinutes) * 60);
+    
+    if (totalSeconds === 0) {
+       setDuration('N/A');
+    } else {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        setDuration(hours > 0 ? `${hours} t ${minutes} min` : `${minutes} min`);
+    }
+  }, [routeItems, baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime]);
+
+
+  // --- 2. Debounced Backend Call for Driving Distance/Time ---
+  // This ONLY runs when the physical locations or their order changes.
+  useEffect(() => {
+    if (isDataLoading) return;
+
+    const placesToCalculate = routeItems.filter(item => item.type === 'place' && item.placeId).map(item => item.placeId!);
+    const currentPlaceIdsString = JSON.stringify(placesToCalculate) + startAddress + endAddress;
+    
+    // Abort if the physical route hasn't changed since last calculation
+    if (currentPlaceIdsString === lastCalculatedPlaceIdsRef.current && distance !== 'N/A') {
+        return; 
+    }
 
     const calculateDistance = async () => {
       setIsCalculating(true);
-      
-      const placesToCalculate = routeItems.filter(item => item.type === 'place' && item.placeId).map(item => item.placeId!);
-      let totalPoints = placesToCalculate.length + (startAddress ? 1 : 0) + (endAddress ? 1 : 0);
+      lastCalculatedPlaceIdsRef.current = currentPlaceIdsString;
 
-      if (totalPoints < 2) {
+      const validStart = startAddress && startAddress.trim() !== '';
+      const validEnd = endAddress && endAddress.trim() !== '';
+      let totalPoints = placesToCalculate.length + (validStart ? 1 : 0) + (validEnd ? 1 : 0);
+
+      // Do not attempt calculation if we lack sufficient points
+      if (placesToCalculate.length === 0 || totalPoints < 2) {
         setDistance('N/A');
         setBaseDurationSeconds(0);
         setIsCalculating(false);
@@ -117,38 +146,24 @@ export default function RouteDetailsPage() {
         const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
         
         setDistance(`${data.distance.toFixed(1)} km`);
-        setBaseDurationSeconds(data.duration || 0);
+        setBaseDurationSeconds(data.duration || 0); 
 
       } catch (err: any) {
         console.error('Detailed error calculating distance:', err);
         setDistance('Error');
         setBaseDurationSeconds(0);
-        toast({ title: 'Error Calculating Distance', description: err.details?.error_message || err.message || 'An unknown error occurred.', variant: 'destructive' });
+        toast({ title: 'Kalkuleringsfeil', description: 'Kunne ikke beregne avstand for ruten.', variant: 'destructive' });
       } finally {
         setIsCalculating(false);
       }
     };
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(calculateDistance, 800);
+    // Debounce the call to prevent spamming the API while dragging
+    timeoutRef.current = setTimeout(calculateDistance, 1000);
 
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
-  }, [routeItems, startAddress, endAddress, isDataLoading, toast]);
-
-
-  // Calculates final formatted duration whenever pure driving time OR time settings change
-  useEffect(() => {
-    const totalPlacesDeliveryTimeMinutes = routeItems.filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime).reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
-    const totalSeconds = baseDurationSeconds + ((prepTimeStart + prepTimeEnd + breakTime + fuelServiceTime + totalPlacesDeliveryTimeMinutes) * 60);
-    
-    if(totalSeconds === 0) {
-       setDuration('N/A');
-    } else {
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        setDuration(hours > 0 ? `${hours} t ${minutes} min` : `${minutes} min`);
-    }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
+  }, [routeItems, startAddress, endAddress, isDataLoading, toast, distance]);
 
 
   // --- Data Fetching ---
@@ -219,12 +234,12 @@ export default function RouteDetailsPage() {
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
     if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.placeId === placeId)) {
-      setRouteItems([...routeItems, { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd }]);
+      setRouteItems(prev => [...prev, { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd }]);
     }
   };
 
   const handleRemoveItem = (itemId: string) => {
-    setRouteItems(routeItems.filter(i => i.id !== itemId));
+    setRouteItems(prev => prev.filter(i => i.id !== itemId));
   };
   
   const handleTimeSettingChange = (type: RouteItemType, value: number) => {
@@ -267,7 +282,7 @@ export default function RouteDetailsPage() {
       } catch (err) {
         console.error('Error auto-saving completed stop:', err);
         setCompletedStops(prev => ({ ...prev, [itemId]: !isNowCompleted }));
-        toast({ title: 'Feil', description: 'Kunne ikke lagre status. Sjekk nettilkoblingen.', variant: 'destructive' });
+        toast({ title: 'Feil', description: 'Kunne ikke lagre status.', variant: 'destructive' });
       }
     }
   };
@@ -277,7 +292,7 @@ export default function RouteDetailsPage() {
     if (over && active.id !== over.id) {
       const oldIndex = routeItems.findIndex(item => item.id === active.id);
       const newIndex = routeItems.findIndex(item => item.id === over.id);
-      setRouteItems(arrayMove(routeItems, oldIndex, newIndex));
+      setRouteItems(prevItems => arrayMove([...prevItems], oldIndex, newIndex));
     }
   };
 
@@ -288,7 +303,7 @@ export default function RouteDetailsPage() {
       return;
     }
     if (placeItems.length > 27) {
-        toast({ title: 'For mange stopp', description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', variant: 'destructive' });
+        toast({ title: 'For mange stopp', description: 'Google Maps tillater maks 25 mellomstopp.', variant: 'destructive' });
         return;
     }
 
@@ -340,6 +355,10 @@ export default function RouteDetailsPage() {
         });
         
         setRouteItems(newItems);
+        // Force the ref to update so the useEffect doesn't immediately overwrite our optimized result
+        const placesToCalculate = newItems.filter(item => item.type === 'place' && item.placeId).map(item => item.placeId!);
+        lastCalculatedPlaceIdsRef.current = JSON.stringify(placesToCalculate) + startAddress + endAddress;
+
         toast({ title: 'Suksess', description: 'Ruten ble optimalisert for korteste kjøretid!' });
       } else {
          toast({ title: 'Info', description: 'Ruten er allerede optimal.' });
@@ -388,6 +407,15 @@ export default function RouteDetailsPage() {
     }
   };
 
+  const handleStartAddressChange = (val: string) => {
+      setStartAddress(val);
+  }
+
+  const handleEndAddressChange = (val: string) => {
+      setEndAddress(val);
+  }
+
+
   if (loading || isDataLoading) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -404,11 +432,13 @@ export default function RouteDetailsPage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
+      {/* Back button */}
       <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-2">
         <ChevronLeft className="h-4 w-4" />
         <Link href="/dashboard/routes" className="text-sm font-medium">Tilbake til Ruter</Link>
       </div>
 
+      {/* Top Box: Route Info */}
       <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
@@ -443,7 +473,7 @@ export default function RouteDetailsPage() {
                         <Home className="h-4 w-4 text-blue-400 ml-2 shrink-0" />
                         <Input 
                             value={startAddress}
-                            onChange={(e) => setStartAddress(e.target.value)}
+                            onChange={(e) => handleStartAddressChange(e.target.value)}
                             placeholder="Startadresse (valgfritt)"
                             className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
                         />
@@ -452,7 +482,7 @@ export default function RouteDetailsPage() {
                         <Flag className="h-4 w-4 text-indigo-400 ml-2 shrink-0" />
                         <Input 
                             value={endAddress}
-                            onChange={(e) => setEndAddress(e.target.value)}
+                            onChange={(e) => handleEndAddressChange(e.target.value)}
                             placeholder="Sluttadresse (valgfritt)"
                             className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
                         />
@@ -499,6 +529,7 @@ export default function RouteDetailsPage() {
         </CardContent>
       </Card>
 
+      {/* Time Settings Box - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-6">
@@ -608,8 +639,10 @@ export default function RouteDetailsPage() {
       )}
       
 
+      {/* Main Content: Places Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
+        {/* Left Col: Add Places */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
@@ -650,6 +683,7 @@ export default function RouteDetailsPage() {
           </Card>
         </div>
         
+        {/* Right Col: Current Route */}
         <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto">
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
@@ -671,6 +705,7 @@ export default function RouteDetailsPage() {
                     {routeItems.map((item, index) => {
                       const isCompleted = completedStops[item.id];
                       
+                      // Special handling for time settings
                       if (item.type !== 'place') {
                          let icon = <Clock className="h-4 w-4" />;
                          let title = '';
@@ -708,11 +743,14 @@ export default function RouteDetailsPage() {
                          );
                       }
                       
+                      // Regular Place Item
                       return (
                          <SortableItem key={item.id} id={item.id}>
                             <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
                               
+                              {/* Top row: Main info */}
                               <div className="flex items-center justify-between w-full">
+                                {/* Left Side: Completion Toggle & Info */}
                                 <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
                                   <button 
                                     type="button" 
@@ -731,6 +769,7 @@ export default function RouteDetailsPage() {
                                   </div>
                                 </div>
                                 
+                                {/* Right Side: Actions (visible on hover on larger screens) */}
                                 <div className="hidden sm:flex items-center gap-1 shrink-0">
                                   <Link href={`/dashboard/places/${item.placeId}`} passHref>
                                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
@@ -748,6 +787,7 @@ export default function RouteDetailsPage() {
                                 </div>
                               </div>
   
+                              {/* Bottom row: Badge and Mobile Actions */}
                               <div className="flex items-center justify-between w-full pl-10">
                                 {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
                                   <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
@@ -756,6 +796,7 @@ export default function RouteDetailsPage() {
                                   </Badge>
                                 ) : <div />} 
                                 
+                                {/* Actions visible on mobile */}
                                 <div className="flex sm:hidden items-center gap-1 shrink-0">
                                   <Link href={`/dashboard/places/${item.placeId}`} passHref>
                                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
@@ -786,6 +827,7 @@ export default function RouteDetailsPage() {
         </Card>
       </div>
 
+      {/* Driver Assignment - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -816,6 +858,7 @@ export default function RouteDetailsPage() {
         </Card>
       )}
 
+      {/* Action Buttons */}
       <Card className="border-slate-200 shadow-sm bg-slate-50/50">
          <CardContent className="p-6 space-y-4">
             {placesCount > 2 && (
@@ -823,7 +866,7 @@ export default function RouteDetailsPage() {
                  variant="outline" 
                  className="w-full shadow-sm font-semibold h-12 bg-white"
                  onClick={handleOptimizeRoute} 
-                 disabled={isOptimizing || isSaving}
+                 disabled={isOptimizing || isSaving || isCalculating}
                >
                  {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
                  Optimer Rekkefølge
