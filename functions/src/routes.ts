@@ -26,6 +26,7 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
   const placeIds = data.placeIds;
   const startAddress = data.startAddress;
   const endAddress = data.endAddress;
+  const optimizeRoute = data.optimizeRoute || false; // Check for optimize flag
 
   if (!Array.isArray(placeIds)) {
     throw new functions.https.HttpsError('invalid-argument', 'The function must be called with an array of place IDs.');
@@ -67,7 +68,8 @@ export const calculateRouteDistance = functions.https.onCall({ secrets: [googleM
       throw new functions.https.HttpsError('not-found', 'Could not find valid coordinates for at least two locations (places or base address).');
     }
     
-    const result = await getDrivingDistance(waypoints);
+    // Pass the flag to the API function
+    const result = await getDrivingDistance(waypoints, optimizeRoute);
 
     return { distance: result.distance, duration: result.duration, waypointOrder: result.waypointOrder };
   } catch (error) {

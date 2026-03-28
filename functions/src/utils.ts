@@ -8,7 +8,7 @@ import { defineSecret } from 'firebase-functions/params';
 const googleMapsApiKeySecret = defineSecret('GOOGLE_MAPS_API_KEY');
 const mapsClient = new Client({});
 
-export async function getDrivingDistance(waypoints: (LatLng | string)[]): Promise<{ distance: number; duration: number; waypointOrder: number[] }> {
+export async function getDrivingDistance(waypoints: (LatLng | string)[], optimizeRoute: boolean = false): Promise<{ distance: number; duration: number; waypointOrder: number[] }> {
   if (waypoints.length < 2) {
     return { distance: 0, duration: 0, waypointOrder: [] };
   }
@@ -23,7 +23,7 @@ export async function getDrivingDistance(waypoints: (LatLng | string)[]): Promis
         origin,
         destination,
         waypoints: intermediateWaypoints,
-        optimize: true,
+        optimize: optimizeRoute,
         key: googleMapsApiKeySecret.value(),
       },
     });

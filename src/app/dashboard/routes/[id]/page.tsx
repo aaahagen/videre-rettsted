@@ -313,7 +313,7 @@ export default function RouteDetailsPage() {
       const functions = getFunctions();
       const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
       
-      const result = await calculateDistanceFn({ placeIds, startAddress, endAddress });
+      const result = await calculateDistanceFn({ placeIds, startAddress, endAddress, optimizeRoute: true });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
       setDistance(`${data.distance.toFixed(1)} km`);
