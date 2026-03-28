@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -27,11 +27,11 @@ import { Textarea } from '@/components/ui/textarea';
 type RouteItemType = 'place' | 'start' | 'end' | 'break' | 'service';
 
 interface RouteItem {
-  id: string; // Unique ID for DnD
+  id: string;
   type: RouteItemType;
-  placeId?: string; // Only for 'place'
-  placeData?: Place; // Only for 'place'
-  duration?: number; // Only for non-'place'
+  placeId?: string;
+  placeData?: Place;
+  duration?: number;
 }
 
 function SortableItem({ id, children }: { id: string, children: React.ReactNode }) {
@@ -54,9 +54,7 @@ export default function RouteDetailsPage() {
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   
-  // The combined list of places and special intervals
   const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
-  
   const [distance, setDistance] = useState('N/A');
   const [duration, setDuration] = useState('N/A');
   
@@ -69,7 +67,6 @@ export default function RouteDetailsPage() {
   const [fuelServiceTime, setFuelServiceTime] = useState<number>(0);
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
   
-  // Track completed stops (using the RouteItem id)
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
 
   const [isSaving, setIsSaving] = useState(false);
@@ -84,82 +81,77 @@ export default function RouteDetailsPage() {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(TouchSensor, {
-      // Press and hold for 250ms before dragging
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+      activationConstraint: { delay: 250, tolerance: 5 },
     })
   );
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const debouncedCalculateDistance = useMemo(() => {
-    return (items: RouteItem[], currentStartAddress: string, currentEndAddress: string) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      setIsCalculating(true); // Start calculating immediately
+  // --- Calculation Logic ---
 
-      timeoutRef.current = setTimeout(async () => {
+  // Triggers a debounced calculation whenever relevant state changes
+  useEffect(() => {
+    if (isDataLoading) return; // Don't calculate while initial data is loading
+
+    const calculateDistance = async () => {
+      setIsCalculating(true);
+      
+      const placesToCalculate = routeItems.filter(item => item.type === 'place' && item.placeId).map(item => item.placeId!);
+      let totalPoints = placesToCalculate.length + (startAddress ? 1 : 0) + (endAddress ? 1 : 0);
+
+      if (totalPoints < 2) {
+        setDistance('N/A');
+        setBaseDurationSeconds(0);
+        setIsCalculating(false);
+        return;
+      }
+
+      try {
         const functions = getFunctions();
         const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
+        const result = await calculateDistanceFn({ 
+            placeIds: placesToCalculate, 
+            startAddress, 
+            endAddress 
+        });
+        const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
         
-        // Filter only actual places for Google Maps
-        const placesToCalculate = items
-           .filter(item => item.type === 'place' && item.placeId)
-           .map(item => item.placeId!);
-           
-        // Calculate how many total points we have (places + start + end)
-        let totalPoints = placesToCalculate.length;
-        if (currentStartAddress) totalPoints++;
-        if (currentEndAddress) totalPoints++;
+        setDistance(`${data.distance.toFixed(1)} km`);
+        setBaseDurationSeconds(data.duration || 0);
 
-        if (totalPoints < 2) {
-          setDistance('N/A');
-          setBaseDurationSeconds(0);
-          setIsCalculating(false);
-          return;
-        }
-
-        try {
-          const result = await calculateDistanceFn({ 
-              placeIds: placesToCalculate,
-              startAddress: currentStartAddress,
-              endAddress: currentEndAddress
-          });
-          const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
-          setDistance(`${data.distance.toFixed(1)} km`);
-          
-          if (data.duration) {
-            setBaseDurationSeconds(data.duration);
-          } else {
-            setBaseDurationSeconds(0);
-          }
-        } catch (err: any) {
-          console.error('Detailed error calculating distance:', err);
-          setDistance('Error');
-          setBaseDurationSeconds(0);
-          toast({
-            title: 'Error Calculating Distance',
-            description: err.details?.error_message || err.message || 'An unknown error occurred.',
-            variant: 'destructive',
-          });
-        } finally {
-          setIsCalculating(false);
-        }
-      }, 500);
-    };
-  }, [toast]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      } catch (err: any) {
+        console.error('Detailed error calculating distance:', err);
+        setDistance('Error');
+        setBaseDurationSeconds(0);
+        toast({ title: 'Error Calculating Distance', description: err.details?.error_message || err.message || 'An unknown error occurred.', variant: 'destructive' });
+      } finally {
+        setIsCalculating(false);
       }
     };
-  }, []);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(calculateDistance, 800);
+
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, [routeItems, startAddress, endAddress, isDataLoading, toast]);
+
+
+  // Calculates final formatted duration whenever pure driving time OR time settings change
+  useEffect(() => {
+    const totalPlacesDeliveryTimeMinutes = routeItems.filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime).reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
+    const totalSeconds = baseDurationSeconds + ((prepTimeStart + prepTimeEnd + breakTime + fuelServiceTime + totalPlacesDeliveryTimeMinutes) * 60);
+    
+    if(totalSeconds === 0) {
+       setDuration('N/A');
+    } else {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        setDuration(hours > 0 ? `${hours} t ${minutes} min` : `${minutes} min`);
+    }
+  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
+
+
+  // --- Data Fetching ---
 
   useEffect(() => {
     if (user && routeId) {
@@ -167,71 +159,49 @@ export default function RouteDetailsPage() {
         setIsDataLoading(true);
         try {
           const userDoc = await firebaseDB.getUser(user.uid);
-          if (userDoc) {
-            setUserData(userDoc);
-          }
           if (userDoc?.orgId) {
+            setUserData(userDoc);
             const [routeData, placesData, usersData] = await Promise.all([
               firebaseDB.getRoute(routeId),
               firebaseDB.getPlaces(userDoc.orgId),
               firebaseDB.getUsers(userDoc.orgId),
             ]);
-            setOrganizationUsers(usersData);
             
-            setRoute(routeData);
-            setAllPlaces(placesData);
-            setRouteNotes(routeData?.notes || '');
-            
-            // Handle backwards compatibility for 'baseAddress'
-            const legacyBaseAddress = (routeData as any).baseAddress || '';
-            const savedStart = routeData?.startAddress || legacyBaseAddress;
-            const savedEnd = routeData?.endAddress || legacyBaseAddress;
+            if (routeData) {
+              setRoute(routeData);
+              setAllPlaces(placesData);
+              setOrganizationUsers(usersData);
+              setRouteNotes(routeData.notes || '');
+              
+              const legacyBaseAddress = (routeData as any).baseAddress || '';
+              setStartAddress(routeData.startAddress || legacyBaseAddress);
+              setEndAddress(routeData.endAddress || legacyBaseAddress);
+              
+              setPrepTimeStart(routeData.prepTimeStart || 0);
+              setPrepTimeEnd(routeData.prepTimeEnd || 0);
+              setBreakTime(routeData.breakTime || 0);
+              setFuelServiceTime(routeData.fuelServiceTime || 0);
 
-            setStartAddress(savedStart);
-            setEndAddress(savedEnd);
-            
-            setPrepTimeStart(routeData?.prepTimeStart || 0);
-            setPrepTimeEnd(routeData?.prepTimeEnd || 0);
-            setBreakTime(routeData?.breakTime || 0);
-            setFuelServiceTime(routeData?.fuelServiceTime || 0);
+              if (routeData.completedStops) {
+                const stopsMap: Record<string, boolean> = {};
+                routeData.completedStops.forEach(id => { stopsMap[id] = true; });
+                setCompletedStops(stopsMap);
+              }
 
-            // Initialize completed stops from database
-            if (routeData?.completedStops) {
-              const stopsMap: Record<string, boolean> = {};
-              routeData.completedStops.forEach(id => {
-                stopsMap[id] = true;
-              });
-              setCompletedStops(stopsMap);
-            }
-
-            // Construct RouteItems array based on saved places
-            let initialItems: RouteItem[] = [];
-            
-            if (routeData?.prepTimeStart && routeData.prepTimeStart > 0) {
-               initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
-            }
-            
-            if (routeData?.places) {
-              routeData.places.forEach(placeId => {
+              let initialItems: RouteItem[] = [];
+              if (routeData.prepTimeStart && routeData.prepTimeStart > 0) initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
+              if (routeData.places) {
+                routeData.places.forEach(placeId => {
                   const placeData = placesData.find(p => p.id === placeId);
-                  if (placeData) {
-                      initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
-                  }
-              });
-            }
-            
-            if (routeData?.breakTime && routeData.breakTime > 0) {
-               initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
-            }
-            if (routeData?.fuelServiceTime && routeData.fuelServiceTime > 0) {
-               initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
-            }
-            if (routeData?.prepTimeEnd && routeData.prepTimeEnd > 0) {
-               initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
-            }
+                  if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
+                });
+              }
+              if (routeData.breakTime && routeData.breakTime > 0) initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
+              if (routeData.fuelServiceTime && routeData.fuelServiceTime > 0) initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
+              if (routeData.prepTimeEnd && routeData.prepTimeEnd > 0) initialItems.push({ id: 'special_end', type: 'end', duration: routeData.prepTimeEnd });
 
-            setRouteItems(initialItems);
-            debouncedCalculateDistance(initialItems, savedStart, savedEnd);
+              setRouteItems(initialItems);
+            }
           }
         } catch (err) {
           console.error('Error fetching route data:', err);
@@ -242,87 +212,42 @@ export default function RouteDetailsPage() {
       };
       fetchData();
     }
-  }, [user, routeId, toast, debouncedCalculateDistance]);
+  }, [user, routeId, toast]);
 
-  const updateRouteItems = (newItems: RouteItem[]) => {
-    setRouteItems(newItems);
-    debouncedCalculateDistance(newItems, startAddress, endAddress);
-  };
-
-  useEffect(() => {
-    // Calculate total duration from places
-    const totalPlacesDeliveryTimeMinutes = routeItems
-        .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
-        .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
-
-    const totalSeconds = baseDurationSeconds 
-      + (prepTimeStart * 60) 
-      + (prepTimeEnd * 60) 
-      + (breakTime * 60) 
-      + (fuelServiceTime * 60)
-      + (totalPlacesDeliveryTimeMinutes * 60);
-    
-    if(totalSeconds === 0) {
-       setDuration('N/A');
-       return;
-    }
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    if (hours > 0) {
-      setDuration(`${hours} t ${minutes} min`);
-    } else {
-      setDuration(`${minutes} min`);
-    }
-  }, [baseDurationSeconds, prepTimeStart, prepTimeEnd, breakTime, fuelServiceTime, routeItems]);
+  // --- Handlers ---
 
   const handleAddPlace = (placeId: string) => {
     const placeToAdd = allPlaces.find(p => p.id === placeId);
     if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.placeId === placeId)) {
-      const newItem: RouteItem = { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd };
-      const newItems = [...routeItems, newItem];
-      updateRouteItems(newItems);
+      setRouteItems([...routeItems, { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd }]);
     }
   };
 
   const handleRemoveItem = (itemId: string) => {
-    const newItems = routeItems.filter(i => i.id !== itemId);
-    updateRouteItems(newItems);
+    setRouteItems(routeItems.filter(i => i.id !== itemId));
   };
   
-  // Sync Time Settings with RouteItems
   const handleTimeSettingChange = (type: RouteItemType, value: number) => {
      let newItems = [...routeItems];
      
      if (value > 0) {
-         // Add or update
          const existingIndex = newItems.findIndex(i => i.type === type);
          if (existingIndex >= 0) {
              newItems[existingIndex].duration = value;
          } else {
-             // Add to list (start at top, end at bottom, others before end)
              const newItem: RouteItem = { id: `special_${type}`, type, duration: value };
-             if (type === 'start') {
-                 newItems.unshift(newItem);
-             } else if (type === 'end') {
-                 newItems.push(newItem);
-             } else {
-                 // Insert before 'end' if it exists, otherwise at the end
+             if (type === 'start') newItems.unshift(newItem);
+             else if (type === 'end') newItems.push(newItem);
+             else {
                  const endIndex = newItems.findIndex(i => i.type === 'end');
-                 if (endIndex >= 0) {
-                     newItems.splice(endIndex, 0, newItem);
-                 } else {
-                     newItems.push(newItem);
-                 }
+                 endIndex >= 0 ? newItems.splice(endIndex, 0, newItem) : newItems.push(newItem);
              }
          }
      } else {
-         // Remove
          newItems = newItems.filter(i => i.type !== type);
      }
      
      setRouteItems(newItems);
-     debouncedCalculateDistance(newItems, startAddress, endAddress);
      
      if (type === 'start') setPrepTimeStart(value);
      if (type === 'end') setPrepTimeEnd(value);
@@ -331,34 +256,17 @@ export default function RouteDetailsPage() {
   };
 
   const toggleItemCompletion = async (itemId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent drag from triggering
+    event.stopPropagation();
     const isNowCompleted = !completedStops[itemId];
+    setCompletedStops(prev => ({ ...prev, [itemId]: isNowCompleted }));
     
-    setCompletedStops(prev => ({
-      ...prev,
-      [itemId]: isNowCompleted
-    }));
-    
-    // Auto-save completion status for drivers
     if (route && userData?.role !== 'admin') {
       try {
-        const currentCompletedStops = Object.entries({
-          ...completedStops,
-          [itemId]: isNowCompleted
-        })
-        .filter(([_, isCompleted]) => isCompleted)
-        .map(([id]) => id);
-
-        await firebaseDB.updateRoute(routeId, {
-          completedStops: currentCompletedStops
-        });
+        const currentCompletedStops = Object.entries({ ...completedStops, [itemId]: isNowCompleted }).filter(([_, isCompleted]) => isCompleted).map(([id]) => id);
+        await firebaseDB.updateRoute(routeId, { completedStops: currentCompletedStops });
       } catch (err) {
         console.error('Error auto-saving completed stop:', err);
-        // Revert local state on failure
-        setCompletedStops(prev => ({
-          ...prev,
-          [itemId]: !isNowCompleted
-        }));
+        setCompletedStops(prev => ({ ...prev, [itemId]: !isNowCompleted }));
         toast({ title: 'Feil', description: 'Kunne ikke lagre status. Sjekk nettilkoblingen.', variant: 'destructive' });
       }
     }
@@ -366,11 +274,10 @@ export default function RouteDetailsPage() {
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (over && active.id !== over.id) {
       const oldIndex = routeItems.findIndex(item => item.id === active.id);
       const newIndex = routeItems.findIndex(item => item.id === over.id);
-      const newItems = arrayMove(routeItems, oldIndex, newIndex);
-      updateRouteItems(newItems);
+      setRouteItems(arrayMove(routeItems, oldIndex, newIndex));
     }
   };
 
@@ -380,13 +287,8 @@ export default function RouteDetailsPage() {
       toast({ title: 'Info', description: 'Du trenger minst 3 stopp for å optimere ruten.' });
       return;
     }
-    
     if (placeItems.length > 27) {
-        toast({ 
-            title: 'For mange stopp', 
-            description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', 
-            variant: 'destructive' 
-        });
+        toast({ title: 'For mange stopp', description: 'Google Maps tillater maks 25 mellomstopp for automatisk optimalisering.', variant: 'destructive' });
         return;
     }
 
@@ -396,81 +298,32 @@ export default function RouteDetailsPage() {
       const functions = getFunctions();
       const calculateDistanceFn = httpsCallable(functions, 'calculateRouteDistance');
       
-      const result = await calculateDistanceFn({ 
-          placeIds,
-          startAddress,
-          endAddress
-      });
+      const result = await calculateDistanceFn({ placeIds, startAddress, endAddress });
       const data = result.data as { distance: number, duration: number, waypointOrder: number[] };
       
-      const newDistanceString = `${data.distance.toFixed(1)} km`;
-      setDistance(newDistanceString);
-      
-      let newDurationSeconds = 0;
-      if (data.duration) {
-        setBaseDurationSeconds(data.duration);
-        newDurationSeconds = data.duration;
-      } else {
-        setBaseDurationSeconds(0);
-      }
-      
-      // Calculate new duration string immediately for auto-save
-      let newDurationString = 'N/A';
-      
-      const totalPlacesDeliveryTimeMinutes = routeItems
-        .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
-        .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
-
-      const totalSeconds = newDurationSeconds 
-        + (prepTimeStart * 60) 
-        + (prepTimeEnd * 60) 
-        + (breakTime * 60) 
-        + (fuelServiceTime * 60)
-        + (totalPlacesDeliveryTimeMinutes * 60);
-
-      if (totalSeconds > 0) {
-          const hours = Math.floor(totalSeconds / 3600);
-          const minutes = Math.floor((totalSeconds % 3600) / 60);
-          if (hours > 0) {
-             newDurationString = `${hours} t ${minutes} min`;
-          } else {
-             newDurationString = `${minutes} min`;
-          }
-      }
+      setDistance(`${data.distance.toFixed(1)} km`);
+      const drivingDur = data.duration || 0;
+      setBaseDurationSeconds(drivingDur);
       
       if (data.waypointOrder && data.waypointOrder.length > 0) {
-        // Reconstruct place order.
         let optimizedPlaceItems: RouteItem[] = [];
         
-        // Count how many address strings we injected into the waypoints list on the backend
-        let addedAddresses = 0;
-        if (startAddress) addedAddresses++;
-        if (endAddress) addedAddresses++;
+        const validStart = startAddress && startAddress.trim() !== '';
+        const validEnd = endAddress && endAddress.trim() !== '';
         
-        if (addedAddresses === 2) {
-             // Both start and end addresses were used: ALL placeItems were intermediate
+        if (validStart && validEnd) {
              optimizedPlaceItems = data.waypointOrder.map(index => placeItems[index]);
-        } else if (addedAddresses === 1) {
-            // One address was used. The logic depends on WHICH address was used.
-            if (startAddress && !endAddress) {
-                // startAddress was origin. The FIRST placeItem was NOT origin. The LAST placeItem was destination.
-                // data.waypointOrder only covers the elements BETWEEN origin and destination.
-                // So, data.waypointOrder covers placeItems from index 0 to length-2.
-                // The last element is destination and remains at the end.
-                const destination = placeItems[placeItems.length - 1];
-                const intermediatePoints = placeItems.slice(0, -1);
-                const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-                optimizedPlaceItems = [...optimizedIntermediate, destination];
-            } else {
-                // endAddress was destination. The FIRST placeItem WAS origin.
-                // data.waypointOrder covers placeItems from index 1 to length-1.
-                const origin = placeItems[0];
-                const intermediatePoints = placeItems.slice(1);
-                const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
-                optimizedPlaceItems = [origin, ...optimizedIntermediate];
-            }
+        } else if (validStart && !validEnd) {
+            const destination = placeItems[placeItems.length - 1];
+            const intermediatePoints = placeItems.slice(0, -1);
+            const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+            optimizedPlaceItems = [...optimizedIntermediate, destination];
+        } else if (!validStart && validEnd) {
+             const origin = placeItems[0];
+             const intermediatePoints = placeItems.slice(1);
+             const optimizedIntermediate = data.waypointOrder.map(index => intermediatePoints[index]);
+             optimizedPlaceItems = [origin, ...optimizedIntermediate];
         } else {
-             // No base addresses: first and last placeItems were origin/destination
              const origin = placeItems[0];
              const destination = placeItems[placeItems.length - 1];
              const intermediatePoints = placeItems.slice(1, -1);
@@ -478,7 +331,6 @@ export default function RouteDetailsPage() {
              optimizedPlaceItems = [origin, ...optimizedIntermediate, destination];
         }
         
-        // Re-integrate optimized places into the main routeItems array
         let optimizedIndex = 0;
         const newItems = routeItems.map(item => {
             if (item.type === 'place') {
@@ -524,7 +376,6 @@ export default function RouteDetailsPage() {
         duration: duration === 'N/A' ? undefined : duration,
         distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
-      // For backward compatibility, also remove baseAddress if we are saving new schema
       (updatedRoute as any).baseAddress = deleteField();
       
       await firebaseDB.updateRoute(routeId, updatedRoute);
@@ -553,13 +404,11 @@ export default function RouteDetailsPage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
-      {/* Back button */}
       <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-2">
         <ChevronLeft className="h-4 w-4" />
         <Link href="/dashboard/routes" className="text-sm font-medium">Tilbake til Ruter</Link>
       </div>
 
-      {/* Top Box: Route Info */}
       <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
@@ -595,7 +444,6 @@ export default function RouteDetailsPage() {
                         <Input 
                             value={startAddress}
                             onChange={(e) => setStartAddress(e.target.value)}
-                            onBlur={() => debouncedCalculateDistance(routeItems, startAddress, endAddress)}
                             placeholder="Startadresse (valgfritt)"
                             className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
                         />
@@ -605,7 +453,6 @@ export default function RouteDetailsPage() {
                         <Input 
                             value={endAddress}
                             onChange={(e) => setEndAddress(e.target.value)}
-                            onBlur={() => debouncedCalculateDistance(routeItems, startAddress, endAddress)}
                             placeholder="Sluttadresse (valgfritt)"
                             className="border-0 shadow-none focus-visible:ring-0 px-2 h-8 text-sm"
                         />
@@ -652,7 +499,6 @@ export default function RouteDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Time Settings Box - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-6">
@@ -762,10 +608,8 @@ export default function RouteDetailsPage() {
       )}
       
 
-      {/* Main Content: Places Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Col: Add Places */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-4">
@@ -806,7 +650,6 @@ export default function RouteDetailsPage() {
           </Card>
         </div>
         
-        {/* Right Col: Current Route */}
         <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto">
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
@@ -828,7 +671,6 @@ export default function RouteDetailsPage() {
                     {routeItems.map((item, index) => {
                       const isCompleted = completedStops[item.id];
                       
-                      // Special handling for time settings
                       if (item.type !== 'place') {
                          let icon = <Clock className="h-4 w-4" />;
                          let title = '';
@@ -866,80 +708,74 @@ export default function RouteDetailsPage() {
                          );
                       }
                       
-                      // Regular Place Item
                       return (
-                        <SortableItem key={item.id} id={item.id}>
-                           <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
-                             
-                             {/* Top row: Main info */}
-                             <div className="flex items-center justify-between w-full">
-                               {/* Left Side: Completion Toggle & Info */}
-                               <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
-                                 <button 
-                                   type="button" 
-                                   className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
-                                 >
-                                   {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
-                                 </button>
- 
-                                 <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
-                                   {index + 1}
+                         <SortableItem key={item.id} id={item.id}>
+                            <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
+                              
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
+                                  <button 
+                                    type="button" 
+                                    className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
+                                  >
+                                    {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                                  </button>
+  
+                                  <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
+                                    {index + 1}
                                  </span>
                                  <div className="flex flex-col min-w-0">
-                                   <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                                     {item.placeData?.name}
-                                   </span>
-                                 </div>
-                               </div>
-                               
-                               {/* Right Side: Actions (visible on hover on larger screens) */}
-                               <div className="hidden sm:flex items-center gap-1 shrink-0">
-                                 <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
-                                     <ExternalLink className="h-4 w-4" />
-                                   </Button>
-                                 </Link>
-                                 <Button 
-                                   variant="ghost" 
-                                   size="icon" 
-                                   className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                   onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                 >
-                                   <Trash2 className="h-4 w-4" />
-                                 </Button>
-                               </div>
-                             </div>
- 
-                             {/* Bottom row: Badge and Mobile Actions */}
-                             <div className="flex items-center justify-between w-full pl-9">
-                               {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
-                                 <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
-                                   <Clock className="h-3 w-3" />
-                                   {item.placeData.estimatedDeliveryTime} min
-                                 </Badge>
-                               ) : <div />} 
-                               
-                               {/* Actions visible on mobile */}
-                               <div className="flex sm:hidden items-center gap-1 shrink-0">
-                                 <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
-                                     <ExternalLink className="h-4 w-4" />
-                                   </Button>
-                                 </Link>
-                                 <Button 
-                                   variant="ghost" 
-                                   size="icon" 
-                                   className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                   onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                 >
-                                   <Trash2 className="h-4 w-4" />
-                                 </Button>
-                               </div>
-                             </div>
- 
-                           </div>
-                         </SortableItem>
-                       )
+                                    <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                      {item.placeData?.name}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="hidden sm:flex items-center gap-1 shrink-0">
+                                  <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+  
+                              <div className="flex items-center justify-between w-full pl-10">
+                                {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
+                                  <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
+                                    <Clock className="h-3 w-3" />
+                                    {item.placeData.estimatedDeliveryTime} min
+                                  </Badge>
+                                ) : <div />} 
+                                
+                                <div className="flex sm:hidden items-center gap-1 shrink-0">
+                                  <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                      <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+  
+                            </div>
+                          </SortableItem>
+                        )
                     })}
                   </ul>
                 </SortableContext>
@@ -950,7 +786,6 @@ export default function RouteDetailsPage() {
         </Card>
       </div>
 
-      {/* Driver Assignment - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
           <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -981,7 +816,6 @@ export default function RouteDetailsPage() {
         </Card>
       )}
 
-      {/* Action Buttons */}
       <Card className="border-slate-200 shadow-sm bg-slate-50/50">
          <CardContent className="p-6 space-y-4">
             {placesCount > 2 && (
