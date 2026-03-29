@@ -130,12 +130,12 @@ export default function RoutesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Ruter</h1>
           <p className="text-slate-500 mt-2 max-w-2xl">
              {userData?.role === 'admin' 
-               ? "Administrer leveringsruter. Opprett nye ruter, tildel dem til sjåfører, og følg med på fremdriften." 
+               ? "Administrer leveringsruter. Opprett nye ruter og tildel dem til sjåfører." 
                : "Her er en oversikt over rutene som er tildelt deg."}
           </p>
         </div>
         {userData?.role === 'admin' && (
-          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow">
+          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow whitespace-nowrap">
             <Plus className="mr-2 h-5 w-5" /> Ny Rute
           </Button>
         )}
