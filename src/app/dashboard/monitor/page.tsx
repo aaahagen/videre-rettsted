@@ -204,7 +204,7 @@ export default function MonitorPage() {
              if (route.prepTimeEnd && route.prepTimeEnd > 0) totalExpectedItems++;
              if (route.breakTime && route.breakTime > 0) totalExpectedItems++;
              if (route.fuelServiceTime && route.fuelServiceTime > 0) totalExpectedItems++;
-             const isFinished = totalExpectedItems > 0 && route.completedStops?.length >= totalExpectedItems;
+             const isFinished = totalExpectedItems > 0 && (route.completedStops?.length || 0) >= totalExpectedItems;
 
              const progress = totalStops > 0 ? (completedPlacesCount / totalStops) * 100 : 0;
              const driverName = route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt';
