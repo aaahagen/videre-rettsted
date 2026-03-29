@@ -174,13 +174,6 @@ export default function RoutesPage() {
           {displayedRoutes.map(route => {
             const totalStops = route.places?.length || 0;
             
-            // To consider a route fully completed, check if ALL stops in the route (which means all `route.places`) are in `route.completedStops`.
-            // Wait, route.places is an array of placeIds. However, we have special stops now. Let's base completion on whether the length of completedStops is >= the total expected.
-            // But wait, totalStops only counted physical places. So let's re-calculate total expected stops from the structure.
-            
-            // A quick reliable check for if a route is fully finished based on its structure:
-            // If the route has any special stops, they will be in completedStops. Let's see how Route details page does it.
-            // It uses routeItems.length. Since we don't have routeItems here, let's estimate or just rely on places length + special times.
             let totalExpectedItems = route.places?.length || 0;
             if (route.prepTimeStart && route.prepTimeStart > 0) totalExpectedItems++;
             if (route.prepTimeEnd && route.prepTimeEnd > 0) totalExpectedItems++;
@@ -190,6 +183,8 @@ export default function RoutesPage() {
             const completedStopsCount = route.completedStops?.length || 0;
             const isFinished = totalExpectedItems > 0 && completedStopsCount >= totalExpectedItems;
             
+            const createdAtDate = (route.createdAt as any)?.toDate ? (route.createdAt as any).toDate() : new Date(route.createdAt as any);
+
             return (
             <Card 
               key={route.id} 
@@ -207,7 +202,7 @@ export default function RoutesPage() {
                       {route.name}
                     </CardTitle>
                     <p className="text-xs text-slate-400 font-medium mt-1">
-                      Opprettet {new Date(route.createdAt as any).toLocaleDateString()}
+                      Opprettet {isNaN(createdAtDate.getTime()) ? 'Ukjent dato' : createdAtDate.toLocaleDateString()}
                     </p>
                   </div>
                 </div>
