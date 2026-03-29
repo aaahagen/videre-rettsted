@@ -99,10 +99,7 @@ export default function MonitorPage() {
       const routeNameMatch = route.name?.toLowerCase().includes(lowerQuery);
       const driverNameMatch = route.driverId && users[route.driverId]?.name?.toLowerCase().includes(lowerQuery);
       
-      // We could potentially search by place names within the route as well
-      // const placesMatch = route.places?.some(placeId => places[placeId]?.name?.toLowerCase().includes(lowerQuery));
-      
-      return routeNameMatch || driverNameMatch; // || placesMatch;
+      return routeNameMatch || driverNameMatch;
     });
   }, [routes, searchQuery, users]);
 
@@ -114,24 +111,34 @@ export default function MonitorPage() {
   const totalRoutes = filteredRoutes.length;
   let finishedRoutes = 0;
   let activeRoutes = 0;
-  let totalStopsOverall = 0;
-  let completedStopsOverall = 0;
+  let totalPlacesOverall = 0;
+  let completedPlacesOverall = 0;
 
   filteredRoutes.forEach(route => {
-    const totalStops = route.places?.length || 0;
-    const completedStopsCount = route.completedStops?.length || 0;
+    const placesCount = route.places?.length || 0;
     
-    totalStopsOverall += totalStops;
-    completedStopsOverall += completedStopsCount;
+    let expectedItems = placesCount;
+    if (route.prepTimeStart && route.prepTimeStart > 0) expectedItems++;
+    if (route.prepTimeEnd && route.prepTimeEnd > 0) expectedItems++;
+    if (route.breakTime && route.breakTime > 0) expectedItems++;
+    if (route.fuelServiceTime && route.fuelServiceTime > 0) expectedItems++;
+    
+    const completedCount = route.completedStops?.length || 0;
 
-    if (totalStops > 0 && completedStopsCount === totalStops) {
+    totalPlacesOverall += placesCount;
+    
+    // Only count completed stops that are actual places (their IDs start with 'place_')
+    const currentCompletedPlaces = route.completedStops?.filter(stopId => stopId.startsWith('place_')).length || 0;
+    completedPlacesOverall += currentCompletedPlaces;
+
+    if (expectedItems > 0 && completedCount >= expectedItems) {
       finishedRoutes++;
-    } else if (totalStops > 0) {
+    } else if (expectedItems > 0) {
       activeRoutes++;
     }
   });
 
-  const overallProgress = totalStopsOverall > 0 ? (completedStopsOverall / totalStopsOverall) * 100 : 0;
+  const overallProgress = totalPlacesOverall > 0 ? (completedPlacesOverall / totalPlacesOverall) * 100 : 0;
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
@@ -164,7 +171,7 @@ export default function MonitorPage() {
               <span className="text-sm text-green-600/80">Fullførte Ruter</span>
             </div>
             <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg">
-              <span className="text-3xl font-bold text-primary">{totalStopsOverall}</span>
+              <span className="text-3xl font-bold text-primary">{totalPlacesOverall}</span>
               <span className="text-sm text-primary/80">Totale Stopp</span>
             </div>
           </div>
@@ -172,7 +179,7 @@ export default function MonitorPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium text-slate-700">Total Fremdrift for Dagen</span>
-              <span className="text-muted-foreground">{completedStopsOverall} / {totalStopsOverall} stopp fullført ({Math.round(overallProgress)}%)</span>
+              <span className="text-muted-foreground">{completedPlacesOverall} / {totalPlacesOverall} stopp fullført ({Math.round(overallProgress)}%)</span>
             </div>
             <Progress value={overallProgress} className="h-3" />
           </div>
