@@ -692,7 +692,7 @@ export default function RouteDetailsPage() {
                     onChange={(e) => setRouteNotes(e.target.value)}
                     placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
                     className="min-h-[120px]"
-                    readOnly={!isAdmin}
+                    readOnly={!isAdmin && !isEditMode}
                 />
                 </CardContent>
             </Card>
