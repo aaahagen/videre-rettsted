@@ -9,6 +9,10 @@ import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
 import { usePathname, useRouter } from 'next/navigation';
 import useUpdateNotifier from '@/hooks/useUpdateNotifier';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebase';
+import { useEffect, useState } from 'react';
+import { firebaseDB } from '@/lib/firebase/database';
 
 export default function DashboardLayout({
   children,
@@ -19,6 +23,17 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { isUpdateAvailable, refreshPage } = useUpdateNotifier();
+  
+  const [user] = useAuthState(auth);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      firebaseDB.getUser(user.uid).then(u => {
+        setIsAdmin(u?.role === 'admin');
+      });
+    }
+  }, [user]);
 
   const isRoutesPage = pathname === '/dashboard/routes';
   const isMonitorPage = pathname === '/dashboard/monitor';
@@ -72,19 +87,23 @@ export default function DashboardLayout({
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button asChild size="sm" className="hidden sm:flex">
-                <Link href={contextLink}>
-                  {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-                  Ny {contextName === 'Ruter' ? 'Rute' : 'Sted'}
-                </Link>
-              </Button>
-              <Button asChild size="icon" className="sm:hidden rounded-full h-10 w-10">
-                <Link href={contextLink}>
-                  {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
-                </Link>
-              </Button>
-            </div>
+            
+            {/* Only show the New button if user is an admin, OR if the context is 'Steder' (since drivers can add places) */}
+            {(isAdmin || contextName === 'Steder') && (
+                <div className="flex items-center gap-2">
+                  <Button asChild size="sm" className="hidden sm:flex">
+                    <Link href={contextLink}>
+                      {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
+                      Ny {contextName === 'Ruter' ? 'Rute' : 'Sted'}
+                    </Link>
+                  </Button>
+                  <Button asChild size="icon" className="sm:hidden rounded-full h-10 w-10">
+                    <Link href={contextLink}>
+                      {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
+                    </Link>
+                  </Button>
+                </div>
+            )}
           </header>
           <main className="flex-1 bg-slate-50/50">
             {children}
