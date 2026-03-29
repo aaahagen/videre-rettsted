@@ -5,16 +5,17 @@ export function Logo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex h-24 w-24 items-center justify-center bg-transparent overflow-hidden',
+        'relative flex items-center justify-center overflow-hidden',
         className
       )}
+      style={{ width: '40px', height: '40px' }} // Explicit size for the container
     >
       <Image
         src="/icon.png"
         alt="VIDERE RettSted Logo"
-        width={96}
-        height={96}
-        className="h-full w-full object-contain"
+        fill // Use fill to make image cover the container
+        sizes="40px" // Hint for Next.js image optimization
+        className="object-contain" // Keep aspect ratio
         priority
       />
     </div>
