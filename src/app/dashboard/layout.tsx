@@ -94,7 +94,7 @@ export default function DashboardLayout({
                   <Button asChild size="sm" className="hidden sm:flex">
                     <Link href={contextLink}>
                       {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-                      Ny {contextName === 'Ruter' ? 'Rute' : 'Sted'}
+                      {contextName === 'Ruter' ? 'Ny Rute' : 'Nytt Sted'}
                     </Link>
                   </Button>
                   <Button asChild size="icon" className="sm:hidden rounded-full h-10 w-10">
