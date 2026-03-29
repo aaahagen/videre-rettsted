@@ -47,3 +47,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
 - **Removed Redundant Admin Panel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
+
+## [Future]
+
+### Added
+- **Fleet Management System:** A comprehensive module for registering and tracking all vehicles within an organization.
+    - **Vehicle Profiles:** Create detailed profiles for each vehicle, including type, loading capacity (weight, volume), fuel type, physical dimensions, and special capabilities (e.g., refrigeration, tail-lift). This data will directly inform the constraint-based route matching engine.
+    - **Maintenance & Service Tracking:** Log service history and set reminders for future maintenance deadlines to ensure fleet compliance and operational readiness.
+    - **Digital Vehicle Inspections & Damage Reporting:** Allow drivers or mechanics to conduct digital inspections and log new damages with photos and notes, creating a full damage history for each vehicle.
+    - **Document Management:** Upload and manage essential vehicle documents like registration, insurance certificates, and inspection reports.
+- **Vehicle Loading & Manifest System:** A new system to verify that the correct items are loaded onto the correct vehicle before a route begins.
+    - **New "Loader" Role:** A restricted user role for warehouse staff who only have permission to access the loading interface.
+    - **Manifest Verification:** A dedicated screen will display all items assigned to a route. Loaders will scan each item's barcode, changing its status from "Pending" to "Loaded" and preventing incorrect items from being loaded.
+- **Comprehensive Proof of Delivery (POD) System:** Upon completing a stop, drivers will be able to capture a full suite of POD information, creating a permanent, auditable record for each delivery.
+    - **Photo Capture:** Reuse the existing camera and image compression functionality to take one or more photos as visual proof.
+    - **Signature Capture:** Allow recipients to sign directly on the driver's device, with the signature saved as an image.
+    - **Barcode Scanning:** Use the device's camera to scan package barcodes, linking specific items to the delivery confirmation.
+    - **Damage & Note Reporting:** Provide a text field for drivers to report any issues, damages, or other important delivery notes.
+- **Driver Location Tracking:** Capture the driver's GPS location using the browser's Geolocation API when a stop is marked as "visited." This data will be stored with a timestamp for verification.
+- **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop's address and the driver's captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
+- **Visited Stop Timestamps:** When a driver marks a stop as visited, a timestamp will be recorded and displayed next to the stop on the monitor page, providing a clear audit trail of delivery times.
+
+### Changed
+- **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
+    - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
+    - **Tier 2: Order-Based Planning with Advanced Goods Definition:** An "Order" module will be introduced, allowing for the import of jobs. Each job/order will support detailed properties, including size, weight, form (e.g., pallet, package, liquid), and special handling requirements like temperature control, hazardous materials (ADR), or required legal documentation.
+    - **Tier 3: Constraint-Based Automatic Generation:** An intelligent backend system will automatically generate optimized daily routes. This system will perform constraint-based matching, assigning orders not only based on location but also by matching the goods' requirements to defined vehicle capabilities from the Fleet Management module. It will flag any jobs that cannot be assigned due to a lack of compatible vehicles.
