@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -421,6 +421,27 @@ export default function RouteDetailsPage() {
     }
   };
 
+  const handleFinishRoute = () => {
+    // Determine if all stops are actually marked complete
+    const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+    
+    // We want all physical places AND special items to be marked to be 'fully' finished,
+    // or just the physical places depending on business logic. Currently completedStops
+    // stores the ID of the RouteItem (e.g., `place_XYZ` or `special_start`).
+    
+    // Let's check if EVERY item in the routeItems array is in completedStops
+    const allCompleted = routeItems.every(item => completedStops[item.id]);
+
+    if (!allCompleted) {
+        toast({ title: 'Ikke ferdig', description: 'Du må markere alle stopp og handlinger som fullført før du kan avslutte ruten.', variant: 'destructive' });
+        return;
+    }
+    
+    // Route is fully complete, redirect to routes view
+    toast({ title: 'Rute Fullført', description: 'Flott jobba! Du blir omdirigert til ruteoversikten.' });
+    router.push('/dashboard/routes');
+  };
+
   const handleStartAddressChange = (val: string) => {
       setStartAddress(val);
   }
@@ -443,6 +464,8 @@ export default function RouteDetailsPage() {
 
   const isAdmin = userData?.role === 'admin';
   const placesCount = routeItems.filter(i => i.type === 'place').length;
+  
+  const allStopsCompleted = routeItems.length > 0 && routeItems.every(item => completedStops[item.id]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
@@ -746,140 +769,161 @@ export default function RouteDetailsPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-0 overflow-y-auto flex-1">
+          <CardContent className="p-0 overflow-y-auto flex-1 flex flex-col justify-between">
             {routeItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8 min-h-[400px]">
                  <MapPin className="h-12 w-12 text-slate-200" />
                  <p className="text-center">Ingen stopp er lagt til enda. <br/>Bruk menyen til venstre for å bygge ruten.</p>
               </div>
             ) : (
-              <div className="p-4">
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={routeItems.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                  <ul className="space-y-3">
-                    {routeItems.map((item, index) => {
-                      const isCompleted = completedStops[item.id];
-                      
-                      // Special handling for time settings
-                      if (item.type !== 'place') {
-                         let icon = <Clock className="h-4 w-4" />;
-                         let title = '';
-                         let colorClass = 'text-slate-500 bg-slate-50';
-                         if (item.type === 'start') { title = 'Klargjøring'; icon = <Home className="h-4 w-4 text-blue-500" />; colorClass = 'bg-blue-50/50 border-blue-100'; }
-                         if (item.type === 'end') { title = 'Ferdigstilling'; icon = <Flag className="h-4 w-4 text-indigo-500" />; colorClass = 'bg-indigo-50/50 border-indigo-100'; }
-                         if (item.type === 'break') { title = 'Pause'; icon = <Coffee className="h-4 w-4 text-amber-500" />; colorClass = 'bg-amber-50/50 border-amber-100'; }
-                         if (item.type === 'service') { title = 'Drivstoff / Service'; icon = <Wrench className="h-4 w-4 text-slate-500" />; colorClass = 'bg-slate-50 border-slate-200'; }
-                         
-                         return (
-                            <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
-                              <div className={`flex-grow flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
-                                <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
-                                  <button type="button" className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}>
-                                    {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
-                                  </button>
-                                  <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shrink-0 shadow-sm border border-slate-100">
-                                    {icon}
-                                  </div>
-                                  <div className="flex flex-col min-w-0">
-                                    <span className={`font-semibold text-sm ${isCompleted ? 'line-through' : ''}`}>{title}</span>
-                                    {item.type === 'start' ? (
-                                       <span className="text-xs text-muted-foreground break-words">{startAddress || 'Startadresse ikke satt'}</span>
-                                    ) : null}
-                                    {item.type === 'end' ? (
-                                       <span className="text-xs text-muted-foreground break-words">{endAddress || 'Sluttadresse ikke satt'}</span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
-                                  <Badge variant="secondary" className="bg-white/60 shrink-0">{item.duration} min</Badge>
-                                </div>
-                              </div>
-                            </SortableItem>
-                         );
-                      }
-                      
-                      // Regular Place Item
-                      return (
-                         <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
-                            <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
+              <div className="p-4 flex flex-col flex-1">
+                  <div className="flex-1">
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={routeItems.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                          <ul className="space-y-3">
+                            {routeItems.map((item, index) => {
+                              const isCompleted = completedStops[item.id];
                               
-                              {/* Top row: Main info */}
-                              <div className="flex items-center justify-between w-full">
-                                {/* Left Side: Completion Toggle & Info */}
-                                <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
-                                  <button 
-                                    type="button" 
-                                    className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
-                                  >
-                                    {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
-                                  </button>
-  
-                                  <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
-                                    {index + 1}
-                                 </span>
-                                 <div className="flex flex-col min-w-0">
-                                    <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                                      {item.placeData?.name}
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                {/* Right Side: Actions (visible on hover on larger screens) */}
-                                <div className={`hidden sm:flex items-center gap-1 shrink-0 ${isEditMode ? '' : 'opacity-100'}`}>
-                                  <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
-                                      <ExternalLink className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-                                  {isEditMode && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                        onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                  )}
-                                </div>
-                              </div>
-  
-                              {/* Bottom row: Badge and Mobile Actions */}
-                              <div className="flex items-center justify-between w-full pl-10">
-                                {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
-                                  <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
-                                    <Clock className="h-3 w-3" />
-                                    {item.placeData.estimatedDeliveryTime} min
-                                  </Badge>
-                                ) : <div />} 
-                                
-                                {/* Actions visible on mobile */}
-                                <div className="flex sm:hidden items-center gap-1 shrink-0">
-                                  <Link href={`/dashboard/places/${item.placeId}`} passHref>
-                                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
-                                      <ExternalLink className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-                                  {isEditMode && (
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                        onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                  )}
-                                </div>
-                              </div>
-  
-                            </div>
-                          </SortableItem>
-                        )
-                    })}
-                  </ul>
-                </SortableContext>
-              </DndContext>
+                              // Special handling for time settings
+                              if (item.type !== 'place') {
+                                 let icon = <Clock className="h-4 w-4" />;
+                                 let title = '';
+                                 let colorClass = 'text-slate-500 bg-slate-50';
+                                 if (item.type === 'start') { title = 'Klargjøring'; icon = <Home className="h-4 w-4 text-blue-500" />; colorClass = 'bg-blue-50/50 border-blue-100'; }
+                                 if (item.type === 'end') { title = 'Ferdigstilling'; icon = <Flag className="h-4 w-4 text-indigo-500" />; colorClass = 'bg-indigo-50/50 border-indigo-100'; }
+                                 if (item.type === 'break') { title = 'Pause'; icon = <Coffee className="h-4 w-4 text-amber-500" />; colorClass = 'bg-amber-50/50 border-amber-100'; }
+                                 if (item.type === 'service') { title = 'Drivstoff / Service'; icon = <Wrench className="h-4 w-4 text-slate-500" />; colorClass = 'bg-slate-50 border-slate-200'; }
+                                 
+                                 return (
+                                    <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
+                                      <div className={`flex-grow flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
+                                        <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
+                                          <button type="button" className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}>
+                                            {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                                          </button>
+                                          <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shrink-0 shadow-sm border border-slate-100">
+                                            {icon}
+                                          </div>
+                                          <div className="flex flex-col min-w-0">
+                                            <span className={`font-semibold text-sm ${isCompleted ? 'line-through' : ''}`}>{title}</span>
+                                            {item.type === 'start' ? (
+                                               <span className="text-xs text-muted-foreground break-words">{startAddress || 'Startadresse ikke satt'}</span>
+                                            ) : null}
+                                            {item.type === 'end' ? (
+                                               <span className="text-xs text-muted-foreground break-words">{endAddress || 'Sluttadresse ikke satt'}</span>
+                                            ) : null}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pl-9 sm:pl-0 shrink-0">
+                                          <Badge variant="secondary" className="bg-white/60 shrink-0">{item.duration} min</Badge>
+                                        </div>
+                                      </div>
+                                    </SortableItem>
+                                 );
+                              }
+                              
+                              // Regular Place Item
+                              return (
+                                 <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
+                                    <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
+                                      
+                                      {/* Top row: Main info */}
+                                      <div className="flex items-center justify-between w-full">
+                                        {/* Left Side: Completion Toggle & Info */}
+                                        <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
+                                          <button 
+                                            type="button" 
+                                            className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}
+                                          >
+                                            {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                                          </button>
+          
+                                          <span className="flex items-center justify-center bg-slate-100 rounded-full h-7 w-7 text-xs font-bold text-slate-600 shrink-0 shadow-inner">
+                                            {index + 1}
+                                         </span>
+                                         <div className="flex flex-col min-w-0">
+                                            <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                                              {item.placeData?.name}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Right Side: Actions (visible on hover on larger screens) */}
+                                        <div className={`hidden sm:flex items-center gap-1 shrink-0 ${isEditMode ? '' : 'opacity-100'}`}>
+                                          <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                              <ExternalLink className="h-4 w-4" />
+                                            </Button>
+                                          </Link>
+                                          {isEditMode && (
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                          )}
+                                        </div>
+                                      </div>
+          
+                                      {/* Bottom row: Badge and Mobile Actions */}
+                                      <div className="flex items-center justify-between w-full pl-10">
+                                        {item.placeData?.estimatedDeliveryTime && item.placeData.estimatedDeliveryTime > 0 ? (
+                                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-slate-200 flex items-center gap-1 shrink-0">
+                                            <Clock className="h-3 w-3" />
+                                            {item.placeData.estimatedDeliveryTime} min
+                                          </Badge>
+                                        ) : <div />} 
+                                        
+                                        {/* Actions visible on mobile */}
+                                        <div className="flex sm:hidden items-center gap-1 shrink-0">
+                                          <Link href={`/dashboard/places/${item.placeId}`} passHref>
+                                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
+                                              <ExternalLink className="h-4 w-4" />
+                                            </Button>
+                                          </Link>
+                                          {isEditMode && (
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                                onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                          )}
+                                        </div>
+                                      </div>
+          
+                                    </div>
+                                  </SortableItem>
+                                )
+                            })}
+                          </ul>
+                        </SortableContext>
+                      </DndContext>
+                  </div>
+                  
+                  {/* Finish Route Button for Drivers */}
+                  {!isAdmin && !isEditMode && routeItems.length > 0 && (
+                      <div className="mt-8 pt-4 border-t border-slate-100">
+                          <Button 
+                              onClick={handleFinishRoute}
+                              disabled={!allStopsCompleted}
+                              className={`w-full h-14 text-lg font-bold transition-all ${allStopsCompleted ? 'bg-green-500 hover:bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                          >
+                              {allStopsCompleted ? (
+                                  <>
+                                      <Check className="mr-2 h-5 w-5" /> Fullfør Rute
+                                  </>
+                              ) : (
+                                  "Marker alle stopp som ferdig først"
+                              )}
+                          </Button>
+                      </div>
+                  )}
               </div>
             )}
           </CardContent>
