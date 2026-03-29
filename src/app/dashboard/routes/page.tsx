@@ -23,8 +23,14 @@ export default function RoutesPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
-  const { query: searchQuery, setQuery } = useSearch();
+  const { query: searchQuery, setContext } = useSearch();
   const router = useRouter();
+
+  // Set context for global search
+  useEffect(() => {
+    setContext('Ruter', '/dashboard/routes/new');
+    return () => setContext('Steder', '/dashboard/new'); // Reset context on unmount
+  }, [setContext]);
 
   useEffect(() => {
     if (user) {
@@ -58,13 +64,6 @@ export default function RoutesPage() {
     }
   }, [user]);
 
-  // Set context for global search
-  useEffect(() => {
-    // We don't set generic search context anymore, we keep the global search as is
-    // But we clear it when unmounting
-    return () => setQuery('');
-  }, [setQuery]);
-
   const displayedRoutes = useMemo(() => {
     let filtered = routes;
     
@@ -74,7 +73,7 @@ export default function RoutesPage() {
     }
     
     // Apply search filter
-    if (searchQuery.trim()) {
+    if (searchQuery && searchQuery.trim() !== '') {
       const lowerQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(route => 
         route.name.toLowerCase().includes(lowerQuery) || 
@@ -157,13 +156,17 @@ export default function RoutesPage() {
               : userData?.role === 'admin' ? "Opprett din første rute for å komme i gang." : "Du har ingen ruter tildelt deg ennå."}
           </p>
           {(searchQuery) && (
-            <Button 
-              variant="link" 
-              onClick={() => setQuery('')}
-              className="mt-4"
-            >
-              Vis alle ruter
-            </Button>
+             <p className="text-sm text-slate-400 mt-4 cursor-pointer hover:underline" onClick={() => {
+                const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement;
+                if(searchInput) {
+                   searchInput.value = '';
+                   // React won't detect this programmatic change, so we dispatch an event
+                   const event = new Event('input', { bubbles: true });
+                   searchInput.dispatchEvent(event);
+                }
+             }}>
+                Tøm søk
+             </p>
           )}
         </div>
       ) : (
