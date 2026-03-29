@@ -654,7 +654,7 @@ export default function RouteDetailsPage() {
       
 
       {/* Main Content: Places Grid */}
-      <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode ? 'lg:grid-cols-12' : ''}`}>
+      <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes) ? 'lg:grid-cols-12' : ''}`}>
         
         {/* Left Col: Add Places (Only visible in edit mode or for admins) */}
         {(isAdmin || isEditMode) && (
@@ -701,8 +701,8 @@ export default function RouteDetailsPage() {
         
         {/* Left Col: View Notes (Only visible if not admin, not editing, and there are notes) */}
         {!isAdmin && !isEditMode && routeNotes && (
-             <div className="flex flex-col gap-6">
-                <Card className="border-slate-200 shadow-sm">
+             <div className="lg:col-span-5 flex flex-col gap-6">
+                <Card className="border-slate-200 shadow-sm h-fit">
                     <CardHeader className="pb-4">
                     <CardTitle className="text-lg flex items-center gap-2">
                         <Info className="h-5 w-5 text-indigo-400" />
@@ -719,7 +719,7 @@ export default function RouteDetailsPage() {
         )}
         
         {/* Right Col: Current Route */}
-        <Card className={`border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto ${(isAdmin || isEditMode) ? 'lg:col-span-7' : ''}`}>
+        <Card className={`border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto ${(isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes)) ? 'lg:col-span-7' : ''}`}>
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div>
