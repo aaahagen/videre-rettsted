@@ -124,7 +124,7 @@ export default function RoutesPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+    <div className="space-y-8 animate-in fade-in duration-500 container mx-auto px-4 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Ruter</h1>
