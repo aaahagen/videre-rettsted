@@ -4,17 +4,16 @@ import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon } from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Route, Place, User } from '@/lib/types';
+import { type Route, type Place, type User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
 export default function MonitorPage() {
-  const [user, loading, error] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const [userData, setUserData] = useState<User | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
   const [places, setPlaces] = useState<Record<string, Place>>({});
@@ -39,7 +38,6 @@ export default function MonitorPage() {
   useEffect(() => {
     if (!userData?.orgId) return;
 
-    // Real-time listener for routes
     const routesRef = collection(db, 'routes');
     const q = query(routesRef, where('orgId', '==', userData.orgId));
     
@@ -48,12 +46,14 @@ export default function MonitorPage() {
       snapshot.forEach((doc) => {
         routesData.push({ id: doc.id, ...doc.data() } as Route);
       });
-      // Sort in memory to avoid needing complex composite indexes initially
-      routesData.sort((a, b) => ((b.updatedAt as any)?.toMillis ? (b.updatedAt as any).toMillis() : 0) - ((a.updatedAt as any)?.toMillis ? (a.updatedAt as any).toMillis() : 0));
+      routesData.sort((a, b) => {
+        const timeA = a.updatedAt ? ('toMillis' in a.updatedAt ? a.updatedAt.toMillis() : new Date(a.updatedAt as any).getTime()) : 0;
+        const timeB = b.updatedAt ? ('toMillis' in b.updatedAt ? b.updatedAt.toMillis() : new Date(b.updatedAt as any).getTime()) : 0;
+        return timeB - timeA;
+      });
       setRoutes(routesData);
     });
 
-    // Fetch places and users once to populate the dictionary maps
     const fetchStaticData = async () => {
        try {
            const [fetchedPlaces, fetchedUsers] = await Promise.all([
@@ -87,7 +87,7 @@ export default function MonitorPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <Clock className="h-8 w-8 text-primary" />
@@ -148,12 +148,9 @@ export default function MonitorPage() {
                              const isCompleted = route.completedStops?.includes(placeId);
                              const place = places[placeId];
                              
-                             // Only show current, next, or all if we want a full view.
-                             // For a dashboard, showing a compressed view is often better. Let's show up to 5 items, centered around the current uncompleted one.
                              const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(id)));
                              const isCurrent = index === firstUncompletedIndex;
                              
-                             // Show first, last, current, previous, and next
                              const shouldShow = index === 0 || index === totalStops - 1 || isCurrent || index === firstUncompletedIndex - 1 || index === firstUncompletedIndex + 1;
                              
                              if (!shouldShow) {
@@ -164,7 +161,6 @@ export default function MonitorPage() {
 
                              return (
                                <div key={placeId} className={`relative flex items-center justify-between p-2 rounded-md ${isCurrent ? 'bg-primary/5 border border-primary/20 shadow-sm -ml-5 pl-5 z-10' : ''} ${isCompleted ? 'opacity-50' : ''}`}>
-                                  {/* Timeline marker */}
                                   <div className={`absolute -left-[21px] flex h-3 w-3 items-center justify-center rounded-full ring-4 ring-white ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-primary animate-pulse' : 'bg-slate-300'}`} />
                                   
                                   <div className="flex flex-col min-w-0">
