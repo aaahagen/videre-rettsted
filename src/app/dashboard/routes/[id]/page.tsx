@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -34,14 +34,16 @@ interface RouteItem {
   duration?: number;
 }
 
-function SortableItem({ id, children }: { id: string, children: React.ReactNode }) {
+function SortableItem({ id, children, isEditMode }: { id: string, children: React.ReactNode, isEditMode: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   return (
     <div ref={setNodeRef} style={style} {...attributes} className="flex items-center w-full">
-      <div {...listeners} style={{ touchAction: 'none' }} className="p-3 cursor-grab hover:bg-slate-100 rounded-md shrink-0 self-stretch flex items-center">
-         <GripVertical className="text-muted-foreground" />
-      </div>
+      {isEditMode && (
+        <div {...listeners} style={{ touchAction: 'none' }} className="p-3 cursor-grab hover:bg-slate-100 rounded-md shrink-0 self-stretch flex items-center">
+           <GripVertical className="text-muted-foreground" />
+        </div>
+      )}
       {children}
     </div>
   );
@@ -72,6 +74,8 @@ export default function RouteDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -176,6 +180,12 @@ export default function RouteDetailsPage() {
           const userDoc = await firebaseDB.getUser(user.uid);
           if (userDoc?.orgId) {
             setUserData(userDoc);
+            
+            // Set edit mode to true by default for admins, false for drivers
+            if (userDoc.role === 'admin') {
+              setIsEditMode(true);
+            }
+            
             const [routeData, placesData, usersData] = await Promise.all([
               firebaseDB.getRoute(routeId),
               firebaseDB.getPlaces(userDoc.orgId),
@@ -399,6 +409,10 @@ export default function RouteDetailsPage() {
       
       await firebaseDB.updateRoute(routeId, updatedRoute);
       toast({ title: 'Suksess', description: 'Ruten er lagret.' });
+      
+      if (!isAdmin) {
+          setIsEditMode(false);
+      }
     } catch (err) {
       console.error('Error saving route:', err);
       toast({ title: 'Feil', description: 'Kunne ikke lagre ruten.', variant: 'destructive' });
@@ -642,53 +656,94 @@ export default function RouteDetailsPage() {
       {/* Main Content: Places Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Col: Add Places */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Legg til Stopp</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select onValueChange={handleAddPlace}>
-                <SelectTrigger className="shadow-sm">
-                  <SelectValue placeholder="Søk og velg et sted..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {allPlaces.map(place => (
-                    <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
-                      {place.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="h-5 w-5 text-slate-400" />
-                Viktig Ruteinformasjon
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea 
-                value={routeNotes}
-                onChange={(e) => setRouteNotes(e.target.value)}
-                placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
-                className="min-h-[120px]"
-                readOnly={!isAdmin}
-              />
-            </CardContent>
-          </Card>
-        </div>
+        {/* Left Col: Add Places (Only visible in edit mode or for admins) */}
+        {(isAdmin || isEditMode) && (
+            <div className="lg:col-span-5 flex flex-col gap-6">
+            <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Legg til Stopp</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <Select onValueChange={handleAddPlace}>
+                    <SelectTrigger className="shadow-sm">
+                    <SelectValue placeholder="Søk og velg et sted..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {allPlaces.map(place => (
+                        <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
+                        {place.name}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </CardContent>
+            </Card>
+            
+            <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <Info className="h-5 w-5 text-slate-400" />
+                    Viktig Ruteinformasjon
+                </CardTitle>
+                </CardHeader>
+                <CardContent>
+                <Textarea 
+                    value={routeNotes}
+                    onChange={(e) => setRouteNotes(e.target.value)}
+                    placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
+                    className="min-h-[120px]"
+                    readOnly={!isAdmin}
+                />
+                </CardContent>
+            </Card>
+            </div>
+        )}
+        
+        {/* Left Col: View Notes (Only visible if not admin, not editing, and there are notes) */}
+        {!isAdmin && !isEditMode && routeNotes && (
+             <div className="lg:col-span-5 flex flex-col gap-6">
+                <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="pb-4">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Info className="h-5 w-5 text-indigo-400" />
+                        Viktig Ruteinformasjon
+                    </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="bg-indigo-50/50 p-4 rounded-md border border-indigo-100 text-sm whitespace-pre-wrap">
+                            {routeNotes}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
         
         {/* Right Col: Current Route */}
-        <Card className="lg:col-span-7 border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto">
+        <Card className={`lg:col-span-${(isAdmin || isEditMode || routeNotes) ? '7' : '12'} border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto`}>
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Rekkefølge</CardTitle>
-              <span className="text-xs text-muted-foreground">Dra og slipp for å endre</span>
+              <div>
+                 <CardTitle className="text-lg flex items-center gap-2">Rekkefølge {isEditMode && <Badge variant="outline" className="text-[10px] ml-2">Redigeringsmodus</Badge>}</CardTitle>
+                 {isEditMode && <span className="text-xs text-muted-foreground mt-1 block">Dra og slipp for å endre rekkefølge</span>}
+              </div>
+              {!isAdmin && (
+                  <Button 
+                    variant={isEditMode ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className="flex items-center gap-2"
+                  >
+                      {isEditMode ? (
+                          <>
+                            <X className="h-4 w-4" /> Avslutt redigering
+                          </>
+                      ) : (
+                          <>
+                            <Edit2 className="h-4 w-4" /> Rediger Rute
+                          </>
+                      )}
+                  </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1">
@@ -716,7 +771,7 @@ export default function RouteDetailsPage() {
                          if (item.type === 'service') { title = 'Drivstoff / Service'; icon = <Wrench className="h-4 w-4 text-slate-500" />; colorClass = 'bg-slate-50 border-slate-200'; }
                          
                          return (
-                            <SortableItem key={item.id} id={item.id}>
+                            <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
                               <div className={`flex-grow flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'opacity-50 grayscale' : ''} ${colorClass}`}>
                                 <div className="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onClick={(e) => toggleItemCompletion(item.id, e)}>
                                   <button type="button" className={`shrink-0 rounded-full transition-colors ${isCompleted ? 'text-green-500 hover:text-green-600' : 'text-slate-300 hover:text-slate-400'}`}>
@@ -745,7 +800,7 @@ export default function RouteDetailsPage() {
                       
                       // Regular Place Item
                       return (
-                         <SortableItem key={item.id} id={item.id}>
+                         <SortableItem key={item.id} id={item.id} isEditMode={isEditMode}>
                             <div className={`flex-grow flex flex-col p-3 rounded-lg bg-white border shadow-sm transition-all group w-full gap-3 ${isCompleted ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-primary/50'}`}>
                               
                               {/* Top row: Main info */}
@@ -770,20 +825,22 @@ export default function RouteDetailsPage() {
                                 </div>
                                 
                                 {/* Right Side: Actions (visible on hover on larger screens) */}
-                                <div className="hidden sm:flex items-center gap-1 shrink-0">
+                                <div className={`hidden sm:flex items-center gap-1 shrink-0 ${isEditMode ? '' : 'opacity-100'}`}>
                                   <Link href={`/dashboard/places/${item.placeId}`} passHref>
                                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary hover:bg-primary/10 h-8 w-8">
                                       <ExternalLink className="h-4 w-4" />
                                     </Button>
                                   </Link>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                    onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  {isEditMode && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="text-slate-300 hover:text-destructive hover:bg-destructive/10 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                        onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  )}
                                 </div>
                               </div>
   
@@ -803,14 +860,16 @@ export default function RouteDetailsPage() {
                                       <ExternalLink className="h-4 w-4" />
                                     </Button>
                                   </Link>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-                                    onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  {isEditMode && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="text-slate-400 hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                                        onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.id); }}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                  )}
                                 </div>
                               </div>
   
@@ -859,29 +918,31 @@ export default function RouteDetailsPage() {
       )}
 
       {/* Action Buttons */}
-      <Card className="border-slate-200 shadow-sm bg-slate-50/50">
-         <CardContent className="p-6 space-y-4">
-            {placesCount > 2 && (
-               <Button 
-                 variant="outline" 
-                 className="w-full shadow-sm font-semibold h-12 bg-white"
-                 onClick={handleOptimizeRoute} 
-                 disabled={isOptimizing || isSaving || isCalculating}
-               >
-                 {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
-                 Optimer Rekkefølge
-               </Button>
-            )}
-            <Button 
-               className="w-full shadow-sm font-bold h-12 text-md"
-               onClick={handleSave} 
-               disabled={isSaving || isCalculating}
-            >
-               {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-               Lagre Rute
-            </Button>
-         </CardContent>
-      </Card>
+      {(isAdmin || isEditMode) && (
+          <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+             <CardContent className="p-6 space-y-4">
+                {placesCount > 2 && (
+                   <Button 
+                     variant="outline" 
+                     className="w-full shadow-sm font-semibold h-12 bg-white"
+                     onClick={handleOptimizeRoute} 
+                     disabled={isOptimizing || isSaving || isCalculating}
+                   >
+                     {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />}
+                     Optimer Rekkefølge
+                   </Button>
+                )}
+                <Button 
+                   className="w-full shadow-sm font-bold h-12 text-md"
+                   onClick={handleSave} 
+                   disabled={isSaving || isCalculating}
+                >
+                   {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                   Lagre Rute
+                </Button>
+             </CardContent>
+          </Card>
+      )}
 
     </div>
   );
