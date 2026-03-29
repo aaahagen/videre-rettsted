@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Monitor Page Statistics Card:** Added a "Dagens Status" (Today's Status) card to the top of the monitor page (`/dashboard/monitor`). This card provides a high-level overview of the day's operations, displaying the total number of routes, active routes, finished routes, total stops across all routes, and an overall progress bar calculating the total number of stops completed against the total number of stops.
 - **Route Monitor Dashboard:** Created a new real-time dashboard for administrators (`/dashboard/monitor`) to track the progress of all active routes. It displays a visual progress bar, the current/next stop, and the assigned driver for each route.
 - **Finished Route Color-Coding:** The main routes list page now uses real-time listeners to automatically change the color of a route's card to green ("Rute fullført") as soon as the assigned driver marks the final stop as complete.
 - **Base Addresses for Routes:** Implemented the ability to set distinct Start and End addresses for a route. These act as the origin and destination points for the driving distance and time calculations.

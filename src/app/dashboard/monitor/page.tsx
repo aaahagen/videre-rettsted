@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon } from 'lucide-react';
+import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
@@ -86,17 +86,73 @@ export default function MonitorPage() {
     return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
+  const totalRoutes = routes.length;
+  let finishedRoutes = 0;
+  let activeRoutes = 0;
+  let totalStopsOverall = 0;
+  let completedStopsOverall = 0;
+
+  routes.forEach(route => {
+    const totalStops = route.places?.length || 0;
+    const completedStopsCount = route.completedStops?.length || 0;
+    
+    totalStopsOverall += totalStops;
+    completedStopsOverall += completedStopsCount;
+
+    if (totalStops > 0 && completedStopsCount === totalStops) {
+      finishedRoutes++;
+    } else if (totalStops > 0) {
+      activeRoutes++;
+    }
+  });
+
+  const overallProgress = totalStopsOverall > 0 ? (completedStopsOverall / totalStopsOverall) * 100 : 0;
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-          <Clock className="h-8 w-8 text-primary" />
+          <Activity className="h-8 w-8 text-primary" />
           Ruteovervåkning
         </h1>
         <p className="text-muted-foreground mt-2">
           Sanntidsoversikt over alle aktive ruter og leveringsstatus.
         </p>
       </div>
+
+      <Card className="mb-8">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl">Dagens Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg">
+              <span className="text-3xl font-bold text-slate-900">{totalRoutes}</span>
+              <span className="text-sm text-muted-foreground">Totale Ruter</span>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
+              <span className="text-3xl font-bold text-blue-600">{activeRoutes}</span>
+              <span className="text-sm text-blue-600/80">Aktive Ruter</span>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg">
+              <span className="text-3xl font-bold text-green-600">{finishedRoutes}</span>
+              <span className="text-sm text-green-600/80">Fullførte Ruter</span>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg">
+              <span className="text-3xl font-bold text-primary">{totalStopsOverall}</span>
+              <span className="text-sm text-primary/80">Totale Stopp</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium text-slate-700">Total Fremdrift for Dagen</span>
+              <span className="text-muted-foreground">{completedStopsOverall} / {totalStopsOverall} stopp fullført ({Math.round(overallProgress)}%)</span>
+            </div>
+            <Progress value={overallProgress} className="h-3" />
+          </div>
+        </CardContent>
+      </Card>
 
       {routes.length === 0 ? (
         <Card className="border-dashed">
