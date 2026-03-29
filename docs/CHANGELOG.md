@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Route Monitor Dashboard:** Created a new real-time dashboard for administrators (`/dashboard/monitor`) to track the progress of all active routes. It displays a visual progress bar, the current/next stop, and the assigned driver for each route.
+- **Finished Route Color-Coding:** The main routes list page now uses real-time listeners to automatically change the color of a route's card to green ("Rute fullført") as soon as the assigned driver marks the final stop as complete.
 - **Base Addresses for Routes:** Implemented the ability to set distinct Start and End addresses for a route. These act as the origin and destination points for the driving distance and time calculations.
 - **Visual Time Intervals:** The time settings (Start, End, Break, Service) are now visualized as distinct, draggable "stops" within the route list, allowing for a more accurate representation of a driver's day.
 - **Estimated Delivery Time per Place:** Added a field to the "Create/Edit Place" form to specify the estimated time spent at that location (e.g., 15 mins for loading). This time is displayed on the place card and is now factored into the total estimated time for any route including that place.
