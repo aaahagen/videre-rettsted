@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity } from 'lucide-react';
@@ -11,6 +11,7 @@ import { type Route, type Place, type User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useSearch } from '@/hooks/use-search';
 
 export default function MonitorPage() {
   const [user, loading] = useAuthState(auth);
@@ -20,6 +21,14 @@ export default function MonitorPage() {
   const [users, setUsers] = useState<Record<string, User>>({});
   const [isDataLoading, setIsDataLoading] = useState(true);
   const router = useRouter();
+  
+  const { query: searchQuery, setContext } = useSearch();
+
+  useEffect(() => {
+    // Set context for global search
+    setContext('Ruter', '/dashboard/routes/new');
+    return () => setContext('Steder', '/dashboard/new'); // Reset context on unmount
+  }, [setContext]);
 
   useEffect(() => {
     if (user) {
@@ -82,17 +91,33 @@ export default function MonitorPage() {
     };
   }, [userData?.orgId]);
 
+  const filteredRoutes = useMemo(() => {
+    if (!searchQuery) return routes;
+    
+    const lowerQuery = searchQuery.toLowerCase();
+    return routes.filter(route => {
+      const routeNameMatch = route.name?.toLowerCase().includes(lowerQuery);
+      const driverNameMatch = route.driverId && users[route.driverId]?.name?.toLowerCase().includes(lowerQuery);
+      
+      // We could potentially search by place names within the route as well
+      // const placesMatch = route.places?.some(placeId => places[placeId]?.name?.toLowerCase().includes(lowerQuery));
+      
+      return routeNameMatch || driverNameMatch; // || placesMatch;
+    });
+  }, [routes, searchQuery, users]);
+
+
   if (loading || isDataLoading || !userData) {
     return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const totalRoutes = routes.length;
+  const totalRoutes = filteredRoutes.length;
   let finishedRoutes = 0;
   let activeRoutes = 0;
   let totalStopsOverall = 0;
   let completedStopsOverall = 0;
 
-  routes.forEach(route => {
+  filteredRoutes.forEach(route => {
     const totalStops = route.places?.length || 0;
     const completedStopsCount = route.completedStops?.length || 0;
     
@@ -122,7 +147,7 @@ export default function MonitorPage() {
 
       <Card className="mb-8">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Dagens Status</CardTitle>
+          <CardTitle className="text-xl">Dagens Status {searchQuery && '(Filtrert)'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -154,16 +179,16 @@ export default function MonitorPage() {
         </CardContent>
       </Card>
 
-      {routes.length === 0 ? (
+      {filteredRoutes.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground space-y-4">
             <RouteIcon className="h-12 w-12 opacity-20" />
-            <p>Ingen ruter funnet.</p>
+            <p>Ingen ruter funnet{searchQuery ? ` for "${searchQuery}"` : ''}.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
-          {routes.map((route) => {
+          {filteredRoutes.map((route) => {
              const totalStops = route.places?.length || 0;
              const completedStopsCount = route.completedStops?.length || 0;
              const progress = totalStops > 0 ? (completedStopsCount / totalStops) * 100 : 0;
