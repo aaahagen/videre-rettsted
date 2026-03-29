@@ -211,7 +211,7 @@ export default function MonitorPage() {
              
              return (
               <Card key={route.id} className={`overflow-hidden transition-all duration-500 ${isFinished ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:shadow-md'}`}>
-                <div className={`h-2 w-full ${isFinished ? 'bg-green-500' : 'bg-primary'}`} style={{ width: `${progress}%`, transition: 'width 1s ease-in-out' }} />
+                <div className={`h-2 w-full ${isFinished ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${progress}%`, transition: 'width 1s ease-in-out' }} />
                 
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
