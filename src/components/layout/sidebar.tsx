@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Star,
+  Clock, Star,
   Route,
   Home,
   LogOut,
@@ -54,8 +54,9 @@ import { useAuth } from '../auth-provider';
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
-  { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
+  { href: '/dashboard/favorites', icon: Clock, Star, label: 'Favoritter' },
   { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+  { href: '/dashboard/monitor', icon: Clock, label: 'Overvåkning', adminOnly: true },
   { href: '/dashboard/admin', icon: Shield, label: 'Admin', adminOnly: true },
   { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
 ];

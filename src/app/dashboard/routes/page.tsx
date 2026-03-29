@@ -1,12 +1,13 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock, SearchX } from 'lucide-react';
+import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock, SearchX, CheckCircle2 } from 'lucide-react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+
 import { firebaseDB } from '@/lib/firebase/database';
-import { auth } from '@/lib/firebase/firebase';
+import { db, auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,95 +29,118 @@ export default function RoutesPage() {
   useEffect(() => {
     if (user) {
       firebaseDB.getUser(user.uid).then(userDoc => {
-        if (userDoc) {
-          setUserData(userDoc);
-          if (userDoc.orgId) {
-            firebaseDB.getRoutes(userDoc.orgId).then(setRoutes);
-            firebaseDB.getUsers(userDoc.orgId).then(setOrganizationUsers);
-          }
+        setUserData(userDoc);
+        if (userDoc?.orgId) {
+          firebaseDB.getUsers(userDoc.orgId).then(setOrganizationUsers);
+
+          // Use a real-time listener instead of a one-time fetch so the UI updates
+          // automatically when a driver finishes a route
+          const routesRef = collection(db, 'routes');
+          const q = query(routesRef, where('orgId', '==', userDoc.orgId));
+          
+          const unsubscribe = onSnapshot(q, (snapshot) => {
+            const routesData: Route[] = [];
+            snapshot.forEach((doc) => {
+              routesData.push({ id: doc.id, ...doc.data() } as Route);
+            });
+            // Sort by created/updated
+            routesData.sort((a, b) => {
+                const timeA = a.createdAt ? ('toMillis' in a.createdAt ? (a.createdAt as any).toMillis() : new Date(a.createdAt as any).getTime()) : 0;
+                const timeB = b.createdAt ? ('toMillis' in b.createdAt ? (b.createdAt as any).toMillis() : new Date(b.createdAt as any).getTime()) : 0;
+                return timeB - timeA;
+            });
+            setRoutes(routesData);
+          });
+          
+          return () => unsubscribe();
         }
       });
     }
   }, [user]);
-  
+
+  // Set context for global search
+  useEffect(() => {
+    // We don't set generic search context anymore, we keep the global search as is
+    // But we clear it when unmounting
+    return () => setQuery('');
+  }, [setQuery]);
+
   const displayedRoutes = useMemo(() => {
-    if (!userData) return [];
-
     let filtered = routes;
-
-    // Filter by driver if not admin
-    if (userData.role !== 'admin') {
-        filtered = filtered.filter(route => route.driverId === userData.id);
+    
+    // Admin sees all, drivers see only their own
+    if (userData?.role !== 'admin') {
+      filtered = filtered.filter(route => route.driverId === user?.uid);
     }
-
-    // Filter by search query
+    
+    // Apply search filter
     if (searchQuery.trim()) {
-        const lowerQuery = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(route => 
-            route.name.toLowerCase().includes(lowerQuery) ||
-            (route.driverId && organizationUsers.find(u => u.id === route.driverId)?.name?.toLowerCase().includes(lowerQuery))
-        );
+      const lowerQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(route => 
+        route.name.toLowerCase().includes(lowerQuery) || 
+        (route.shipmentNumber && route.shipmentNumber.toLowerCase().includes(lowerQuery)) ||
+        organizationUsers.find(u => u.id === route.driverId)?.name?.toLowerCase().includes(lowerQuery)
+      );
     }
-
+    
     return filtered;
-  }, [routes, userData, searchQuery, organizationUsers]);
+  }, [routes, userData, user?.uid, searchQuery, organizationUsers]);
 
-  
   const handleDeleteClick = (e: React.MouseEvent, route: Route) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent card click
     setRouteToDelete(route);
     setDeleteConfirmation('');
   };
 
   const confirmDeleteRoute = async () => {
-    if (!routeToDelete) return;
+    if (!routeToDelete || deleteConfirmation.toLowerCase() !== 'slett rute') return;
+    
     setIsDeleting(true);
     try {
       await firebaseDB.deleteRoute(routeToDelete.id as string);
-      setRoutes(routes.filter(r => r.id !== routeToDelete.id));
+      // We don't need to manually update state because the onSnapshot listener will handle it
       setRouteToDelete(null);
     } catch (err) {
       console.error('Error deleting route:', err);
       alert('Kunne ikke slette ruten.');
     } finally {
       setIsDeleting(false);
+      setDeleteConfirmation('');
     }
   };
 
   const handleCreateRoute = () => {
+    // Generate a temporary ID or just navigate to the 'new' page
+    // For now, we'll navigate to a 'new' page that handles creation
     router.push('/dashboard/routes/new');
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
-  if (error) {
-    return <p>Feil: {error.message}</p>;
-  }
-
-  if (!user) {
+  if (error || !user) {
     router.push('/login');
     return null;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
-          {searchQuery ? `Søkeresultater for "${searchQuery}"` : 'Ruter'}
-        </h1>
-        {searchQuery && (
-          <Button variant="outline" size="sm" onClick={() => setQuery('')}>
-            Nullstill søk
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Ruter</h1>
+          <p className="text-slate-500 mt-2 max-w-2xl">
+             {userData?.role === 'admin' 
+               ? "Administrer leveringsruter. Opprett nye ruter, tildel dem til sjåfører, og følg med på fremdriften." 
+               : "Her er en oversikt over rutene som er tildelt deg."}
+          </p>
+        </div>
+        {userData?.role === 'admin' && (
+          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow">
+            <Plus className="mr-2 h-5 w-5" /> Ny Rute
           </Button>
         )}
       </div>
-      
+
       {displayedRoutes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-full bg-slate-100 p-6 mb-4">
@@ -143,18 +167,22 @@ export default function RoutesPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedRoutes.map(route => (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {displayedRoutes.map(route => {
+            const totalStops = route.places?.length || 0;
+            const isFinished = totalStops > 0 && route.completedStops?.length === totalStops;
+            
+            return (
             <Card 
               key={route.id} 
-              className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-slate-200 overflow-hidden flex flex-col h-full bg-white hover:-translate-y-1"
+              className={`group cursor-pointer transition-all duration-300 overflow-hidden flex flex-col h-full bg-white hover:-translate-y-1 ${isFinished ? 'border-green-200 shadow-sm hover:shadow-md' : 'border-slate-200 hover:shadow-xl'}`}
               onClick={() => router.push(`/dashboard/routes/${route.id}`)}
             >
-              <div className="h-2 w-full bg-gradient-to-r from-slate-300 via-slate-400 to-slate-500" />
+              <div className={`h-2 w-full ${isFinished ? 'bg-green-500' : 'bg-gradient-to-r from-slate-300 via-slate-400 to-slate-500'}`} />
               <CardHeader className="flex flex-row items-start justify-between pb-2 pt-5">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-slate-100 text-slate-800 rounded-xl group-hover:bg-slate-800 group-hover:text-white transition-colors">
-                    <RouteIcon className="h-6 w-6" />
+                  <div className={`p-2.5 rounded-xl transition-colors ${isFinished ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-800 group-hover:bg-slate-800 group-hover:text-white'}`}>
+                    {isFinished ? <CheckCircle2 className="h-6 w-6" /> : <RouteIcon className="h-6 w-6" />}
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-slate-800 line-clamp-1 transition-colors">
@@ -182,21 +210,21 @@ export default function RoutesPage() {
                 {/* Stats Rows */}
                 <div className="flex flex-col gap-2">
                   {/* Row 1: Stops & Distance */}
-                  <div className="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-100 w-full">
+                  <div className={`flex items-center p-3 rounded-lg border w-full ${isFinished ? 'bg-green-50/50 border-green-100' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="flex-1 flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-slate-400 shrink-0" />
+                      <MapPin className={`h-5 w-5 shrink-0 ${isFinished ? 'text-green-500' : 'text-slate-400'}`} />
                       <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Stopp</span>
-                        <span className="text-sm font-bold text-slate-700 leading-none">{route.places?.length || 0}</span>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinished ? 'text-green-600' : 'text-slate-400'}`}>Stopp</span>
+                        <span className="text-sm font-bold text-slate-700 leading-none">{totalStops}</span>
                       </div>
                     </div>
                     
-                    <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
+                    <div className={`w-px h-8 mx-2 shrink-0 ${isFinished ? 'bg-green-200' : 'bg-slate-200'}`} />
                     
                     <div className="flex-1 flex items-center gap-2 justify-start">
-                      <RouteIcon className="h-5 w-5 text-slate-500 shrink-0" />
+                      <RouteIcon className={`h-5 w-5 shrink-0 ${isFinished ? 'text-green-500' : 'text-slate-500'}`} />
                       <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Distanse</span>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinished ? 'text-green-600' : 'text-slate-400'}`}>Distanse</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none">
                           {route.distanceString || '--'}
                         </span>
@@ -205,23 +233,23 @@ export default function RoutesPage() {
                   </div>
 
                   {/* Row 2: Time & Driver */}
-                  <div className="flex items-center bg-slate-50 p-3 rounded-lg border border-slate-100 w-full">
+                  <div className={`flex items-center p-3 rounded-lg border w-full ${isFinished ? 'bg-green-50/50 border-green-100' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="flex-1 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-slate-400 shrink-0" />
+                      <Clock className={`h-5 w-5 shrink-0 ${isFinished ? 'text-green-500' : 'text-slate-400'}`} />
                       <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Est. Tid</span>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinished ? 'text-green-600' : 'text-slate-400'}`}>Est. Tid</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none">
                           {route.duration || '--'}
                         </span>
                       </div>
                     </div>
                     
-                    <div className="w-px h-8 bg-slate-200 mx-2 shrink-0" />
+                    <div className={`w-px h-8 mx-2 shrink-0 ${isFinished ? 'bg-green-200' : 'bg-slate-200'}`} />
                     
                     <div className="flex-1 flex items-center gap-2 min-w-0">
-                      <Car className="h-5 w-5 text-slate-400 shrink-0" />
+                      <Car className={`h-5 w-5 shrink-0 ${isFinished ? 'text-green-500' : 'text-slate-400'}`} />
                       <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Sjåfør</span>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider ${isFinished ? 'text-green-600' : 'text-slate-400'}`}>Sjåfør</span>
                         <span className="text-sm font-semibold text-slate-700 leading-none truncate" title={organizationUsers.find(u => u.id === route.driverId)?.name || 'Ingen'}>
                            {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name?.split(' ')[0] || 'Tildelt') : <span className="text-rose-500 italic text-xs">Mangler</span>}
                         </span>
@@ -232,7 +260,12 @@ export default function RoutesPage() {
 
                 {/* Status Indicator */}
                 <div className="pt-2">
-                   {route.places?.length === 0 ? (
+                   {isFinished ? (
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                         <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                         Rute fullført
+                      </div>
+                   ) : route.places?.length === 0 ? (
                       <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200">
                          <Clock className="h-3.5 w-3.5 mr-1" />
                          Tom rute - krever oppsett
@@ -251,7 +284,7 @@ export default function RoutesPage() {
 
               </CardContent>
             </Card>
-          ))}
+          )})}
         </div>
       )}
           
@@ -277,8 +310,7 @@ export default function RoutesPage() {
               onClick={confirmDeleteRoute}
               disabled={deleteConfirmation.toLowerCase() !== 'slett rute' || isDeleting}
             >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-              Slett rute
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Slett permanent'}
             </Button>
           </DialogFooter>
         </DialogContent>
