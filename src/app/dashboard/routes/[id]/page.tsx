@@ -679,63 +679,55 @@ export default function RouteDetailsPage() {
       {/* Main Content: Places Grid */}
       <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes) ? 'lg:grid-cols-12' : ''}`}>
         
-        {/* Left Col: Add Places (Only visible in edit mode or for admins) */}
-        {(isAdmin || isEditMode) && (
+        {/* Left Col: Add Places & Route Notes */}
+        {(isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes)) && (
             <div className="lg:col-span-5 flex flex-col gap-6">
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Legg til Stopp</CardTitle>
-                </CardHeader>
-                <CardContent>
-                <Select onValueChange={handleAddPlace}>
-                    <SelectTrigger className="shadow-sm">
-                    <SelectValue placeholder="Søk og velg et sted..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                    {allPlaces.map(place => (
-                        <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
-                        {place.name}
-                        </SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
-                </CardContent>
-            </Card>
+                
+                {/* Add Places (Only visible in edit mode or for admins) */}
+                {(isAdmin || isEditMode) && (
+                    <Card className="border-slate-200 shadow-sm">
+                        <CardHeader className="pb-4">
+                        <CardTitle className="text-lg">Legg til Stopp</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                        <Select onValueChange={handleAddPlace}>
+                            <SelectTrigger className="shadow-sm">
+                            <SelectValue placeholder="Søk og velg et sted..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {allPlaces.map(place => (
+                                <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
+                                {place.name}
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        </CardContent>
+                    </Card>
+                )}
             
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="pb-4">
-                <CardTitle className="text-lg flex items-center gap-2">
-                    <Info className="h-5 w-5 text-slate-400" />
-                    Viktig Ruteinformasjon
-                </CardTitle>
-                </CardHeader>
-                <CardContent>
-                <Textarea 
-                    value={routeNotes}
-                    onChange={(e) => setRouteNotes(e.target.value)}
-                    placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
-                    className="min-h-[120px]"
-                    readOnly={!isAdmin && !isEditMode}
-                />
-                </CardContent>
-            </Card>
-            </div>
-        )}
-        
-        {/* Left Col: View Notes (Only visible if not admin, not editing, and there are notes) */}
-        {!isAdmin && !isEditMode && routeNotes && (
-             <div className="lg:col-span-5 flex flex-col gap-6">
+                {/* Route Notes */}
                 <Card className="border-slate-200 shadow-sm h-fit">
                     <CardHeader className="pb-4">
                     <CardTitle className="text-lg flex items-center gap-2">
-                        <Info className="h-5 w-5 text-indigo-400" />
+                        <Info className={`h-5 w-5 ${!isAdmin && !isEditMode ? 'text-indigo-400' : 'text-slate-400'}`} />
                         Viktig Ruteinformasjon
                     </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="bg-indigo-50/50 p-4 rounded-md border border-indigo-100 text-sm whitespace-pre-wrap">
-                            {routeNotes}
-                        </div>
+                        {(!isAdmin && !isEditMode) ? (
+                             <div className="bg-indigo-50/50 p-4 rounded-md border border-indigo-100 text-sm whitespace-pre-wrap">
+                                {routeNotes}
+                            </div>
+                        ) : (
+                            <Textarea 
+                                value={routeNotes}
+                                onChange={(e) => setRouteNotes(e.target.value)}
+                                placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
+                                className="min-h-[120px]"
+                                readOnly={!isAdmin && !isEditMode}
+                            />
+                        )}
                     </CardContent>
                 </Card>
             </div>
