@@ -197,9 +197,16 @@ export default function MonitorPage() {
         <div className="grid gap-6 grid-cols-1 xl:grid-cols-2">
           {filteredRoutes.map((route) => {
              const totalStops = route.places?.length || 0;
-             const completedStopsCount = route.completedStops?.length || 0;
-             const progress = totalStops > 0 ? (completedStopsCount / totalStops) * 100 : 0;
-             const isFinished = totalStops > 0 && completedStopsCount === totalStops;
+             const completedPlacesCount = route.completedStops?.filter(id => id.startsWith('place_')).length || 0;
+             
+             let totalExpectedItems = totalStops;
+             if (route.prepTimeStart && route.prepTimeStart > 0) totalExpectedItems++;
+             if (route.prepTimeEnd && route.prepTimeEnd > 0) totalExpectedItems++;
+             if (route.breakTime && route.breakTime > 0) totalExpectedItems++;
+             if (route.fuelServiceTime && route.fuelServiceTime > 0) totalExpectedItems++;
+             const isFinished = totalExpectedItems > 0 && route.completedStops?.length >= totalExpectedItems;
+
+             const progress = totalStops > 0 ? (completedPlacesCount / totalStops) * 100 : 0;
              const driverName = route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt';
              
              return (
@@ -219,7 +226,7 @@ export default function MonitorPage() {
                       </div>
                     </div>
                     <Badge variant={isFinished ? 'default' : 'secondary'} className={isFinished ? 'bg-green-500 hover:bg-green-600' : ''}>
-                      {completedStopsCount} / {totalStops} fullført
+                      {completedPlacesCount} / {totalStops} fullført
                     </Badge>
                   </div>
                 </CardHeader>
@@ -233,10 +240,10 @@ export default function MonitorPage() {
                       </h4>
                       <div className="relative border-l-2 border-slate-100 ml-3 pl-4 space-y-4">
                           {route.places?.map((placeId, index) => {
-                             const isCompleted = route.completedStops?.includes(placeId);
+                             const isCompleted = route.completedStops?.includes(`place_${placeId}`);
                              const place = places[placeId];
                              
-                             const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(id)));
+                             const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(`place_${id}`)));
                              const isCurrent = index === firstUncompletedIndex;
                              
                              const shouldShow = index === 0 || index === totalStops - 1 || isCurrent || index === firstUncompletedIndex - 1 || index === firstUncompletedIndex + 1;
