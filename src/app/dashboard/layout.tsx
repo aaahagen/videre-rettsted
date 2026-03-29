@@ -3,7 +3,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon } from 'lucide-react';
+import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon, Activity } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
@@ -15,19 +15,20 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { query, setQuery } = useSearch();
+  const { query, setQuery, contextName, contextLink } = useSearch();
   const pathname = usePathname();
   const router = useRouter();
   const { isUpdateAvailable, refreshPage } = useUpdateNotifier();
 
   const isRoutesPage = pathname === '/dashboard/routes';
+  const isMonitorPage = pathname === '/dashboard/monitor';
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     
-    // Only redirect to dashboard if we are not already on the dashboard AND not on the routes page
-    if (value && pathname !== '/dashboard' && !isRoutesPage) {
+    // Only redirect to dashboard if we are not already on the dashboard AND not on a page that handles its own search
+    if (value && pathname !== '/dashboard' && !isRoutesPage && !isMonitorPage) {
         router.push('/dashboard');
     }
   };
@@ -57,7 +58,7 @@ export default function DashboardLayout({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder={isRoutesPage ? "Søk etter ruter..." : "Søk etter steder..."}
+                placeholder={`Søk etter ${contextName.toLowerCase()}...`}
                 className="w-full rounded-full bg-secondary/50 pl-10 pr-10 border-none focus-visible:ring-primary h-10"
                 value={query}
                 onChange={handleSearchChange}
@@ -73,14 +74,14 @@ export default function DashboardLayout({
             </div>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" className="hidden sm:flex">
-                <Link href={isRoutesPage ? "/dashboard/routes/new" : "/dashboard/new"}>
-                  {isRoutesPage ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-                  {isRoutesPage ? "Ny Rute" : "Nytt Sted"}
+                <Link href={contextLink}>
+                  {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
+                  Ny {contextName === 'Ruter' ? 'Rute' : 'Sted'}
                 </Link>
               </Button>
               <Button asChild size="icon" className="sm:hidden rounded-full h-10 w-10">
-                <Link href={isRoutesPage ? "/dashboard/routes/new" : "/dashboard/new"}>
-                  {isRoutesPage ? <RouteIcon className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
+                <Link href={contextLink}>
+                  {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
                 </Link>
               </Button>
             </div>

@@ -56,8 +56,8 @@ export default function MonitorPage() {
         routesData.push({ id: doc.id, ...doc.data() } as Route);
       });
       routesData.sort((a, b) => {
-        const timeA = a.updatedAt ? ('toMillis' in a.updatedAt ? a.updatedAt.toMillis() : new Date(a.updatedAt as any).getTime()) : 0;
-        const timeB = b.updatedAt ? ('toMillis' in b.updatedAt ? b.updatedAt.toMillis() : new Date(b.updatedAt as any).getTime()) : 0;
+        const timeA = a.updatedAt ? ('toMillis' in a.updatedAt ? (a.updatedAt as any).toMillis() : new Date(a.updatedAt as any).getTime()) : 0;
+        const timeB = b.updatedAt ? ('toMillis' in b.updatedAt ? (b.updatedAt as any).toMillis() : new Date(b.updatedAt as any).getTime()) : 0;
         return timeB - timeA;
       });
       setRoutes(routesData);
