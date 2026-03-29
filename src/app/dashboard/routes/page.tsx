@@ -135,7 +135,7 @@ export default function RoutesPage() {
           </p>
         </div>
         {userData?.role === 'admin' && (
-          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow whitespace-nowrap">
+          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow whitespace-nowrap shrink-0">
             <Plus className="mr-2 h-5 w-5" /> Ny Rute
           </Button>
         )}
@@ -170,7 +170,22 @@ export default function RoutesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayedRoutes.map(route => {
             const totalStops = route.places?.length || 0;
-            const isFinished = totalStops > 0 && route.completedStops?.length === totalStops;
+            
+            // To consider a route fully completed, check if ALL stops in the route (which means all `route.places`) are in `route.completedStops`.
+            // Wait, route.places is an array of placeIds. However, we have special stops now. Let's base completion on whether the length of completedStops is >= the total expected.
+            // But wait, totalStops only counted physical places. So let's re-calculate total expected stops from the structure.
+            
+            // A quick reliable check for if a route is fully finished based on its structure:
+            // If the route has any special stops, they will be in completedStops. Let's see how Route details page does it.
+            // It uses routeItems.length. Since we don't have routeItems here, let's estimate or just rely on places length + special times.
+            let totalExpectedItems = route.places?.length || 0;
+            if (route.prepTimeStart && route.prepTimeStart > 0) totalExpectedItems++;
+            if (route.prepTimeEnd && route.prepTimeEnd > 0) totalExpectedItems++;
+            if (route.breakTime && route.breakTime > 0) totalExpectedItems++;
+            if (route.fuelServiceTime && route.fuelServiceTime > 0) totalExpectedItems++;
+            
+            const completedStopsCount = route.completedStops?.length || 0;
+            const isFinished = totalExpectedItems > 0 && completedStopsCount >= totalExpectedItems;
             
             return (
             <Card 
