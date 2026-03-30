@@ -7,30 +7,43 @@ This document outlines the phased implementation plan for future features. The g
 
 The goal of this phase is to establish the foundational data structures and add high-value, standalone features that improve daily operations and communication.
 
-1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`. This is the absolute prerequisite for all advanced planning. The initial implementation will focus on core details: vehicle name, type, and basic capacity.
-2.  **Messaging & Read Confirmation:** Implement a new real-time messaging system. Administrators will be able to send messages and attached documents to specific users or broadcast to all drivers. The system will track and display a confirmation when each recipient has viewed the message, ensuring critical information is acknowledged.
-3.  **Driver Location & Timestamps:** Implement background GPS location capture when a stop is marked as "visited" and record the associated timestamp. This data will be displayed on the monitor page to provide a clear audit trail of delivery times and locations.
-4.  **Route Archiving & Templates (Tier 1):** Implement the ability for planners to save any completed route as a "Template" for quick reuse. Finished routes will be moved to an accessible archive for historical analysis.
+1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.
+2.  **UI/UX Refinements:**
+    *   Add a direct link from a place on the monitor page to its detailed place page.
+    *   Review the route card UI on the monitor page to simplify the status indicators (e.g., consolidating the two progress bars).
+3.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
+4.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail.
+5.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
 
 ## Phase 2: End-to-End Verification & Process Integrity
 
 This phase focuses on building the features that ensure what is planned is what actually happens in the physical world, creating a full, verifiable chain of custody.
 
-1.  **Proof of Delivery (POD) System:** Build the complete POD workflow. This includes signature capture on the driver's device, photo uploads for visual proof, barcode scanning to link specific packages, and a text field for damage reporting or other notes.
-2.  **Vehicle Loading & Manifest System:** Implement the barcode-scanning workflow for verifying items as they are loaded onto a vehicle. This includes creating a new, restricted "Loader" role in the application.
-3.  **Integrated Digital Vehicle Inspections:** We will build a comprehensive vehicle inspection module directly into the application, using the functionality of the existing `videre-inspection.no` app as a blueprint. This unified approach ensures a seamless user experience and enables powerful, real-time integration between vehicle status and route planning.
-    *   **Customizable Checklist Builder:** Allow administrators to create and manage dynamic inspection forms for different vehicle types and regulatory needs (e.g., pre-trip, post-trip, annual check).
-    *   **Rich Media Defect Reporting:** Enable drivers to attach multiple photos and videos to clearly document issues found during an inspection.
-    *   **End-to-End Defect Management:** Implement a full workflow for tracking a reported defect from identification to resolution. This includes assigning mechanics, tracking repair status, and requiring manager sign-off before a vehicle is returned to service.
-    *   **Shareable PDF Reports:** The system will generate comprehensive PDF reports for any completed inspection. These reports will include all checklist data, notes, and embedded photos, designed to be easily shared with maintenance workshops, regulatory bodies, or other stakeholders.
+1.  **Proof of Delivery (POD) System:** Build the complete POD workflow (signatures, photos, barcode scans).
+2.  **Vehicle Loading & Manifest System:** Implement the barcode-scanning workflow for verifying loaded items.
+3.  **Integrated Digital Vehicle Inspections:** Build a comprehensive, in-app vehicle inspection module with customizable checklists, media attachments, defect management, and shareable PDF reports.
 
 ## Phase 3: Intelligent Automation & Optimization
 
-This is the final phase, where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
+This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
 
-1.  **Install & Integrate Google OR-Tools:** The first step of this phase is to integrate Google's open-source optimization library (`OR-Tools`) into the backend. This will provide the core engine for solving the complex routing problems.
-2.  **Advanced Goods & Vehicle Definitions (Tier 2):** Expand the "Order" and "Vehicle" data models to include all detailed properties:
-    *   **Goods:** Size, weight, form (pallet, package, tank), temperature requirements, ADR status, and necessary legal documentation.
-    *   **Vehicles:** Detailed capacity (weight, volume), physical dimensions (height, width), and special capabilities (refrigeration, tail-lift, ADR certification).
-3.  **Constraint-Based Automatic Route Generation (Tier 3):** This is the capstone feature. The system will use Google OR-Tools to automatically generate optimized, multi-stop daily routes. It will perform constraint-based matching, assigning orders only to vehicles that are legally and physically capable of transporting them and flagging any unassignable jobs for manual review.
-4.  **Geofence-based Delivery Alerts:** With all location data available, implement the final alert system to automatically flag potential delivery errors by comparing the driver's GPS location at the time of delivery with the planned stop's address.
+1.  **Install & Integrate Google OR-Tools:** Integrate Google's optimization library into the backend.
+2.  **Advanced Data Definitions (Tier 2):** Expand the data models to include all detailed properties required for optimization:
+    *   **Goods:** Size, weight, form, temperature requirements, ADR status.
+    *   **Vehicles:** Detailed capacity, dimensions, and special capabilities.
+    *   **Places:** Add "Opening Hours" to ensure deliveries are only scheduled at valid times.
+3.  **Constraint-Based Automatic Route Generation (Tier 3):** Use Google OR-Tools to automatically generate optimized, multi-stop daily routes based on all defined constraints.
+4.  **Geofence-based Delivery Alerts:** Automatically flag potential delivery errors by comparing GPS location with the planned stop's address.
+
+## Phase 4: Commercialization & Multi-Tenancy
+
+This phase focuses on building the features necessary to offer the application as a multi-tenant, subscription-based service (SaaS).
+
+1.  **Super-Admin & Organization Management:** Create a "Super-Admin" role (for you as the owner) with the ability to manage different customer organizations, users, and permissions.
+2.  **Stripe Payment Integration:** Integrate the Stripe API to handle customer subscriptions, billing, and payments.
+
+## Phase 5: Resilience & Accessibility
+
+This phase focuses on extending the application's reach and ensuring it remains functional even in challenging network conditions.
+
+1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data (e.g., routes, places) even when offline. The app will sync its data with the backend whenever a connection becomes available.
