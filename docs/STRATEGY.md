@@ -1,3 +1,4 @@
+
 # Development Strategy & Roadmap
 
 This document outlines the phased implementation plan for future features. The goal is to build new functionality in a logical order that minimizes technical conflicts and delivers value incrementally.
@@ -17,7 +18,11 @@ This phase focuses on building the features that ensure what is planned is what 
 
 1.  **Proof of Delivery (POD) System:** Build the complete POD workflow. This includes signature capture on the driver's device, photo uploads for visual proof, barcode scanning to link specific packages, and a text field for damage reporting or other notes.
 2.  **Vehicle Loading & Manifest System:** Implement the barcode-scanning workflow for verifying items as they are loaded onto a vehicle. This includes creating a new, restricted "Loader" role in the application.
-3.  **Digital Inspections & Advanced Fleet Data:** Expand the Fleet Management module by implementing digital inspection checklists. Allow drivers to report new damage with timestamped photos and notes. Add functionality for logging maintenance history and scheduling service reminders.
+3.  **Integrated Digital Vehicle Inspections:** We will build a comprehensive vehicle inspection module directly into the application, using the functionality of the existing `videre-inspection.no` app as a blueprint. This unified approach ensures a seamless user experience and enables powerful, real-time integration between vehicle status and route planning.
+    *   **Customizable Checklist Builder:** Allow administrators to create and manage dynamic inspection forms for different vehicle types and regulatory needs (e.g., pre-trip, post-trip, annual check).
+    *   **Rich Media Defect Reporting:** Enable drivers to attach multiple photos and videos to clearly document issues found during an inspection.
+    *   **End-to-End Defect Management:** Implement a full workflow for tracking a reported defect from identification to resolution. This includes assigning mechanics, tracking repair status, and requiring manager sign-off before a vehicle is returned to service.
+    *   **Shareable PDF Reports:** The system will generate comprehensive PDF reports for any completed inspection. These reports will include all checklist data, notes, and embedded photos, designed to be easily shared with maintenance workshops, regulatory bodies, or other stakeholders.
 
 ## Phase 3: Intelligent Automation & Optimization
 
