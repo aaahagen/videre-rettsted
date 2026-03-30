@@ -8,7 +8,11 @@ This document outlines the phased implementation plan for future features. The g
 The goal of this phase is to establish the foundational data structures and add high-value, standalone features that improve daily operations and communication.
 
 1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.
-2.  **Monitor Page UI/UX Refinements:**
+2.  **Authentication & Security Enhancements:**
+    *   **Multi-Factor Authentication (MFA):** Implement mandatory MFA for all users with an "Admin" role to enhance security.
+    *   **Super-Admin Login:** Enable "Sign in with Google" as an exclusive, convenient login method for the Super-Admin account.
+    *   **Standard User Login:** Maintain the secure email-and-password system for all regular (non-admin) users.
+3.  **Monitor Page UI/UX Refinements:**
     *   **Card Content & Layout:**
         *   Add a direct link from a place on the monitor page to its detailed place page.
         *   Review and simplify the status indicators (e.g., consolidating progress bars).
@@ -18,9 +22,9 @@ The goal of this phase is to establish the foundational data structures and add 
         *   When a route is fully completed, display a prominent final completion timestamp on the card (e.g., "Finished at 14:32").
     *   **Interactivity:**
         *   Implement an "expand/collapse" feature on route cards to allow planners to see the full list of stops on demand without leaving the monitor page.
-3.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
-4.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
-5.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
+4.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
+5.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
+6.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
 
 ## Phase 2: End-to-End Verification & Process Integrity
 
