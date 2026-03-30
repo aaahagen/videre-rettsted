@@ -8,11 +8,18 @@ This document outlines the phased implementation plan for future features. The g
 The goal of this phase is to establish the foundational data structures and add high-value, standalone features that improve daily operations and communication.
 
 1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.
-2.  **UI/UX Refinements:**
-    *   Add a direct link from a place on the monitor page to its detailed place page.
-    *   Review the route card UI on the monitor page to simplify the status indicators (e.g., consolidating the two progress bars).
+2.  **Monitor Page UI/UX Refinements:**
+    *   **Card Content & Layout:**
+        *   Add a direct link from a place on the monitor page to its detailed place page.
+        *   Review and simplify the status indicators (e.g., consolidating progress bars).
+        *   Review all text and labels for clarity and conciseness (e.g., `...flere gjenstående stopp...`).
+    *   **Timestamps:**
+        *   Display a timestamp for each individually completed stop within the card view.
+        *   When a route is fully completed, display a prominent final completion timestamp on the card (e.g., "Finished at 14:32").
+    *   **Interactivity:**
+        *   Implement an "expand/collapse" feature on route cards to allow planners to see the full list of stops on demand without leaving the monitor page.
 3.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
-4.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail.
+4.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
 5.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
 
 ## Phase 2: End-to-End Verification & Process Integrity
