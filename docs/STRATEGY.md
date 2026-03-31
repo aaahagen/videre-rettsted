@@ -8,11 +8,12 @@ This document outlines the phased implementation plan for future features. The g
 The goal of this phase is to establish the foundational data structures and add high-value, standalone features that improve daily operations and communication.
 
 1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.
-2.  **Authentication & Security Enhancements:**
+2.  **Workforce Management & Driver Profiles:** Create the database structure and UI for `Driver Profiles` to manage workforce details (e.g., working hours, certifications, skills).
+3.  **Authentication & Security Enhancements:**
     *   **Multi-Factor Authentication (MFA):** Implement mandatory MFA for all users with an "Admin" role to enhance security.
     *   **Super-Admin Login:** Enable "Sign in with Google" as an exclusive, convenient login method for the Super-Admin account.
     *   **Standard User Login:** Maintain the secure email-and-password system for all regular (non-admin) users.
-3.  **Monitor Page UI/UX Refinements:**
+4.  **Monitor Page UI/UX Refinements:**
     *   **Card Content & Layout:**
         *   Add a direct link from a place on the monitor page to its detailed place page.
         *   Review and simplify the status indicators (e.g., consolidating progress bars).
@@ -22,9 +23,9 @@ The goal of this phase is to establish the foundational data structures and add 
         *   When a route is fully completed, display a prominent final completion timestamp on the card (e.g., "Finished at 14:32").
     *   **Interactivity:**
         *   Implement an "expand/collapse" feature on route cards to allow planners to see the full list of stops on demand without leaving the monitor page.
-4.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
-5.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
-6.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
+5.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
+6.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
+7.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
 
 ## Phase 2: End-to-End Verification & Process Integrity
 
@@ -43,7 +44,8 @@ This is the phase where we leverage all the data and structures from the previou
     *   **Goods:** Size, weight, form, temperature requirements, ADR status.
     *   **Vehicles:** Detailed capacity, dimensions, and special capabilities.
     *   **Places:** Add "Opening Hours" to ensure deliveries are only scheduled at valid times.
-3.  **Constraint-Based Automatic Route Generation (Tier 3):** Use Google OR-Tools to automatically generate optimized, multi-stop daily routes based on all defined constraints.
+    *   **Drivers:** Utilize `Driver Profiles` (working hours, skills, certifications) as constraints.
+3.  **Constraint-Based Automatic Route Generation (Tier 3):** Use Google OR-Tools to automatically generate optimized, multi-stop daily routes based on all defined constraints (Goods, Vehicles, Places, and Drivers).
 4.  **Geofence-based Delivery Alerts:** Automatically flag potential delivery errors by comparing GPS location with the planned stop's address.
 
 ## Phase 4: Commercialization & Multi-Tenancy
