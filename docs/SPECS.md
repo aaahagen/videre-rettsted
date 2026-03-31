@@ -7,6 +7,15 @@ VIDERE RettSted is a web-based application (deployed as a PWA/App Store wrapper)
 - **Admins (Hjelpefunksjonærer)**: Tech-savvy individuals responsible for setting up organizations and managing users.
 - **Drivers**: The primary users, often with low digital literacy. The UI for them must be extremely intuitive.
 
+## Core Architectural Principles
+
+1.  **Multi-Tenant Data Architecture:** The system must be multi-tenant from the ground up to support future commercialization (Phase 4). All top-level Firestore collections that contain organization-specific data (e.g., `places`, `routes`, `vehicles`, `drivers`) **must** be designed as sub-collections of a primary `organizations` collection. This ensures data isolation and security.
+
+    - **Correct Structure:** `/organizations/{organization_id}/vehicles/{vehicle_id}`
+    - **Incorrect Structure:** `/vehicles/{vehicle_id}` (This would be a global collection)
+
+    Every query and data access rule must enforce this `organization_id` boundary.
+
 ## Core Features
 
 ### 1. Multi-Tenancy & Onboarding
