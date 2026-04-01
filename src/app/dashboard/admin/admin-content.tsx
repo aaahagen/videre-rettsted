@@ -325,6 +325,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         description: "Sjåførprofilen ble lagret.",
       });
       setEditingDriverProfile(null);
+      setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
     } catch (error: any) {
       toast({
         title: "Feil ved oppdatering",
@@ -344,6 +345,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         description: `Brukerens navn er nå ${newName.trim()}.`,
       });
       setEditingUser(null);
+      setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
     } catch (error: any) {
       toast({
         title: "Feil ved oppdatering",
@@ -904,7 +906,12 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
         
         {/* Edit Driver Profile Dialog */}
-        <Dialog open={!!editingDriverProfile} onOpenChange={(open) => !open && setEditingDriverProfile(null)}>
+        <Dialog open={!!editingDriverProfile} onOpenChange={(open) => {
+            if (!open) {
+                setEditingDriverProfile(null);
+                setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+            }
+        }}>
           <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Rediger Sjåførprofil</DialogTitle>
@@ -916,14 +923,22 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
               <DriverProfileForm 
                   user={editingDriverProfile} 
                   onSubmit={handleUpdateDriverProfile} 
-                  onCancel={() => setEditingDriverProfile(null)} 
+                  onCancel={() => {
+                      setEditingDriverProfile(null);
+                      setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+                  }} 
               />
             )}
           </DialogContent>
         </Dialog>
 
         {/* Edit Name Dialog */}
-        <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <Dialog open={!!editingUser} onOpenChange={(open) => {
+            if (!open) {
+                setEditingUser(null);
+                setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+            }
+        }}>
           <DialogContent className="sm:max-w-md w-[95vw] rounded-xl" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Endre Navn</DialogTitle>

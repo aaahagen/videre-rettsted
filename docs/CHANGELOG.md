@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **3PS Integration:** Added the ability to mark a route as being driven by a Third-Party Supplier (3PS) and log the supplier's name in the route editor. The Monitor page correctly displays this information.
 - **Vehicle Image Uploads:** Enabled uploading up to 8 compressed photos per vehicle in the Fleet Management module.
-- **Driver Image Uploads:** Enabled uploading up to 8 compressed photos per driver in the Workforce Management module.
+- **Driver Image Upload:** Enabled uploading a profile picture for drivers in the Workforce Management module. The picture is displayed in the personnel overview.
 
 - **Fleet Management Module:** Added a complete system for administrators to register and manage the organization's vehicle fleet.
     - **Vehicle Profiles:** Created database structures and UI to capture detailed vehicle properties including type (truck, van, car), fuel type, dimensions, capacity (weight, volume, pallets), and special capabilities (refrigeration, tail-lift, ADR, trailer coupling).
@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Driver Profile Image limit**: Limited the number of images a driver can upload to their profile to 1.
 - **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
 - **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on saved Place IDs.
 - **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service.
@@ -49,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Admin Dialog Freeze:** Fixed an issue where the screen would remain unclickable (frozen pointer events) after saving or closing the "Edit Driver Profile" dialog in the Admin Panel.
+- **Calendar Layout Issue:** Corrected styling issues with the `react-day-picker` integration that caused the rotation start-date calendar to render incorrectly.
+- **Driver Profile Save Error:** Fixed a backend error that occurred when saving a driver's profile by explicitly using `deleteField()` instead of setting fields to undefined.
+- **Driver Profile Storage Permissions:** Updated Firebase Storage rules to allow administrators to upload profile pictures on behalf of drivers.
 - **Mobile Route Item Display:** Corrected a layout bug in the detailed route view that caused the estimated delivery time badge for each place to be hidden on smaller mobile screens.
 - **Dynamic Route Recalculation:** Fixed an issue where the total estimated route time failed to update instantly when a user manually dragged and dropped stops to reorder them. The UI now reliably recalculates driving distance and total duration upon every physical route alteration.
 - **Android Touch Support:** Resolved a bug preventing drag-and-drop reordering of route items on Android devices by implementing a dedicated `TouchSensor` with an activation delay.

@@ -6,18 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Plus, X, Calendar as CalendarIcon, UploadCloud, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRef } from 'react';
-import { Camera, Image as ImageIcon, Trash2, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { deleteField } from 'firebase/firestore';
 
 
 interface DriverProfileFormProps {
@@ -28,17 +28,13 @@ interface DriverProfileFormProps {
 
 export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    
+    const [isUploading, setIsUploading] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const cameraInputRef = useRef<HTMLInputElement>(null);
-    const [images, setImages] = useState<Array<{ url: string, preview?: string, file?: File }>>(
-        user.images || []
+    const [image, setImage] = useState< { url: string, preview?: string, file?: File } | null>(
+        (user.images && user.images[0]) || null
     );
-    const [isUploading, setIsUploading] = useState(false);
 
-    // Image compression logic from place-form.tsx
     const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -68,30 +64,24 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
         reader.readAsDataURL(file);
     };
 
-    const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (!files.length) return;
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        const remainingSlots = 8 - images.length;
-        const filesToProcess = files.slice(0, remainingSlots);
-
-        filesToProcess.forEach(file => {
-            processFile(file, (preview, resizedFile) => {
-                setImages(prev => [...prev, { url: '', preview, file: resizedFile }]);
-            });
+        processFile(file, (preview, resizedFile) => {
+            setImage({ url: '', preview, file: resizedFile });
         });
         
         if (e.target) e.target.value = '';
     };
 
-    const removeImage = (index: number) => {
-        setImages(prev => prev.filter((_, i) => i !== index));
+    const removeImage = () => {
+        setImage(null);
     };
 
     const [useRotation, setUseRotation] = useState<boolean>(!!user.rotation);
     const [rotationStartDate, setRotationStartDate] = useState<Date | undefined>(user.rotation?.startDate ? new Date(user.rotation.startDate) : undefined);
     
-    // Helper to generate a default week
     const defaultWeek = () => ({
         days: {
             monday: { isWorking: true, start: '08:00', end: '16:00' },
@@ -131,9 +121,8 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
         setRotationWeeks(newWeeks);
     };
 
-const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['scheduleOverrides']>(user.scheduleOverrides || {});
+    const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['scheduleOverrides']>(user.scheduleOverrides || {});
     
-    // UI state for adding new override
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
     const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'custom'>('off');
     const [overrideStart, setOverrideStart] = useState('08:00');
@@ -160,31 +149,59 @@ const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['schedu
             return updated;
         });
     };
-const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.start || '08:00');
+
+    const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.start || '08:00');
     const [workingHoursEnd, setWorkingHoursEnd] = useState(user.workingHours?.end || '16:00');
     const [certifications, setCertifications] = useState<string[]>(user.certifications || []);
     const [skills, setSkills] = useState<string[]>(user.skills || []);
-
     const [newCert, setNewCert] = useState('');
     const [newSkill, setNewSkill] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setIsUploading(true);
+
         try {
-            await onSubmit({
-                workingHours: {
-                    start: workingHoursStart,
-                    end: workingHoursEnd
-                },
-                scheduleOverrides,
+            let imageData: { url: string; }[] = [];
+            
+            if (image && image.file) {
+                const uniqueId = uuidv4();
+                const path = `users/${user.id}/profile/${uniqueId}`;
+                const url = await firebaseStorage.uploadFile(path, image.file);
+                imageData = [{ url }];
+            } else if (image) {
+                imageData = [{ url: image.url }];
+            }
+
+            const dataToSubmit: any = {
                 certifications,
-                skills
-            });
+                skills,
+                scheduleOverrides,
+                images: imageData,
+            };
+
+            if (useRotation) {
+                dataToSubmit.rotation = {
+                    startDate: rotationStartDate ? format(rotationStartDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+                    weeks: rotationWeeks,
+                };
+                dataToSubmit.workingHours = deleteField();
+            } else {
+                dataToSubmit.workingHours = {
+                    start: workingHoursStart,
+                    end: workingHoursEnd,
+                };
+                dataToSubmit.rotation = deleteField();
+            }
+
+            await onSubmit(dataToSubmit);
         } finally {
             setIsSubmitting(false);
+            setIsUploading(false);
         }
     };
+
 
     const addCert = () => {
         if (newCert.trim() && !certifications.includes(newCert.trim())) {
@@ -262,7 +279,7 @@ const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.st
                                         {rotationStartDate ? format(rotationStartDate, "PPP", { locale: nb }) : <span>Velg startdato</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
+                                <PopoverContent className="w-auto p-0 z-[100]" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={rotationStartDate}
@@ -353,7 +370,7 @@ const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.st
                                     {selectedDate ? format(selectedDate, "PPP", { locale: nb }) : <span>Velg dato</span>}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 z-[100]" align="start">
                                 <Calendar
                                     mode="single"
                                     selected={selectedDate}
@@ -484,27 +501,21 @@ const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.st
                 </div>
             </div>
 
-            
-            {/* Images Section */}
             <div className="space-y-4 border-t pt-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Sjåførbilder</h3>
-                        <p className="text-xs text-muted-foreground">Legg til bilder av sjåføren (Maks 8 bilder).</p>
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {images.length} / 8
-                    </span>
+                <div>
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Sjåførbilde</h3>
+                    <p className="text-xs text-muted-foreground">Legg til et bilde av sjåføren.</p>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {images.map((img, index) => (
-                        <div key={index} className="relative group rounded-md overflow-hidden border">
+                <div className="w-48">
+                    {image ? (
+                        <div className="relative group rounded-md overflow-hidden border">
                             <div className="relative aspect-square w-full">
                                 <Image
-                                    src={img.preview || img.url}
-                                    alt={`Bilde ${index + 1}`}
+                                    src={image.preview || image.url}
+                                    alt="Sjåførbilde"
                                     fill
+                                    sizes="(max-width: 768px) 192px, 192px"
                                     className="object-cover"
                                 />
                             </div>
@@ -513,34 +524,31 @@ const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.st
                                 variant="destructive" 
                                 size="icon" 
                                 className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => removeImage(index)}
+                                onClick={removeImage}
                             >
                                 <Trash2 className="h-3 w-3" />
                             </Button>
                         </div>
-                    ))}
-                    
-                    {images.length < 8 && (
+                    ) : (
                         <div className="flex flex-col gap-2">
                             <input
                               type="file"
                               accept="image/*"
-                              multiple
                               className="sr-only"
                               ref={fileInputRef}
-                              onChange={handleAddImages}
+                              onChange={handleImageChange}
                             />
                             <Button 
                                 type="button" 
                                 variant="outline" 
-                                className="h-full aspect-square flex flex-col items-center justify-center gap-2 text-muted-foreground"
+                                className="h-48 w-48 aspect-square flex flex-col items-center justify-center gap-2 text-muted-foreground"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   fileInputRef.current?.click();
                                 }}
                             >
-                              <UploadCloud className="h-6 w-6" />
-                              <span className="text-xs">Last opp</span>
+                              <UploadCloud className="h-8 w-8" />
+                              <span className="text-sm">Last opp bilde</span>
                             </Button>
                         </div>
                     )}

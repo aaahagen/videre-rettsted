@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, Users, Loader2, Search, Printer } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Loader2, Search, Printer, User as UserIcon } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 // --- Core Logic for computing a driver's status on a specific date ---
 const getDriverStatus = (driver: DriverProfile, date: Date) => {
@@ -152,7 +153,7 @@ export default function WorkforcePage() {
                                             {searchDate ? format(searchDate, "PPP", { locale: nb }) : <span>Velg dato</span>}
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <PopoverContent className="w-auto p-0 z-[100]" align="start">
                                         <Calendar
                                             mode="single"
                                             selected={searchDate}
@@ -175,27 +176,45 @@ export default function WorkforcePage() {
                                     const statusInfo = getDriverStatus(driver, searchDate);
                                     return (
                                         <div key={driver.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
-                                            <div className="space-y-1">
-                                                <p className="font-semibold text-lg">{driver.name || driver.email}</p>
-                                                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
-                                                    {driver.certifications?.length ? (
-                                                        <div className="flex gap-1 items-center mr-2 border-r pr-3">
-                                                            <span className="font-medium">Sertifikater:</span>
-                                                            {driver.certifications.map((c, i) => (
-                                                                <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{c}</span>
-                                                            ))}
-                                                        </div>
-                                                    ) : null}
-                                                    {driver.skills?.length ? (
-                                                        <div className="flex gap-1 items-center">
-                                                            <span className="font-medium">Ferdigheter:</span>
-                                                            {driver.skills.map((s, i) => (
-                                                                <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{s}</span>
-                                                            ))}
-                                                        </div>
-                                                    ) : null}
+                                            <div className="flex items-center gap-4">
+                                                {/* Driver Image or Initial Placeholder */}
+                                                <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border bg-slate-100 flex items-center justify-center">
+                                                    {(driver.images && driver.images.length > 0 && driver.images[0].url) ? (
+                                                        <Image
+                                                            src={driver.images[0].url}
+                                                            alt={driver.name || driver.email}
+                                                            fill
+                                                            sizes="48px"
+                                                            className="object-cover"
+                                                        />
+                                                    ) : (
+                                                        <UserIcon className="h-6 w-6 text-slate-400" />
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="space-y-1">
+                                                    <p className="font-semibold text-lg">{driver.name || driver.email}</p>
+                                                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
+                                                        {driver.certifications?.length ? (
+                                                            <div className="flex gap-1 items-center mr-2 border-r pr-3">
+                                                                <span className="font-medium">Sertifikater:</span>
+                                                                {driver.certifications.map((c, i) => (
+                                                                    <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{c}</span>
+                                                                ))}
+                                                            </div>
+                                                        ) : null}
+                                                        {driver.skills?.length ? (
+                                                            <div className="flex gap-1 items-center">
+                                                                <span className="font-medium">Ferdigheter:</span>
+                                                                {driver.skills.map((s, i) => (
+                                                                    <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{s}</span>
+                                                                ))}
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
                                                 </div>
                                             </div>
+                                            
                                             <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                                                 <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
                                                     {statusInfo.status}
