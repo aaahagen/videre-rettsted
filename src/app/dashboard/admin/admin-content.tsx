@@ -19,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -58,8 +58,10 @@ import { DataImport } from '@/components/admin/data-import';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
+import { DriverProfileForm } from '@/components/workforce/driver-profile-form';
+import { DriverProfile } from '@/lib/types';
 
-function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
+function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName, onEditProfile }: any) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,6 +71,13 @@ function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handl
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
+        {user.role === 'driver' && (
+          <DropdownMenuItem onClick={onEditProfile}>
+            <IdCard className="mr-2 h-4 w-4" />
+            Rediger Sjåførprofil
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onEditName}>
           <Edit2 className="mr-2 h-4 w-4" />
@@ -124,6 +133,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
   const [newName, setNewName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -296,6 +306,25 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         title: "Rolle oppdatert",
         description: `Brukerens rolle er nå ${newRole === 'admin' ? 'Admin' : 'Sjåfør'}.`,
       });
+    } catch (error: any) {
+      toast({
+        title: "Feil ved oppdatering",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  
+  const handleUpdateDriverProfile = async (data: Partial<DriverProfile>) => {
+    if (!editingDriverProfile) return;
+    try {
+      await updateDoc(doc(db, 'users', editingDriverProfile.id), data);
+      toast({
+        title: "Profil oppdatert",
+        description: "Sjåførprofilen ble lagret.",
+      });
+      setEditingDriverProfile(null);
     } catch (error: any) {
       toast({
         title: "Feil ved oppdatering",
@@ -590,6 +619,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                                   setEditingUser(user);
                                   setNewName(user.name || '');
                                 }}
+                                onEditProfile={() => setEditingDriverProfile(user as DriverProfile)}
                               />
                             </TableCell>
                           </TableRow>
@@ -622,9 +652,10 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                             handleToggleStatus={handleToggleStatus} 
                             handleDeleteUser={handleDeleteUser} 
                             onEditName={() => {
-                              setEditingUser(user);
-                              setNewName(user.name || '');
-                            }}
+                                  setEditingUser(user);
+                                  setNewName(user.name || '');
+                                }}
+                                onEditProfile={() => setEditingDriverProfile(user as DriverProfile)}
                           />
                         </div>
                         <div className="flex gap-2">
@@ -870,6 +901,26 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                 <DeleteOrganization orgId={organization.id} />
             </>
         )}
+
+        
+        {/* Edit Driver Profile Dialog */}
+        <Dialog open={!!editingDriverProfile} onOpenChange={(open) => !open && setEditingDriverProfile(null)}>
+          <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Rediger Sjåførprofil</DialogTitle>
+              <DialogDescription>
+                Oppdater ferdigheter, arbeidstid og sertifiseringer for {editingDriverProfile?.name || editingDriverProfile?.email}.
+              </DialogDescription>
+            </DialogHeader>
+            {editingDriverProfile && (
+              <DriverProfileForm 
+                  user={editingDriverProfile} 
+                  onSubmit={handleUpdateDriverProfile} 
+                  onCancel={() => setEditingDriverProfile(null)} 
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Name Dialog */}
         <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>

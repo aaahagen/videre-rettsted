@@ -37,8 +37,13 @@ To ensure future flexibility and ease of migration to a different backend, all i
 - name: string
 - email: string
 - role: "driver" | "admin"
-- orgId: string (links user to an organization)
+- orgId: string
 - favorites: array (of placeIds)
+- workingHours: map (start, end)
+- rotation: map (startDate, weeks array)
+- scheduleOverrides: map (date string -> type, start, end)
+- certifications: array (of strings)
+- skills: array (of strings)
 
 ### /invitations/{invitationId}
 - email: string
@@ -57,11 +62,21 @@ To ensure future flexibility and ease of migration to a different backend, all i
 - updatedAt: timestamp
 - images: array (of objects { url, caption })
 
+### /organizations/{orgId}/vehicles/{vehicleId}
+- name: string
+- registrationNumber: string
+- type: 'truck' | 'van' | 'car'
+- fuelType: 'diesel' | 'electric' | 'gas' | 'hybrid'
+- capacity: map (weight, volume, pallets)
+- capabilities: map (refrigeration, tailLift, adr, trailerCoupling)
+- status: 'active' | 'maintenance' | 'inactive'
+
 ### /routes/{routeId}
 - name: string
 - orgId: string
 - places: array (ordered list of placeIds)
 - driverId: string (optional, assigns route to a specific driver)
+- vehicleId: string (optional, assigns route to a specific vehicle)
 
 ## Security Rules (Firestore)
 

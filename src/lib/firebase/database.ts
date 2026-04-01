@@ -4,7 +4,7 @@ import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, w
 import { db, auth } from './firebase';
 import { firebaseStorage } from './storage';
 import { Database } from '../database';
-import { Place, User, Organization, Route, LogEntry } from '../types';
+import { Place, User, Organization, Route, LogEntry, Vehicle } from '../types';
 
 export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login', details?: any) => {
     try {
@@ -248,6 +248,70 @@ const deleteRoute = async (id: string): Promise<void> => {
   await deleteDoc(docRef);
 };
 
+
+// Vehicle methods
+const createVehicle = async (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> => {
+  const docRef = await addDoc(collection(db, 'vehicles'), {
+    ...vehicle,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return {
+    ...vehicle,
+    id: docRef.id,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Vehicle;
+};
+
+const getVehicle = async (id: string): Promise<Vehicle | null> => {
+  const docRef = doc(db, 'vehicles', id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return null;
+  const data = docSnap.data();
+  return {
+    ...data,
+    id: docSnap.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Vehicle;
+};
+
+const getVehicles = async (orgId: string): Promise<Vehicle[]> => {
+  const q = query(collection(db, 'vehicles'), where('orgId', '==', orgId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      ...data,
+      id: doc.id,
+      createdAt: data.createdAt?.toDate?.() || new Date(),
+      updatedAt: data.updatedAt?.toDate?.() || new Date(),
+    } as Vehicle;
+  });
+};
+
+const updateVehicle = async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
+  const docRef = doc(db, 'vehicles', id);
+  await updateDoc(docRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+  const updated = await getDoc(docRef);
+  const data = updated.data()!;
+  return {
+    ...data,
+    id: updated.id,
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  } as Vehicle;
+};
+
+const deleteVehicle = async (id: string): Promise<void> => {
+  const docRef = doc(db, 'vehicles', id);
+  await deleteDoc(docRef);
+};
+
 export const toggleFavorite = async (userId: string, placeId: string) => {
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
@@ -282,4 +346,9 @@ export const firebaseDB: Database = {
   createRoute,
   updateRoute,
   deleteRoute,
+  createVehicle,
+  getVehicle,
+  getVehicles,
+  updateVehicle,
+  deleteVehicle,
 };

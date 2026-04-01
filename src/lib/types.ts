@@ -99,6 +99,7 @@ export interface Route {
   endAddress?: string; // The ending address of the route
   notes?: string; // Crucial information about the route
   driverId?: string;
+  vehicleId?: string;
   distance?: number; // in kilometers
   distanceString?: string; // e.g. "10.5 km"
   duration?: string; // e.g., "1 t 23 min"
@@ -138,3 +139,60 @@ export interface LogEntry {
   timestamp: FieldValue | Date;
   details?: any;
 }
+
+export interface Vehicle {
+  id: string;
+  orgId: string;
+  name: string; // e.g., "Scania R500", "Van 1"
+  registrationNumber: string;
+  type: 'truck' | 'van' | 'car';
+  fuelType?: 'diesel' | 'electric' | 'gas' | 'hybrid';
+  dimensions?: {
+    length?: number; // meters
+    height?: number; // meters
+    width?: number; // meters
+  };
+  capacity: {
+    weight?: number; // in kg
+    volume?: number; // in cubic meters
+    pallets?: number;
+  };
+  capabilities: {
+    refrigeration: boolean;
+    tailLift: boolean;
+    adr: boolean; // Hazardous materials
+    trailerCoupling: boolean; // Can drag a trailer
+  };
+  status: 'active' | 'maintenance' | 'inactive';
+  createdAt: FieldValue | Date;
+  updatedAt: FieldValue | Date;
+}
+
+export interface DriverProfile extends User {
+  workingHours?: {
+    start: string; // e.g., "08:00"
+    end: string;   // e.g., "16:00"
+  };
+  rotation?: {
+    startDate: string; // ISO date string when rotation starts
+    weeks: Array<{
+      days: {
+        monday: { isWorking: boolean; start?: string; end?: string };
+        tuesday: { isWorking: boolean; start?: string; end?: string };
+        wednesday: { isWorking: boolean; start?: string; end?: string };
+        thursday: { isWorking: boolean; start?: string; end?: string };
+        friday: { isWorking: boolean; start?: string; end?: string };
+        saturday: { isWorking: boolean; start?: string; end?: string };
+        sunday: { isWorking: boolean; start?: string; end?: string };
+      };
+    }>;
+  };
+  scheduleOverrides?: Record<string, {
+    type: 'off' | 'vacation' | 'sick' | 'custom';
+    start?: string;
+    end?: string;
+  }>;
+  certifications?: string[]; // e.g., ["ADR", "Forklift"]
+  skills?: string[];
+}
+

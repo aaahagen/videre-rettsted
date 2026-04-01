@@ -7,22 +7,17 @@ This document outlines the phased implementation plan for future features. The g
 
 The goal of this phase is to establish the foundational data structures and add high-value, standalone features that improve daily operations and communication.
 
-1.  **Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.
-2.  **Workforce Management & Driver Profiles:** Create the database structure and UI for `Driver Profiles` to manage workforce details (e.g., working hours, certifications, skills).
+1.  ~~**Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.~~ (Completed)
+2.  ~~**Workforce Management & Driver Profiles:** Create the database structure and UI for `Driver Profiles` to manage workforce details (e.g., working hours, certifications, skills, and advanced rotation schedules).~~ (Completed)
 3.  **Authentication & Security Enhancements:**
     *   **Multi-Factor Authentication (MFA):** Implement mandatory MFA for all users with an "Admin" role to enhance security.
     *   **Super-Admin Login:** Enable "Sign in with Google" as an exclusive, convenient login method for the Super-Admin account.
     *   **Standard User Login:** Maintain the secure email-and-password system for all regular (non-admin) users.
-4.  **Monitor Page UI/UX Refinements:**
-    *   **Card Content & Layout:**
-        *   Add a direct link from a place on the monitor page to its detailed place page.
-        *   Review and simplify the status indicators (e.g., consolidating progress bars).
-        *   Review all text and labels for clarity and conciseness (e.g., `...flere gjenstående stopp...`).
-    *   **Timestamps:**
-        *   Display a timestamp for each individually completed stop within the card view.
-        *   When a route is fully completed, display a prominent final completion timestamp on the card (e.g., "Finished at 14:32").
-    *   **Interactivity:**
-        *   Implement an "expand/collapse" feature on route cards to allow planners to see the full list of stops on demand without leaving the monitor page.
+4.  ~~**Monitor Page UI/UX Refinements:**~~ (Completed)
+    *   ~~Added direct links to places.~~
+        *   ~~Simplified status indicators.~~
+        *   ~~Added expand/collapse functionality to route cards.~~
+        *   *Note: Real-time exact timestamps for each stop are still pending a data model update to the Route completion array.*
 5.  **Messaging & Read Confirmation:** Implement a real-time messaging system with read receipts.
 6.  **Driver Location & Timestamps:** Capture GPS location and timestamps for an audit trail for every stop.
 7.  **Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.
@@ -59,4 +54,4 @@ This phase focuses on building the features necessary to offer the application a
 
 This phase focuses on extending the application's reach and ensuring it remains functional even in challenging network conditions.
 
-1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data (e.g., routes, places) even when offline. The app will sync its data with the backend whenever a connection becomes available.
+1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data (e.g., routes, places) even when offline. The app will sync its data with the backend whenever a connection becomes available. *(Note: Firestore IndexedDB offline caching is already enabled at the data layer).* 

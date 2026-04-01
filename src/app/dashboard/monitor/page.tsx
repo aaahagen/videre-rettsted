@@ -3,13 +3,15 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity } from 'lucide-react';
+import Link from 'next/link';
+import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity, ChevronDown, ChevronUp, ExternalLink, Users } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
-import { type Route, type Place, type User } from '@/lib/types';
+import { type Route, type Place, type User, type Vehicle } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useSearch } from '@/hooks/use-search';
 
@@ -19,10 +21,16 @@ export default function MonitorPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [places, setPlaces] = useState<Record<string, Place>>({});
   const [users, setUsers] = useState<Record<string, User>>({});
+  const [vehicles, setVehicles] = useState<Record<string, Vehicle>>({});
   const [isDataLoading, setIsDataLoading] = useState(true);
   const router = useRouter();
   
   const { query: searchQuery, setContext } = useSearch();
+  const [expandedRoutes, setExpandedRoutes] = useState<Record<string, boolean>>({});
+
+  const toggleRouteExpansion = (routeId: string) => {
+    setExpandedRoutes(prev => ({ ...prev, [routeId]: !prev[routeId] }));
+  };
 
   useEffect(() => {
     // Set context for global search
@@ -65,9 +73,10 @@ export default function MonitorPage() {
 
     const fetchStaticData = async () => {
        try {
-           const [fetchedPlaces, fetchedUsers] = await Promise.all([
+           const [fetchedPlaces, fetchedUsers, fetchedVehicles] = await Promise.all([
                firebaseDB.getPlaces(userData.orgId),
-               firebaseDB.getUsers(userData.orgId)
+               firebaseDB.getUsers(userData.orgId),
+               firebaseDB.getVehicles(userData.orgId)
            ]);
            
            const placesMap: Record<string, Place> = {};
@@ -77,6 +86,10 @@ export default function MonitorPage() {
            const usersMap: Record<string, User> = {};
            fetchedUsers.forEach(u => usersMap[u.id] = u);
            setUsers(usersMap);
+           
+           const vehiclesMap: Record<string, Vehicle> = {};
+           fetchedVehicles.forEach(v => vehiclesMap[v.id] = v);
+           setVehicles(vehiclesMap);
        } catch(err) {
            console.error("Error fetching places/users for monitor:", err);
        } finally {
@@ -211,28 +224,50 @@ export default function MonitorPage() {
              
              return (
               <Card key={route.id} className={`overflow-hidden transition-all duration-500 ${isFinished ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:shadow-md'}`}>
-                <div className={`h-2 w-full ${isFinished ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${progress}%`, transition: 'width 1s ease-in-out' }} />
+                <div className={`h-2 w-full ${isFinished ? 'bg-green-200' : 'bg-red-200'}`} />
                 
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => toggleRouteExpansion(route.id)}>
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-xl flex items-center gap-2">
                         {route.name}
                         {isFinished && <CheckCircle2 className="h-5 w-5 text-green-500" />}
                       </CardTitle>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                         <span className="flex items-center gap-1"><Car className="h-4 w-4" /> {driverName}</span>
-                         {route.duration && <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {route.duration}</span>}
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
+                         <span className="flex items-center gap-1" title="Sjåfør">
+                             <Users className="h-4 w-4" /> {driverName}
+                         </span>
+                         <span className="flex items-center gap-1" title="Kjøretøy">
+                             <Car className="h-4 w-4" /> {route.vehicleId ? (vehicles[route.vehicleId]?.name || 'Ukjent') : 'Ikke tildelt'}
+                         </span>
+                         {route.duration && <span className="flex items-center gap-1" title="Estimert Kjøretid"><Clock className="h-4 w-4" /> {route.duration}</span>}
                       </div>
                     </div>
-                    <Badge variant={isFinished ? 'default' : 'secondary'} className={isFinished ? 'bg-green-500 hover:bg-green-600' : ''}>
-                      {completedPlacesCount} / {totalStops} fullført
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                        <Badge variant={isFinished ? 'default' : 'secondary'} className={isFinished ? 'bg-green-500 hover:bg-green-600' : ''}>
+                          {completedPlacesCount} / {totalStops} fullført
+                        </Badge>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" aria-label="Toggle Route Details" asChild>
+                            <div>
+                                {expandedRoutes[route.id] ? <ChevronUp className="h-4 w-4 pointer-events-none" /> : <ChevronDown className="h-4 w-4 pointer-events-none" />}
+                            </div>
+                        </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 
                 <CardContent>
-                   <Progress value={progress} className="h-2 mb-4 bg-slate-100" />
+                   
+                   {/* Custom Progress Bar for explicit color control */}
+                   <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-2">
+                       <div 
+                           className={`h-full w-full flex-1 transition-all duration-1000 ease-in-out ${isFinished ? 'bg-green-500' : 'bg-red-500'}`}
+                           style={{ transform: `translateX(-${100 - (progress || 0)}%)` }}
+                       />
+                   </div>
+
+                   {isFinished && <div className="text-xs text-green-600 font-medium mb-4 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Rute ferdigstilt</div>}
+                   {!isFinished && <div className="h-6 mb-4"></div>}
                    
                    <div className="space-y-3 mt-6">
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
@@ -246,26 +281,39 @@ export default function MonitorPage() {
                              const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(`place_${id}`)));
                              const isCurrent = index === firstUncompletedIndex;
                              
-                             const shouldShow = index === 0 || index === totalStops - 1 || isCurrent || index === firstUncompletedIndex - 1 || index === firstUncompletedIndex + 1;
+                             const isExpanded = expandedRoutes[route.id];
+                             const shouldShow = isExpanded || index === 0 || index === totalStops - 1 || isCurrent || index === firstUncompletedIndex - 1 || index === firstUncompletedIndex + 1;
                              
                              if (!shouldShow) {
-                                if (index === 1 && firstUncompletedIndex > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... flere fullførte stopp ...</div>;
-                                if (index === firstUncompletedIndex + 2 && index < totalStops - 1) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... flere gjenstående stopp ...</div>;
-                                return null;
+                                if (isFinished) {
+                                    // If route is finished, we only hide stops between the first and last
+                                    if (index === 1 && totalStops > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${totalStops - 2} fullførte stopp skjult ...</div>;
+                                    return null;
+                                } else {
+                                    // Route is ongoing
+                                    if (index === 1 && firstUncompletedIndex > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${firstUncompletedIndex - 1} fullførte stopp skjult ...</div>;
+                                    if (index === firstUncompletedIndex + 2 && index < totalStops - 1) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${totalStops - 1 - (firstUncompletedIndex + 1)} gjenstående stopp skjult ...</div>;
+                                    return null;
+                                }
                              }
 
                              return (
-                               <div key={placeId} className={`relative flex items-center justify-between p-2 rounded-md ${isCurrent ? 'bg-primary/5 border border-primary/20 shadow-sm -ml-5 pl-5 z-10' : ''} ${isCompleted ? 'opacity-50' : ''}`}>
+                               <div key={placeId} className={`relative flex items-center justify-between p-2 rounded-md ${isCurrent ? 'bg-primary/5 border border-primary/20 shadow-sm -ml-5 pl-5 z-10' : ''} ${isCompleted ? 'opacity-60' : 'hover:bg-slate-50'}`}>
                                   <div className={`absolute -left-[21px] flex h-3 w-3 items-center justify-center rounded-full ring-4 ring-white ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-primary animate-pulse' : 'bg-slate-300'}`} />
                                   
-                                  <div className="flex flex-col min-w-0">
-                                      <span className={`text-sm font-medium truncate ${isCompleted ? 'line-through text-slate-500' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
-                                          {place?.name || 'Laster sted...'}
-                                      </span>
+                                  <div className="flex flex-col min-w-0 pr-4">
+                                      <Link href={`/dashboard/places/${placeId}`} className="hover:underline flex items-center gap-2 group">
+                                          <span className={`text-sm font-medium truncate ${isCompleted ? 'line-through text-slate-500' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
+                                              {place?.name || 'Laster sted...'}
+                                          </span>
+                                          <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
+                                      </Link>
                                       {place?.address && <span className="text-xs text-muted-foreground truncate">{place.address}</span>}
                                   </div>
                                   
-                                  <div className="shrink-0">
+                                  <div className="shrink-0 flex items-center gap-2">
+                                      {/* Timestamp placeholder - requires data model update to be real */}
+                                      {isCompleted && <span className="text-[10px] text-muted-foreground hidden sm:inline-block">Fullført</span>}
                                       {isCompleted ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : isCurrent ? <Badge variant="default" className="text-[10px] h-5">Neste</Badge> : <Circle className="h-4 w-4 text-slate-200" />}
                                   </div>
                                </div>

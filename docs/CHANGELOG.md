@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Fleet Management Module:** Added a complete system for administrators to register and manage the organization's vehicle fleet.
+    - **Vehicle Profiles:** Created database structures and UI to capture detailed vehicle properties including type (truck, van, car), fuel type, dimensions, capacity (weight, volume, pallets), and special capabilities (refrigeration, tail-lift, ADR, trailer coupling).
+    - **Fleet Overview Page:** Added `/dashboard/fleet` for admins to view, add, edit, and delete vehicles.
+- **Workforce Management Module:** Added a comprehensive system for managing driver profiles and work schedules.
+    - **Driver Profiles:** Extended user data to include standard working hours, certifications (e.g., ADR, Truck), and special skills. Admin UI updated to allow editing these profiles.
+    - **Advanced Scheduling Engine:** Implemented a robust scheduling system supporting standard working hours, single-day overrides (vacation, sick leave, custom hours), and a fully customizable multi-week rotation (Turnusplan) system.
+    - **Personnel Overview Page:** Added `/dashboard/workforce` allowing admins to select a date and instantly see the calculated working status of every driver based on the scheduling engine rules.
+    - **12-Week Plan Printout:** Built a dedicated, print-optimized page (`/dashboard/workforce/print`) that generates a professional 12-week schedule grid for any selected driver.
+- **Monitor Page Enhancements:**
+    - **Collapsible Route Details:** The route cards on the monitor page can now be clicked to expand/collapse the full list of stops, saving screen space.
+    - **Smart Stop Hiding:** When collapsed, the card intelligently hides completed and distant upcoming stops, summarizing them with text (e.g., "... 5 gjenstående stopp skjult ...").
+    - **Direct Place Links:** Place names within the monitor route view are now clickable links leading directly to the place details page.
+    - **Vehicle Display:** Route cards now prominently display the assigned vehicle alongside the assigned driver.
+    - **Clear Completion State:** Route cards now have a static color header (red for active, green for finished) and display a clear "Rute ferdigstilt" message when 100% complete.
+- **Offline Persistence:** Explicitly enabled Firestore's IndexedDB local cache to ensure the application remains readable and can queue writes even during network outages.
+
 - **Monitor Page Statistics Card:** Added a "Dagens Status" (Today's Status) card to the top of the monitor page (`/dashboard/monitor`). This card provides a high-level overview of the day's operations, displaying the total number of routes, active routes, finished routes, total stops across all routes, and an overall progress bar calculating the total number of stops completed against the total number of stops.
 - **Route Monitor Dashboard:** Created a new real-time dashboard for administrators (`/dashboard/monitor`) to track the progress of all active routes. It displays a visual progress bar, the current/next stop, and the assigned driver for each route.
 - **Finished Route Color-Coding:** The main routes list page now uses real-time listeners to automatically change the color of a route's card to green ("Rute fullført") as soon as the assigned driver marks the final stop as complete.

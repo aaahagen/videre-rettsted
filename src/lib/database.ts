@@ -1,4 +1,4 @@
-import { Place, User, Organization, Route } from './types';
+import { Place, User, Organization, Route, Vehicle } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;
@@ -23,4 +23,11 @@ export interface Database {
   getRoutes(orgId: string): Promise<Route[]>;
   updateRoute(id: string, updates: Partial<Route>): Promise<Route>;
   deleteRoute(id: string): Promise<void>;
+
+  createVehicle(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle>;
+  getVehicle(id: string): Promise<Vehicle | null>;
+  getVehicles(orgId: string): Promise<Vehicle[]>;
+  updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle>;
+  deleteVehicle(id: string): Promise<void>;
+
 }

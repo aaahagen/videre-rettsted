@@ -1,0 +1,433 @@
+'use client';
+
+import { useState } from 'react';
+import { DriverProfile } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Loader2, Plus, X, Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+
+
+interface DriverProfileFormProps {
+    user: DriverProfile;
+    onSubmit: (data: Partial<DriverProfile>) => Promise<void>;
+    onCancel: () => void;
+}
+
+export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFormProps) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    
+    const [useRotation, setUseRotation] = useState<boolean>(!!user.rotation);
+    const [rotationStartDate, setRotationStartDate] = useState<Date | undefined>(user.rotation?.startDate ? new Date(user.rotation.startDate) : undefined);
+    
+    // Helper to generate a default week
+    const defaultWeek = () => ({
+        days: {
+            monday: { isWorking: true, start: '08:00', end: '16:00' },
+            tuesday: { isWorking: true, start: '08:00', end: '16:00' },
+            wednesday: { isWorking: true, start: '08:00', end: '16:00' },
+            thursday: { isWorking: true, start: '08:00', end: '16:00' },
+            friday: { isWorking: true, start: '08:00', end: '16:00' },
+            saturday: { isWorking: false },
+            sunday: { isWorking: false }
+        }
+    });
+
+    const [rotationWeeks, setRotationWeeks] = useState<any[]>(
+        user.rotation?.weeks || [defaultWeek()]
+    );
+
+    const addRotationWeek = () => {
+        setRotationWeeks([...rotationWeeks, defaultWeek()]);
+    };
+
+    const removeRotationWeek = (index: number) => {
+        setRotationWeeks(rotationWeeks.filter((_, i) => i !== index));
+    };
+
+    const updateRotationDay = (weekIndex: number, day: string, field: string, value: any) => {
+        const newWeeks = [...rotationWeeks];
+        newWeeks[weekIndex] = {
+            ...newWeeks[weekIndex],
+            days: {
+                ...newWeeks[weekIndex].days,
+                [day]: {
+                    ...newWeeks[weekIndex].days[day],
+                    [field]: value
+                }
+            }
+        };
+        setRotationWeeks(newWeeks);
+    };
+
+const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['scheduleOverrides']>(user.scheduleOverrides || {});
+    
+    // UI state for adding new override
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'custom'>('off');
+    const [overrideStart, setOverrideStart] = useState('08:00');
+    const [overrideEnd, setOverrideEnd] = useState('16:00');
+
+    const addOverride = () => {
+        if (!selectedDate) return;
+        const dateStr = format(selectedDate, 'yyyy-MM-dd');
+        setScheduleOverrides(prev => ({
+            ...prev,
+            [dateStr]: {
+                type: overrideType,
+                ...(overrideType === 'custom' ? { start: overrideStart, end: overrideEnd } : {})
+            }
+        }));
+        setSelectedDate(undefined);
+    };
+
+    const removeOverride = (dateStr: string) => {
+        setScheduleOverrides(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev };
+            delete updated[dateStr];
+            return updated;
+        });
+    };
+const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.start || '08:00');
+    const [workingHoursEnd, setWorkingHoursEnd] = useState(user.workingHours?.end || '16:00');
+    const [certifications, setCertifications] = useState<string[]>(user.certifications || []);
+    const [skills, setSkills] = useState<string[]>(user.skills || []);
+
+    const [newCert, setNewCert] = useState('');
+    const [newSkill, setNewSkill] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                workingHours: {
+                    start: workingHoursStart,
+                    end: workingHoursEnd
+                },
+                scheduleOverrides,
+                certifications,
+                skills
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const addCert = () => {
+        if (newCert.trim() && !certifications.includes(newCert.trim())) {
+            setCertifications([...certifications, newCert.trim()]);
+            setNewCert('');
+        }
+    };
+
+    const removeCert = (cert: string) => {
+        setCertifications(certifications.filter(c => c !== cert));
+    };
+
+    const addSkill = () => {
+        if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+            setSkills([...skills, newSkill.trim()]);
+            setNewSkill('');
+        }
+    };
+
+    const removeSkill = (skill: string) => {
+        setSkills(skills.filter(s => s !== skill));
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+                {!useRotation && <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Arbeidstid (Standard)</h3>}
+                {!useRotation && <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="start">Starttid</Label>
+                        <Input 
+                            id="start" 
+                            type="time" 
+                            required 
+                            value={workingHoursStart}
+                            onChange={(e) => setWorkingHoursStart(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="end">Sluttid</Label>
+                        <Input 
+                            id="end" 
+                            type="time" 
+                            required 
+                            value={workingHoursEnd}
+                            onChange={(e) => setWorkingHoursEnd(e.target.value)}
+                        />
+                                        </div>
+                </div>
+                }
+            </div>
+            <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Turnusplan (Rotasjon)</h3>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="useRotation" className="text-sm">Bruk turnus</Label>
+                        <Switch id="useRotation" checked={useRotation} onCheckedChange={setUseRotation} />
+                    </div>
+                </div>
+
+                {useRotation && (
+                    <div className="space-y-6 bg-slate-50 p-4 rounded-lg border">
+                        <div className="space-y-2 max-w-xs">
+                            <Label>Startdato for turnus</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !rotationStartDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {rotationStartDate ? format(rotationStartDate, "PPP", { locale: nb }) : <span>Velg startdato</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={rotationStartDate}
+                                        onSelect={setRotationStartDate}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <p className="text-xs text-muted-foreground">Denne datoen markerer uke 1 i rotasjonen.</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {rotationWeeks.map((week, weekIndex) => (
+                                <div key={weekIndex} className="bg-white border rounded-lg p-4 space-y-3">
+                                    <div className="flex justify-between items-center border-b pb-2">
+                                        <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
+                                        {rotationWeeks.length > 1 && (
+                                            <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">
+                                                Fjern uke
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-2">
+                                        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
+                                            const dayData = week.days[dayKey];
+                                            const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
+                                            
+                                            return (
+                                                <div key={dayKey} className={`border rounded p-2 flex flex-col gap-2 ${dayData.isWorking ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-50'}`}>
+                                                    <div className="flex items-center justify-between">
+                                                        <Label className="text-xs font-bold uppercase">{dayNames[dayKey]}</Label>
+                                                        <Switch 
+                                                            checked={dayData.isWorking} 
+                                                            onCheckedChange={(v) => updateRotationDay(weekIndex, dayKey, 'isWorking', v)} 
+                                                            className="scale-75 origin-right"
+                                                        />
+                                                    </div>
+                                                    {dayData.isWorking ? (
+                                                        <div className="flex flex-col gap-1 mt-1">
+                                                            <Input 
+                                                                type="time" 
+                                                                value={dayData.start || ''} 
+                                                                onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} 
+                                                                className="h-7 text-xs px-2"
+                                                            />
+                                                            <Input 
+                                                                type="time" 
+                                                                value={dayData.end || ''} 
+                                                                onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} 
+                                                                className="h-7 text-xs px-2"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-14 flex items-center justify-center text-xs text-muted-foreground italic">
+                                                            Fridag
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed">
+                            <Plus className="mr-2 h-4 w-4" /> Legg til ny uke i rotasjonen
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Avvik / Ferie</h3>
+                
+                <div className="flex flex-col sm:flex-row gap-3 items-end bg-slate-50 p-4 rounded-lg border">
+                    <div className="space-y-2 w-full sm:w-auto">
+                        <Label>Dato</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-[180px] justify-start text-left font-normal",
+                                        !selectedDate && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {selectedDate ? format(selectedDate, "PPP", { locale: nb }) : <span>Velg dato</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                    
+                    <div className="space-y-2 w-full sm:w-auto">
+                        <Label>Type</Label>
+                        <Select value={overrideType} onValueChange={(v: any) => setOverrideType(v)}>
+                            <SelectTrigger className="w-[140px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="off">Fridag</SelectItem>
+                                <SelectItem value="vacation">Ferie</SelectItem>
+                                <SelectItem value="sick">Sykemelding</SelectItem>
+                                <SelectItem value="custom">Tilpasset tid</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {overrideType === 'custom' && (
+                        <>
+                            <div className="space-y-2 w-full sm:w-auto">
+                                <Label>Start</Label>
+                                <Input type="time" value={overrideStart} onChange={e => setOverrideStart(e.target.value)} className="w-[100px]"/>
+                            </div>
+                            <div className="space-y-2 w-full sm:w-auto">
+                                <Label>Slutt</Label>
+                                <Input type="time" value={overrideEnd} onChange={e => setOverrideEnd(e.target.value)} className="w-[100px]"/>
+                            </div>
+                        </>
+                    )}
+
+                    <Button type="button" onClick={addOverride} disabled={!selectedDate} className="w-full sm:w-auto">
+                        Legg til
+                    </Button>
+                </div>
+
+                {scheduleOverrides && Object.keys(scheduleOverrides).length > 0 && (
+                    <div className="space-y-2 mt-4">
+                        {Object.entries(scheduleOverrides).sort(([a], [b]) => a.localeCompare(b)).map(([date, details]) => {
+                            let typeLabel = '';
+                            let colorClass = '';
+                            switch(details.type) {
+                                case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700'; break;
+                                case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break;
+                                case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break;
+                                case 'custom': typeLabel = `Arbeider ${details.start} - ${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break;
+                            }
+                            return (
+                                <div key={date} className="flex justify-between items-center p-2 border rounded bg-white">
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-medium w-24">{format(new Date(date), 'dd.MM.yyyy')}</span>
+                                        <span className={`px-2 py-0.5 rounded text-sm border ${colorClass}`}>
+                                            {typeLabel}
+                                        </span>
+                                    </div>
+                                    <Button variant="ghost" size="sm" type="button" onClick={() => removeOverride(date)} className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive">
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Sertifiseringer</h3>
+                <div className="flex gap-2">
+                    <Input 
+                        placeholder="F.eks. ADR, Truckførerbevis" 
+                        value={newCert}
+                        onChange={(e) => setNewCert(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                addCert();
+                            }
+                        }}
+                    />
+                    <Button type="button" variant="secondary" onClick={addCert}><Plus className="h-4 w-4" /></Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {certifications.map((cert, i) => (
+                        <div key={i} className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200">
+                            {cert}
+                            <button type="button" onClick={() => removeCert(cert)} className="hover:text-blue-900 ml-1">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </div>
+                    ))}
+                    {certifications.length === 0 && <span className="text-sm text-muted-foreground italic">Ingen sertifiseringer lagt til.</span>}
+                </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Spesialferdigheter / Godkjenninger</h3>
+                <div className="flex gap-2">
+                    <Input 
+                        placeholder="F.eks. Montering, Kjøl/Frys erfaring" 
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                addSkill();
+                            }
+                        }}
+                    />
+                    <Button type="button" variant="secondary" onClick={addSkill}><Plus className="h-4 w-4" /></Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {skills.map((skill, i) => (
+                        <div key={i} className="flex items-center gap-1 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium border border-slate-200">
+                            {skill}
+                            <button type="button" onClick={() => removeSkill(skill)} className="hover:text-slate-900 ml-1">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </div>
+                    ))}
+                    {skills.length === 0 && <span className="text-sm text-muted-foreground italic">Ingen ferdigheter lagt til.</span>}
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t pt-6">
+                <Button type="button" variant="outline" onClick={onCancel}>Avbryt</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Lagre Profil
+                </Button>
+            </div>
+        </form>
+    );
+}
