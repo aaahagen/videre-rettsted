@@ -11,12 +11,16 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, Users, Loader2, Search, Printer, User as UserIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { DriverProfileForm } from '@/components/workforce/driver-profile-form';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 // --- Core Logic for computing a driver's status on a specific date ---
 const getDriverStatus = (driver: DriverProfile, date: Date) => {
@@ -69,12 +73,12 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
 
 export default function WorkforcePage() {
     const { dbUser } = useAuth();
+    const { toast } = useToast();
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchDate, setSearchDate] = useState<Date>(new Date());
     const [searchQuery, setSearchQuery] = useState('');
-    
-    // Print state
+    const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
     
     useEffect(() => {
         if (dbUser?.orgId) {
@@ -95,13 +99,33 @@ export default function WorkforcePage() {
         }
     };
 
+    const handleUpdateDriverProfile = async (data: Partial<DriverProfile>) => {
+        if (!editingDriverProfile) return;
+        try {
+            await updateDoc(doc(db, 'users', editingDriverProfile.id), data);
+            toast({
+                title: "Profil oppdatert",
+                description: "Sjåførprofilen ble lagret.",
+            });
+            setEditingDriverProfile(null);
+            loadDrivers(); // Reload to show new data
+            setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+        } catch (error: any) {
+            toast({
+                title: "Feil ved oppdatering",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
     
     const filteredDrivers = drivers.filter(d => 
         (d.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
         (d.email?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
     );
 
-    if (isLoading) {
+    if (isLoading && drivers.length === 0) {
         return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
@@ -175,7 +199,7 @@ export default function WorkforcePage() {
                                 {filteredDrivers.map(driver => {
                                     const statusInfo = getDriverStatus(driver, searchDate);
                                     return (
-                                        <div key={driver.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
+                                        <div key={driver.id} className="p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:bg-slate-50 transition-colors">
                                             <div className="flex items-center gap-4">
                                                 {/* Driver Image or Initial Placeholder */}
                                                 <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border bg-slate-100 flex items-center justify-center">
@@ -194,20 +218,32 @@ export default function WorkforcePage() {
                                                 
                                                 <div className="space-y-1">
                                                     <p className="font-semibold text-lg">{driver.name || driver.email}</p>
-                                                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
-                                                        {driver.certifications?.length ? (
-                                                            <div className="flex gap-1 items-center mr-2 border-r pr-3">
-                                                                <span className="font-medium">Sertifikater:</span>
-                                                                {driver.certifications.map((c, i) => (
-                                                                    <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{c}</span>
-                                                                ))}
-                                                            </div>
-                                                        ) : null}
-                                                        {driver.skills?.length ? (
-                                                            <div className="flex gap-1 items-center">
-                                                                <span className="font-medium">Ferdigheter:</span>
-                                                                {driver.skills.map((s, i) => (
-                                                                    <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{s}</span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                                            {driver.certifications?.length ? (
+                                                                <div className="flex gap-1 items-center mr-2 border-r pr-3">
+                                                                    <span className="font-medium">Sertifikater:</span>
+                                                                    {driver.certifications.map((c, i) => (
+                                                                        <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{c}</span>
+                                                                    ))}
+                                                                </div>
+                                                            ) : null}
+                                                            {driver.skills?.length ? (
+                                                                <div className="flex gap-1 items-center">
+                                                                    <span className="font-medium">Ferdigheter:</span>
+                                                                    {driver.skills.map((s, i) => (
+                                                                        <span key={i} className="bg-slate-100 px-1.5 py-0.5 rounded border">{s}</span>
+                                                                                                                                            ))}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                        {driver.documents?.length ? (
+                                                            <div className="flex flex-wrap gap-1 items-center mt-1">
+                                                                {driver.documents.map((doc, i) => (
+                                                                     <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-blue-50 text-blue-700 hover:text-blue-900 hover:bg-blue-100 transition-colors px-2 py-0.5 rounded border border-blue-200 text-xs">
+                                                                         <FileText className="h-3 w-3" />
+                                                                         <span className="truncate max-w-[120px]">{doc.name}</span>
+                                                                     </a>
                                                                 ))}
                                                             </div>
                                                         ) : null}
@@ -215,11 +251,18 @@ export default function WorkforcePage() {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                                            <div className="flex flex-wrap lg:flex-nowrap items-end sm:items-center gap-3">
                                                 <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
                                                     {statusInfo.status}
                                                 </Badge>
                                                 
+                                                {dbUser?.role === 'admin' && (
+                                                    <Button variant="outline" size="sm" onClick={() => setEditingDriverProfile(driver)}>
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        Rediger
+                                                    </Button>
+                                                )}
+
                                                 <Button variant="secondary" size="sm" asChild>
                                                     <a href={`/dashboard/workforce/print?driverId=${driver.id}&date=${searchDate.toISOString()}`} target="_blank" rel="noopener noreferrer">
                                                         <Printer className="mr-2 h-4 w-4" />
@@ -236,7 +279,29 @@ export default function WorkforcePage() {
                     </CardContent>
                 </Card>
 
-                {/* Dialog for Previewing Print */}
+                {/* Edit Driver Profile Dialog */}
+                <Dialog open={!!editingDriverProfile} onOpenChange={(open) => {
+                    if (!open) {
+                        setEditingDriverProfile(null);
+                        setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+                    }
+                }}>
+                <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+                    <DialogHeader>
+                    <DialogTitle>Rediger Sjåførprofil</DialogTitle>
+                    </DialogHeader>
+                    {editingDriverProfile && (
+                    <DriverProfileForm 
+                        user={editingDriverProfile} 
+                        onSubmit={handleUpdateDriverProfile} 
+                        onCancel={() => {
+                            setEditingDriverProfile(null);
+                            setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+                        }} 
+                    />
+                    )}
+                </DialogContent>
+                </Dialog>
                 
             </div>
 

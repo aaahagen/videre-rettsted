@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, X, Calendar as CalendarIcon, UploadCloud, Trash2 } from 'lucide-react';
+import { Loader2, Plus, X, Calendar as CalendarIcon, UploadCloud, Trash2, FileText, Download } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,8 +31,14 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [isUploading, setIsUploading] = useState(false);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const documentInputRef = useRef<HTMLInputElement>(null);
+    
     const [image, setImage] = useState< { url: string, preview?: string, file?: File } | null>(
         (user.images && user.images[0]) || null
+    );
+
+    const [documents, setDocuments] = useState<Array<{ url: string; name: string; type: string; file?: File }>>(
+        user.documents || []
     );
 
     const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
@@ -77,6 +83,26 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
 
     const removeImage = () => {
         setImage(null);
+    };
+
+    const handleAddDocuments = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        const newDocs = files.map(file => ({
+            url: '',
+            name: file.name,
+            type: file.type,
+            file: file
+        }));
+
+        setDocuments(prev => [...prev, ...newDocs]);
+        
+        if (e.target) e.target.value = '';
+    };
+
+    const removeDocument = (index: number) => {
+        setDocuments(prev => prev.filter((_, i) => i !== index));
     };
 
     const [useRotation, setUseRotation] = useState<boolean>(!!user.rotation);
@@ -127,6 +153,8 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'custom'>('off');
     const [overrideStart, setOverrideStart] = useState('08:00');
     const [overrideEnd, setOverrideEnd] = useState('16:00');
+    const [calendarOpen, setCalendarOpen] = useState(false);
+    const [turnusCalendarOpen, setTurnusCalendarOpen] = useState(false);
 
     const addOverride = () => {
         if (!selectedDate) return;
@@ -174,11 +202,37 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 imageData = [{ url: image.url }];
             }
 
+            let uploadedDocuments: { url: string; name: string; type: string; uploadedAt?: any }[] = [];
+            
+            for (const doc of documents) {
+                if (doc.file) {
+                    const uniqueId = uuidv4();
+                    const fileExtension = doc.name.split('.').pop() || '';
+                    const safeName = doc.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                    const path = `users/${user.id}/documents/${uniqueId}_${safeName}`;
+                    const url = await firebaseStorage.uploadFile(path, doc.file);
+                    uploadedDocuments.push({
+                        url,
+                        name: doc.name,
+                        type: doc.type,
+                        uploadedAt: new Date()
+                    });
+                } else {
+                    uploadedDocuments.push({
+                        url: doc.url,
+                        name: doc.name,
+                        type: doc.type
+                    });
+                }
+            }
+
+
             const dataToSubmit: any = {
                 certifications,
                 skills,
                 scheduleOverrides,
                 images: imageData,
+                documents: uploadedDocuments,
             };
 
             if (useRotation) {
@@ -266,7 +320,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                     <div className="space-y-6 bg-slate-50 p-4 rounded-lg border">
                         <div className="space-y-2 max-w-xs">
                             <Label>Startdato for turnus</Label>
-                            <Popover>
+                            <Popover open={turnusCalendarOpen} onOpenChange={setTurnusCalendarOpen}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant={"outline"}
@@ -279,11 +333,14 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                         {rotationStartDate ? format(rotationStartDate, "PPP", { locale: nb }) : <span>Velg startdato</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                                <PopoverContent className="w-auto p-0 z-[150]" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={rotationStartDate}
-                                        onSelect={setRotationStartDate}
+                                        onSelect={(date) => {
+                                            setRotationStartDate(date);
+                                            setTurnusCalendarOpen(false);
+                                        }}
                                         initialFocus
                                     />
                                 </PopoverContent>
@@ -357,7 +414,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 <div className="flex flex-col sm:flex-row gap-3 items-end bg-slate-50 p-4 rounded-lg border">
                     <div className="space-y-2 w-full sm:w-auto">
                         <Label>Dato</Label>
-                        <Popover>
+                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant={"outline"}
@@ -370,11 +427,14 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                     {selectedDate ? format(selectedDate, "PPP", { locale: nb }) : <span>Velg dato</span>}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                            <PopoverContent className="w-auto p-0 z-[150]" align="start">
                                 <Calendar
                                     mode="single"
                                     selected={selectedDate}
-                                    onSelect={setSelectedDate}
+                                    onSelect={(date) => {
+                                        setSelectedDate(date);
+                                        setCalendarOpen(false);
+                                    }}
                                     initialFocus
                                 />
                             </PopoverContent>
@@ -387,7 +447,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                             <SelectTrigger className="w-[140px]">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[150]">
                                 <SelectItem value="off">Fridag</SelectItem>
                                 <SelectItem value="vacation">Ferie</SelectItem>
                                 <SelectItem value="sick">Sykemelding</SelectItem>
@@ -498,6 +558,75 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                         </div>
                     ))}
                     {skills.length === 0 && <span className="text-sm text-muted-foreground italic">Ingen ferdigheter lagt til.</span>}
+                </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Dokumenter</h3>
+                        <p className="text-xs text-muted-foreground">Last opp kursbevis, attester og andre dokumenter. (Maks 10MB per fil)</p>
+                    </div>
+                </div>
+                
+                <div className="space-y-3">
+                    {documents.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-slate-50 group">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <div className="h-10 w-10 shrink-0 bg-blue-100 text-blue-600 rounded flex items-center justify-center">
+                                    <FileText className="h-5 w-5" />
+                                </div>
+                                <div className="flex flex-col truncate">
+                                    <span className="text-sm font-medium truncate" title={doc.name}>
+                                        {doc.name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground uppercase">
+                                        {doc.file ? 'Venter på opplasting...' : doc.type.split('/')[1] || 'Fil'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {!doc.file && doc.url && (
+                                    <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-500 hover:text-slate-900">
+                                        <a href={doc.url} target="_blank" rel="noopener noreferrer" download={doc.name}>
+                                            <Download className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                )}
+                                <Button 
+                                    type="button"
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={() => removeDocument(index)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+
+                    <div className="pt-2">
+                        <input
+                            type="file"
+                            multiple
+                            className="sr-only"
+                            ref={documentInputRef}
+                            onChange={handleAddDocuments}
+                        />
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="w-full border-dashed flex items-center justify-center gap-2 text-muted-foreground"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                documentInputRef.current?.click();
+                            }}
+                        >
+                            <UploadCloud className="h-4 w-4" />
+                            <span>Last opp dokument(er)</span>
+                        </Button>
+                    </div>
                 </div>
             </div>
 

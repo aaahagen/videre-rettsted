@@ -9,13 +9,24 @@ service firebase.storage {
       return request.resource == null || (request.resource.contentType.matches('image/.*')
           && request.resource.size < 5 * 1024 * 1024);
     }
+    
+    // Helper function for general documents under 10MB
+    function isValidDocument() {
+       return request.resource == null || (request.resource.size < 10 * 1024 * 1024);
+    }
 
     // User profile pictures: Only the owner or an admin can write, any logged-in user can read
-    match /users/{userId}/{allPaths=**} {
+    match /users/{userId}/profile/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && isValidImage();
-    }    
+    }
     
+    // User documents: Allow admins to upload and read documents
+    match /users/{userId}/documents/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && isValidDocument();
+    }
+
     // Place images: Any logged-in user can read and write (upload images for delivery locations)
     // We restrict writes to valid images only to prevent non-image uploads.
     match /places/{allPaths=**} {

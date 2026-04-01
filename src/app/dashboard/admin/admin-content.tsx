@@ -61,7 +61,7 @@ import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { DriverProfileForm } from '@/components/workforce/driver-profile-form';
 import { DriverProfile } from '@/lib/types';
 
-function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName, onEditProfile }: any) {
+function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -71,14 +71,7 @@ function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handl
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
-        {user.role === 'driver' && (
-          <DropdownMenuItem onClick={onEditProfile}>
-            <IdCard className="mr-2 h-4 w-4" />
-            Rediger Sjåførprofil
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuSeparator />
+        
         <DropdownMenuItem onClick={onEditName}>
           <Edit2 className="mr-2 h-4 w-4" />
           Endre Navn
@@ -133,7 +126,6 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
   const [newName, setNewName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -306,26 +298,6 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         title: "Rolle oppdatert",
         description: `Brukerens rolle er nå ${newRole === 'admin' ? 'Admin' : 'Sjåfør'}.`,
       });
-    } catch (error: any) {
-      toast({
-        title: "Feil ved oppdatering",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  
-  const handleUpdateDriverProfile = async (data: Partial<DriverProfile>) => {
-    if (!editingDriverProfile) return;
-    try {
-      await updateDoc(doc(db, 'users', editingDriverProfile.id), data);
-      toast({
-        title: "Profil oppdatert",
-        description: "Sjåførprofilen ble lagret.",
-      });
-      setEditingDriverProfile(null);
-      setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
     } catch (error: any) {
       toast({
         title: "Feil ved oppdatering",
@@ -621,7 +593,6 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                                   setEditingUser(user);
                                   setNewName(user.name || '');
                                 }}
-                                onEditProfile={() => setEditingDriverProfile(user as DriverProfile)}
                               />
                             </TableCell>
                           </TableRow>
@@ -657,7 +628,6 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                                   setEditingUser(user);
                                   setNewName(user.name || '');
                                 }}
-                                onEditProfile={() => setEditingDriverProfile(user as DriverProfile)}
                           />
                         </div>
                         <div className="flex gap-2">
@@ -905,32 +875,6 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         )}
 
         
-        {/* Edit Driver Profile Dialog */}
-        <Dialog open={!!editingDriverProfile} onOpenChange={(open) => {
-            if (!open) {
-                setEditingDriverProfile(null);
-                setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
-            }
-        }}>
-          <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-            <DialogHeader>
-              <DialogTitle>Rediger Sjåførprofil</DialogTitle>
-              <DialogDescription>
-                Oppdater ferdigheter, arbeidstid og sertifiseringer for {editingDriverProfile?.name || editingDriverProfile?.email}.
-              </DialogDescription>
-            </DialogHeader>
-            {editingDriverProfile && (
-              <DriverProfileForm 
-                  user={editingDriverProfile} 
-                  onSubmit={handleUpdateDriverProfile} 
-                  onCancel={() => {
-                      setEditingDriverProfile(null);
-                      setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
-                  }} 
-              />
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Edit Name Dialog */}
         <Dialog open={!!editingUser} onOpenChange={(open) => {

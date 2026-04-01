@@ -198,5 +198,5 @@ export interface DriverProfile extends User {
   }>;
   certifications?: string[]; // e.g., ["ADR", "Forklift"]
   skills?: string[];
+  documents?: { url: string; name: string; type: string; uploadedAt?: any }[]; // For certificates, diplomas, etc.
 }
-
