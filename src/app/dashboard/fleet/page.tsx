@@ -150,7 +150,7 @@ export default function FleetPage() {
             </Card>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle>{editingVehicle ? 'Endre Kjøretøy' : 'Nytt Kjøretøy'}</DialogTitle>
                     </DialogHeader>

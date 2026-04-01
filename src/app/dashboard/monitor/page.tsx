@@ -111,8 +111,9 @@ export default function MonitorPage() {
     return routes.filter(route => {
       const routeNameMatch = route.name?.toLowerCase().includes(lowerQuery);
       const driverNameMatch = route.driverId && users[route.driverId]?.name?.toLowerCase().includes(lowerQuery);
+      const supplierMatch = route.isThirdParty && route.thirdPartySupplier?.toLowerCase().includes(lowerQuery);
       
-      return routeNameMatch || driverNameMatch;
+      return routeNameMatch || driverNameMatch || supplierMatch;
     });
   }, [routes, searchQuery, users]);
 
@@ -220,7 +221,9 @@ export default function MonitorPage() {
              const isFinished = totalExpectedItems > 0 && (route.completedStops?.length || 0) >= totalExpectedItems;
 
              const progress = totalStops > 0 ? (completedPlacesCount / totalStops) * 100 : 0;
-             const driverName = route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt';
+             const driverName = route.isThirdParty 
+                ? (route.thirdPartySupplier ? `3PS: ${route.thirdPartySupplier}` : '3PS (Ekstern)') 
+                : (route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt');
              
              return (
               <Card key={route.id} className={`overflow-hidden transition-all duration-500 ${isFinished ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:shadow-md'}`}>
@@ -237,9 +240,11 @@ export default function MonitorPage() {
                          <span className="flex items-center gap-1" title="Sjåfør">
                              <Users className="h-4 w-4" /> {driverName}
                          </span>
-                         <span className="flex items-center gap-1" title="Kjøretøy">
-                             <Car className="h-4 w-4" /> {route.vehicleId ? (vehicles[route.vehicleId]?.name || 'Ukjent') : 'Ikke tildelt'}
-                         </span>
+                         {!route.isThirdParty && (
+                             <span className="flex items-center gap-1" title="Kjøretøy">
+                                 <Car className="h-4 w-4" /> {route.vehicleId ? (vehicles[route.vehicleId]?.name || 'Ukjent') : 'Ikke tildelt'}
+                             </span>
+                         )}
                          {route.duration && <span className="flex items-center gap-1" title="Estimert Kjøretid"><Clock className="h-4 w-4" /> {route.duration}</span>}
                       </div>
                     </div>

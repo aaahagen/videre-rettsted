@@ -905,7 +905,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         
         {/* Edit Driver Profile Dialog */}
         <Dialog open={!!editingDriverProfile} onOpenChange={(open) => !open && setEditingDriverProfile(null)}>
-          <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Rediger Sjåførprofil</DialogTitle>
               <DialogDescription>
@@ -924,7 +924,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
 
         {/* Edit Name Dialog */}
         <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-          <DialogContent className="sm:max-w-md w-[95vw] rounded-xl">
+          <DialogContent className="sm:max-w-md w-[95vw] rounded-xl" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Endre Navn</DialogTitle>
               <DialogDescription>
@@ -952,7 +952,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
         </Dialog>
 
         <Dialog open={!!inviteLink} onOpenChange={(open) => !open && setInviteLink(null)}>
-          <DialogContent className="sm:max-w-md w-[95vw] rounded-xl">
+          <DialogContent className="sm:max-w-md w-[95vw] rounded-xl" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Invitasjonslenke Klar</DialogTitle>
               <DialogDescription>

@@ -234,7 +234,7 @@ export default function PlaceDetailsPage() {
                                       </div>
                                     </div>
                                   </DialogTrigger>
-                                  <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+                                  <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center" aria-describedby={undefined}>
                                     <DialogTitle className="sr-only">
                                       Bildevisning for {place.name} - Bilde {index + 1}
                                     </DialogTitle>
@@ -485,7 +485,7 @@ export default function PlaceDetailsPage() {
                       Slett Sted
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent aria-describedby={undefined}>
                     <DialogHeader>
                       <DialogTitle>Er du sikker?</DialogTitle>
                       <DialogDescription>

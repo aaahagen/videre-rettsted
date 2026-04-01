@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **3PS Integration:** Added the ability to mark a route as being driven by a Third-Party Supplier (3PS) and log the supplier's name in the route editor. The Monitor page correctly displays this information.
+- **Vehicle Image Uploads:** Enabled uploading up to 8 compressed photos per vehicle in the Fleet Management module.
+- **Driver Image Uploads:** Enabled uploading up to 8 compressed photos per driver in the Workforce Management module.
+
 - **Fleet Management Module:** Added a complete system for administrators to register and manage the organization's vehicle fleet.
     - **Vehicle Profiles:** Created database structures and UI to capture detailed vehicle properties including type (truck, van, car), fuel type, dimensions, capacity (weight, volume, pallets), and special capabilities (refrigeration, tail-lift, ADR, trailer coupling).
     - **Fleet Overview Page:** Added `/dashboard/fleet` for admins to view, add, edit, and delete vehicles.

@@ -9,10 +9,10 @@ The goal of this phase is to establish the foundational data structures and add 
 
 1.  ~~**Core Fleet Management:** Create the database structure and UI for `Vehicle Profiles`.~~ (Completed)
 2.  ~~**Workforce Management & Driver Profiles:** Create the database structure and UI for `Driver Profiles` to manage workforce details (e.g., working hours, certifications, skills, and advanced rotation schedules).~~ (Completed)
-3.  **Authentication & Security Enhancements:**
-    *   **Multi-Factor Authentication (MFA):** Implement mandatory MFA for all users with an "Admin" role to enhance security.
-    *   **Super-Admin Login:** Enable "Sign in with Google" as an exclusive, convenient login method for the Super-Admin account.
-    *   **Standard User Login:** Maintain the secure email-and-password system for all regular (non-admin) users.
+3.  ~~**Authentication & Security Enhancements:**~~ (To be implemented in Phase 1.5/2)
+    *   ~~**Multi-Factor Authentication (MFA):** Implement mandatory MFA for all users with an "Admin" role to enhance security.~~
+    *   ~~**Super-Admin Login:** Enable "Sign in with Google" as an exclusive, convenient login method for the Super-Admin account.~~
+    *   ~~**Standard User Login:** Maintain the secure email-and-password system for all regular (non-admin) users.~~
 4.  ~~**Monitor Page UI/UX Refinements:**~~ (Completed)
     *   ~~Added direct links to places.~~
         *   ~~Simplified status indicators.~~

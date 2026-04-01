@@ -99,6 +99,8 @@ export interface Route {
   endAddress?: string; // The ending address of the route
   notes?: string; // Crucial information about the route
   driverId?: string;
+  isThirdParty?: boolean;
+  thirdPartySupplier?: string; // Name of the 3PS company
   vehicleId?: string;
   distance?: number; // in kilometers
   distanceString?: string; // e.g. "10.5 km"
@@ -129,6 +131,7 @@ export interface User {
   role: 'admin' | 'driver';
   favorites: string[];
   status?: 'active' | 'paused';
+  images?: { url: string; description?: string; uploadedAt?: any }[];
 }
 
 export interface LogEntry {
@@ -166,6 +169,7 @@ export interface Vehicle {
   status: 'active' | 'maintenance' | 'inactive';
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
+  images?: { url: string; description?: string; uploadedAt?: any }[];
 }
 
 export interface DriverProfile extends User {

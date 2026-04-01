@@ -302,7 +302,7 @@ export default function RoutesPage() {
       )}
           
       <Dialog open={!!routeToDelete} onOpenChange={(open) => !open && setRouteToDelete(null)}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Slett rute</DialogTitle>
             <DialogDescription>
