@@ -445,7 +445,7 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
   const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
   return (
-    <div className="p-2 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto overflow-x-hidden w-full">
       <div className="space-y-6 sm:space-y-8">
         
         <h1 className="text-3xl font-bold font-headline px-1">Adminpanel</h1>
