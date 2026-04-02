@@ -99,6 +99,7 @@ export interface CompletedStopEvent {
 export interface Route {
   id: string;
   name: string;
+  status?: 'active' | 'completed';
   shipmentNumber?: string;
   orgId: string; // Database field is orgId
   organizationId?: string;

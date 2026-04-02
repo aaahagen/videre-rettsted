@@ -18,7 +18,17 @@ import { deleteField } from 'firebase/firestore';
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -48,6 +58,8 @@ function SortableItem({ id, children, isEditMode }: { id: string, children: Reac
         </div>
       )}
       {children}
+
+
     </div>
   );
 }
@@ -81,6 +93,8 @@ export default function RouteDetailsPage() {
   const [isOptimizing, setIsOptimizing] = useState(false);
   
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
+  const [finishConfirmationText, setFinishConfirmationText] = useState('');
 
   const router = useRouter();
   const params = useParams();
@@ -290,6 +304,11 @@ export default function RouteDetailsPage() {
 
   const toggleItemCompletion = async (itemId: string, event: React.MouseEvent) => {
     event.stopPropagation();
+    if (route?.status === 'completed' && !isAdmin) {
+        toast({ title: 'Ruten er låst', description: 'Du kan ikke endre en fullført rute.' });
+        return;
+    }
+
     const isNowCompleted = !completedStops[itemId];
     setCompletedStops(prev => ({ ...prev, [itemId]: isNowCompleted }));
 
@@ -459,25 +478,25 @@ export default function RouteDetailsPage() {
     }
   };
 
-  const handleFinishRoute = () => {
-    // Determine if all stops are actually marked complete
-    const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
-    
-    // We want all physical places AND special items to be marked to be 'fully' finished,
-    // or just the physical places depending on business logic. Currently completedStops
-    // stores the ID of the RouteItem (e.g., `place_XYZ` or `special_start`).
-    
-    // Let's check if EVERY item in the routeItems array is in completedStops
-    const allCompleted = routeItems.every(item => completedStops[item.id]);
-
-    if (!allCompleted) {
-        toast({ title: 'Ikke ferdig', description: 'Du må markere alle stopp og handlinger som fullført før du kan avslutte ruten.', variant: 'destructive' });
+  const handleFinishRoute = async () => {
+    if (finishConfirmationText.toLowerCase() !== 'ferdig') {
+        toast({ title: 'Bekreftelse mangler', description: 'Du må skrive "Ferdig" for å bekrefte.', variant: 'destructive' });
         return;
     }
-    
-    // Route is fully complete, redirect to routes view
-    toast({ title: 'Rute Fullført', description: 'Flott jobba! Du blir omdirigert til ruteoversikten.' });
-    router.push('/dashboard/routes');
+
+    if (!route) return;
+    setIsSaving(true);
+    try {
+      await firebaseDB.updateRoute(routeId, { status: 'completed' });
+      toast({ title: 'Rute Fullført', description: 'Flott jobba! Ruten er nå arkivert.' });
+      router.push('/dashboard/routes');
+    } catch (err) {
+      console.error('Error finishing route:', err);
+      toast({ title: 'Feil', description: 'Kunne ikke fullføre ruten.', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+      setIsFinishDialogOpen(false);
+    }
   };
 
   const handleStartAddressChange = (val: string) => {
@@ -772,7 +791,7 @@ export default function RouteDetailsPage() {
                  <CardTitle className="text-lg flex items-center gap-2">Rekkefølge {isEditMode && <Badge variant="outline" className="text-[10px] ml-2">Redigeringsmodus</Badge>}</CardTitle>
                  {isEditMode && <span className="text-xs text-muted-foreground mt-1 block">Dra og slipp for å endre rekkefølge</span>}
               </div>
-              {!isAdmin && (
+              {!isAdmin && route?.status !== 'completed' && (
                   <Button 
                     variant={isEditMode ? "secondary" : "outline"}
                     size="sm"
@@ -943,10 +962,10 @@ export default function RouteDetailsPage() {
                   </div>
                   
                   {/* Finish Route Button for Drivers */}
-                  {!isAdmin && !isEditMode && routeItems.length > 0 && (
+                  {!isAdmin && !isEditMode && routeItems.length > 0 && route?.status !== 'completed' && (
                       <div className="mt-8 pt-4 border-t border-slate-100">
                           <Button 
-                              onClick={handleFinishRoute}
+                              onClick={() => setIsFinishDialogOpen(true)}
                               disabled={!allStopsCompleted}
                               className={`w-full h-14 text-lg font-bold transition-all ${allStopsCompleted ? 'bg-green-500 hover:bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
                           >
@@ -958,6 +977,13 @@ export default function RouteDetailsPage() {
                                   "Marker alle stopp som ferdig først"
                               )}
                           </Button>
+                      </div>
+                  )}
+
+                  {!isAdmin && route?.status === 'completed' && (
+                      <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-green-600 font-bold bg-green-50 p-4 rounded-lg">
+                          <CheckCircle2 className="h-6 w-6" />
+                          Ruten er fullført og låst
                       </div>
                   )}
               </div>
@@ -1049,6 +1075,37 @@ export default function RouteDetailsPage() {
           </Card>
       )}
 
-    </div>
+          {/* Finish Confirmation Dialog */}
+      <AlertDialog open={isFinishDialogOpen} onOpenChange={setIsFinishDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Er du helt ferdig med ruten?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Når du fullfører ruten vil den bli låst for endringer. 
+              <br/><br/>
+              Skriv <span className="font-bold text-slate-900">"Ferdig"</span> i feltet under for å bekrefte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input 
+              value={finishConfirmationText}
+              onChange={(e) => setFinishConfirmationText(e.target.value)}
+              placeholder='Skriv "Ferdig" her...'
+              className="bg-slate-50 border-slate-200"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFinishConfirmationText('')}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleFinishRoute}
+              disabled={finishConfirmationText.toLowerCase() !== 'ferdig' || isSaving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Fullfør og arkiver
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+</div>
   );
 }
