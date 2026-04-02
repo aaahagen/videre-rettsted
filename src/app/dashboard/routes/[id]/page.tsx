@@ -514,6 +514,23 @@ export default function RouteDetailsPage() {
       </div>
 
       {/* Top Box: Route Info */}
+      
+      {/* Route Notes - Always visible at top for drivers if not in edit mode */}
+      {!isAdmin && !isEditMode && routeNotes && (
+        <Card className="border-indigo-100 shadow-md bg-indigo-50/30 overflow-hidden">
+          <CardHeader className="pb-3 bg-indigo-100/50">
+            <CardTitle className="text-lg flex items-center gap-2 text-indigo-900">
+              <Info className="h-5 w-5 text-indigo-600" />
+              Viktig Ruteinformasjon
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+             <div className="text-sm text-indigo-950 font-medium whitespace-pre-wrap">
+                {routeNotes}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
@@ -718,7 +735,7 @@ export default function RouteDetailsPage() {
       <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes) ? 'lg:grid-cols-12' : ''}`}>
         
         {/* Left Col: Add Places & Route Notes */}
-        {(isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes)) && (
+        {(isAdmin || isEditMode) && (
             <div className="lg:col-span-5 flex flex-col gap-6">
                 
                 {/* Add Places (Only visible in edit mode or for admins) */}
@@ -753,19 +770,12 @@ export default function RouteDetailsPage() {
                     </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {(!isAdmin && !isEditMode) ? (
-                             <div className="bg-indigo-50/50 p-4 rounded-md border border-indigo-100 text-sm whitespace-pre-wrap">
-                                {routeNotes}
-                            </div>
-                        ) : (
-                            <Textarea 
-                                value={routeNotes}
-                                onChange={(e) => setRouteNotes(e.target.value)}
-                                placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
-                                className="min-h-[120px]"
-                                readOnly={!isAdmin && !isEditMode}
-                            />
-                        )}
+                        <Textarea 
+                            value={routeNotes}
+                            onChange={(e) => setRouteNotes(e.target.value)}
+                            placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
+                            className="min-h-[120px]"
+                        />
                     </CardContent>
                 </Card>
             </div>
