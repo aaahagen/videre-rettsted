@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **3PS Integration:** Added the ability to mark a route as being driven by a Third-Party Supplier (3PS) and log the supplier's name in the route editor. The Monitor page correctly displays this information.
 - **Vehicle Image Uploads:** Enabled uploading up to 8 compressed photos per vehicle in the Fleet Management module.
 - **Driver Image Upload:** Enabled uploading a profile picture for drivers in the Workforce Management module. The picture is displayed in the personnel overview.
+- **Period Schedule Overrides:** Added the ability to register schedule overrides (vacation, sick leave, etc.) for entire periods by specifying a start and end date, simplifying data entry for extended absences.
+- **Upcoming Overrides Display:** The main workforce page now prominently displays a driver's upcoming schedule overrides (up to 3) directly on their profile card for quick visibility.
 
 - **Fleet Management Module:** Added a complete system for administrators to register and manage the organization's vehicle fleet.
     - **Vehicle Profiles:** Created database structures and UI to capture detailed vehicle properties including type (truck, van, car), fuel type, dimensions, capacity (weight, volume, pallets), and special capabilities (refrigeration, tail-lift, ADR, trailer coupling).
@@ -43,8 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
-- **Form Redesign:** Completely redesigned the "Edit Driver Profile" and "Register Vehicle" forms to use a clean, card-based layout, significantly improving readability and usability.
-- **Date Picker Reliability:** Replaced the custom Popover/Calendar component used for selecting dates in the Driver Profile form with a native HTML `<input type="date">` for improved reliability and better mobile support.
+- **Workforce Form Redesign:** Completely redesigned the "Edit Driver Profile" and "Register Vehicle" forms to use a clean, card-based layout, significantly improving readability and usability.
+- **Workforce Print UI:** The "Plan (12 uker)" print button on the workforce overview is now conditionally rendered, appearing only if the driver has an active rotation schedule configured.
+- **Workforce Status Text:** Updated the fallback status text for drivers on a rotation schedule without a specific daily plan to say "Bruker Turnusplan" instead of "Ingen plan satt".
+- **Sidebar Navigation:** Wrapped the main sidebar navigation links in a scroll area to prevent overflow and ensure all items remain accessible on smaller screens.
+- **Date Picker Reliability:** Replaced the custom Popover/Calendar component used for selecting dates across the entire application (including the main Workforce page) with a native HTML `<input type="date">` for improved reliability and vastly superior mobile support.
 - **Driver Profile Image limit**: Limited the number of images a driver can upload to their profile to 1.
 - **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
 - **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on saved Place IDs.
@@ -53,8 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
-- **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card on smaller screens.
-- **Date Picker State Bug:** Fixed an issue where the selected date for an override in the driver profile was not being registered correctly due to popover state conflicts.
+- **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card, ensuring it stacks properly on smaller screens.
+- **Date Picker State Bug:** Fixed an issue where the selected date for an override in the driver profile was not being registered correctly by migrating to the native HTML date input.
 - **Admin Dialog Freeze:** Fixed an issue where the screen would remain unclickable (frozen pointer events) after saving or closing the "Edit Driver Profile" dialog in the Admin Panel.
 - **Calendar Layout Issue:** Corrected styling issues with the `react-day-picker` integration that caused the rotation start-date calendar to render incorrectly.
 - **Driver Profile Save Error:** Fixed a backend error that occurred when saving a driver's profile by explicitly using `deleteField()` instead of setting fields to undefined.
