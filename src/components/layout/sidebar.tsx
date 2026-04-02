@@ -54,6 +54,9 @@ import { doc, onSnapshot } from 'firebase/firestore'; // Added onSnapshot
 import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
 import { collection, query, where, onSnapshot as onSnapshotFirestore } from 'firebase/firestore';
+import { Progress } from '@/components/ui/progress';
+import { Trophy } from 'lucide-react';
+import { firebaseDB } from '@/lib/firebase/database';
 import Link from 'next/link';
 import { useAuth } from '../auth-provider';
 
@@ -79,6 +82,7 @@ export default function AppSidebar() {
   const { setOpenMobile, isMobile } = useSidebar();
   const [isLegalOpen, setIsLegalOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [totalPlacesCount, setTotalPlacesCount] = useState(0);
 
   // Changed to real-time listener to handle permission propagation delays
   useEffect(() => {
@@ -87,6 +91,12 @@ export default function AppSidebar() {
 
     if (dbUser?.orgId) {
       setOrgLoading(true);
+
+      // Fetch places count for gamification
+      firebaseDB.getPlaces(dbUser.orgId).then(places => {
+          setTotalPlacesCount(places.length);
+      }).catch(err => console.error("Error fetching places count:", err));
+      
       const orgRef = doc(db, 'organizations', dbUser.orgId);
       
       unsubscribeOrg = onSnapshot(orgRef, (docSnap) => {
@@ -209,9 +219,26 @@ export default function AppSidebar() {
                   <DropdownMenuContent
                     side={isMobile ? "bottom" : "right"}
                     align="end"
-                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                    className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg pb-2"
                   >
-                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                    {!isAdmin && totalPlacesCount > 0 && (
+                        <div className="px-3 py-3 border-b border-slate-100 mb-1 bg-slate-50/50">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5">
+                                    <Trophy className="h-4 w-4 text-yellow-500" />
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Utforsker-status</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded-full">
+                                    {Math.round(((dbUser?.visitedPlaces?.length || 0) / totalPlacesCount) * 100)}%
+                                </span>
+                            </div>
+                            <Progress value={((dbUser?.visitedPlaces?.length || 0) / totalPlacesCount) * 100} className="h-1.5 bg-slate-200" />
+                            <p className="text-[10px] text-muted-foreground mt-1.5 leading-tight">
+                                Du har utforsket {dbUser?.visitedPlaces?.length || 0} av {totalPlacesCount} steder i din organisasjon.
+                            </p>
+                        </div>
+                    )}
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive mt-1">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logg ut</span>
                     </DropdownMenuItem>
