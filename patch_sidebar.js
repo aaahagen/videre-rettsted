@@ -1,27 +1,23 @@
 const fs = require('fs');
-const path = require('path');
+const file = 'src/components/layout/sidebar.tsx';
+let content = fs.readFileSync(file, 'utf8');
 
-const filePath = path.join(__dirname, 'src/components/layout/sidebar.tsx');
-let content = fs.readFileSync(filePath, 'utf8');
+const targetImport = `  ChevronDown
+} from 'lucide-react';`;
 
-if (!content.includes('/dashboard/fleet')) {
-    // Import Truck icon
-    content = content.replace(
-        "import {\n  Clock, Star,",
-        "import {\n  Clock, Star,\n  Truck,"
-    );
+const newImport = `  ChevronDown,
+  MessageSquare
+} from 'lucide-react';`;
 
-    // Add nav item
-    const newNavItem = `  { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },`;
-    
-    // Find the right place to insert (after Routes)
-    content = content.replace(
-        "{ href: '/dashboard/routes', icon: Route, label: 'Ruter' },",
-        "{ href: '/dashboard/routes', icon: Route, label: 'Ruter' },\n" + newNavItem
-    );
+content = content.replace(targetImport, newImport);
 
-    fs.writeFileSync(filePath, content);
-    console.log('Added Fleet to sidebar');
-} else {
-    console.log('Fleet already in sidebar');
-}
+const targetNavItems = `const navItems = [
+  { href: '/dashboard', icon: Home, label: 'Leveringssteder' },`;
+
+const newNavItems = `const navItems = [
+  { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
+  { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },`;
+
+content = content.replace(targetNavItems, newNavItems);
+
+fs.writeFileSync(file, content);

@@ -1,45 +1,19 @@
 const fs = require('fs');
-const path = require('path');
+const file = 'src/lib/types.ts';
+let content = fs.readFileSync(file, 'utf8');
 
-const filePath = path.join(__dirname, 'src/lib/types.ts');
-let content = fs.readFileSync(filePath, 'utf8');
-
-// Check if types already exist to avoid duplication
-if (!content.includes('export interface Vehicle')) {
-    const typesToAdd = `
-export interface Vehicle {
+const newTypes = `
+export interface Message {
   id: string;
   orgId: string;
-  name: string; // e.g., "Scania R500", "Van 1"
-  registrationNumber: string;
-  type: 'truck' | 'van' | 'car';
-  capacity: {
-    weight?: number; // in kg
-    volume?: number; // in cubic meters
-    pallets?: number;
-  };
-  capabilities: {
-    refrigeration: boolean;
-    tailLift: boolean;
-    adr: boolean; // Hazardous materials
-  };
-  status: 'active' | 'maintenance' | 'inactive';
+  senderId: string; // userId
+  recipientId: string; // userId or 'all'/'drivers'/'admins' for broadcast
+  content: string;
   createdAt: FieldValue | Date;
-  updatedAt: FieldValue | Date;
-}
-
-export interface DriverProfile extends User {
-  workingHours?: {
-    start: string; // e.g., "08:00"
-    end: string;   // e.g., "16:00"
-  };
-  certifications?: string[]; // e.g., ["ADR", "Forklift"]
-  skills?: string[];
+  readBy: string[]; // array of userIds who have read the message
+  type: 'direct' | 'broadcast';
 }
 `;
-    content += '\n' + typesToAdd + '\n';
-    fs.writeFileSync(filePath, content);
-    console.log('Successfully added Vehicle and DriverProfile types.');
-} else {
-    console.log('Types already exist.');
-}
+
+content += newTypes;
+fs.writeFileSync(file, content);

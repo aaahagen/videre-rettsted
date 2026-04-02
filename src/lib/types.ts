@@ -218,3 +218,14 @@ export interface DriverProfile extends User {
   skills?: string[];
   documents?: { url: string; name: string; type: string; uploadedAt?: any }[]; // For certificates, diplomas, etc.
 }
+
+export interface Message {
+  id: string;
+  orgId: string;
+  senderId: string; // userId
+  recipientId: string; // userId or 'all'/'drivers'/'admins' for broadcast
+  content: string;
+  createdAt: FieldValue | Date;
+  readBy: string[]; // array of userIds who have read the message
+  type: 'direct' | 'broadcast';
+}
