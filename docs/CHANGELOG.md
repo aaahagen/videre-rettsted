@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **External Workforce (Contractors):** Introduced a new system to register and manage hired external extras (Innleid). They receive a dedicated role with customized access, and administrators can log their specific agency contact information.
+- **Workforce Statistics Dashboard:** Added a dynamic, date-based statistics overview to the Workforce page, providing administrators with an instant snapshot of personnel status (Working, Sick, Vacation, Off, and Contractors).
 - **Vehicle Documents:** Added the ability to upload and manage documents (like registration and insurance certificates) directly on a vehicle's profile. An indicator was added to the fleet list view to show if a vehicle has attached documents.
 - **3PS Integration:** Added the ability to mark a route as being driven by a Third-Party Supplier (3PS) and log the supplier's name in the route editor. The Monitor page correctly displays this information.
 - **Vehicle Image Uploads:** Enabled uploading up to 8 compressed photos per vehicle in the Fleet Management module.
