@@ -141,6 +141,7 @@ export interface User {
   orgId: string;
   role: 'admin' | 'driver' | 'contractor';
   favorites: string[];
+  visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
   images?: { url: string; description?: string; uploadedAt?: any }[];
 }

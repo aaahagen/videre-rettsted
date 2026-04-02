@@ -15,7 +15,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { deleteField } from 'firebase/firestore';
 
-import { firebaseDB } from '@/lib/firebase/database';
+import { firebaseDB, markPlaceVisited } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -344,6 +344,18 @@ export default function RouteDetailsPage() {
             completedStops: currentCompletedStops,
             completedStopEvents: newEvents
         });
+        
+        // Gamification: Mark place as visited for the driver
+        if (isNowCompleted && itemId.startsWith('place_')) {
+           const placeId = itemId.replace('place_', '');
+           if (userData?.id) {
+               try {
+                  await markPlaceVisited(userData.id, placeId);
+               } catch (e) {
+                  console.error("Could not mark place as visited", e);
+               }
+           }
+        }
       } catch (err) {
         console.error('Error auto-saving completed stop:', err);
         setCompletedStops(prev => ({ ...prev, [itemId]: !isNowCompleted }));

@@ -326,6 +326,11 @@ export const toggleFavorite = async (userId: string, placeId: string) => {
   }
 };
 
+export const markPlaceVisited = async (userId: string, placeId: string) => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { visitedPlaces: arrayUnion(placeId) });
+};
+
 export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
