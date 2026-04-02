@@ -3,10 +3,10 @@ import { storage } from './firebase';
 import { Storage } from '../storage';
 
 export class FirebaseStorage implements Storage {
-  async uploadFile(path: string, file: File): Promise<string> {
+  async uploadFile(path: string, file: File, metadata?: object): Promise<string> {
     try {
       const storageRef = ref(storage, path);
-      const snapshot = await uploadBytes(storageRef, file);
+      const snapshot = await uploadBytes(storageRef, file, metadata);
       return await getDownloadURL(snapshot.ref);
     } catch (error) {
       console.error("Error uploading file:", error);
