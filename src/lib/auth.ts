@@ -4,7 +4,7 @@ export interface Auth {
   registerOrganization(email: string, password: string, organizationName: string, name: string, orgNumber?: string): Promise<{ uid: string; orgId: string }>;
 
   // Creates an invitation and returns the invitation link
-  inviteUser(email: string, role: 'driver' | 'admin', name?: string): Promise<string>;
+  inviteUser(email: string, role: 'driver' | 'admin' | 'contractor', name?: string): Promise<string>;
 
   // Signs in a user
   signIn(email: string, password: string, rememberMe?: boolean): Promise<{ uid: string }>;
