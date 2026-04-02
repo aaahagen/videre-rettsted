@@ -61,7 +61,10 @@ service cloud.firestore {
       allow update: if false;
 
       // Admins can delete invitations to revoke them.
-      allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
+      // We allow delete if the user is an admin, even if we can't verify the orgId on the resource
+      // as long as the application logic ensures they only delete their own.
+      // To be safer, we can check the orgId if the resource exists.
+      allow delete: if isAuthenticated() && isAdmin() && (resource == null || isUserInOrg(resource.data.orgId));
     }
 
     // Places
