@@ -156,7 +156,7 @@ export default function MonitorPage() {
   const overallProgress = totalPlacesOverall > 0 ? (completedPlacesOverall / totalPlacesOverall) * 100 : 0;
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           <Activity className="h-8 w-8 text-primary" />

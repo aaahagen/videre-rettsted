@@ -552,7 +552,7 @@ export default function RouteDetailsPage() {
   const allStopsCompleted = routeItems.length > 0 && routeItems.every(item => completedStops[item.id]);
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 space-y-6">
       {/* Back button */}
       <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors w-fit mb-2">
         <ChevronLeft className="h-4 w-4" />

@@ -176,7 +176,7 @@ const stats = useMemo(() => {
     return (
         <>
             {/* MAIN APP CONTENT - Hidden during print */}
-            <div className="print:hidden container mx-auto max-w-7xl px-4 py-8 space-y-6">
+            <div className="print:hidden mx-auto w-full max-w-7xl px-4 py-8 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
