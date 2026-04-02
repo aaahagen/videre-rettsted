@@ -367,9 +367,7 @@ const stats = useMemo(() => {
                                                                         </div>
                                                                     );
                                                                 })}
-                                                                {hasMoreOverrides && (
-                                                                    <span className="text-[10px] text-muted-foreground italic text-center mt-1">...og {allUpcomingOverrides.length - 3} til</span>
-                                                                )}
+                                                                
                                                             </div>
                                                         </div>
                                                     )}
