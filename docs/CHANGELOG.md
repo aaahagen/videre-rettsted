@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Gamification (Explorer Status):** Added a visual progress bar to the user profile dropdown (accessible by clicking the username in the sidebar). It calculates the driver's "Explorer Status" by dynamically comparing their historically completed stops against the total number of places registered to the organization.
+- **Custom Vehicle Attributes:** Added a dynamic "Egendefinerte Egenskaper" (Custom Attributes) section to the vehicle registration form. Administrators can now define any number of custom key-value pairs (e.g., "Jekketralle: 2 stk", "Girkasse: Manuell") for a vehicle. These are displayed as stylish tags on the main fleet overview.
+- **Trailer Support:** Added "Henger" (Trailer) as a primary vehicle type, and "Flakbil / Åpen Henger" (Flatbed) as a core capability toggle.
+- **Physical Dimensions Tracking:** Administrators can now record a vehicle's exact Height, Width, and Length in meters. This crucial safety data is displayed prominently on the Fleet page.
+- **Driver Route Context:** If a route is assigned to a vehicle with physical dimensions, those dimensions (Height, Width, Length) are now displayed directly in the top statistics bar of the driver's route view, ensuring they are aware of their constraints before driving.
+- **Vehicle Note Fields:** Added dedicated text areas for supplementary notes regarding a vehicle's capacity (e.g., weight limits) and capabilities (e.g., included equipment). These notes render as distinct info boxes on the vehicle's card.
 - **Route Templates:** Administrators can now save any configured route as a reusable "Template" (Mal). A new "Maler" tab on the Routes overview page displays all saved templates. Opening a template allows the user to quickly spawn a brand new, active route based on the template's stop sequence, addresses, and time settings.
 - **Route Completion Confirmation:** Drivers are now required to explicitly type "Ferdig" into a confirmation dialog to complete a route, preventing accidental completions.
 - **Route Locking:** Once a route is marked as completed, it becomes locked for the driver. Drivers cannot check/uncheck stops or edit the route anymore. Administrators retain full editing rights for corrections.
@@ -54,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Maximum Width Constraints:** Removed aggressive "container" overrides across all major dashboard views (Workforce, Monitor, Fleet, Routes, Places) to ensure the interface does not stretch awkwardly on ultra-wide desktop monitors. The entire application now maxes out at a comfortable 1280px width (max-w-7xl) and remains perfectly centered.
+- **Vehicle Form UI:** Significantly enhanced the visual hierarchy of the "Registrer Nytt Kjøretøy" (Register New Vehicle) dialog. Employed stark white cards, distinct header backgrounds, subtle drop shadows on inputs, and rounded interactive toggles to make data entry much clearer and easier on the eyes.
 - **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
 - **Sidebar Navigation:** The "Meldinger" (Messages) link has been repositioned directly below "Ruter" in the sidebar for better workflow grouping.
 - **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
