@@ -265,8 +265,7 @@ const stats = useMemo(() => {
                                     .sort(([a], [b]) => a.localeCompare(b))
                                 : [];
                                 
-                            const visibleOverrides = allUpcomingOverrides.slice(0, 3);
-                            const hasMoreOverrides = allUpcomingOverrides.length > 3;
+
                             const isExpanded = !!expandedCards[driver.id];
 
                             return (
@@ -343,14 +342,14 @@ const stats = useMemo(() => {
                                                         </div>
                                                     ) : null}
 
-                                                    {visibleOverrides.length > 0 && (
+                                                    {allUpcomingOverrides.length > 0 && (
                                                         <div className="space-y-1.5 bg-rose-50/50 p-2 rounded border border-rose-100">
                                                             <span className="flex items-center text-[10px] uppercase font-bold tracking-wider text-rose-600">
                                                                 <CalendarDays className="h-3 w-3 mr-1" />
                                                                 Kommende fravær
                                                             </span>
-                                                            <div className="flex flex-col gap-1 mt-1">
-                                                                {visibleOverrides.map(([dateStr, details]) => {
+                                                            <div className="flex flex-col gap-1 mt-1 max-h-[120px] overflow-y-auto pr-1 no-scrollbar">
+                                                                {allUpcomingOverrides.map(([dateStr, details]) => {
                                                                     let typeLabel = ''; 
                                                                     switch(details.type) { 
                                                                         case 'off': typeLabel = 'Fridag'; break; 
