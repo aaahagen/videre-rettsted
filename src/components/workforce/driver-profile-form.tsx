@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, X, UploadCloud, Trash2, FileText, Download, User as UserIcon } from 'lucide-react';
+import { Loader2, Plus, X, UploadCloud, Trash2, FileText, Download, User as UserIcon, Briefcase } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -208,7 +208,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [agencyPhone, setAgencyPhone] = useState(user?.agencyInfo?.phone || '');
     const [agencyEmail, setAgencyEmail] = useState(user?.agencyInfo?.email || '');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+        const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         setIsUploading(true);
@@ -248,9 +248,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 }
             }
 
-
-            const dataToSubmit: any = {
-
+            const dataToSubmit: Partial<DriverProfile> = {
                 certifications,
                 skills,
                 scheduleOverrides,
@@ -258,9 +256,39 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 documents: uploadedDocuments,
                 employmentType,
                 role: employmentType === 'external' ? 'contractor' : 'driver',
-                            employmentType,
-                role: employmentType === 'external' ? 'contractor' : 'driver',
             };
+
+            if (employmentType === 'external') {
+                dataToSubmit.agencyInfo = {
+                    name: agencyName,
+                    contactPerson: agencyContact,
+                    phone: agencyPhone,
+                    email: agencyEmail,
+                };
+            } else {
+                dataToSubmit.agencyInfo = deleteField() as any;
+            }
+
+            if (useRotation) {
+                dataToSubmit.rotation = {
+                    startDate: rotationStartDateStr,
+                    weeks: rotationWeeks,
+                };
+                dataToSubmit.workingHours = deleteField() as any;
+            } else {
+                dataToSubmit.workingHours = {
+                    start: workingHoursStart,
+                    end: workingHoursEnd,
+                };
+                dataToSubmit.rotation = deleteField() as any;
+            }
+
+            await onSubmit(dataToSubmit);
+        } finally {
+            setIsSubmitting(false);
+            setIsUploading(false);
+        }
+    };
 
             if (employmentType === 'external') {
                 dataToSubmit.agencyInfo = {
