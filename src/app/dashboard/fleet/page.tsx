@@ -5,7 +5,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useSearch } from '@/hooks/use-search';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle } from '@/lib/types';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -131,67 +131,73 @@ export default function FleetPage() {
                     
                 </div>
 
-                <Card>
-                    <CardContent className="p-0">
-                        {filteredVehicles.length === 0 && searchQuery ? (
-                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                            <div className="rounded-full bg-slate-100 p-6 mb-4">
-                                <SearchX className="h-12 w-12 text-slate-300" />
-                            </div>
-                            <h2 className="text-xl font-semibold text-slate-900">
-                                Ingen kjøretøy matchet "{searchQuery}"
-                            </h2>
+                {filteredVehicles.length === 0 && searchQuery ? (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-slate-200">
+                        <div className="rounded-full bg-slate-100 p-6 mb-4">
+                            <SearchX className="h-12 w-12 text-slate-300" />
                         </div>
-                    ) : vehicles.length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <Truck className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                <p>Ingen kjøretøy registrert ennå.</p>
-                            </div>
-                        ) : (
-                            <div className="divide-y">
-                                {filteredVehicles.map(v => (
-                                    <div key={v.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
-                                        <div className="flex-1 space-y-1">
-                                            <div className="flex items-center gap-3">
-                                                <p className="font-semibold text-lg">{v.name}</p>
-                                                <Badge variant="outline">{v.registrationNumber}</Badge>
-                                                <Badge variant={v.status === 'active' ? 'default' : v.status === 'maintenance' ? 'destructive' : 'secondary'}>
-                                                    {v.status === 'active' ? 'I drift' : v.status === 'maintenance' ? 'Verksted' : 'Inaktiv'}
-                                                </Badge>
-                                                {(v.documents && v.documents.length > 0) && (
-                                                     <Tooltip>
-                                                        <TooltipTrigger>
-                                                          <FileText className="h-5 w-5 text-slate-500" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                          <p>{v.documents.length} dokument(er) lastet opp</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground pt-1">
-                                                <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : 'Personbil'}</span>
-                                                <span className="text-slate-300">|</span>
-                                                {v.capabilities?.tailLift && <Badge variant="secondary">Lift</Badge>}
-                                                {v.capabilities?.refrigeration && <Badge variant="secondary">Kjøl/Frys</Badge>}
-                                                {v.capabilities?.trailerCoupling && <Badge variant="secondary">Hengerfeste</Badge>}
-                                                {v.capabilities?.adr && <Badge variant="destructive" className="bg-amber-100 text-amber-800">ADR</Badge>}
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 w-full sm:w-auto">
-                                            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => handleOpenForm(v)}>
-                                                <Edit className="h-4 w-4 mr-2" /> Endre
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(v.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Ingen kjøretøy matchet "{searchQuery}"
+                        </h2>
+                    </div>
+                ) : vehicles.length === 0 ? (
+                    <div className="text-center py-20 text-muted-foreground bg-white rounded-xl border border-slate-200">
+                        <Truck className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                        <p>Ingen kjøretøy registrert ennå.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredVehicles.map(v => (
+                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative">
+                                <CardHeader className="pb-3 flex flex-row items-start justify-between">
+                                    <div>
+                                        <CardTitle className="text-xl font-bold">{v.name}</CardTitle>
+                                        <div className="flex gap-2 mt-2">
+                                            <Badge variant="outline">{v.registrationNumber}</Badge>
+                                            <Badge variant={v.status === 'active' ? 'default' : v.status === 'maintenance' ? 'destructive' : 'secondary'}>
+                                                {v.status === 'active' ? 'I drift' : v.status === 'maintenance' ? 'Verksted' : 'Inaktiv'}
+                                            </Badge>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                    <div className="flex flex-col gap-1 items-end -mt-2 -mr-2">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" onClick={() => handleOpenForm(v)}>
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(v.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                                            <Truck className="h-4 w-4" />
+                                            <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : 'Personbil'}</span>
+                                            {v.documents && v.documents.length > 0 && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <span className="flex items-center gap-1 ml-auto text-primary cursor-pointer bg-primary/10 px-2 py-0.5 rounded-full text-xs font-medium">
+                                                            <FileText className="h-3 w-3" /> {v.documents.length} doc
+                                                        </span>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{v.documents.length} dokument(er) lastet opp</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 text-xs">
+                                            {v.capabilities?.tailLift && <Badge variant="secondary">Lift</Badge>}
+                                            {v.capabilities?.refrigeration && <Badge variant="secondary">Kjøl/Frys</Badge>}
+                                            {v.capabilities?.trailerCoupling && <Badge variant="secondary">Hengerfeste</Badge>}
+                                            {v.capabilities?.adr && <Badge variant="destructive" className="bg-amber-100 text-amber-800 border-amber-200">ADR</Badge>}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
 
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
