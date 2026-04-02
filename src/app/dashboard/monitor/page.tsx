@@ -205,7 +205,7 @@ export default function MonitorPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground space-y-4">
             <RouteIcon className="h-12 w-12 opacity-20" />
-            <p>Ingen ruter funnet{searchQuery ? ` for "${searchQuery}"` : ''}.</p>
+            <p>Ingen ruter funnet{searchQuery ? ` for "{searchQuery}"` : ''}.</p>
           </CardContent>
         </Card>
       ) : (
@@ -223,12 +223,12 @@ export default function MonitorPage() {
 
              const progress = totalStops > 0 ? (completedPlacesCount / totalStops) * 100 : 0;
              const driverName = route.isThirdParty 
-                ? (route.thirdPartySupplier ? `3PS: ${route.thirdPartySupplier}` : '3PS (Ekstern)') 
+                ? (route.thirdPartySupplier ? `3PS: {route.thirdPartySupplier}` : '3PS (Ekstern)') 
                 : (route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt');
              
              return (
-              <Card key={route.id} className={`overflow-hidden transition-all duration-500 ${isFinished ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:shadow-md'}`}>
-                <div className={`h-2 w-full ${isFinished ? 'bg-green-200' : 'bg-red-200'}`} />
+              <Card key={route.id} className={`overflow-hidden transition-all duration-500 {isFinished ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:shadow-md'}`}>
+                <div className={`h-2 w-full {isFinished ? 'bg-green-200' : 'bg-red-200'}`} />
                 
                 <CardHeader className="pb-2 cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => toggleRouteExpansion(route.id)}>
                   <div className="flex items-start justify-between">
@@ -267,8 +267,8 @@ export default function MonitorPage() {
                    {/* Custom Progress Bar for explicit color control */}
                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-2">
                        <div 
-                           className={`h-full w-full flex-1 transition-all duration-1000 ease-in-out ${isFinished ? 'bg-green-500' : 'bg-red-500'}`}
-                           style={{ transform: `translateX(-${100 - (progress || 0)}%)` }}
+                           className={`h-full w-full flex-1 transition-all duration-1000 ease-in-out {isFinished ? 'bg-green-500' : 'bg-red-500'}`}
+                           style={{ transform: `translateX(-{100 - (progress || 0)}%)` }}
                        />
                    </div>
 
@@ -284,7 +284,7 @@ export default function MonitorPage() {
                              const isCompleted = route.completedStops?.includes(`place_${placeId}`);
                              const place = places[placeId];
                              
-                             const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(`place_${id}`)));
+                             const firstUncompletedIndex = route.places.findIndex(id => !(route.completedStops?.includes(`place_{id}`)));
                              const isCurrent = index === firstUncompletedIndex;
                              
                              const isExpanded = expandedRoutes[route.id];
@@ -293,23 +293,23 @@ export default function MonitorPage() {
                              if (!shouldShow) {
                                 if (isFinished) {
                                     // If route is finished, we only hide stops between the first and last
-                                    if (index === 1 && totalStops > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${totalStops - 2} fullførte stopp skjult ...</div>;
+                                    if (index === 1 && totalStops > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {totalStops - 2} fullførte stopp skjult ...</div>;
                                     return null;
                                 } else {
                                     // Route is ongoing
-                                    if (index === 1 && firstUncompletedIndex > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${firstUncompletedIndex - 1} fullførte stopp skjult ...</div>;
-                                    if (index === firstUncompletedIndex + 2 && index < totalStops - 1) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... ${totalStops - 1 - (firstUncompletedIndex + 1)} gjenstående stopp skjult ...</div>;
+                                    if (index === 1 && firstUncompletedIndex > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {firstUncompletedIndex - 1} fullførte stopp skjult ...</div>;
+                                    if (index === firstUncompletedIndex + 2 && index < totalStops - 1) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {totalStops - 1 - (firstUncompletedIndex + 1)} gjenstående stopp skjult ...</div>;
                                     return null;
                                 }
                              }
 
                              return (
-                               <div key={placeId} className={`relative flex items-center justify-between p-2 rounded-md ${isCurrent ? 'bg-primary/5 border border-primary/20 shadow-sm -ml-5 pl-5 z-10' : ''} ${isCompleted ? 'opacity-60' : 'hover:bg-slate-50'}`}>
-                                  <div className={`absolute -left-[21px] flex h-3 w-3 items-center justify-center rounded-full ring-4 ring-white ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-primary animate-pulse' : 'bg-slate-300'}`} />
+                               <div key={placeId} className={`relative flex items-center justify-between p-2 rounded-md {isCurrent ? 'bg-primary/5 border border-primary/20 shadow-sm -ml-5 pl-5 z-10' : ''} {isCompleted ? 'opacity-60' : 'hover:bg-slate-50'}`}>
+                                  <div className={`absolute -left-[21px] flex h-3 w-3 items-center justify-center rounded-full ring-4 ring-white {isCompleted ? 'bg-green-500' : isCurrent ? 'bg-primary animate-pulse' : 'bg-slate-300'}`} />
                                   
                                   <div className="flex flex-col min-w-0 pr-4">
-                                      <Link href={`/dashboard/places/${placeId}`} className="hover:underline flex items-center gap-2 group">
-                                          <span className={`text-sm font-medium truncate ${isCompleted ? 'line-through text-slate-500' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
+                                      <Link href={`/dashboard/places/{placeId}`} className="hover:underline flex items-center gap-2 group">
+                                          <span className={`text-sm font-medium truncate {isCompleted ? 'line-through text-slate-500' : isCurrent ? 'text-primary' : 'text-slate-700'}`}>
                                               {place?.name || 'Laster sted...'}
                                           </span>
                                           <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
