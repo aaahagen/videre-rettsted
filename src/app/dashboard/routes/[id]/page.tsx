@@ -514,23 +514,6 @@ export default function RouteDetailsPage() {
       </div>
 
       {/* Top Box: Route Info */}
-      
-      {/* Route Notes - Always visible at top for drivers if not in edit mode */}
-      {!isAdmin && !isEditMode && routeNotes && (
-        <Card className="border-indigo-100 shadow-md bg-indigo-50/30 overflow-hidden">
-          <CardHeader className="pb-3 bg-indigo-100/50">
-            <CardTitle className="text-lg flex items-center gap-2 text-indigo-900">
-              <Info className="h-5 w-5 text-indigo-600" />
-              Viktig Ruteinformasjon
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-             <div className="text-sm text-indigo-950 font-medium whitespace-pre-wrap">
-                {routeNotes}
-            </div>
-          </CardContent>
-        </Card>
-      )}
       <Card className="border-slate-200 shadow-md bg-gradient-to-br from-white to-slate-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-6">
@@ -810,6 +793,19 @@ export default function RouteDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1 flex flex-col justify-between">
+            {/* Route Notes - Integrated at the top of the list for drivers/viewers */}
+            {!isEditMode && routeNotes && (
+              <div className="bg-amber-50 border-b border-amber-100 p-4 shrink-0">
+                <div className="flex items-center gap-2 mb-2 text-amber-800">
+                  <Info className="h-4 w-4" />
+                  <span className="text-sm font-bold uppercase tracking-wider">Viktig Informasjon</span>
+                </div>
+                <div className="text-sm text-amber-900 whitespace-pre-wrap font-medium">
+                  {routeNotes}
+                </div>
+              </div>
+            )}
+
             {routeItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-3 p-8 min-h-[400px]">
                  <MapPin className="h-12 w-12 text-slate-200" />
