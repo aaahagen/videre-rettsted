@@ -61,7 +61,7 @@ export interface Place {
   // Images
   imageUrl?: string;
   imageHint?: string;
-  images?: { url: string; description?: string; uploadedAt?: any }[];
+  images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
 
   // Location
   coordinates?: {

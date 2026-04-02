@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Trash2, Loader2, FileText, Download, Plus } from 'lucide-react';
+import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star } from 'lucide-react';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,7 +24,7 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const docFileInputRef = useRef<HTMLInputElement>(null);
-    const [images, setImages] = useState<Array<{ url: string, preview?: string, file?: File }>>(
+    const [images, setImages] = useState<Array<{ url: string, preview?: string, file?: File, isMain?: boolean }>>(
         initialData?.images || []
     );
      const [documents, setDocuments] = useState<Array<{ url: string, name: string, type: 'registration' | 'insurance' | 'other', file?: File }>>(
@@ -108,6 +108,10 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
         setDocuments(prev => prev.filter((_, i) => i !== index));
     };
 
+    const setMainImage = (index: number) => {
+        setImages(prev => prev.map((img, i) => ({ ...img, isMain: i === index })));
+    };
+
     const handleAddCustomField = () => {
         const currentFields = formData.capabilities?.customFields || [];
         handleChange('capabilities', {
@@ -145,9 +149,9 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                     const vehicleIdFolder = initialData?.id || `temp_${uuidv4()}`;
                     const path = `vehicles/${vehicleIdFolder}/${uuidv4()}.${ext}`;
                     const url = await firebaseStorage.uploadFile(path, img.file);
-                    finalImages.push({ url });
+                    finalImages.push({ url, isMain: img.isMain });
                 } else {
-                    finalImages.push({ url: img.url });
+                    finalImages.push({ url: img.url, isMain: img.isMain });
                 }
             }
             
@@ -421,13 +425,25 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                 <CardContent>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {images.map((img, index) => (
-                            <div key={index} className="relative group rounded-md overflow-hidden border bg-white">
+                            <div key={index} className={`relative group rounded-md overflow-hidden border ${img.isMain ? 'border-primary ring-2 ring-primary ring-offset-1' : 'border-slate-200'} bg-white`}>
                                 <div className="relative aspect-square w-full">
                                     <Image src={img.preview || img.url} alt={`Bilde ${index + 1}`} fill className="object-cover" />
+                                    {img.isMain && (
+                                        <div className="absolute bottom-0 left-0 right-0 bg-primary/90 text-primary-foreground text-[10px] font-bold text-center py-1 uppercase tracking-wider">
+                                            Hovedbilde
+                                        </div>
+                                    )}
                                 </div>
-                                <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeImage(index)}>
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
+                                <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button type="button" variant="destructive" size="icon" className="h-6 w-6" onClick={() => removeImage(index)}>
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                    {!img.isMain && (
+                                        <Button type="button" variant="secondary" size="icon" className="h-6 w-6 bg-white hover:bg-slate-100 text-slate-700" onClick={() => setMainImage(index)} title="Sett som hovedbilde">
+                                            <Star className="h-3 w-3" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                         
