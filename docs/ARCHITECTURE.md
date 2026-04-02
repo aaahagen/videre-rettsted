@@ -16,6 +16,15 @@
 *   **Authentication**: Firebase Authentication
 *   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations)
 
+## Core Philosophy: Function-First Design
+
+This project adheres to a "Function-First" design philosophy. This principle dictates that while aesthetics are important, the primary goal of any design choice is to enhance the application's functionality, reliability, and ease of use.
+
+*   **Clarity and Intuition:** The user interface is intentionally kept clean and intuitive. The goal is for a new user, particularly a driver with varying technical literacy, to understand how to use the core features with minimal to no instruction.
+*   **Purpose-Driven UI:** Every UI element must serve a clear purpose. We avoid purely decorative elements that could add clutter and confusion. For example, recent form redesigns utilized a card-based layout to visually group related information, making complex forms easier to parse and complete.
+*   **Performance over Flair:** We prioritize fast load times and responsive interactions over complex animations or heavy graphical elements that do not contribute directly to the user's workflow.
+*   **Reliability as a Feature:** Functionality extends to reliability. Technical decisions, such as the adoption of native HTML date pickers over custom components, are made to ensure the application is robust, bug-free, and works seamlessly across all devices, especially mobile.
+
 ## Core Technical Decisions
 
 ### Date Selection: Native HTML Inputs
