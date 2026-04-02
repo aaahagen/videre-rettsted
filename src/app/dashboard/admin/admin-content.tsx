@@ -79,12 +79,24 @@ function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handl
         {user.role === 'admin' ? (
           <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'driver')}>
             <Shield className="mr-2 h-4 w-4" />
-            Gjør til Sjåfør
+            Gjør til Fast Sjåfør
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'admin')}>
             <ShieldAlert className="mr-2 h-4 w-4" />
             Gjør til Admin
+          </DropdownMenuItem>
+        )}
+        {user.role !== 'contractor' && (
+          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'contractor')}>
+             <UserIcon className="mr-2 h-4 w-4" />
+             Gjør til Innleid (Ekstern)
+          </DropdownMenuItem>
+        )}
+        {user.role === 'contractor' && (
+          <DropdownMenuItem onClick={() => handleUpdateRole(user.id, 'driver')}>
+             <Shield className="mr-2 h-4 w-4" />
+             Gjør til Fast Sjåfør
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
@@ -118,7 +130,7 @@ const ITEMS_PER_PAGE = 5;
 export default function AdminDashboardContent({ authUser }: { authUser: FirebaseUser }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'driver' | 'admin'>('driver');
+  const [role, setRole] = useState<'driver' | 'admin' | 'contractor'>('driver');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -484,13 +496,14 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                 <Label htmlFor="role">Rolle</Label>
                 <Select
                   value={role}
-                  onValueChange={(value: 'driver' | 'admin') => setRole(value)}
+                  onValueChange={(value: 'driver' | 'admin' | 'contractor') => setRole(value as any)}
                 >
                   <SelectTrigger id="role" className="w-full">
                     <SelectValue placeholder="Velg en rolle" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="driver">Sjåfør</SelectItem>
+                    <SelectItem value="driver">Fast Sjåfør</SelectItem>
+                    <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -567,10 +580,10 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                             <TableCell>{user.email}</TableCell>
                             <TableCell>
                               <Badge
-                                variant={user.role === 'admin' ? 'default' : 'secondary'}
-                                className={user.role === 'admin' ? 'bg-primary' : ''}
+                                variant={user.role === 'admin' ? 'default' : user.role === 'contractor' ? 'outline' : 'secondary'}
+                                className={user.role === 'admin' ? 'bg-primary' : user.role === 'contractor' ? 'bg-amber-100 text-amber-800 hover:bg-amber-100' : ''}
                               >
-                                {user.role === 'admin' ? 'Admin' : 'Sjåfør'}
+                                {user.role === 'admin' ? 'Admin' : user.role === 'contractor' ? 'Innleid' : 'Fast Sjåfør'}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -632,10 +645,10 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                         </div>
                         <div className="flex gap-2">
                           <Badge
-                            variant={user.role === 'admin' ? 'default' : 'secondary'}
-                            className={user.role === 'admin' ? 'bg-primary' : ''}
+                            variant={user.role === 'admin' ? 'default' : user.role === 'contractor' ? 'outline' : 'secondary'}
+                            className={user.role === 'admin' ? 'bg-primary' : user.role === 'contractor' ? 'bg-amber-100 text-amber-800 hover:bg-amber-100' : ''}
                           >
-                            {user.role === 'admin' ? 'Admin' : 'Sjåfør'}
+                            {user.role === 'admin' ? 'Admin' : user.role === 'contractor' ? 'Innleid' : 'Fast Sjåfør'}
                           </Badge>
                           <Badge 
                             variant="outline" 

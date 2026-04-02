@@ -117,7 +117,7 @@ export interface Invitation {
   id: string;
   email: string;
   organizationId: string;
-  role: 'admin' | 'driver';
+  role: 'admin' | 'driver' | 'contractor';
   expiresAt: FieldValue;
   organizationName?: string;
 }
@@ -128,7 +128,7 @@ export interface User {
   name: string;
   email: string;
   orgId: string;
-  role: 'admin' | 'driver';
+  role: 'admin' | 'driver' | 'contractor';
   favorites: string[];
   status?: 'active' | 'paused';
   images?: { url: string; description?: string; uploadedAt?: any }[];
@@ -174,6 +174,13 @@ export interface Vehicle {
 }
 
 export interface DriverProfile extends User {
+  employmentType?: 'internal' | 'external';
+  agencyInfo?: {
+    name: string;
+    contactPerson: string;
+    phone: string;
+    email: string;
+  };
   workingHours?: {
     start: string; // e.g., "08:00"
     end: string;   // e.g., "16:00"
@@ -184,7 +191,7 @@ export interface DriverProfile extends User {
       days: {
         monday: { isWorking: boolean; start?: string; end?: string };
         tuesday: { isWorking: boolean; start?: string; end?: string };
-        wednesday: { isWorking: boolean; start?: string; end?: aupdatestring };
+        wednesday: { isWorking: boolean; start?: string; end?: string };
         thursday: { isWorking: boolean; start?: string; end?: string };
         friday: { isWorking: boolean; start?: string; end?: string };
         saturday: { isWorking: boolean; start?: string; end?: string };

@@ -147,7 +147,8 @@ export const acceptInvitation = functions.https.onCall(async (request) => {
         const batch = db.batch();
 
         const userRef = db.collection("users").doc(uid);
-        batch.set(userRef, {
+        
+        const userData: any = {
             name: name,
             email: email,
             orgId: orgId,
@@ -155,7 +156,13 @@ export const acceptInvitation = functions.https.onCall(async (request) => {
             favorites: [],
             status: "active",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        };
+
+        if (role === 'contractor') {
+            userData.employmentType = 'external';
+        }
+
+        batch.set(userRef, userData);
 
         batch.delete(inviteRef);
         await batch.commit();

@@ -546,7 +546,60 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {skills.map((skill, i) => (<div key={i} className="flex items-center gap-1 bg-slate-200 text-slate-800 px-3 py-1 rounded-full text-sm font-medium border border-slate-300"> {skill} <button type="button" onClick={() => removeSkill(skill)} className="hover:text-slate-900 ml-1"><X className="h-3 w-3" /></button></div>))}
                                 </div>
+                            
+                            <div className="space-y-2 col-span-2 pt-2 border-t">
+                                <Label>Ansettelsestype</Label>
+                                <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                                    <label className="flex items-center space-x-2 cursor-pointer border p-3 rounded-lg flex-1 hover:bg-slate-50 transition-colors">
+                                        <input 
+                                            type="radio" 
+                                            name="employmentType" 
+                                            value="internal" 
+                                            checked={employmentType === 'internal'} 
+                                            onChange={() => setEmploymentType('internal')}
+                                            className="w-4 h-4 text-primary"
+                                        />
+                                        <span>Fast ansatt (Intern)</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer border p-3 rounded-lg flex-1 hover:bg-slate-50 transition-colors">
+                                        <input 
+                                            type="radio" 
+                                            name="employmentType" 
+                                            value="external" 
+                                            checked={employmentType === 'external'} 
+                                            onChange={() => setEmploymentType('external')}
+                                            className="w-4 h-4 text-primary"
+                                        />
+                                        <span>Innleid (Ekstern)</span>
+                                    </label>
+                                </div>
                             </div>
+                        
+                        {employmentType === 'external' && (
+                            <div className="pt-4 border-t space-y-4">
+                                <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="h-4 w-4" /> Bemanningsbyrå Info</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Byrånavn</Label>
+                                        <Input value={agencyName} onChange={e => setAgencyName(e.target.value)} placeholder="F.eks. Adecco, Manpower" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Kontaktperson</Label>
+                                        <Input value={agencyContact} onChange={e => setAgencyContact(e.target.value)} placeholder="Navn på kontaktperson" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Telefon</Label>
+                                        <Input value={agencyPhone} onChange={e => setAgencyPhone(e.target.value)} placeholder="Tlf nr" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>E-post</Label>
+                                        <Input value={agencyEmail} onChange={e => setAgencyEmail(e.target.value)} placeholder="E-postadresse" type="email" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        </div>
                         </CardContent>
                     </Card>
                 </div>
