@@ -229,13 +229,13 @@ const stats = useMemo(() => {
                 <Card className="bg-white">
                     <CardHeader className="pb-3 border-b">
                         <div className="flex flex-col sm:flex-row gap-4 items-end justify-between">
-                            <div className="space-y-2 w-full sm:w-auto">
+                            <div className="space-y-2 w-full sm:w-auto max-w-full">
                                 <Label>Velg dato for oversikt</Label>
                                 <Input 
                                     type="date"
                                     value={searchDateStr}
                                     onChange={(e) => setSearchDateStr(e.target.value)}
-                                    className="w-full sm:w-[240px]"
+                                    className="w-full max-w-full sm:w-[240px]"
                                 />
                             </div>
                         </div>

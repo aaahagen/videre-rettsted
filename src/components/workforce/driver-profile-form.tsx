@@ -330,7 +330,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                         </CardHeader>
                         <CardContent>
                              <input type="file" accept="image/*" className="sr-only" ref={fileInputRef} onChange={handleImageChange} />
-                             <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                             <Button type="button" variant="outline" className="w-full max-w-full" onClick={() => fileInputRef.current?.click()}>
                                 <UploadCloud className="mr-2 h-4 w-4" /> Endre bilde
                             </Button>
                         </CardContent>
@@ -398,13 +398,13 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 </div>
                             ) : (
                                <div className="space-y-6">
-                                    <div className="space-y-2 w-full sm:max-w-[200px]">
+                                    <div className="space-y-2 w-full max-w-full sm:max-w-[200px]">
                                         <Label>Startdato for turnus</Label>
                                         <Input 
                                             type="date" 
                                             value={rotationStartDateStr} 
                                             onChange={(e) => setRotationStartDateStr(e.target.value)}
-                                            className="w-full"
+                                            className="w-full max-w-full"
                                         />
                                         <p className="text-xs text-muted-foreground mt-1">Denne datoen markerer uke 1 i rotasjonen.</p>
                                     </div>
@@ -458,24 +458,24 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 </div>
 
                                 <div className="grid grid-cols-2 md:flex md:flex-row gap-3 items-end">
-                                    <div className="space-y-2 col-span-2 md:w-[150px]">
+                                    <div className="space-y-2 col-span-2 md:w-[150px] max-w-full">
                                         <Label>{isPeriod ? 'Fra dato' : 'Dato'}</Label>
                                         <Input 
                                             type="date" 
                                             value={overrideStartDateStr} 
                                             onChange={(e) => setOverrideStartDateStr(e.target.value)}
-                                            className="w-full"
+                                            className="w-full max-w-full"
                                         />
                                     </div>
 
                                     {isPeriod && (
-                                        <div className="space-y-2 col-span-2 md:w-[150px]">
+                                        <div className="space-y-2 col-span-2 md:w-[150px] max-w-full">
                                             <Label>Til dato</Label>
                                             <Input 
                                                 type="date" 
                                                 value={overrideEndDateStr} 
                                                 onChange={(e) => setOverrideEndDateStr(e.target.value)}
-                                                className="w-full"
+                                                className="w-full max-w-full"
                                                 min={overrideStartDateStr}
                                             />
                                         </div>
@@ -484,7 +484,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                     <div className="space-y-2 col-span-2 md:w-[140px]">
                                         <Label>Type</Label>
                                         <Select value={overrideType} onValueChange={(v: any) => setOverrideType(v)}>
-                                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                                            <SelectTrigger className="w-full max-w-full"><SelectValue /></SelectTrigger>
                                             <SelectContent className="z-[150]">
                                                 <SelectItem value="off">Fridag</SelectItem>
                                                 <SelectItem value="vacation">Ferie</SelectItem>
@@ -507,7 +507,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                         </>
                                     )}
                                     <div className="col-span-2 md:w-auto">
-                                        <Button type="button" onClick={addOverride} disabled={!overrideStartDateStr || (isPeriod && !overrideEndDateStr)} className="w-full">Legg til</Button>
+                                        <Button type="button" onClick={addOverride} disabled={!overrideStartDateStr || (isPeriod && !overrideEndDateStr)} className="w-full max-w-full">Legg til</Button>
                                     </div>
                                 </div>
                             </div>
