@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth-provider';
+import { useSearch } from '@/hooks/use-search';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Truck, Plus, Loader2, Edit, Trash2, FileText } from 'lucide-react';
+import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { VehicleForm } from '@/components/fleet/vehicle-form';
@@ -29,8 +30,20 @@ export default function FleetPage() {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const { query: searchQuery, setContext } = useSearch();
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        const handleOpen = () => handleOpenForm();
+        window.addEventListener('open-new-vehicle-form', handleOpen);
+        return () => window.removeEventListener('open-new-vehicle-form', handleOpen);
+    }, []);
+
+    useEffect(() => {
+        setContext('Kjøretøy', '/dashboard/fleet');
+        return () => setContext('Steder', '/dashboard/new');
+    }, [setContext]);
 
     useEffect(() => {
         if (dbUser?.orgId) {
@@ -97,6 +110,11 @@ export default function FleetPage() {
         return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
+    const filteredVehicles = vehicles.filter(v => 
+        (v.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
+        (v.registrationNumber?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
+    );
+
     return (
         <TooltipProvider>
             <div className="container mx-auto max-w-7xl px-4 py-8 space-y-6">
@@ -110,21 +128,28 @@ export default function FleetPage() {
                             Administrer bedriftens kjøretøy og deres egenskaper for ruteplanlegging.
                         </p>
                     </div>
-                    <Button onClick={() => handleOpenForm()}>
-                        <Plus className="mr-2 h-4 w-4" /> Nytt Kjøretøy
-                    </Button>
+                    
                 </div>
 
                 <Card>
                     <CardContent className="p-0">
-                        {vehicles.length === 0 ? (
+                        {filteredVehicles.length === 0 && searchQuery ? (
+                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                            <div className="rounded-full bg-slate-100 p-6 mb-4">
+                                <SearchX className="h-12 w-12 text-slate-300" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Ingen kjøretøy matchet "{searchQuery}"
+                            </h2>
+                        </div>
+                    ) : vehicles.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
                                 <Truck className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                 <p>Ingen kjøretøy registrert ennå.</p>
                             </div>
                         ) : (
                             <div className="divide-y">
-                                {vehicles.map(v => (
+                                {filteredVehicles.map(v => (
                                     <div key={v.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-slate-50 transition-colors">
                                         <div className="flex-1 space-y-1">
                                             <div className="flex items-center gap-3">

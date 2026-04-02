@@ -108,11 +108,7 @@ export default function RoutesPage() {
     }
   };
 
-  const handleCreateRoute = () => {
-    // Generate a temporary ID or just navigate to the 'new' page
-    // For now, we'll navigate to a 'new' page that handles creation
-    router.push('/dashboard/routes/new');
-  };
+
 
   if (loading) {
     return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -133,11 +129,7 @@ export default function RoutesPage() {
                : "Her er en oversikt over rutene som er tildelt deg."}
           </p>
         </div>
-        {userData?.role === 'admin' && (
-          <Button onClick={handleCreateRoute} className="shadow-md hover:shadow-lg transition-shadow whitespace-nowrap shrink-0">
-            <Plus className="mr-2 h-5 w-5" /> Ny Rute
-          </Button>
-        )}
+
       </div>
 
       {displayedRoutes.length === 0 ? (

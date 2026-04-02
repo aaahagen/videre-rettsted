@@ -19,6 +19,7 @@ import { DriverProfileForm } from '@/components/workforce/driver-profile-form';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useSearch } from '@/hooks/use-search';
 
 // --- Core Logic for computing a driver's status on a specific date ---
 const getDriverStatus = (driver: DriverProfile, date: Date) => {
@@ -72,12 +73,18 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
 export default function WorkforcePage() {
     const { dbUser } = useAuth();
     const { toast } = useToast();
+    const { query: searchQuery, setContext } = useSearch();
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchDateStr, setSearchDateStr] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
-    const [searchQuery, setSearchQuery] = useState('');
+    
     const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
     
+    useEffect(() => {
+        setContext('Personell', '/dashboard/admin'); // Redirects to admin page where invitations are sent
+        return () => setContext('Steder', '/dashboard/new');
+    }, [setContext]);
+
     useEffect(() => {
         if (dbUser?.orgId) {
             loadDrivers();
@@ -103,7 +110,7 @@ export default function WorkforcePage() {
             await updateDoc(doc(db, 'users', editingDriverProfile.id), data);
             toast({
                 title: "Profil oppdatert",
-                description: "Sjåførprofilen ble lagret.",
+                description: "Profilen ble lagret.",
             });
             setEditingDriverProfile(null);
             loadDrivers(); // Reload to show new data
@@ -148,26 +155,14 @@ export default function WorkforcePage() {
                             Personelloversikt
                         </h1>
                         <p className="text-muted-foreground mt-2">
-                            Søk etter sjåfører og se tilgjengelighet og arbeidsplan for en spesifikk dato.
+                            Søk etter personell og se tilgjengelighet og arbeidsplan for en spesifikk dato.
                         </p>
                     </div>
                 </div>
 
                 <Card className="bg-white">
                     <CardHeader className="pb-3 border-b">
-                        <div className="flex flex-col sm:flex-row gap-4 items-end">
-                            <div className="space-y-2 w-full sm:w-64 relative">
-                                <Label>Søk etter sjåfør</Label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        placeholder="Navn eller e-post..." 
-                                        className="pl-9"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                            </div>
+                        <div className="flex flex-col sm:flex-row gap-4 items-end justify-between">
                             <div className="space-y-2 w-full sm:w-auto">
                                 <Label>Velg dato for oversikt</Label>
                                 <Input 
@@ -182,7 +177,7 @@ export default function WorkforcePage() {
                     <CardContent className="p-0">
                         {filteredDrivers.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
-                                Ingen sjåfører funnet.
+                                Ingen funnet.
                             </div>
                         ) : (
                             <div className="divide-y">
@@ -333,9 +328,9 @@ export default function WorkforcePage() {
                 }}>
                 <DialogContent className="max-w-6xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
                     <DialogHeader>
-                        <DialogTitle>Rediger Sjåførprofil</DialogTitle>
+                        <DialogTitle>Rediger profil</DialogTitle>
                         <DialogDescription>
-                          Oppdater arbeidstid, kompetanse og personlig informasjon for sjåføren.
+                          Oppdater arbeidstid, kompetanse og personlig informasjon.
                         </DialogDescription>
                     </DialogHeader>
                      <div className="py-4">

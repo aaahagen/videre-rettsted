@@ -3,7 +3,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon, Activity } from 'lucide-react';
+import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon, Activity, UserPlus, Truck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
@@ -43,7 +43,7 @@ export default function DashboardLayout({
     setQuery(value);
     
     // Only redirect to dashboard if we are not already on the dashboard AND not on a page that handles its own search
-    if (value && pathname !== '/dashboard' && !isRoutesPage && !isMonitorPage) {
+    if (value && pathname !== '/dashboard' && !isRoutesPage && !isMonitorPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
         router.push('/dashboard');
     }
   };
@@ -91,16 +91,32 @@ export default function DashboardLayout({
             {/* Only show the New button if user is an admin, OR if the context is 'Steder' (since drivers can add places) */}
             {(isAdmin || contextName === 'Steder') && (
                 <div className="flex items-center gap-2">
-                  <Button asChild size="sm" className="hidden sm:flex">
-                    <Link href={contextLink}>
-                      {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-                      {contextName === 'Ruter' ? 'Ny Rute' : 'Nytt Sted'}
-                    </Link>
+                  <Button 
+                    size="sm" 
+                    className="hidden sm:flex"
+                    onClick={() => {
+                        if (contextName === 'Kjøretøy') {
+                            window.dispatchEvent(new CustomEvent('open-new-vehicle-form'));
+                        } else {
+                            router.push(contextLink);
+                        }
+                    }}
+                  >
+                    {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : contextName === 'Personell' ? <UserPlus className="mr-2 h-4 w-4" /> : contextName === 'Kjøretøy' ? <Truck className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
+                    {contextName === 'Ruter' ? 'Ny Rute' : contextName === 'Personell' ? 'Nytt personell' : contextName === 'Kjøretøy' ? 'Nytt Kjøretøy' : 'Nytt Sted'}
                   </Button>
-                  <Button asChild size="icon" className="sm:hidden rounded-full h-10 w-10">
-                    <Link href={contextLink}>
-                      {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
-                    </Link>
+                  <Button 
+                    size="icon" 
+                    className="sm:hidden rounded-full h-10 w-10"
+                    onClick={() => {
+                        if (contextName === 'Kjøretøy') {
+                            window.dispatchEvent(new CustomEvent('open-new-vehicle-form'));
+                        } else {
+                            router.push(contextLink);
+                        }
+                    }}
+                  >
+                    {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : contextName === 'Personell' ? <UserPlus className="h-5 w-5" /> : contextName === 'Kjøretøy' ? <Truck className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
                   </Button>
                 </div>
             )}
