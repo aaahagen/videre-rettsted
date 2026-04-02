@@ -290,49 +290,6 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
         }
     };
 
-            if (employmentType === 'external') {
-                dataToSubmit.agencyInfo = {
-                    name: agencyName,
-                    contactPerson: agencyContact,
-                    phone: agencyPhone,
-                    email: agencyEmail,
-                };
-            } else {
-                dataToSubmit.agencyInfo = deleteField();
-            }
-
-            if (employmentType === 'external') {
-                dataToSubmit.agencyInfo = {
-                    name: agencyName,
-                    contactPerson: agencyContact,
-                    phone: agencyPhone,
-                    email: agencyEmail,
-                };
-            } else {
-                dataToSubmit.agencyInfo = deleteField();
-            }
-
-            if (useRotation) {
-                dataToSubmit.rotation = {
-                    startDate: rotationStartDateStr,
-                    weeks: rotationWeeks,
-                };
-                dataToSubmit.workingHours = deleteField();
-            } else {
-                dataToSubmit.workingHours = {
-                    start: workingHoursStart,
-                    end: workingHoursEnd,
-                };
-                dataToSubmit.rotation = deleteField();
-            }
-
-            await onSubmit(dataToSubmit);
-        } finally {
-            setIsSubmitting(false);
-            setIsUploading(false);
-        }
-    };
-
 
     const addCert = () => {
         if (newCert.trim() && !certifications.includes(newCert.trim())) {
