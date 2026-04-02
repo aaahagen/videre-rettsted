@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Route Completion Confirmation:** Drivers are now required to explicitly type "Ferdig" into a confirmation dialog to complete a route, preventing accidental completions.
+- **Route Locking:** Once a route is marked as completed, it becomes locked for the driver. Drivers cannot check/uncheck stops or edit the route anymore. Administrators retain full editing rights for corrections.
 - **Real-time Messaging System:** Added a dedicated communication hub (`/dashboard/messages`) allowing administrators to broadcast messages to all drivers or all administrators. Drivers can send direct messages back to the administrative team.
 - **Read Receipts & Unread Badges:** Implemented a real-time read receipt system. Senders can see when their messages have been read (single vs double checkmarks). A dynamic unread badge also appears in the sidebar for any user with new messages.
 - **Proof of Delivery Foundation (Location & Timestamps):** When a driver completes a stop, the application now requests the device's location. A timestamp and the GPS coordinates are securely saved to the database.
@@ -51,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
+- **Sidebar Navigation:** The "Meldinger" (Messages) link has been repositioned directly below "Ruter" in the sidebar for better workflow grouping.
 - **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
 - **Contextual Global Search:** Upgraded the global search bar in the top navigation to be context-aware. When viewing the Fleet ("Kjøretøy") or Workforce ("Personell") pages, the search bar now automatically filters the respective lists on those pages, rather than redirecting the user to the generic Places search.
 
@@ -67,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Firestore Permissions:** Resolved permission-denied errors related to the new real-time messaging system and the revocation/deletion of pending invitations by administrators.
+- **Monitor Page Rendering:** Fixed an issue where the completion state of routes (e.g., green styling, checkmarks) occasionally failed to render due to broken template literals.
 - **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card, ensuring it stacks properly on smaller screens.
 - **Date Picker State Bug:** Fixed an issue where the selected date for an override in the driver profile was not being registered correctly by migrating to the native HTML date input.
 - **Admin Dialog Freeze:** Fixed an issue where the screen would remain unclickable (frozen pointer events) after saving or closing the "Edit Driver Profile" dialog in the Admin Panel.
