@@ -378,7 +378,7 @@ const stats = useMemo(() => {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex flex-wrap lg:flex-nowrap items-end sm:items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0 justify-end">
+                                            <div className="flex flex-wrap lg:flex-nowrap items-end sm:items-center gap-3 w-full lg:w-auto mt-2 lg:mt-8 justify-end">
                                                 <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
                                                     {statusInfo.status}
                                                 </Badge>
