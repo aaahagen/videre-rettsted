@@ -86,6 +86,13 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
+    // Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId);
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId);
+    }
+
     // Vehicles
     match /vehicles/{vehicleId} {
       // Allow read if the user is in the same organization. 
