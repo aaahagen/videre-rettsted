@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Calendar as CalendarIcon, Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -286,20 +286,25 @@ export default function WorkforcePage() {
                         setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
                     }
                 }}>
-                <DialogContent className="sm:max-w-xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+                <DialogContent className="max-w-6xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
                     <DialogHeader>
-                    <DialogTitle>Rediger Sjåførprofil</DialogTitle>
+                        <DialogTitle>Rediger Sjåførprofil</DialogTitle>
+                        <DialogDescription>
+                          Oppdater arbeidstid, kompetanse og personlig informasjon for sjåføren.
+                        </DialogDescription>
                     </DialogHeader>
-                    {editingDriverProfile && (
-                    <DriverProfileForm 
-                        user={editingDriverProfile} 
-                        onSubmit={handleUpdateDriverProfile} 
-                        onCancel={() => {
-                            setEditingDriverProfile(null);
-                            setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
-                        }} 
-                    />
-                    )}
+                     <div className="py-4">
+                        {editingDriverProfile && (
+                            <DriverProfileForm 
+                                user={editingDriverProfile} 
+                                onSubmit={handleUpdateDriverProfile} 
+                                onCancel={() => {
+                                    setEditingDriverProfile(null);
+                                    setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
+                                }} 
+                            />
+                        )}
+                    </div>
                 </DialogContent>
                 </Dialog>
                 

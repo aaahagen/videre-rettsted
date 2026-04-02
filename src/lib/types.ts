@@ -170,6 +170,7 @@ export interface Vehicle {
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
   images?: { url: string; description?: string; uploadedAt?: any }[];
+  documents?: { url: string; name: string; type: 'registration' | 'insurance' | 'other'; uploadedAt?: any }[];
 }
 
 export interface DriverProfile extends User {
@@ -183,7 +184,7 @@ export interface DriverProfile extends User {
       days: {
         monday: { isWorking: boolean; start?: string; end?: string };
         tuesday: { isWorking: boolean; start?: string; end?: string };
-        wednesday: { isWorking: boolean; start?: string; end?: string };
+        wednesday: { isWorking: boolean; start?: string; end?: aupdatestring };
         thursday: { isWorking: boolean; start?: string; end?: string };
         friday: { isWorking: boolean; start?: string; end?: string };
         saturday: { isWorking: boolean; start?: string; end?: string };
