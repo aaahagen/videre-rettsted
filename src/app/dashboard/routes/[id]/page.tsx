@@ -70,6 +70,7 @@ export default function RouteDetailsPage() {
   const [route, setRoute] = useState<Route | null>(null);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
+  const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
   
   const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
   const [distance, setDistance] = useState('N/A');
@@ -210,6 +211,15 @@ export default function RouteDetailsPage() {
               firebaseDB.getPlaces(userDoc.orgId),
               firebaseDB.getUsers(userDoc.orgId),
             ]);
+            
+            if (routeData && routeData.vehicleId) {
+               try {
+                   const vehicle = await firebaseDB.getVehicle(routeData.vehicleId);
+                   setAssignedVehicle(vehicle);
+               } catch (e) {
+                   console.error("Failed to load vehicle", e);
+               }
+            }
             
             if (routeData) {
               setRoute(routeData);
@@ -613,7 +623,9 @@ export default function RouteDetailsPage() {
               <div className="flex items-center gap-2">
                 <Car className="h-5 w-5 text-emerald-500" />
                 <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Distanse</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                      Distanse
+                  </span>
                   {isCalculating ? (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
                   ) : (
@@ -635,6 +647,23 @@ export default function RouteDetailsPage() {
                   )}
                 </div>
               </div>
+              
+              {assignedVehicle && (assignedVehicle.dimensions?.height || assignedVehicle.dimensions?.width || assignedVehicle.dimensions?.length) && (
+                <>
+                  <Separator orientation="vertical" className="h-8 hidden sm:block bg-slate-200" />
+                  <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-scaling text-amber-600"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M14 15H9v-5"/><path d="M16 3h5v5"/><path d="M21 3l-6 6"/></svg>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Kjøretøy: {assignedVehicle.name}</span>
+                      <span className="font-semibold text-sm text-slate-800">
+                        {assignedVehicle.dimensions.height && <span className="mr-2">H: {assignedVehicle.dimensions.height}m</span>}
+                        {assignedVehicle.dimensions.width && <span className="mr-2">B: {assignedVehicle.dimensions.width}m</span>}
+                        {assignedVehicle.dimensions.length && <span>L: {assignedVehicle.dimensions.length}m</span>}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
