@@ -427,7 +427,7 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                         {images.map((img, index) => (
                             <div key={index} className={`relative group rounded-md overflow-hidden border ${img.isMain ? 'border-primary ring-2 ring-primary ring-offset-1' : 'border-slate-200'} bg-white`}>
                                 <div className="relative aspect-square w-full">
-                                    <Image src={img.preview || img.url} alt={`Bilde ${index + 1}`} fill className="object-cover" />
+                                    <Image src={img.preview || img.url} alt={`Bilde ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
                                     {img.isMain && (
                                         <div className="absolute bottom-0 left-0 right-0 bg-primary/90 text-primary-foreground text-[10px] font-bold text-center py-1 uppercase tracking-wider">
                                             Hovedbilde
