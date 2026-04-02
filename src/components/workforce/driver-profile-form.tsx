@@ -202,6 +202,11 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [skills, setSkills] = useState<string[]>(user.skills || []);
     const [newCert, setNewCert] = useState('');
     const [newSkill, setNewSkill] = useState('');
+    const [employmentType, setEmploymentType] = useState<'internal' | 'external'>(user?.employmentType || 'internal');
+    const [agencyName, setAgencyName] = useState(user?.agencyInfo?.name || '');
+    const [agencyContact, setAgencyContact] = useState(user?.agencyInfo?.contactPerson || '');
+    const [agencyPhone, setAgencyPhone] = useState(user?.agencyInfo?.phone || '');
+    const [agencyEmail, setAgencyEmail] = useState(user?.agencyInfo?.email || '');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -245,6 +250,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
 
 
             const dataToSubmit: any = {
+
                 certifications,
                 skills,
                 scheduleOverrides,
@@ -252,7 +258,20 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 documents: uploadedDocuments,
                 employmentType,
                 role: employmentType === 'external' ? 'contractor' : 'driver',
+                            employmentType,
+                role: employmentType === 'external' ? 'contractor' : 'driver',
             };
+
+            if (employmentType === 'external') {
+                dataToSubmit.agencyInfo = {
+                    name: agencyName,
+                    contactPerson: agencyContact,
+                    phone: agencyPhone,
+                    email: agencyEmail,
+                };
+            } else {
+                dataToSubmit.agencyInfo = deleteField();
+            }
 
             if (employmentType === 'external') {
                 dataToSubmit.agencyInfo = {
