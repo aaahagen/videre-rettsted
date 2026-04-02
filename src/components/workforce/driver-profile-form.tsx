@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { deleteField } from 'firebase/firestore';
 
@@ -148,21 +148,43 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
 
     const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['scheduleOverrides']>(user.scheduleOverrides || {});
     
-    const [selectedDateStr, setSelectedDateStr] = useState<string>('');
+    const [overrideStartDateStr, setOverrideStartDateStr] = useState<string>('');
+    const [overrideEndDateStr, setOverrideEndDateStr] = useState<string>('');
+    const [isPeriod, setIsPeriod] = useState(false);
+
     const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'custom'>('off');
     const [overrideStart, setOverrideStart] = useState('08:00');
     const [overrideEnd, setOverrideEnd] = useState('16:00');
 
     const addOverride = () => {
-        if (!selectedDateStr) return;
-        setScheduleOverrides(prev => ({
-            ...prev,
-            [selectedDateStr]: {
-                type: overrideType,
-                ...(overrideType === 'custom' ? { start: overrideStart, end: overrideEnd } : {})
-            }
-        }));
-        setSelectedDateStr('');
+        if (!overrideStartDateStr) return;
+
+        const newOverrides = { ...scheduleOverrides };
+        const overrideData = {
+            type: overrideType,
+            ...(overrideType === 'custom' ? { start: overrideStart, end: overrideEnd } : {})
+        };
+
+        if (isPeriod && overrideEndDateStr) {
+             const startParts = overrideStartDateStr.split('-');
+             const endParts = overrideEndDateStr.split('-');
+             const startDate = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]));
+             const endDate = new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]));
+
+             let currentDate = startDate;
+             while (currentDate <= endDate) {
+                 const dateStr = format(currentDate, 'yyyy-MM-dd');
+                 newOverrides[dateStr] = overrideData;
+                 currentDate = addDays(currentDate, 1);
+             }
+        } else {
+             newOverrides[overrideStartDateStr] = overrideData;
+        }
+
+        setScheduleOverrides(newOverrides);
+        setOverrideStartDateStr('');
+        setOverrideEndDateStr('');
+        setIsPeriod(false);
     };
 
     const removeOverride = (dateStr: string) => {
@@ -339,7 +361,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                     <CardTitle>Arbeidstid</CardTitle>
                                     <CardDescription>Definer standard arbeidstid eller en rullerende turnusplan.</CardDescription>
                                 </div>
-                                <div className="flex items-center gap-2 shrink-0">
+                                <div className="flex items-center gap-2 shrink-0 pt-1">
                                     <Label htmlFor="useRotation" className="text-sm font-normal text-muted-foreground">Bruk turnus?</Label>
                                     <Switch id="useRotation" checked={useRotation} onCheckedChange={setUseRotation} />
                                 </div>
@@ -400,7 +422,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                             </div>
                                         ))}
                                     </div>
-                                    <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" /> Legg til uke</Button>
+                                    <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" /> Legg til uke i rotasjonen</Button>
                                 </div>
                             )}
                         </CardContent>
@@ -409,22 +431,40 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                     <Card className="bg-slate-50/50">
                          <CardHeader>
                             <CardTitle>Avvik & Ferie</CardTitle>
-                            <CardDescription>Legg til enkeltdager med avvikende arbeidstid, sykdom eller ferie.</CardDescription>
+                            <CardDescription>Legg til sykemelding, ferie eller avvikende arbeidstid. Bruk perioder for lengre fravær.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="bg-white p-4 rounded-lg border">
+                            <div className="bg-white p-4 rounded-lg border space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Switch id="isPeriod" checked={isPeriod} onCheckedChange={setIsPeriod} />
+                                    <Label htmlFor="isPeriod">Registrer for en periode (flere dager)</Label>
+                                </div>
+
                                 <div className="grid grid-cols-2 md:flex md:flex-row gap-3 items-end">
-                                    <div className="space-y-2 col-span-2 md:w-[160px]">
-                                        <Label>Dato</Label>
+                                    <div className="space-y-2 col-span-2 md:w-[150px]">
+                                        <Label>{isPeriod ? 'Fra dato' : 'Dato'}</Label>
                                         <Input 
                                             type="date" 
-                                            value={selectedDateStr} 
-                                            onChange={(e) => setSelectedDateStr(e.target.value)}
+                                            value={overrideStartDateStr} 
+                                            onChange={(e) => setOverrideStartDateStr(e.target.value)}
                                             className="w-full"
                                         />
                                     </div>
+
+                                    {isPeriod && (
+                                        <div className="space-y-2 col-span-2 md:w-[150px]">
+                                            <Label>Til dato</Label>
+                                            <Input 
+                                                type="date" 
+                                                value={overrideEndDateStr} 
+                                                onChange={(e) => setOverrideEndDateStr(e.target.value)}
+                                                className="w-full"
+                                                min={overrideStartDateStr}
+                                            />
+                                        </div>
+                                    )}
                                     
-                                    <div className="space-y-2 col-span-2 md:w-[150px]">
+                                    <div className="space-y-2 col-span-2 md:w-[140px]">
                                         <Label>Type</Label>
                                         <Select value={overrideType} onValueChange={(v: any) => setOverrideType(v)}>
                                             <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
@@ -450,18 +490,17 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                         </>
                                     )}
                                     <div className="col-span-2 md:w-auto">
-                                        <Button type="button" onClick={addOverride} disabled={!selectedDateStr} className="w-full">Legg til</Button>
+                                        <Button type="button" onClick={addOverride} disabled={!overrideStartDateStr || (isPeriod && !overrideEndDateStr)} className="w-full">Legg til</Button>
                                     </div>
                                 </div>
                             </div>
 
                             {scheduleOverrides && Object.keys(scheduleOverrides).length > 0 && (
-                                <div className="space-y-2 mt-4">
+                                <div className="space-y-2 mt-4 max-h-[300px] overflow-y-auto pr-2">
                                     {Object.entries(scheduleOverrides).sort(([a], [b]) => a.localeCompare(b)).map(([date, details]) => {
                                         let typeLabel = ''; let colorClass = '';
                                         switch(details.type) { case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700'; break; case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break; case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break; case 'custom': typeLabel = `Arbeider ${details.start} - ${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break; }
                                         
-                                        // Parse local date safely from YYYY-MM-DD
                                         const [year, month, day] = date.split('-');
                                         const localDate = new Date(Number(year), Number(month) - 1, Number(day));
                                         

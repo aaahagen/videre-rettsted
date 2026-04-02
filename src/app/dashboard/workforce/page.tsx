@@ -8,11 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit } from 'lucide-react';
-import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays } from 'lucide-react';
+import { format, differenceInWeeks, isValid } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +66,7 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
     }
 
     // 4. Default if nothing is set
-    return { status: 'Ingen plan satt', short: '-', type: 'unknown', color: 'bg-slate-100 text-slate-500 italic border-slate-200' };
+    return { status: 'Bruker Turnusplan', short: 'Turnus', type: 'unknown', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' };
 };
 
 export default function WorkforcePage() {
@@ -76,7 +74,7 @@ export default function WorkforcePage() {
     const { toast } = useToast();
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchDate, setSearchDate] = useState<Date>(new Date());
+    const [searchDateStr, setSearchDateStr] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
     const [searchQuery, setSearchQuery] = useState('');
     const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
     
@@ -129,7 +127,15 @@ export default function WorkforcePage() {
         return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
-    
+    // Parse the search date securely
+    let searchDate = new Date();
+    if (searchDateStr) {
+        const [year, month, day] = searchDateStr.split('-');
+        if (year && month && day) {
+            searchDate = new Date(Number(year), Number(month) - 1, Number(day));
+        }
+    }
+
 
     return (
         <>
@@ -164,28 +170,12 @@ export default function WorkforcePage() {
                             </div>
                             <div className="space-y-2 w-full sm:w-auto">
                                 <Label>Velg dato for oversikt</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-full sm:w-[240px] justify-start text-left font-normal",
-                                                !searchDate && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {searchDate ? format(searchDate, "PPP", { locale: nb }) : <span>Velg dato</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0 z-[100]" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={searchDate}
-                                            onSelect={(date) => date && setSearchDate(date)}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                                <Input 
+                                    type="date"
+                                    value={searchDateStr}
+                                    onChange={(e) => setSearchDateStr(e.target.value)}
+                                    className="w-full sm:w-[240px]"
+                                />
                             </div>
                         </div>
                     </CardHeader>
@@ -198,9 +188,38 @@ export default function WorkforcePage() {
                             <div className="divide-y">
                                 {filteredDrivers.map(driver => {
                                     const statusInfo = getDriverStatus(driver, searchDate);
+                                    
+                                    // Calculate upcoming overrides
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    
+                                    const allUpcomingOverrides = driver.scheduleOverrides 
+                                        ? Object.entries(driver.scheduleOverrides)
+                                            .filter(([dateStr]) => {
+                                                const [year, month, day] = dateStr.split('-');
+                                                const overrideDate = new Date(Number(year), Number(month) - 1, Number(day));
+                                                return overrideDate >= today;
+                                            })
+                                            .sort(([a], [b]) => a.localeCompare(b))
+                                        : [];
+                                        
+                                    const visibleOverrides = allUpcomingOverrides.slice(0, 3);
+                                    const hasMoreOverrides = allUpcomingOverrides.length > 3;
+
                                     return (
-                                        <div key={driver.id} className="p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:bg-slate-50 transition-colors">
-                                            <div className="flex items-center gap-4">
+                                        <div key={driver.id} className="p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:bg-slate-50 transition-colors relative">
+                                             {dbUser?.role === 'admin' && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="absolute top-2 right-2 text-muted-foreground hover:text-slate-900"
+                                                    onClick={() => setEditingDriverProfile(driver)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                    <span className="sr-only">Rediger profil</span>
+                                                </Button>
+                                            )}
+                                            <div className="flex items-center gap-4 pr-10 w-full lg:w-auto">
                                                 {/* Driver Image or Initial Placeholder */}
                                                 <div className="relative h-12 w-12 shrink-0 rounded-full overflow-hidden border bg-slate-100 flex items-center justify-center">
                                                     {(driver.images && driver.images.length > 0 && driver.images[0].url) ? (
@@ -216,7 +235,7 @@ export default function WorkforcePage() {
                                                     )}
                                                 </div>
                                                 
-                                                <div className="space-y-1">
+                                                <div className="space-y-1 w-full">
                                                     <p className="font-semibold text-lg">{driver.name || driver.email}</p>
                                                     <div className="flex flex-col gap-1">
                                                         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -237,6 +256,37 @@ export default function WorkforcePage() {
                                                                 </div>
                                                             ) : null}
                                                         </div>
+                                                        
+                                                        {visibleOverrides.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1 items-center mt-1">
+                                                                <span className="flex items-center text-xs font-medium text-muted-foreground mr-1">
+                                                                    <CalendarDays className="h-3 w-3 mr-1" />
+                                                                    Kommende avvik:
+                                                                </span>
+                                                                {visibleOverrides.map(([dateStr, details]) => {
+                                                                    let typeLabel = ''; 
+                                                                    let colorClass = '';
+                                                                    switch(details.type) { 
+                                                                        case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700 border-slate-200'; break; 
+                                                                        case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break; 
+                                                                        case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break; 
+                                                                        case 'custom': typeLabel = `${details.start}-${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break; 
+                                                                    }
+                                                                    const [year, month, day] = dateStr.split('-');
+                                                                    const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+                                                                    
+                                                                    return (
+                                                                        <span key={dateStr} className={cn("px-1.5 py-0.5 rounded border text-[10px] font-medium", colorClass)}>
+                                                                            {format(localDate, 'dd.MM', { locale: nb })}: {typeLabel}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                                {hasMoreOverrides && (
+                                                                    <span className="text-[10px] text-muted-foreground ml-1">...og {allUpcomingOverrides.length - 3} til</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+
                                                         {driver.documents?.length ? (
                                                             <div className="flex flex-wrap gap-1 items-center mt-1">
                                                                 {driver.documents.map((doc, i) => (
@@ -251,24 +301,19 @@ export default function WorkforcePage() {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex flex-wrap lg:flex-nowrap items-end sm:items-center gap-3">
+                                            <div className="flex flex-wrap lg:flex-nowrap items-end sm:items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0 justify-end">
                                                 <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
                                                     {statusInfo.status}
                                                 </Badge>
-                                                
-                                                {dbUser?.role === 'admin' && (
-                                                    <Button variant="outline" size="sm" onClick={() => setEditingDriverProfile(driver)}>
-                                                        <Edit className="mr-2 h-4 w-4" />
-                                                        Rediger
+
+                                                {driver.rotation && driver.rotation.startDate && driver.rotation.weeks?.length > 0 && (
+                                                    <Button variant="secondary" size="sm" asChild>
+                                                        <a href={`/dashboard/workforce/print?driverId=${driver.id}&date=${searchDate.toISOString()}`} target="_blank" rel="noopener noreferrer">
+                                                            <Printer className="mr-2 h-4 w-4" />
+                                                            Plan (12 uker)
+                                                        </a>
                                                     </Button>
                                                 )}
-
-                                                <Button variant="secondary" size="sm" asChild>
-                                                    <a href={`/dashboard/workforce/print?driverId=${driver.id}&date=${searchDate.toISOString()}`} target="_blank" rel="noopener noreferrer">
-                                                        <Printer className="mr-2 h-4 w-4" />
-                                                        Plan (12 uker)
-                                                    </a>
-                                                </Button>
 
                                             </div>
                                         </div>

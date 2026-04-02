@@ -27,6 +27,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
+  SidebarGroup,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -42,6 +43,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Logo } from '../logo';
 import { Skeleton } from '../ui/skeleton';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -136,8 +138,8 @@ export default function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
-        <SidebarMenu className="mb-4">
+      <SidebarContent className="p-2 flex flex-col h-full overflow-hidden">
+        <SidebarMenu className="mb-4 shrink-0">
           <SidebarMenuItem>
             {loading ? (
               <div className="flex items-center gap-2 p-2">
@@ -186,61 +188,65 @@ export default function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <SidebarMenu>
-          {navItems.map((item) => {
-            if (item.adminOnly && !isAdmin) return null;
+        <ScrollArea className="flex-1 -mx-2 px-2">
+            <SidebarGroup>
+            <SidebarMenu>
+            {navItems.map((item) => {
+                if (item.adminOnly && !isAdmin) return null;
 
-            return (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label, className: 'bg-primary' }}
-                  onClick={() => setOpenMobile(false)}
+                return (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={{ children: item.label, className: 'bg-primary' }}
+                    onClick={() => setOpenMobile(false)}
+                    >
+                    <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                );
+            })}
+            {isAdmin && (
+                <Collapsible
+                open={isLegalOpen}
+                onOpenChange={setIsLegalOpen}
+                className="group/collapsible"
                 >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-           {isAdmin && (
-            <Collapsible
-              open={isLegalOpen}
-              onOpenChange={setIsLegalOpen}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={{ children: 'Juridisk', className: 'bg-primary' }}>
-                    <Scale className="h-4 w-4" />
-                    <span>Juridisk</span>
-                    <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isLegalOpen ? 'rotate-180' : ''}`} />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-1 px-4 py-2">
-                  <SidebarMenuButton asChild className="h-8 text-sm">
-                    <Link href="/legal/personvern" onClick={() => setOpenMobile(false)}>
-                      Personvern
-                    </Link>
-                  </SidebarMenuButton>
-                  <SidebarMenuButton asChild className="h-8 text-sm">
-                    <Link href="/legal/vilkar" onClick={() => setOpenMobile(false)}>
-                      Brukervilkår
-                    </Link>
-                  </SidebarMenuButton>
-                  <SidebarMenuButton asChild className="h-8 text-sm">
-                    <Link href="/legal/dpa" onClick={() => setOpenMobile(false)}>
-                      DPA
-                    </Link>
-                  </SidebarMenuButton>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          )}
-        </SidebarMenu>
+                <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={{ children: 'Juridisk', className: 'bg-primary' }}>
+                        <Scale className="h-4 w-4" />
+                        <span>Juridisk</span>
+                        <ChevronDown className={`ml-auto h-4 w-4 transition-transform duration-200 ${isLegalOpen ? 'rotate-180' : ''}`} />
+                    </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-1 px-4 py-2">
+                    <SidebarMenuButton asChild className="h-8 text-sm">
+                        <Link href="/legal/personvern" onClick={() => setOpenMobile(false)}>
+                        Personvern
+                        </Link>
+                    </SidebarMenuButton>
+                    <SidebarMenuButton asChild className="h-8 text-sm">
+                        <Link href="/legal/vilkar" onClick={() => setOpenMobile(false)}>
+                        Brukervilkår
+                        </Link>
+                    </SidebarMenuButton>
+                    <SidebarMenuButton asChild className="h-8 text-sm">
+                        <Link href="/legal/dpa" onClick={() => setOpenMobile(false)}>
+                        DPA
+                        </Link>
+                    </SidebarMenuButton>
+                    </CollapsibleContent>
+                </SidebarMenuItem>
+                </Collapsible>
+            )}
+            </SidebarMenu>
+            </SidebarGroup>
+        </ScrollArea>
       </SidebarContent>
     </Sidebar>
   );
