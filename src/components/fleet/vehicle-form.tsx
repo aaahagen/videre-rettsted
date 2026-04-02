@@ -215,6 +215,7 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                                     <SelectItem value="car">Personbil</SelectItem>
                                     <SelectItem value="van">Varebil</SelectItem>
                                     <SelectItem value="truck">Lastebil</SelectItem>
+                                    <SelectItem value="trailer">Henger</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -346,6 +347,10 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                         <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
                             <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="adr">ADR (Farlig gods)</Label>
                             <Switch id="adr" checked={formData.capabilities?.adr} onCheckedChange={v => handleNestedChange('capabilities', 'adr', v)} />
+                        </div>
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
+                            <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="flatbed">Flakbil / Åpen Henger</Label>
+                            <Switch id="flatbed" checked={formData.capabilities?.flatbed} onCheckedChange={v => handleNestedChange('capabilities', 'flatbed', v)} />
                         </div>
                     </div>
                     

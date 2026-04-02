@@ -160,7 +160,7 @@ export interface Vehicle {
   orgId: string;
   name: string; // e.g., "Scania R500", "Van 1"
   registrationNumber: string;
-  type: 'truck' | 'van' | 'car';
+  type: 'truck' | 'van' | 'car' | 'trailer';
   fuelType?: 'diesel' | 'electric' | 'gas' | 'hybrid';
   dimensions?: {
     length?: number; // meters
@@ -178,6 +178,7 @@ export interface Vehicle {
     tailLift: boolean;
     adr: boolean; // Hazardous materials
     trailerCoupling: boolean; // Can drag a trailer
+    flatbed?: boolean; // Flakbil
     notes?: string;
     customFields?: { name: string; value: string }[];
   };

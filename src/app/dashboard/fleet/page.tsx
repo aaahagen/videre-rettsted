@@ -173,7 +173,7 @@ export default function FleetPage() {
                                     <div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                                             <Truck className="h-4 w-4" />
-                                            <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : 'Personbil'}</span>
+                                            <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : v.type === 'trailer' ? 'Henger' : 'Personbil'}</span>
                                             {v.documents && v.documents.length > 0 && (
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
@@ -192,6 +192,7 @@ export default function FleetPage() {
                                             {v.capabilities?.refrigeration && <Badge variant="secondary">Kjøl/Frys</Badge>}
                                             {v.capabilities?.trailerCoupling && <Badge variant="secondary">Hengerfeste</Badge>}
                                             {v.capabilities?.adr && <Badge variant="destructive" className="bg-amber-100 text-amber-800 border-amber-200">ADR</Badge>}
+                                            {v.capabilities?.flatbed && <Badge variant="outline" className="bg-slate-100 border-slate-300">Flak/Åpen</Badge>}
                                         </div>
                                         {(v.dimensions?.height || v.dimensions?.width || v.dimensions?.length) && (
                                             <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
