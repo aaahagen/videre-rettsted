@@ -16,6 +16,15 @@
 *   **Authentication**: Firebase Authentication
 *   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations)
 
+## Core Technical Decisions
+
+### Date Selection: Native HTML Inputs
+- **Decision:** Throughout the application, native HTML `<input type="date">` elements are strictly preferred over custom React calendar components (e.g., popovers with `react-day-picker`) for simple date selection.
+- **Rationale:** 
+    1.  **Reliability:** Custom popover calendars frequently introduce complex state management bugs, particularly regarding z-index stacking, click-away handling, and component mounting/unmounting lifecycles. Native inputs eliminate this entire class of bugs.
+    2.  **Mobile UX:** Native date inputs trigger the device's built-in UI (e.g., the iOS date spinner wheel or Android's calendar dialog). This provides a vastly superior, familiar, and accessible experience for mobile users, which is critical given the driver-centric nature of the app.
+    3.  **Simplicity:** Reduces bundle size, dependency count, and code complexity.
+
 ## Backend Abstraction Layer
 
 To ensure future flexibility and ease of migration to a different backend, all interactions with the backend (Firebase) will be encapsulated within a dedicated abstraction layer. This layer will expose a set of generic functions to the rest of the application for data operations (CRUD). This architecture also allows for the entire backend to be migrated to a self-hosted or on-premise server if required by the organization's security policies.
