@@ -127,9 +127,10 @@ export default function WorkforcePage() {
     };
 
     
+    const safeQuery = (searchQuery || '').toLowerCase();
     const filteredDrivers = drivers.filter(d => 
-        (d.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-        (d.email?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
+        (d.name?.toLowerCase().includes(safeQuery) || false) ||
+        (d.email?.toLowerCase().includes(safeQuery) || false)
     );
 
     // Parse the search date securely

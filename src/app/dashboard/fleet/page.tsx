@@ -110,9 +110,10 @@ export default function FleetPage() {
         return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
+    const safeQuery = (searchQuery || '').toLowerCase();
     const filteredVehicles = vehicles.filter(v => 
-        (v.name?.toLowerCase().includes(searchQuery.toLowerCase()) || '') ||
-        (v.registrationNumber?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
+        (v.name?.toLowerCase().includes(safeQuery) || false) ||
+        (v.registrationNumber?.toLowerCase().includes(safeQuery) || false)
     );
 
     return (
