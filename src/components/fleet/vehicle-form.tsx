@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Trash2, Loader2, FileText, Download } from 'lucide-react';
+import { UploadCloud, Trash2, Loader2, FileText, Download, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -106,6 +106,31 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
 
     const removeDocument = (index: number) => {
         setDocuments(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleAddCustomField = () => {
+        const currentFields = formData.capabilities?.customFields || [];
+        handleChange('capabilities', {
+            ...formData.capabilities,
+            customFields: [...currentFields, { name: '', value: '' }]
+        });
+    };
+
+    const handleUpdateCustomField = (index: number, field: 'name' | 'value', value: string) => {
+        const currentFields = [...(formData.capabilities?.customFields || [])];
+        currentFields[index] = { ...currentFields[index], [field]: value };
+        handleChange('capabilities', {
+            ...formData.capabilities,
+            customFields: currentFields
+        });
+    };
+
+    const handleRemoveCustomField = (index: number) => {
+        const currentFields = (formData.capabilities?.customFields || []).filter((_, i) => i !== index);
+        handleChange('capabilities', {
+            ...formData.capabilities,
+            customFields: currentFields
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -324,7 +349,54 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             <Switch id="adr" checked={formData.capabilities?.adr} onCheckedChange={v => handleNestedChange('capabilities', 'adr', v)} />
                         </div>
                     </div>
-                    <div className="mt-4 space-y-2">
+                    
+                    {/* Custom Fields Section */}
+                    <div className="mt-6 pt-6 border-t border-slate-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <Label className="text-base font-semibold">Egendefinerte Egenskaper</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={handleAddCustomField} className="h-8">
+                                <Plus className="h-4 w-4 mr-1" /> Legg til egenskap
+                            </Button>
+                        </div>
+                        
+                        {formData.capabilities?.customFields && formData.capabilities.customFields.length > 0 ? (
+                            <div className="space-y-3">
+                                {formData.capabilities.customFields.map((field, index) => (
+                                    <div key={index} className="flex items-start gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
+                                        <div className="flex-1 space-y-2">
+                                            <Input 
+                                                placeholder="Navn på egenskap (f.eks. Jekketralle)" 
+                                                value={field.name} 
+                                                onChange={(e) => handleUpdateCustomField(index, 'name', e.target.value)}
+                                                className="h-8 text-sm bg-white"
+                                            />
+                                            <Input 
+                                                placeholder="Verdi (f.eks. Ja, 2 stk, Manuell)" 
+                                                value={field.value} 
+                                                onChange={(e) => handleUpdateCustomField(index, 'value', e.target.value)}
+                                                className="h-8 text-sm bg-white"
+                                            />
+                                        </div>
+                                        <Button 
+                                            type="button" 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onClick={() => handleRemoveCustomField(index)}
+                                            className="text-slate-400 hover:text-destructive hover:bg-destructive/10 shrink-0 h-8 w-8"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-sm text-muted-foreground italic text-center py-4 bg-slate-50 rounded-md border border-dashed border-slate-200">
+                                Ingen egendefinerte egenskaper lagt til enda.
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-slate-200 space-y-2">
                         <Label htmlFor="capabilitiesNotes">Utfyllende informasjon om utstyr</Label>
                         <Textarea 
                             id="capabilitiesNotes" 

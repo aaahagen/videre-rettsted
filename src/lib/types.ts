@@ -179,6 +179,7 @@ export interface Vehicle {
     adr: boolean; // Hazardous materials
     trailerCoupling: boolean; // Can drag a trailer
     notes?: string;
+    customFields?: { name: string; value: string }[];
   };
   status: 'active' | 'maintenance' | 'inactive';
   createdAt: FieldValue | Date;
