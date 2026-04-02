@@ -59,10 +59,10 @@ import { useAuth } from '../auth-provider';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
-  { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
   { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+  { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
   { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },
   { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true },
   { href: '/dashboard/monitor', icon: Clock, label: 'Overvåkning', adminOnly: true },
