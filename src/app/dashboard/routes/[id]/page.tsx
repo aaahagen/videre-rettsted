@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useGeolocation } from '@/hooks/use-geolocation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -22,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Place, Route } from '@/lib/types';
+import { Place, Route, CompletedStopEvent } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -73,6 +74,8 @@ export default function RouteDetailsPage() {
   
   const [isCalculating, setIsCalculating] = useState(false);
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
+  const [completedStopEvents, setCompletedStopEvents] = useState<Record<string, CompletedStopEvent>>({});
+  const { getPosition } = useGeolocation();
   const [isSaving, setIsSaving] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -209,6 +212,9 @@ export default function RouteDetailsPage() {
               setBreakTime(routeData.breakTime || 0);
               setFuelServiceTime(routeData.fuelServiceTime || 0);
 
+              if (routeData.completedStopEvents) {
+                setCompletedStopEvents(routeData.completedStopEvents);
+              }
               if (routeData.completedStops) {
                 const stopsMap: Record<string, boolean> = {};
                 routeData.completedStops.forEach(id => { stopsMap[id] = true; });
@@ -286,14 +292,43 @@ export default function RouteDetailsPage() {
     event.stopPropagation();
     const isNowCompleted = !completedStops[itemId];
     setCompletedStops(prev => ({ ...prev, [itemId]: isNowCompleted }));
+
+    let newEvents = { ...completedStopEvents };
+
+    if (isNowCompleted && itemId.startsWith('place_')) {
+      const placeId = itemId.replace('place_', '');
+      let coords;
+      try {
+        coords = await getPosition();
+      } catch (e) {
+        console.warn('Could not get location', e);
+      }
+      
+      const newEvent: CompletedStopEvent = {
+        placeId,
+        timestamp: new Date().toISOString(),
+      };
+      if (coords) {
+          newEvent.coordinates = coords;
+      }
+      newEvents[itemId] = newEvent;
+    } else {
+      delete newEvents[itemId];
+    }
+    setCompletedStopEvents(newEvents);
     
     if (route && userData?.role !== 'admin') {
       try {
         const currentCompletedStops = Object.entries({ ...completedStops, [itemId]: isNowCompleted }).filter(([_, isCompleted]) => isCompleted).map(([id]) => id);
-        await firebaseDB.updateRoute(routeId, { completedStops: currentCompletedStops });
+        
+        await firebaseDB.updateRoute(routeId, { 
+            completedStops: currentCompletedStops,
+            completedStopEvents: newEvents
+        });
       } catch (err) {
         console.error('Error auto-saving completed stop:', err);
         setCompletedStops(prev => ({ ...prev, [itemId]: !isNowCompleted }));
+        setCompletedStopEvents(completedStopEvents); // Revert
         toast({ title: 'Feil', description: 'Kunne ikke lagre status.', variant: 'destructive' });
       }
     }
@@ -400,6 +435,7 @@ export default function RouteDetailsPage() {
         endAddress,
         notes: routeNotes,
         completedStops: currentCompletedStops,
+        completedStopEvents: completedStopEvents,
         prepTimeStart,
         prepTimeEnd,
         breakTime,

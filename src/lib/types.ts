@@ -87,6 +87,15 @@ export interface Place {
 
 export type DeliveryPlace = Place;
 
+export interface CompletedStopEvent {
+    placeId: string;
+    timestamp: string | Date | FieldValue;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
+}
+
 export interface Route {
   id: string;
   name: string;
@@ -95,6 +104,7 @@ export interface Route {
   organizationId?: string;
   places: string[]; // array of placeIds
   completedStops?: string[]; // array of placeIds that are marked as complete
+  completedStopEvents?: Record<string, CompletedStopEvent>; // map of placeId to completion event
   startAddress?: string; // The starting address of the route
   endAddress?: string; // The ending address of the route
   notes?: string; // Crucial information about the route

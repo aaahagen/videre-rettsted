@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Proof of Delivery Foundation (Location & Timestamps):** When a driver completes a stop, the application now requests the device's location. A timestamp and the GPS coordinates are securely saved to the database.
+- **Enhanced Monitor Dashboard:** The Monitor page now displays the exact time a delivery was completed next to the checkmark, replacing the generic "Fullført" text. Additionally, a clickable "Vis kart" link appears, allowing administrators to open Google Maps pinned to the exact location where the driver was when they completed the stop.
 - **External Workforce (Contractors):** Introduced a new system to register and manage hired external extras (Innleid). They receive a dedicated role with customized access, and administrators can log their specific agency contact information.
 - **Workforce Statistics Dashboard:** Added a dynamic, date-based statistics overview to the Workforce page, providing administrators with an instant snapshot of personnel status (Working, Sick, Vacation, Off, and Contractors).
 - **Vehicle Documents:** Added the ability to upload and manage documents (like registration and insurance certificates) directly on a vehicle's profile. An indicator was added to the fleet list view to show if a vehicle has attached documents.
@@ -104,9 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Signature Capture:** Allow recipients to sign directly on the driver's device, with the signature saved as an image.
     - **Barcode Scanning:** Use the device's camera to scan package barcodes, linking specific items to the delivery confirmation.
     - **Damage & Note Reporting:** Provide a text field for drivers to report any issues, damages, or other important delivery notes.
-- **Driver Location Tracking:** Capture the driver's GPS location using the browser's Geolocation API when a stop is marked as "visited." This data will be stored with a timestamp for verification.
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop's address and the driver's captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
-- **Visited Stop Timestamps:** When a driver marks a stop as visited, a timestamp will be recorded and displayed next to the stop on the monitor page, providing a clear audit trail of delivery times.
 
 ### Changed
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
