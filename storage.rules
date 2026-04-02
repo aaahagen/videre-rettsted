@@ -34,10 +34,11 @@ service firebase.storage {
       allow write: if request.auth != null && isValidImage();
     }
     
-    // Vehicle images: Any logged-in user can read, any logged-in user can write (assuming admins manage fleet)
+    // Vehicle images and documents: Any logged-in user can read, any logged-in user can write
     match /vehicles/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && isValidImage();
+      // Allow any valid document or image
+      allow write: if request.auth != null && isValidDocument(); 
     }
   }
 }

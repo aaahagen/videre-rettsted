@@ -169,6 +169,9 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
             }
 
             await onSubmit({ ...formData, images: finalImages, documents: finalDocuments });
+        } catch (error) {
+            console.error("Error submitting vehicle form:", error);
+            throw error; // Let the parent component's catch block handle it
         } finally {
             setIsSubmitting(false);
             setIsUploading(false);
