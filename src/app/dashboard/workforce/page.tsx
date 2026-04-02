@@ -130,10 +130,6 @@ export default function WorkforcePage() {
         (d.email?.toLowerCase().includes(searchQuery.toLowerCase()) || '')
     );
 
-    if (isLoading && drivers.length === 0) {
-        return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    }
-
     // Parse the search date securely
     let searchDate = new Date();
     if (searchDateStr) {
@@ -143,7 +139,7 @@ export default function WorkforcePage() {
         }
     }
 
-    const stats = useMemo(() => {
+const stats = useMemo(() => {
         let working = 0;
         let sick = 0;
         let vacation = 0;
@@ -164,6 +160,14 @@ export default function WorkforcePage() {
 
         return { working, sick, vacation, off, contractors, total: drivers.length };
     }, [drivers, searchDate]);
+
+    if (isLoading && drivers.length === 0) {
+        return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
+
+
+
+    
 
 
     return (
