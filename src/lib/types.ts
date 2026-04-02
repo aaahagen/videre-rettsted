@@ -171,12 +171,14 @@ export interface Vehicle {
     weight?: number; // in kg
     volume?: number; // in cubic meters
     pallets?: number;
+    notes?: string;
   };
   capabilities: {
     refrigeration: boolean;
     tailLift: boolean;
     adr: boolean; // Hazardous materials
     trailerCoupling: boolean; // Can drag a trailer
+    notes?: string;
   };
   status: 'active' | 'maintenance' | 'inactive';
   createdAt: FieldValue | Date;

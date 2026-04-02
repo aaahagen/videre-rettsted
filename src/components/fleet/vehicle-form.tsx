@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Vehicle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -286,6 +287,16 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             <Input id="pallets" type="number" value={formData.capacity?.pallets || ''} onChange={e => handleNestedChange('capacity', 'pallets', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                     </div>
+                    <div className="mt-4 space-y-2">
+                        <Label htmlFor="capacityNotes">Utfyllende informasjon om kapasitet</Label>
+                        <Textarea 
+                            id="capacityNotes" 
+                            placeholder="Skriv inn eventuelle begrensninger eller merknader angående kapasitet..." 
+                            value={formData.capacity?.notes || ''} 
+                            onChange={e => handleNestedChange('capacity', 'notes', e.target.value)} 
+                            className="resize-none"
+                        />
+                    </div>
                 </CardContent>
             </Card>
 
@@ -312,6 +323,16 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             <Label htmlFor="adr" className="flex-1 cursor-pointer">ADR (Farlig gods)</Label>
                             <Switch id="adr" checked={formData.capabilities?.adr} onCheckedChange={v => handleNestedChange('capabilities', 'adr', v)} />
                         </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                        <Label htmlFor="capabilitiesNotes">Utfyllende informasjon om utstyr</Label>
+                        <Textarea 
+                            id="capabilitiesNotes" 
+                            placeholder="F.eks. Lastebøyler, stropper, jekketralle inkludert..." 
+                            value={formData.capabilities?.notes || ''} 
+                            onChange={e => handleNestedChange('capabilities', 'notes', e.target.value)} 
+                            className="resize-none"
+                        />
                     </div>
                 </CardContent>
             </Card>
