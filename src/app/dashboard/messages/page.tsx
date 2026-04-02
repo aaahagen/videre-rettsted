@@ -28,7 +28,7 @@ export default function MessagesPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!dbUser?.orgId) return;
+    if (!dbUser?.orgId || !dbUser?.id) return;
 
     // Fetch users for display names
     const fetchUsers = async () => {

@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userRef = doc(db, 'users', user.uid);
       unsubscribe = onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
-          setDbUser(docSnap.data() as User);
+          setDbUser({ ...docSnap.data(), id: docSnap.id } as User);
         } else {
           setDbUser(null);
         }
