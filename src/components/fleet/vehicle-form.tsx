@@ -192,25 +192,25 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             
-            <Card className="bg-slate-50/50">
-                <CardHeader>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Generelt</CardTitle>
                     <CardDescription>Basisinformasjon for å identifisere kjøretøyet.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Internt Navn / ID *</Label>
-                            <Input id="name" required placeholder="F.eks. Bil 1, Lastebil Nord" value={formData.name || ''} onChange={e => handleChange('name', e.target.value)} />
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="name">Internt Navn / ID *</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" id="name" required placeholder="F.eks. Bil 1, Lastebil Nord" value={formData.name || ''} onChange={e => handleChange('name', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="reg">Registreringsnummer *</Label>
-                            <Input id="reg" required placeholder="AB 12345" value={formData.registrationNumber || ''} onChange={e => handleChange('registrationNumber', e.target.value)} />
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="reg">Registreringsnummer *</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" id="reg" required placeholder="AB 12345" value={formData.registrationNumber || ''} onChange={e => handleChange('registrationNumber', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="type">Kjøretøytype</Label>
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="type">Kjøretøytype</Label>
                             <Select value={formData.type} onValueChange={(v) => handleChange('type', v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="bg-white border-slate-300 shadow-sm"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="car">Personbil</SelectItem>
                                     <SelectItem value="van">Varebil</SelectItem>
@@ -219,9 +219,9 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="fuel">Drivstoff</Label>
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="fuel">Drivstoff</Label>
                             <Select value={formData.fuelType || 'diesel'} onValueChange={(v) => handleChange('fuelType', v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="bg-white border-slate-300 shadow-sm"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="diesel">Diesel</SelectItem>
                                     <SelectItem value="electric">Elektrisk</SelectItem>
@@ -231,9 +231,9 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             </Select>
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="bg-white border-slate-300 shadow-sm"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="active">Aktiv i drift</SelectItem>
                                     <SelectItem value="maintenance">På verksted / Vedlikehold</SelectItem>
@@ -245,16 +245,16 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50/50">
-                <CardHeader>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Fysiske Dimensjoner</CardTitle>
                     <CardDescription>Viktig informasjon for sjåføren angående broer, tunneler og trange veier.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="height">Høyde (meter)</Label>
-                            <Input 
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="height">Høyde (meter)</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" 
                                 id="height" 
                                 type="number" 
                                 step="0.01" 
@@ -265,8 +265,8 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="width">Bredde (meter)</Label>
-                            <Input 
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="width">Bredde (meter)</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" 
                                 id="width" 
                                 type="number" 
                                 step="0.01" 
@@ -277,8 +277,8 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="length">Lengde (meter)</Label>
-                            <Input 
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="length">Lengde (meter)</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" 
                                 id="length" 
                                 type="number" 
                                 step="0.01" 
@@ -292,60 +292,59 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50/50">
-                <CardHeader>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Kapasitet</CardTitle>
                     <CardDescription>Definer lasteevnen til kjøretøyet.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="weight">Nyttelast (kg)</Label>
-                            <Input id="weight" type="number" value={formData.capacity?.weight || ''} onChange={e => handleNestedChange('capacity', 'weight', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="weight">Nyttelast (kg)</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" id="weight" type="number" value={formData.capacity?.weight || ''} onChange={e => handleNestedChange('capacity', 'weight', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="volume">Volum (m³)</Label>
-                            <Input id="volume" type="number" step="0.1" value={formData.capacity?.volume || ''} onChange={e => handleNestedChange('capacity', 'volume', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="volume">Volum (m³)</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" id="volume" type="number" step="0.1" value={formData.capacity?.volume || ''} onChange={e => handleNestedChange('capacity', 'volume', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="pallets">Antall Paller</Label>
-                            <Input id="pallets" type="number" value={formData.capacity?.pallets || ''} onChange={e => handleNestedChange('capacity', 'pallets', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="pallets">Antall Paller</Label>
+                            <Input className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm" id="pallets" type="number" value={formData.capacity?.pallets || ''} onChange={e => handleNestedChange('capacity', 'pallets', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                     </div>
                     <div className="mt-4 space-y-2">
-                        <Label htmlFor="capacityNotes">Utfyllende informasjon om kapasitet</Label>
-                        <Textarea 
-                            id="capacityNotes" 
+                        <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="capacityNotes">Utfyllende informasjon om kapasitet</Label>
+                        <Textarea id="capacityNotes" 
                             placeholder="Skriv inn eventuelle begrensninger eller merknader angående kapasitet..." 
                             value={formData.capacity?.notes || ''} 
                             onChange={e => handleNestedChange('capacity', 'notes', e.target.value)} 
-                            className="resize-none"
+                            className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm min-h-[100px]"
                         />
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50/50">
-                <CardHeader>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Egenskaper & Utstyr</CardTitle>
                     <CardDescription>Spesifiser hvilket utstyr kjøretøyet har.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
-                            <Label htmlFor="tailLift" className="flex-1 cursor-pointer">Bakløfter (Lift)</Label>
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
+                            <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="tailLift">Bakløfter (Lift)</Label>
                             <Switch id="tailLift" checked={formData.capabilities?.tailLift} onCheckedChange={v => handleNestedChange('capabilities', 'tailLift', v)} />
                         </div>
-                        <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
-                            <Label htmlFor="refrigeration" className="flex-1 cursor-pointer">Kjøl/Frys</Label>
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
+                            <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="refrigeration">Kjøl/Frys</Label>
                             <Switch id="refrigeration" checked={formData.capabilities?.refrigeration} onCheckedChange={v => handleNestedChange('capabilities', 'refrigeration', v)} />
                         </div>
-                        <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
-                            <Label htmlFor="trailer" className="flex-1 cursor-pointer">Hengerfeste</Label>
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
+                            <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="trailer">Hengerfeste</Label>
                             <Switch id="trailer" checked={formData.capabilities?.trailerCoupling} onCheckedChange={v => handleNestedChange('capabilities', 'trailerCoupling', v)} />
                         </div>
-                        <div className="flex items-center justify-between p-3 border rounded-lg bg-white">
-                            <Label htmlFor="adr" className="flex-1 cursor-pointer">ADR (Farlig gods)</Label>
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors shadow-sm">
+                            <Label className="flex-1 cursor-pointer font-semibold text-slate-700" htmlFor="adr">ADR (Farlig gods)</Label>
                             <Switch id="adr" checked={formData.capabilities?.adr} onCheckedChange={v => handleNestedChange('capabilities', 'adr', v)} />
                         </div>
                     </div>
@@ -362,19 +361,17 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                         {formData.capabilities?.customFields && formData.capabilities.customFields.length > 0 ? (
                             <div className="space-y-3">
                                 {formData.capabilities.customFields.map((field, index) => (
-                                    <div key={index} className="flex items-start gap-2 bg-slate-50 p-2 rounded-md border border-slate-100">
+                                    <div key={index} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-sm">
                                         <div className="flex-1 space-y-2">
-                                            <Input 
-                                                placeholder="Navn på egenskap (f.eks. Jekketralle)" 
+                                            <Input placeholder="Navn på egenskap (f.eks. Jekketralle)" 
                                                 value={field.name} 
                                                 onChange={(e) => handleUpdateCustomField(index, 'name', e.target.value)}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-9 text-sm bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm"
                                             />
-                                            <Input 
-                                                placeholder="Verdi (f.eks. Ja, 2 stk, Manuell)" 
+                                            <Input placeholder="Verdi (f.eks. Ja, 2 stk, Manuell)" 
                                                 value={field.value} 
                                                 onChange={(e) => handleUpdateCustomField(index, 'value', e.target.value)}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-9 text-sm bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm"
                                             />
                                         </div>
                                         <Button 
@@ -390,27 +387,26 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-sm text-muted-foreground italic text-center py-4 bg-slate-50 rounded-md border border-dashed border-slate-200">
+                            <div className="text-sm text-muted-foreground italic text-center py-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
                                 Ingen egendefinerte egenskaper lagt til enda.
                             </div>
                         )}
                     </div>
 
                     <div className="mt-6 pt-6 border-t border-slate-200 space-y-2">
-                        <Label htmlFor="capabilitiesNotes">Utfyllende informasjon om utstyr</Label>
-                        <Textarea 
-                            id="capabilitiesNotes" 
+                        <Label className="text-slate-700 font-semibold mb-1 block" htmlFor="capabilitiesNotes">Utfyllende informasjon om utstyr</Label>
+                        <Textarea id="capabilitiesNotes" 
                             placeholder="F.eks. Lastebøyler, stropper, jekketralle inkludert..." 
                             value={formData.capabilities?.notes || ''} 
                             onChange={e => handleNestedChange('capabilities', 'notes', e.target.value)} 
-                            className="resize-none"
+                            className="bg-white border-slate-300 focus-visible:ring-primary/20 shadow-sm min-h-[100px]"
                         />
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="bg-slate-50/50">
-                 <CardHeader>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                 <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Kjøretøybilder</CardTitle>
                     <CardDescription>Last opp bilder av kjøretøyet. Maks 8 bilder.</CardDescription>
                 </CardHeader>
@@ -441,8 +437,8 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                 </CardContent>
             </Card>
 
-             <Card className="bg-slate-50/50">
-                <CardHeader>
+             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Dokumenter</CardTitle>
                     <CardDescription>Last opp og administrer viktige dokumenter som vognkort og forsikringsbevis.</CardDescription>
                 </CardHeader>
