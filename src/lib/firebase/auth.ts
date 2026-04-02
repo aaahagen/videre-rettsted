@@ -46,7 +46,7 @@ export const firebaseAuth: Auth = {
     return { uid, orgId };
   },
 
-  async inviteUser(email, role, name) {
+  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor', name?: string) {
     const user = auth.currentUser;
     if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
 
