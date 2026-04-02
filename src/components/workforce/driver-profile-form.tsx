@@ -250,7 +250,20 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 scheduleOverrides,
                 images: imageData,
                 documents: uploadedDocuments,
+                employmentType,
+                role: employmentType === 'external' ? 'contractor' : 'driver',
             };
+
+            if (employmentType === 'external') {
+                dataToSubmit.agencyInfo = {
+                    name: agencyName,
+                    contactPerson: agencyContact,
+                    phone: agencyPhone,
+                    email: agencyEmail,
+                };
+            } else {
+                dataToSubmit.agencyInfo = deleteField();
+            }
 
             if (useRotation) {
                 dataToSubmit.rotation = {
@@ -546,7 +559,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {skills.map((skill, i) => (<div key={i} className="flex items-center gap-1 bg-slate-200 text-slate-800 px-3 py-1 rounded-full text-sm font-medium border border-slate-300"> {skill} <button type="button" onClick={() => removeSkill(skill)} className="hover:text-slate-900 ml-1"><X className="h-3 w-3" /></button></div>))}
                                 </div>
-                            
+                            </div>
                             <div className="space-y-2 col-span-2 pt-2 border-t">
                                 <Label>Ansettelsestype</Label>
                                 <div className="flex flex-col sm:flex-row gap-4 mt-2">
