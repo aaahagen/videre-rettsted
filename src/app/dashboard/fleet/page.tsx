@@ -149,7 +149,16 @@ export default function FleetPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredVehicles.map(v => (
-                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative">
+                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden bg-white border-slate-200">
+                                {v.images && v.images.length > 0 && (
+                                    <div className="w-full h-48 relative bg-slate-100 border-b border-slate-100">
+                                        <img 
+                                            src={v.images.find(img => img.isMain)?.url || v.images[0].url} 
+                                            alt={v.name} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
                                 <CardHeader className="pb-3 flex flex-row items-start justify-between">
                                     <div>
                                         <CardTitle className="text-xl font-bold">{v.name}</CardTitle>
@@ -174,18 +183,7 @@ export default function FleetPage() {
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                                             <Truck className="h-4 w-4" />
                                             <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : v.type === 'trailer' ? 'Henger' : 'Personbil'}</span>
-                                            {v.documents && v.documents.length > 0 && (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <span className="flex items-center gap-1 ml-auto text-primary cursor-pointer bg-primary/10 px-2 py-0.5 rounded-full text-xs font-medium">
-                                                            <FileText className="h-3 w-3" /> {v.documents.length} doc
-                                                        </span>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{v.documents.length} dokument(er) lastet opp</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            )}
+
                                         </div>
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {v.capabilities?.tailLift && <Badge variant="secondary">Lift</Badge>}
@@ -227,6 +225,26 @@ export default function FleetPage() {
                                                         <span className="whitespace-pre-wrap">{v.capabilities.notes}</span>
                                                     </div>
                                                 )}
+                                            </div>
+                                        )}
+
+                                        {v.documents && v.documents.length > 0 && (
+                                            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vedlagte Dokumenter</span>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {v.documents.map((doc, idx) => (
+                                                        <a 
+                                                            key={idx} 
+                                                            href={doc.url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-primary transition-colors border border-slate-200 rounded-md p-2 group"
+                                                        >
+                                                            <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary shrink-0" />
+                                                            <span className="truncate">{doc.name}</span>
+                                                        </a>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
