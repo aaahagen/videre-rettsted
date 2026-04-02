@@ -143,7 +143,7 @@ export interface User {
   favorites: string[];
   visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
-  images?: { url: string; description?: string; uploadedAt?: any }[];
+  images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
 }
 
 export interface LogEntry {
@@ -185,7 +185,7 @@ export interface Vehicle {
   status: 'active' | 'maintenance' | 'inactive';
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
-  images?: { url: string; description?: string; uploadedAt?: any }[];
+  images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
   documents?: { url: string; name: string; type: 'registration' | 'insurance' | 'other'; uploadedAt?: any }[];
 }
 
