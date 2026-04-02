@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Route Templates:** Administrators can now save any configured route as a reusable "Template" (Mal). A new "Maler" tab on the Routes overview page displays all saved templates. Opening a template allows the user to quickly spawn a brand new, active route based on the template's stop sequence, addresses, and time settings.
 - **Route Completion Confirmation:** Drivers are now required to explicitly type "Ferdig" into a confirmation dialog to complete a route, preventing accidental completions.
 - **Route Locking:** Once a route is marked as completed, it becomes locked for the driver. Drivers cannot check/uncheck stops or edit the route anymore. Administrators retain full editing rights for corrections.
 - **Real-time Messaging System:** Added a dedicated communication hub (`/dashboard/messages`) allowing administrators to broadcast messages to all drivers or all administrators. Drivers can send direct messages back to the administrative team.

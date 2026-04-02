@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Route } from '@/lib/types';
 import { useSearch } from '@/hooks/use-search';
 
@@ -24,6 +25,7 @@ export default function RoutesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   const { query: searchQuery, setContext } = useSearch();
+  const [activeTab, setActiveTab] = useState("active");
   const router = useRouter();
 
   // Set context for global search
@@ -163,7 +165,7 @@ export default function RoutesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {displayedRoutes.map(route => {
+          {displayedRoutes.filter(r => r.status !== 'template').map(route => {
             const totalStops = route.places?.length || 0;
             
             let totalExpectedItems = route.places?.length || 0;

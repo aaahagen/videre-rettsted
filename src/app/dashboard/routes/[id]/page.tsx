@@ -474,6 +474,11 @@ export default function RouteDetailsPage() {
         duration: duration === 'N/A' ? undefined : duration,
         distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
+      
+      // Prevent saving an active route if it was a template that we are now "starting"
+      // Actually, if it's a template, maybe we shouldn't let them complete it.
+      // We will handle "starting a template" by copying it to a new active route instead.
+      
       (updatedRoute as any).baseAddress = deleteField();
       
       await firebaseDB.updateRoute(routeId, updatedRoute);
@@ -800,7 +805,11 @@ export default function RouteDetailsPage() {
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div>
-                 <CardTitle className="text-lg flex items-center gap-2">Rekkefølge {isEditMode && <Badge variant="outline" className="text-[10px] ml-2">Redigeringsmodus</Badge>}</CardTitle>
+                 <CardTitle className="text-lg flex items-center gap-2">
+                    Rekkefølge 
+                    {isEditMode && <Badge variant="outline" className="text-[10px] ml-2">Redigeringsmodus</Badge>}
+                    {route?.status === 'template' && <Badge variant="secondary" className="text-[10px] ml-2 bg-indigo-100 text-indigo-700">MAL</Badge>}
+                 </CardTitle>
                  {isEditMode && <span className="text-xs text-muted-foreground mt-1 block">Dra og slipp for å endre rekkefølge</span>}
               </div>
               {!isAdmin && route?.status !== 'completed' && (
@@ -974,7 +983,7 @@ export default function RouteDetailsPage() {
                   </div>
                   
                   {/* Finish Route Button for Drivers */}
-                  {!isAdmin && !isEditMode && routeItems.length > 0 && route?.status !== 'completed' && (
+                  {!isAdmin && !isEditMode && routeItems.length > 0 && route?.status !== 'completed' && route?.status !== 'template' && (
                       <div className="mt-8 pt-4 border-t border-slate-100">
                           <Button 
                               onClick={() => setIsFinishDialogOpen(true)}
@@ -1075,14 +1084,81 @@ export default function RouteDetailsPage() {
                      Optimer Rekkefølge
                    </Button>
                 )}
-                <Button 
-                   className="w-full shadow-sm font-bold h-12 text-md"
-                   onClick={handleSave} 
-                   disabled={isSaving || isCalculating}
-                >
-                   {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-                   Lagre Rute
-                </Button>
+                {route?.status === 'template' ? (
+                   <Button 
+                     className="w-full shadow-sm font-bold h-12 text-md bg-indigo-600 hover:bg-indigo-700 text-white"
+                     onClick={async () => {
+                         if (!route) return;
+                         setIsSaving(true);
+                         try {
+                           const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+                           const newRoute = await firebaseDB.createRoute({
+                             name: `Ny rute fra ${route.name}`,
+                             orgId: route.orgId,
+                             status: 'active',
+                             places: placeIds,
+                             startAddress,
+                             endAddress,
+                             notes: routeNotes,
+                             prepTimeStart,
+                             prepTimeEnd,
+                             breakTime,
+                             fuelServiceTime,
+                           });
+                           toast({ title: 'Rute Opprettet', description: 'En ny aktiv rute ble opprettet fra malen.' });
+                           router.push(`/dashboard/routes/${newRoute.id}`);
+                         } catch(e) {
+                           toast({ title: 'Feil', description: 'Kunne ikke opprette rute fra mal', variant: 'destructive' });
+                         } finally { setIsSaving(false); }
+                     }} 
+                     disabled={isSaving || isCalculating}
+                  >
+                     {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <RouteIcon className="mr-2 h-5 w-5" />}
+                     Opprett ny rute fra denne malen
+                  </Button>
+                ) : (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                     variant="secondary"
+                     className="w-full sm:w-1/3 shadow-sm font-bold h-12 text-md border border-slate-200"
+                     onClick={async () => {
+                         if (!route) return;
+                         setIsSaving(true);
+                         try {
+                           const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+                           await firebaseDB.createRoute({
+                             name: `Mal: ${route.name}`,
+                             orgId: route.orgId,
+                             status: 'template',
+                             places: placeIds,
+                             startAddress,
+                             endAddress,
+                             notes: routeNotes,
+                             prepTimeStart,
+                             prepTimeEnd,
+                             breakTime,
+                             fuelServiceTime,
+                           });
+                           toast({ title: 'Mal Lagret', description: 'En kopi av ruten ble lagret som mal.' });
+                         } catch(e) {
+                           toast({ title: 'Feil', description: 'Kunne ikke lagre mal', variant: 'destructive' });
+                         } finally { setIsSaving(false); }
+                     }} 
+                     disabled={isSaving || isCalculating}
+                  >
+                     {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                     Lagre som Mal
+                  </Button>
+                  <Button 
+                     className="w-full sm:w-2/3 shadow-sm font-bold h-12 text-md"
+                     onClick={handleSave} 
+                     disabled={isSaving || isCalculating}
+                  >
+                     {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
+                     Lagre Endringer
+                  </Button>
+                </div>
+                )}
              </CardContent>
           </Card>
       )}
