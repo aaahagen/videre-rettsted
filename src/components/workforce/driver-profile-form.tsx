@@ -611,8 +611,6 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 </div>
                             </div>
                         )}
-
-                        </div>
                         </CardContent>
                     </Card>
                 </div>
