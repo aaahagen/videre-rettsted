@@ -610,80 +610,6 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                     </Card>
 
                     <Card className="bg-slate-50/50">
-                        <CardHeader>
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <CardTitle>Arbeidstid</CardTitle>
-                                    <CardDescription>Definer standard arbeidstid eller en rullerende turnusplan.</CardDescription>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0 pt-1">
-                                    <Label htmlFor="useRotation" className="text-sm font-normal text-muted-foreground">Bruk turnus?</Label>
-                                    <Switch id="useRotation" checked={useRotation} onCheckedChange={setUseRotation} />
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {!useRotation ? (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="start">Standard starttid</Label>
-                                        <Input id="start" type="time" required value={workingHoursStart} onChange={(e) => setWorkingHoursStart(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="end">Standard sluttid</Label>
-                                        <Input id="end" type="time" required value={workingHoursEnd} onChange={(e) => setWorkingHoursEnd(e.target.value)} />
-                                    </div>
-                                </div>
-                            ) : (
-                               <div className="space-y-6">
-                                    <div className="space-y-2 w-full max-w-full sm:max-w-[200px]">
-                                        <Label>Startdato for turnus</Label>
-                                        <Input 
-                                            type="date" 
-                                            value={rotationStartDateStr} 
-                                            onChange={(e) => setRotationStartDateStr(e.target.value)}
-                                            className="w-full max-w-full"
-                                        />
-                                        <p className="text-xs text-muted-foreground mt-1">Denne datoen markerer uke 1 i rotasjonen.</p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {rotationWeeks.map((week, weekIndex) => (
-                                            <div key={weekIndex} className="bg-white border rounded-lg p-4 space-y-3">
-                                                <div className="flex justify-between items-center border-b pb-2 mb-4">
-                                                    <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
-                                                    {rotationWeeks.length > 1 && <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">Fjern uke</Button>}
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
-                                                        const dayData = week.days[dayKey];
-                                                        const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
-                                                        return (
-                                                            <div key={dayKey} className={`border rounded p-2 flex flex-col gap-2 ${dayData.isWorking ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-100'}`}>
-                                                                <div className="flex items-center justify-between">
-                                                                    <Label className="text-xs font-bold uppercase">{dayNames[dayKey]}</Label>
-                                                                    <Switch checked={dayData.isWorking} onCheckedChange={(v) => updateRotationDay(weekIndex, dayKey, 'isWorking', v)} className="scale-75 origin-right" />
-                                                                </div>
-                                                                {dayData.isWorking ? (
-                                                                    <div className="flex flex-col gap-1 mt-1">
-                                                                        <Input type="time" value={dayData.start || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} className="h-9 text-xs px-2 w-full" />
-                                                                        <Input type="time" value={dayData.end || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} className="h-9 text-xs px-2 w-full" />
-                                                                    </div>
-                                                                ) : <div className="h-[76px] flex items-center justify-center text-xs text-muted-foreground italic">Fri</div>}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" /> Legg til uke i rotasjonen</Button>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-slate-50/50">
                          <CardHeader>
                             <CardTitle>Avvik & Ferie</CardTitle>
                             <CardDescription>Legg til sykemelding, ferie eller avvikende arbeidstid. Bruk perioder for lengre fravær.</CardDescription>
@@ -857,6 +783,80 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                     </Card>
                 </div>
             </div>
+
+            <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <CardTitle>Arbeidstid</CardTitle>
+                                    <CardDescription>Definer standard arbeidstid eller en rullerende turnusplan.</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0 pt-1">
+                                    <Label htmlFor="useRotation" className="text-sm font-normal text-muted-foreground">Bruk turnus?</Label>
+                                    <Switch id="useRotation" checked={useRotation} onCheckedChange={setUseRotation} />
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {!useRotation ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="start">Standard starttid</Label>
+                                        <Input id="start" type="time" required value={workingHoursStart} onChange={(e) => setWorkingHoursStart(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="end">Standard sluttid</Label>
+                                        <Input id="end" type="time" required value={workingHoursEnd} onChange={(e) => setWorkingHoursEnd(e.target.value)} />
+                                    </div>
+                                </div>
+                            ) : (
+                               <div className="space-y-6">
+                                    <div className="space-y-2 w-full max-w-full sm:max-w-[200px]">
+                                        <Label>Startdato for turnus</Label>
+                                        <Input 
+                                            type="date" 
+                                            value={rotationStartDateStr} 
+                                            onChange={(e) => setRotationStartDateStr(e.target.value)}
+                                            className="w-full max-w-full"
+                                        />
+                                        <p className="text-xs text-muted-foreground mt-1">Denne datoen markerer uke 1 i rotasjonen.</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {rotationWeeks.map((week, weekIndex) => (
+                                            <div key={weekIndex} className="bg-white border rounded-lg p-4 space-y-3">
+                                                <div className="flex justify-between items-center border-b pb-2 mb-4">
+                                                    <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
+                                                    {rotationWeeks.length > 1 && <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">Fjern uke</Button>}
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
+                                                        const dayData = week.days[dayKey];
+                                                        const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
+                                                        return (
+                                                            <div key={dayKey} className={`border rounded p-2 flex flex-col gap-2 ${dayData.isWorking ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-100'}`}>
+                                                                <div className="flex items-center justify-between">
+                                                                    <Label className="text-xs font-bold uppercase">{dayNames[dayKey]}</Label>
+                                                                    <Switch checked={dayData.isWorking} onCheckedChange={(v) => updateRotationDay(weekIndex, dayKey, 'isWorking', v)} className="scale-75 origin-right" />
+                                                                </div>
+                                                                {dayData.isWorking ? (
+                                                                    <div className="flex flex-col gap-1 mt-1">
+                                                                        <Input type="time" value={dayData.start || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} className="h-9 text-xs px-2 w-full" />
+                                                                        <Input type="time" value={dayData.end || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} className="h-9 text-xs px-2 w-full" />
+                                                                    </div>
+                                                                ) : <div className="h-[76px] flex items-center justify-center text-xs text-muted-foreground italic">Fri</div>}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" /> Legg til uke i rotasjonen</Button>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
             <div className="flex justify-end gap-3 border-t pt-6">
                 <Button type="button" variant="ghost" onClick={onCancel}>Avbryt</Button>
