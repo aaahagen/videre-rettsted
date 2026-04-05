@@ -654,7 +654,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                                     <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
                                                     {rotationWeeks.length > 1 && <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">Fjern uke</Button>}
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2">
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
                                                         const dayData = week.days[dayKey];
                                                         const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
