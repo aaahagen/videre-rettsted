@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { deleteField } from 'firebase/firestore';
 
@@ -207,6 +207,38 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [agencyContact, setAgencyContact] = useState(user?.agencyInfo?.contactPerson || '');
     const [agencyPhone, setAgencyPhone] = useState(user?.agencyInfo?.phone || '');
     const [agencyEmail, setAgencyEmail] = useState(user?.agencyInfo?.email || '');
+    
+    // Core HR fields
+    const [phone, setPhone] = useState(user.phone || '');
+    const [address, setAddress] = useState(user.address || '');
+    const [emergencyContact, setEmergencyContact] = useState(user.emergencyContact || '');
+    const [nextOfKin, setNextOfKin] = useState(user.nextOfKin || '');
+    const [children, setChildren] = useState(user.children || '');
+    const [adminNotes, setAdminNotes] = useState(user.adminNotes || '');
+    const [seniorityDate, setSeniorityDate] = useState(user.seniorityDate || '');
+    
+    // Extended HR fields
+    const [dateOfBirth, setDateOfBirth] = useState(user.dateOfBirth || '');
+    const [socialSecurityNumber, setSocialSecurityNumber] = useState(user.socialSecurityNumber || '');
+    const [gender, setGender] = useState(user.gender || '');
+    const [employeeId, setEmployeeId] = useState(user.employeeId || '');
+    const [jobTitle, setJobTitle] = useState(user.jobTitle || '');
+    const [department, setDepartment] = useState(user.department || '');
+    const [supervisor, setSupervisor] = useState(user.supervisor || '');
+    const [employmentStatus, setEmploymentStatus] = useState(user.employmentStatus || '');
+    const [probationEndDate, setProbationEndDate] = useState(user.probationEndDate || '');
+    const [hourlyRate, setHourlyRate] = useState(user.hourlyRate || '');
+    const [bankAccountNumber, setBankAccountNumber] = useState(user.bankAccountNumber || '');
+    const [taxCode, setTaxCode] = useState(user.taxCode || '');
+    const [staffHandbookAcknowledged, setStaffHandbookAcknowledged] = useState(user.staffHandbookAcknowledged || false);
+    const [backgroundCheckDate, setBackgroundCheckDate] = useState(user.backgroundCheckDate || '');
+    
+    // Contract fields
+    const [contracts, setContracts] = useState<DriverProfile['contracts']>(user.contracts || []);
+    const [newContractStart, setNewContractStart] = useState('');
+    const [newContractEnd, setNewContractEnd] = useState('');
+    const [newContractHours, setNewContractHours] = useState('');
+    const [newContractRole, setNewContractRole] = useState('Sjåfør');
 
         const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -256,7 +288,33 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 documents: uploadedDocuments,
                 employmentType,
                 role: employmentType === 'external' ? 'contractor' : 'driver',
+                phone,
+                address,
+                emergencyContact,
+                nextOfKin,
+                children,
+                adminNotes,
+                seniorityDate,
+                dateOfBirth,
+                socialSecurityNumber,
+                gender,
+                employeeId,
+                jobTitle,
+                department,
+                supervisor,
+                employmentStatus,
+                probationEndDate,
+                bankAccountNumber,
+                taxCode,
+                staffHandbookAcknowledged,
+                backgroundCheckDate,
             };
+
+            if (hourlyRate) {
+                dataToSubmit.hourlyRate = Number(hourlyRate);
+            } else {
+                dataToSubmit.hourlyRate = deleteField() as any;
+            }
 
             if (employmentType === 'external') {
                 dataToSubmit.agencyInfo = {
@@ -300,6 +358,27 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
 
     const removeCert = (cert: string) => {
         setCertifications(certifications.filter(c => c !== cert));
+    };
+
+    
+    const addContract = () => {
+        if (!newContractStart || !newContractHours) return;
+        const newContract = {
+            id: uuidv4(),
+            startDate: newContractStart,
+            endDate: newContractEnd || undefined,
+            contractedHours: Number(newContractHours),
+            role: newContractRole
+        };
+        setContracts([...(contracts || []), newContract]);
+        setNewContractStart('');
+        setNewContractEnd('');
+        setNewContractHours('');
+        setNewContractRole('Sjåfør');
+    };
+
+    const removeContract = (id: string) => {
+        setContracts((contracts || []).filter(c => c.id !== id));
     };
 
     const addSkill = () => {
@@ -371,6 +450,165 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                 </div>
                 
                 <div className="w-full lg:w-2/3 space-y-6">
+                    <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <CardTitle>Arbeidskontrakter</CardTitle>
+                            <CardDescription>Oversikt over nåværende og tidligere kontrakter.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end">
+                                <div className="space-y-2">
+                                    <Label>Fra dato</Label>
+                                    <Input type="date" value={newContractStart} onChange={e => setNewContractStart(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Til dato (valgfri)</Label>
+                                    <Input type="date" value={newContractEnd} onChange={e => setNewContractEnd(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Timer/uke</Label>
+                                    <Input type="number" value={newContractHours} onChange={e => setNewContractHours(e.target.value)} placeholder="F.eks 37.5" />
+                                </div>
+                                <Button type="button" variant="secondary" onClick={addContract} disabled={!newContractStart || !newContractHours} className="w-full"><Plus className="h-4 w-4 mr-2" /> Legg til</Button>
+                            </div>
+
+                            {(contracts || []).length > 0 && (
+                                <div className="space-y-2 pt-4 border-t">
+                                    {(contracts || []).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(contract => (
+                                        <div key={contract.id} className="flex justify-between items-center p-3 border rounded-lg bg-white shadow-sm">
+                                            <div className="grid grid-cols-3 gap-4 flex-1">
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Periode</p>
+                                                    <p className="text-sm font-medium">{format(parseISO(contract.startDate), 'dd.MM.yyyy')} - {contract.endDate ? format(parseISO(contract.endDate), 'dd.MM.yyyy') : 'Pågående'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Stilling</p>
+                                                    <p className="text-sm font-medium">{contract.role}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Timer/uke</p>
+                                                    <p className="text-sm font-medium">{contract.contractedHours} t</p>
+                                                </div>
+                                            </div>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeContract(contract.id)} className="text-destructive hover:bg-destructive/10 ml-4 shrink-0">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <CardTitle>Personalinformasjon</CardTitle>
+                            <CardDescription>Grunnleggende informasjon for de ansatte.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Telefonnummer</Label>
+                                    <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Tlf nr" type="tel" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Adresse</Label>
+                                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full adresse" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Nødkontakt / Pårørende</Label>
+                                    <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} placeholder="Navn og tlf" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Ansatt siden</Label>
+                                    <Input type="date" value={seniorityDate} onChange={e => setSeniorityDate(e.target.value)} />
+                                </div>
+                            </div>
+                        
+                                <div className="space-y-2">
+                                    <Label>Fødselsdato</Label>
+                                    <Input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Personnummer / D-nummer</Label>
+                                    <Input value={socialSecurityNumber} onChange={e => setSocialSecurityNumber(e.target.value)} placeholder="11 siffer" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Kjønn</Label>
+                                    <Select value={gender} onValueChange={setGender}>
+                                        <SelectTrigger><SelectValue placeholder="Velg kjønn" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Mann</SelectItem>
+                                            <SelectItem value="female">Kvinne</SelectItem>
+                                            <SelectItem value="other">Annet</SelectItem>
+                                            <SelectItem value="prefer_not_to_say">Ønsker ikke å oppgi</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Ansattnummer</Label>
+                                    <Input value={employeeId} onChange={e => setEmployeeId(e.target.value)} placeholder="F.eks. 1001" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Stillingstittel</Label>
+                                    <Input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Sjåfør" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Avdeling</Label>
+                                    <Input value={department} onChange={e => setDepartment(e.target.value)} placeholder="Transport" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Nærmeste leder</Label>
+                                    <Input value={supervisor} onChange={e => setSupervisor(e.target.value)} placeholder="Navn på leder" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Stillingsprosent / Status</Label>
+                                    <Select value={employmentStatus} onValueChange={setEmploymentStatus}>
+                                        <SelectTrigger><SelectValue placeholder="Velg status" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="full-time">Heltid (100%)</SelectItem>
+                                            <SelectItem value="part-time">Deltid</SelectItem>
+                                            <SelectItem value="temporary">Midlertidig</SelectItem>
+                                            <SelectItem value="on-call">Tilkalling / Ringevikar</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Prøvetid utløper</Label>
+                                    <Input type="date" value={probationEndDate} onChange={e => setProbationEndDate(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Timelønn / Lønn</Label>
+                                    <Input type="number" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} placeholder="NOK" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Bankkontonummer</Label>
+                                    <Input value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} placeholder="11 siffer" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Skattekort / Tabell</Label>
+                                    <Input value={taxCode} onChange={e => setTaxCode(e.target.value)} placeholder="F.eks. 7100" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Dato for bakgrunnssjekk</Label>
+                                    <Input type="date" value={backgroundCheckDate} onChange={e => setBackgroundCheckDate(e.target.value)} />
+                                </div>
+                                <div className="space-y-2 col-span-1 sm:col-span-2 flex items-center gap-2 pt-2 border-t mt-2">
+                                    <Switch checked={staffHandbookAcknowledged} onCheckedChange={setStaffHandbookAcknowledged} id="handbook" />
+                                    <Label htmlFor="handbook">Har lest og akseptert personalhåndboken</Label>
+                                </div>
+                            <div className="space-y-2 mt-4 pt-4 border-t">
+                                <Label>Admin Notat (Kun synlig for ledere)</Label>
+                                <textarea 
+                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    value={adminNotes} 
+                                    onChange={e => setAdminNotes(e.target.value)} 
+                                    placeholder="Interne notater..."
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card className="bg-slate-50/50">
                         <CardHeader>
                             <div className="flex items-start justify-between">

@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Digital Contract Management:** Administrators can now upload and manage digital contracts for each driver. The system supports version history, allowing for a complete overview of a driver's contract changes over time.
+- **Centralized HR Information:** The driver profile has been expanded to include a dedicated section for essential HR information, including emergency contact, next of kin, and other relevant personalia.
+- **Administrative Notes:** A new private notes field has been added to the driver profile, allowing administrators to keep a record of important information and observations.
 - **Gamification (Explorer Status):** Added a visual progress bar to the user profile dropdown (accessible by clicking the username in the sidebar). It calculates the driver's "Explorer Status" by dynamically comparing their historically completed stops against the total number of places registered to the organization.
 - **Custom Vehicle Attributes:** Added a dynamic "Egendefinerte Egenskaper" (Custom Attributes) section to the vehicle registration form. Administrators can now define any number of custom key-value pairs (e.g., "Jekketralle: 2 stk", "Girkasse: Manuell") for a vehicle. These are displayed as stylish tags on the main fleet overview.
 - **Trailer Support:** Added "Henger" (Trailer) as a primary vehicle type, and "Flakbil / Åpen Henger" (Flatbed) as a core capability toggle.
@@ -74,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Date Picker Reliability:** Replaced the custom Popover/Calendar component used for selecting dates across the entire application (including the main Workforce page) with a native HTML `<input type="date">` for improved reliability and vastly superior mobile support.
 - **Driver Profile Image limit**: Limited the number of images a driver can upload to their profile to 1.
 - **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
-- **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on saved Place IDs.
+- **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on a saved Place ID.
 - **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service.
 - **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
@@ -92,7 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Route Recalculation:** Fixed an issue where the total estimated route time failed to update instantly when a user manually dragged and dropped stops to reorder them. The UI now reliably recalculates driving distance and total duration upon every physical route alteration.
 - **Android Touch Support:** Resolved a bug preventing drag-and-drop reordering of route items on Android devices by implementing a dedicated `TouchSensor` with an activation delay.
 - **Optimization API Lock:** Corrected a bug in the backend `calculateRouteDistance` function where Google Maps was permanently instructed to "optimize" the route. It now correctly respects manual user ordering during a standard calculation and only invokes the optimization engine when the explicit "Optimer Rekkefølge" button is pressed.
-- **Memory Leak in Route Calculation:** Resolved a memory leak caused by unresolved Promises in the debounce function used for distance calculations on the route page.
+- **Memory Leak in Route Calculation:** Resolved a memory leak caused by unresolved Promises in the debounce function for distance calculations on the route page.
 - **Route Optimization Logic:** Fixed a bug where the "Optimer Rekkefølge" (Optimize Order) button would fail to update the visual order of the stops on the screen.
 - **Frontend Build Error:** Fixed a syntax error in the `page.tsx` file for the detailed route view.
 - **Distance Calculation Crash:** Resolved an issue where the distance calculation would crash the backend function if Google Maps returned ZERO_RESULTS.

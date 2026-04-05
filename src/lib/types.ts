@@ -189,6 +189,24 @@ export interface Vehicle {
   documents?: { url: string; name: string; type: 'registration' | 'insurance' | 'other'; uploadedAt?: any }[];
 }
 
+export interface Contract {
+  id: string;
+  startDate: string; // ISO date string
+  endDate?: string; // ISO date string, optional for current contract
+  contractedHours: number; // Weekly hours
+  role: string;
+  salary?: number;
+}
+
+export interface TimeLog {
+  id: string;
+  date: string; // ISO date string
+  planned: { start: string; end: string; };
+  worked: { start: string; end: string; };
+  overtimeStatus: 'pending' | 'approved' | 'declined';
+  logMethod?: 'manual' | 'geofence';
+}
+
 export interface DriverProfile extends User {
   employmentType?: 'internal' | 'external';
   agencyInfo?: {
@@ -223,6 +241,39 @@ export interface DriverProfile extends User {
   certifications?: string[]; // e.g., ["ADR", "Forklift"]
   skills?: string[];
   documents?: { url: string; name: string; type: string; uploadedAt?: any }[]; // For certificates, diplomas, etc.
+  
+  // New HR/Workforce fields
+  address?: string;
+  phone?: string;
+  emergencyContact?: string; // Format: Name, Relationship, Phone
+  nextOfKin?: string;
+  children?: string; // Simple text field for now, can be expanded later
+  adminNotes?: string;
+  seniorityDate?: string; // ISO date string
+  contracts?: Contract[];
+  timeLogs?: TimeLog[];
+
+  // Personal Identification
+  dateOfBirth?: string; // ISO date string
+  socialSecurityNumber?: string;
+  gender?: string;
+
+  // Employment & Status
+  employeeId?: string;
+  jobTitle?: string;
+  department?: string;
+  supervisor?: string;
+  employmentStatus?: string; // e.g., 'full-time', 'part-time'
+  probationEndDate?: string; // ISO date string
+
+  // Compensation & Benefits
+  hourlyRate?: number;
+  bankAccountNumber?: string;
+  taxCode?: string;
+
+  // Compliance & Records
+  staffHandbookAcknowledged?: boolean;
+  backgroundCheckDate?: string; // ISO date string
 }
 
 export interface Message {

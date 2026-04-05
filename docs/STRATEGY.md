@@ -23,7 +23,26 @@ The goal of this phase is to establish the foundational data structures and add 
 7.  ~~**Route Archiving & Templates (Tier 1):** Implement the ability to save completed routes as templates.~~ (Completed)
 8.  ~~**Driver Gamification:** Implement a visual progress bar reflecting the driver's actual exploration of the organization's delivery network.~~ (Completed)
 
-## Phase 2: End-to-End Verification & Process Integrity
+## Phase 2: Advanced Workforce Management & HR Integration
+
+This phase expands on the initial workforce module, introducing comprehensive HR and compliance features to provide administrators with deeper insights and control over personnel management.
+
+1.  **Time & Attendance Tracking:**
+    *   **Worked vs. Planned Hours:** Develop a system for drivers to log their actual start and end times.
+    *   **Geofence-based Time Logging:** Implement an automatic "stamp in/out" system using geofencing to capture when drivers arrive at and leave the main depot/office.
+    *   **Multi-Day Timeline View:** Enhance the workforce page with a timeline visualization, allowing administrators to compare planned vs. actual worked hours for each driver over selectable periods (e.g., week, month).
+    *   **Overtime Management:** Implement a workflow for administrators to review, approve, or decline logged overtime, whether entered manually or captured automatically.
+2.  **Personnel File Enhancements:**
+    *   ~~**Centralized Contact Info:** Redesign the personnel card to display all key personalia (address, phone, email, emergency contact, next of kin, children) in one accessible location.~~ (Completed)
+    *   ~~**Administrative Notes:** Add a dedicated, private text field on each driver's profile for administrator comments.~~ (Completed)
+    *   **Salary & Seniority Tracking:** Add fields for salary details and track seniority based on the start date.
+3.  **Contract Management:**
+    *   ~~**Digital Contracts:** Create a system to store contract details, including contracted hours, role, and start date.~~ (Completed)
+    *   ~~**Contract History:** Implement versioning for contracts, allowing administrators to view a complete history of a driver's roles and contract changes over time.~~ (Completed)
+4.  **Compliance & Planning Alerts:**
+    *   **Working Hours Directive:** Integrate a rules engine into the schedule planner that alerts administrators in real-time if they attempt to create a schedule that violates legal or contractually agreed-upon working hour limits.
+
+## Phase 3: End-to-End Verification & Process Integrity
 
 This phase focuses on building the features that ensure what is planned is what actually happens in the physical world, creating a full, verifiable chain of custody.
 
@@ -31,7 +50,7 @@ This phase focuses on building the features that ensure what is planned is what 
 2.  **Vehicle Loading & Manifest System:** Implement the barcode-scanning workflow for verifying loaded items.
 3.  **Integrated Digital Vehicle Inspections:** Build a comprehensive, in-app vehicle inspection module with customizable checklists, media attachments, defect management, and shareable PDF reports.
 
-## Phase 3: Intelligent Automation & Optimization
+## Phase 4: Intelligent Automation & Optimization
 
 This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
 
@@ -44,15 +63,15 @@ This is the phase where we leverage all the data and structures from the previou
 3.  **Constraint-Based Automatic Route Generation (Tier 3):** Use Google OR-Tools to automatically generate optimized, multi-stop daily routes based on all defined constraints (Goods, Vehicles, Places, and Drivers).
 4.  **Geofence-based Delivery Alerts:** Automatically flag potential delivery errors by comparing GPS location with the planned stop's address.
 
-## Phase 4: Commercialization & Multi-Tenancy
+## Phase 5: Commercialization & Multi-Tenancy
 
 This phase focuses on building the features necessary to offer the application as a multi-tenant, subscription-based service (SaaS).
 
 1.  **Super-Admin & Organization Management:** Create a "Super-Admin" role (for you as the owner) with the ability to manage different customer organizations, users, and permissions.
 2.  **Stripe Payment Integration:** Integrate the Stripe API to handle customer subscriptions, billing, and payments.
 
-## Phase 5: Resilience & Accessibility
+## Phase 6: Resilience & Accessibility
 
 This phase focuses on extending the application's reach and ensuring it remains functional even in challenging network conditions.
 
-1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data (e.g., routes, places) even when offline. The app will sync its data with the backend whenever a connection becomes available. *(Note: Firestore IndexedDB offline caching is already enabled at the data layer).* 
+1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data (e.g., routes, places) even when offline. The app will sync its data with the backend whenever a connection becomes available. *(Note: Firestore IndexedDB offline caching is already enabled at the data layer).*
