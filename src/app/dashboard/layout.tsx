@@ -52,7 +52,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col relative">
+        <div className="flex flex-1 flex-col relative min-w-0">
           {isUpdateAvailable && (
             <div className="bg-primary text-primary-foreground text-center p-2 flex items-center justify-center">
               <p className="text-sm font-medium">En ny versjon er tilgjengelig.</p>
@@ -121,7 +121,7 @@ export default function DashboardLayout({
                 </div>
             )}
           </header>
-          <main className="flex-1 bg-slate-50/50">
+          <main className="flex-1 bg-slate-50/50 min-w-0 flex flex-col">
             {children}
           </main>
         </div>
