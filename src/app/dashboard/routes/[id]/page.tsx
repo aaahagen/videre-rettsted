@@ -18,6 +18,7 @@ import { deleteField } from 'firebase/firestore';
 import { firebaseDB, markPlaceVisited } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
   AlertDialog,
@@ -1147,6 +1148,7 @@ export default function RouteDetailsPage() {
                   </Button>
                 ) : (
                 <div className="flex flex-col sm:flex-row gap-4">
+                  {isAdmin && (
                   <Button 
                      variant="secondary"
                      className="w-full sm:w-1/3 shadow-sm font-bold h-12 text-md border border-slate-200"
@@ -1178,8 +1180,9 @@ export default function RouteDetailsPage() {
                      {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
                      Lagre som Mal
                   </Button>
+                  )}
                   <Button 
-                     className="w-full sm:w-2/3 shadow-sm font-bold h-12 text-md"
+                     className={cn("w-full shadow-sm font-bold h-12 text-md", isAdmin ? "sm:w-2/3" : "")}
                      onClick={handleSave} 
                      disabled={isSaving || isCalculating}
                   >
