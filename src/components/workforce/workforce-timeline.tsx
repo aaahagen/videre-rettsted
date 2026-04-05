@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Edit, User as UserIcon } from 'lucide-react'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay, isToday, addWeeks, subWeeks, addMonths, subMonths, isWeekend } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { getDriverStatus } from '@/app/dashboard/workforce/page';
+import { getDriverStatus } from "@/lib/workforce-utils";
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
