@@ -654,7 +654,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                                     <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
                                                     {rotationWeeks.length > 1 && <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">Fjern uke</Button>}
                                                 </div>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                                                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
                                                         const dayData = week.days[dayKey];
                                                         const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
@@ -666,10 +666,10 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                                                 </div>
                                                                 {dayData.isWorking ? (
                                                                     <div className="flex flex-col gap-1 mt-1">
-                                                                        <Input type="time" value={dayData.start || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} className="h-7 text-xs px-2" />
-                                                                        <Input type="time" value={dayData.end || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} className="h-7 text-xs px-2" />
+                                                                        <Input type="time" value={dayData.start || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} className="h-9 text-xs px-2 w-full" />
+                                                                        <Input type="time" value={dayData.end || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} className="h-9 text-xs px-2 w-full" />
                                                                     </div>
-                                                                ) : <div className="h-14 flex items-center justify-center text-xs text-muted-foreground italic">Fri</div>}
+                                                                ) : <div className="h-[76px] flex items-center justify-center text-xs text-muted-foreground italic">Fri</div>}
                                                             </div>
                                                         );
                                                     })}
