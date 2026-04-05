@@ -1,4 +1,3 @@
-
 # Development Strategy & Roadmap
 
 This document outlines the phased implementation plan for future features. The goal is to build new functionality in a logical order that minimizes technical conflicts and delivers value incrementally.
@@ -28,10 +27,29 @@ The goal of this phase is to establish the foundational data structures and add 
 This phase expands on the initial workforce module, introducing comprehensive HR and compliance features to provide administrators with deeper insights and control over personnel management.
 
 1.  **Time & Attendance Tracking:**
-    *   **Worked vs. Planned Hours:** Develop a system for drivers to log their actual start and end times.
-    *   **Geofence-based Time Logging:** Implement an automatic "stamp in/out" system using geofencing to capture when drivers arrive at and leave the main depot/office.
+    *   **Core Principle - Worked vs. Planned Hours:** The system will be built on the core principle of separating the *planned* schedule from the *actual* hours worked. A new, immutable `WorkLog` data object will be introduced as the source of truth for payroll.
+    *   **Dual Stamping Methods for All Driver Types:**
+        *   **A) Geofence-Based Stamping:** For drivers starting at a fixed depot, the mobile app will only allow "Start/End Shift" actions when they are within the depot's geofence, providing strong location-based verification.
+        *   **B) Field-Based GPS Stamping:** For drivers starting from home or in the field, the app will allow "Start/End Shift" from any location, capturing the GPS coordinates at the moment of the stamp. The admin UI will display these points on a map for verification.
+    *   **Automated Overtime & Approval Workflow:** An automated process will flag any `WorkLog` where actual hours exceed planned hours, placing it in an admin approval queue. The dashboard will provide a simple one-click "Approve/Decline" interface, complete with GPS map visualization for field-based logs.
     *   ~~**Multi-Day Timeline View:** Enhance the workforce page with a timeline visualization, allowing administrators to compare planned vs. actual worked hours for each driver over selectable periods (e.g., week, month).~~ (Completed)
-    *   **Overtime Management:** Implement a workflow for administrators to review, approve, or decline logged overtime, whether entered manually or captured automatically.
+    *   **Proposed Data Model (`WorkLog`):**
+        ```typescript
+        interface WorkLog {
+          id: string;
+          driverId: string;
+          plannedStart: ISODateTime;
+          plannedEnd: ISODateTime;
+          actualPunchIn: ISODateTime;
+          actualPunchOut: ISODateTime;
+          entryMethod: 'geofence' | 'gps_stamp' | 'manual_entry';
+          punchInLocation?: { lat: number, lon: number };
+          punchOutLocation?: { lat: number, lon: number };
+          status: 'pending_review' | 'needs_overtime_approval' | 'approved' | 'declined';
+          overtimeMinutes?: number;
+          notes?: string;
+        }
+        ```
 2.  **Personnel File Enhancements:**
     *   ~~**Centralized Contact Info:** Redesign the personnel card to display all key personalia (address, phone, email, emergency contact, next of kin, children) in one accessible location.~~ (Completed)
     *   ~~**Administrative Notes:** Add a dedicated, private text field on each driver's profile for administrator comments.~~ (Completed)
