@@ -36,7 +36,7 @@ export function WorkforceTimeline({ drivers, onEditDriver }: WorkforceTimelinePr
     };
 
     return (
-        <Card className="border-slate-200 shadow-sm overflow-hidden w-full max-w-full overflow-x-hidden">
+        <Card className="border-slate-200 shadow-sm overflow-hidden flex flex-col w-full min-w-0">
             <CardContent className="p-0">
                 <div className="flex items-center justify-between p-4 bg-slate-50 border-b border-slate-200">
                     <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export function WorkforceTimeline({ drivers, onEditDriver }: WorkforceTimelinePr
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto w-full min-w-0 flex-1">
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50">
