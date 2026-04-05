@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multi-Day Timeline View:** Added a "Timeline" view to the workforce page, allowing administrators to visualize schedules over a week or month. This provides a clear overview of who is working, on vacation, or sick, making it easier to compare planned vs. actual hours.
 - **Digital Contract Management:** Administrators can now upload and manage digital contracts for each driver. The system supports version history, allowing for a complete overview of a driver's contract changes over time.
 - **Centralized HR Information:** The driver profile has been expanded to include a dedicated section for essential HR information, including emergency contact, next of kin, and other relevant personalia.
 - **Administrative Notes:** A new private notes field has been added to the driver profile, allowing administrators to keep a record of important information and observations.

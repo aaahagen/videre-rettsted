@@ -30,7 +30,7 @@ This phase expands on the initial workforce module, introducing comprehensive HR
 1.  **Time & Attendance Tracking:**
     *   **Worked vs. Planned Hours:** Develop a system for drivers to log their actual start and end times.
     *   **Geofence-based Time Logging:** Implement an automatic "stamp in/out" system using geofencing to capture when drivers arrive at and leave the main depot/office.
-    *   **Multi-Day Timeline View:** Enhance the workforce page with a timeline visualization, allowing administrators to compare planned vs. actual worked hours for each driver over selectable periods (e.g., week, month).
+    *   ~~**Multi-Day Timeline View:** Enhance the workforce page with a timeline visualization, allowing administrators to compare planned vs. actual worked hours for each driver over selectable periods (e.g., week, month).~~ (Completed)
     *   **Overtime Management:** Implement a workflow for administrators to review, approve, or decline logged overtime, whether entered manually or captured automatically.
 2.  **Personnel File Enhancements:**
     *   ~~**Centralized Contact Info:** Redesign the personnel card to display all key personalia (address, phone, email, emergency contact, next of kin, children) in one accessible location.~~ (Completed)
