@@ -16,7 +16,7 @@ import {
   PlusCircle,
   Lock,
   Info,
-  Scale,
+  Scale, MapPin,
   ChevronDown,
   MessageSquare
 } from 'lucide-react';
@@ -61,7 +61,8 @@ import Link from 'next/link';
 import { useAuth } from '../auth-provider';
 
 const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Leveringssteder' },
+  { href: '/dashboard', icon: Home, label: 'Oversikt' },
+  { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
   { href: '/dashboard/routes', icon: Route, label: 'Ruter' },

@@ -30,7 +30,6 @@ service cloud.firestore {
     // Users
     match /users/{userId} {
       allow read: if isAuthenticated();
-      
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (
         (request.auth.uid == userId && 
@@ -43,43 +42,28 @@ service cloud.firestore {
 
     // Invitations
     match /invitations/{invitationId} {
-      // Public can fetch a specific invite by its ID to use it.
       allow get: if true;
-
-      // Admins can list the invitations ONLY for their own organization.
-      // We check if the orgId they are querying matches their own orgId.
       allow list: if isAuthenticated() && isAdmin();
-      
-      // Admins can create new invitations.
       allow create: if isAuthenticated() && isAdmin(); 
-      
-      // This rule is no longer needed, as invitations are deleted upon use.
-      // It's kept here for reference but can be removed later.
       allow update: if false;
-
-      // Admins can delete invitations to revoke them.
-      // We allow delete if the user is an admin, even if we can't verify the orgId on the resource
-      // as long as the application logic ensures they only delete their own.
-      // To be safer, we can check the orgId if the resource exists.
       allow delete: if isAuthenticated() && isAdmin() && (resource == null || isUserInOrg(resource.data.orgId));
     }
 
     // Places
     match /places/{placeId} {
-      allow read: if isAuthenticated(); // The client queries always use where('orgId', '==', orgId)
+      allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
       allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId);
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
-    }    // Routes
+    }
+
+    // Routes
     match /routes/{routeId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      
       allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (
-        isAdmin() || 
-        (request.auth.uid == resource.data.driverId)
+        isAdmin() || (request.auth.uid == resource.data.driverId)
       );
-      
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
@@ -96,6 +80,28 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
       allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+    }
+
+    // WorkLogs
+    match /workLogs/{logId} {
+      // Allow user to read if they are the driver or an admin in the same org
+      // For queries (list), Firestore evaluates the rule against the query constraints.
+      allow read: if isAuthenticated() && (
+        (resource == null) || // For documents that don't exist yet in queries
+        (request.auth.uid == resource.data.driverId) || 
+        (isAdmin() && isUserInOrg(resource.data.orgId))
+      );
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.driverId == request.auth.uid &&
+        isUserInOrg(request.resource.data.orgId);
+        
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.driverId) || 
+        (isAdmin() && isUserInOrg(resource.data.orgId))
+      );
+      
+      allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
     }
   }
 }

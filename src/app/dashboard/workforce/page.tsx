@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List } from 'lucide-react';
+import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ import { db } from '@/lib/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useSearch } from '@/hooks/use-search';
 import { WorkforceTimeline } from "@/components/workforce/workforce-timeline";
+import { TimeApprovals } from "@/components/workforce/time-approvals";
 import { getDriverStatus } from "@/lib/workforce-utils";
 
 // --- Core Logic for computing a driver's status on a specific date ---
@@ -32,7 +33,7 @@ export default function WorkforcePage() {
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchDateStr, setSearchDateStr] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
-    const [viewMode, setViewMode] = useState<'cards' | 'timeline'>('cards');
+    const [viewMode, setViewMode] = useState<'cards' | 'timeline' | 'approvals'>('cards');
     
     const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
@@ -168,6 +169,17 @@ const stats = useMemo(() => {
                             <List className="h-3.5 w-3.5 mr-1.5" />
                             Tidslinje
                         </Button>
+                        {dbUser?.role === 'admin' && (
+                        <Button 
+                            variant={viewMode === "approvals" ? "default" : "ghost"} 
+                            size="sm" 
+                            onClick={() => setViewMode('approvals')}
+                            className={cn("h-8 px-3 text-xs font-medium", viewMode === 'approvals' && "shadow-sm")}
+                        >
+                            <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />
+                            Godkjenninger
+                        </Button>
+                        )}
                     </div>
                 </div>
 
@@ -211,7 +223,9 @@ const stats = useMemo(() => {
                 </div>
 
 
-                {viewMode === 'cards' ? (
+                {viewMode === 'approvals' ? (
+                    <TimeApprovals orgId={dbUser!.orgId} drivers={drivers} />
+                ) : viewMode === 'cards' ? (
                     <>
                         <div className="flex flex-col sm:flex-row gap-4 items-end justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                             <div className="space-y-2 w-full sm:w-auto max-w-full">
