@@ -46,8 +46,13 @@ This phase focuses on building the features necessary to offer the application a
 1.  **Super-Admin & Organization Management:** Create a "Super-Admin" role (for the platform owner) with the ability to manage different customer organizations, users, and permissions.
 2.  **Stripe Payment Integration:** Integrate the Stripe API to handle customer subscriptions, billing, and payments.
 
-## Phase 7: Resilience & Accessibility
+## Phase 7: Resilience & Native Mobile Distribution
 
-This phase focuses on extending the application's reach and ensuring it remains functional even in challenging network conditions.
+This phase focuses on extending the application's reach, ensuring offline reliability, and removing technical friction for drivers by distributing a native application.
 
-1.  **Offline-Capable Mobile Application:** Develop a downloadable application (likely a PWA or native app) that allows users to access and interact with their essential data even when offline. The app will sync its data with the backend whenever a connection becomes available. *(Note: Firestore IndexedDB offline caching is already enabled at the data layer).*
+1.  **App Store & Google Play Distribution:** Package the driver-facing portion of the application for official store distribution (via Capacitor.js or React Native). This eliminates the need for users to manually "Add to Home Screen" and increases perceived trust.
+2.  **Native Hardware Integration:** Leverage native APIs for:
+    *   **High-Quality Camera Access:** Crucial for rapid barcode scanning and clear Proof of Delivery (POD) photo capture.
+    *   **Background Geolocation:** Enable reliable "Always-on" location tracking to trigger geofence alerts even when the app is minimized.
+    *   **Native Push Notifications:** Utilize Apple APNs and Firebase Cloud Messaging (FCM) for highly reliable schedule updates and dispatch alerts.
+3.  **True Offline Capabilities:** Move beyond browser-based IndexedDB (which can be aggressively cleared by the OS) and implement persistent, native device storage to guarantee the app remains functional in severe network dead zones.

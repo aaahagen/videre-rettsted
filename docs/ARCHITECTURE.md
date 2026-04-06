@@ -9,6 +9,12 @@
 *   **State Management**: React Context API for user session, SWR for data fetching
 *   **Deployment**: Firebase Hosting
 
+### Future Mobile Architecture (Phase 7)
+To support App Store / Google Play distribution for drivers, the frontend architecture will eventually be split:
+1.  **Admin Console:** Will remain a robust Next.js web application utilizing Server Components and App Hosting.
+2.  **Driver Application:** Will be decoupled into a strictly Client-Side Rendered (CSR) architecture (either a statically exported Next.js app wrapped in Capacitor.js, or rebuilt in React Native/Expo). 
+    *   *Constraint:* Driver-facing features must avoid heavy reliance on Next.js server-side features (like standard API routes or Node-based Image Optimization) to ensure a smooth transition to a native mobile wrapper.
+
 ## Backend
 
 *   **Database**: Cloud Firestore
