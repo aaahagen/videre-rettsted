@@ -13,9 +13,10 @@ const newStates = `
     const [baseLng, setBaseLng] = useState(user.baseLocation?.coordinates?.lng?.toString() || '');
     const [baseRadius, setBaseRadius] = useState(user.baseLocation?.radius || 500);
 `;
+
 content = content.slice(0, stateStartIdx) + newStates + '\n' + content.slice(stateStartIdx);
 
-// 2. Update handleSubmit data object
+// 2. Add to handleSubmit
 content = content.replace(
     'employmentType,',
     `employmentType,
@@ -27,9 +28,7 @@ content = content.replace(
                 } : deleteField() as any,`
 );
 
-// 3. Add UI
-// We move the Arbeidstid card to the bottom earlier, so I should look for where to insert.
-// I will insert it before the Kompetanse card.
+// 3. Add UI before the Kompetanse card
 const insertionPoint = '                     <Card className="bg-slate-50/50">\n                        <CardHeader>\n                            <CardTitle>Kompetanse</CardTitle>';
 
 const trackingUI = `
@@ -102,13 +101,10 @@ const trackingUI = `
                             </div>
                         </CardContent>
                     </Card>
+
 `;
 
 content = content.replace(insertionPoint, trackingUI + insertionPoint);
 
-// 4. Ensure Switch and Badge are imported
-if (!content.includes('Badge } from')) {
-    content = content.replace("import { Button } from '@/components/ui/button';", "import { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';");
-}
-
 fs.writeFileSync(filePath, content);
+console.log('Added Geofencing settings to Driver Form');

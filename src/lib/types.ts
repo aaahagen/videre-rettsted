@@ -15,6 +15,11 @@ export interface Organization {
   name: string;
   orgNumber?: string;
   ownerId?: string;
+  mainDepot?: {
+    address: string;
+    coordinates: { lat: number, lng: number };
+    radius: number; // in meters
+  };
   fieldSettings?: {
     description?: {
       label: string;
@@ -228,6 +233,12 @@ export interface WorkLog {
 
 export interface DriverProfile extends User {
   employmentType?: 'internal' | 'external';
+  timeTrackingMethod?: 'fixed_location' | 'flexible_location';
+  baseLocation?: {
+    address: string;
+    coordinates: { lat: number, lng: number };
+    radius: number;
+  };
   agencyInfo?: {
     name: string;
     contactPerson: string;

@@ -156,7 +156,11 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
     notesPlaceholder: '',
     field3Enabled: false,
     field3Label: '',
-    field3Placeholder: ''
+    field3Placeholder: '',
+    depotAddress: '',
+    depotLat: '',
+    depotLng: '',
+    depotRadius: 500
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -183,7 +187,11 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
               notesPlaceholder: org.fieldSettings?.notes?.placeholder || '',
               field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
               field3Label: org.fieldSettings?.field3?.label || '',
-              field3Placeholder: org.fieldSettings?.field3?.placeholder || ''
+              field3Placeholder: org.fieldSettings?.field3?.placeholder || '',
+              depotAddress: org.mainDepot?.address || '',
+              depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
+              depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
+              depotRadius: org.mainDepot?.radius || 500
             });
           }
 
@@ -395,7 +403,15 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
             label: orgSettings.notesLabel,
             placeholder: orgSettings.notesPlaceholder
           },
-          field3: {
+          mainDepot: {
+          address: orgSettings.depotAddress,
+          coordinates: {
+            lat: parseFloat(orgSettings.depotLat) || 0,
+            lng: parseFloat(orgSettings.depotLng) || 0
+          },
+          radius: orgSettings.depotRadius
+        },
+        field3: {
             enabled: orgSettings.field3Enabled,
             label: orgSettings.field3Label,
             placeholder: orgSettings.field3Placeholder
@@ -508,6 +524,56 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="space-y-4 pt-6 border-t">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Hoveddepot & Geofencing</h3>
+                  <p className="text-xs text-slate-500 italic">Sett lokasjonen for organisasjonens hoveddepot. Dette brukes til å verifisere inn- og utstempling for sjåfører med fast oppmøte.</p>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="depotAddress">Adresse</Label>
+                      <Input
+                        id="depotAddress"
+                        placeholder="F.eks. Storgata 1, 0101 Oslo"
+                        value={orgSettings.depotAddress}
+                        onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="depotLat">Breddegrad (Lat)</Label>
+                      <Input
+                        id="depotLat"
+                        placeholder="59.9139"
+                        value={orgSettings.depotLat}
+                        onChange={(e) => setOrgSettings(s => ({ ...s, depotLat: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="depotLng">Lengdegrad (Lng)</Label>
+                      <Input
+                        id="depotLng"
+                        placeholder="10.7522"
+                        value={orgSettings.depotLng}
+                        onChange={(e) => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-4 md:col-span-2">
+                        <div className="flex justify-between items-center">
+                            <Label htmlFor="depotRadius">Radius for stempling: {orgSettings.depotRadius} meter</Label>
+                        </div>
+                        <input 
+                            type="range" 
+                            id="depotRadius"
+                            min="100" 
+                            max="5000" 
+                            step="100"
+                            value={orgSettings.depotRadius}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                    </div>
+                  </div>
+              </div>
+
               <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90 px-8" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
