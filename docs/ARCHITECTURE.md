@@ -75,24 +75,36 @@ For high-level data aggregation and KPI reporting, we will adopt an API-first pr
 The security model is fundamentally based on multi-tenancy and a strict role hierarchy. All queries and writes from the client must be validated against the user's `orgId` and their specific `role`.
 
 ### Role Hierarchy
-The application enforces three distinct levels of authorization:
+The application enforces granular authorization levels to support diverse operational workflows:
 
 1.  **Driver / Contractor (`role: 'driver' | 'contractor'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Read access to data within their organization. Write access is heavily restricted (e.g., can update their own status, can mark assigned route stops as complete, can add photos to places). Cannot delete critical infrastructure or view administrative HR notes.
+    *   **Permissions:** Read access to their assigned routes and places. Write access is restricted to operational updates (e.g., status changes, marking stops complete, capturing PODs, uploading place images). Cannot access administrative tools.
 
-2.  **Organization Admin (`role: 'admin'`)**:
+2.  **Warehouse / Loader (`role: 'loader'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Full CRUD (Create, Read, Update, Delete) rights over routes, places, vehicles, and personnel *only within their specific organization*. Cannot read or modify data belonging to other organizations.
+    *   **Permissions:** Dedicated access to the vehicle manifest and loading modules (Phase 3). Can scan and mark items as loaded but cannot edit routes or access HR data.
 
-3.  **Super Admin / Platform Owner (`role: 'super_admin'`)**:
+3.  **Route Planner (`role: 'planner'`)**:
+    *   **Scope:** Bound strictly to a single `orgId`.
+    *   **Permissions:** Focused administrative access. Can create, edit, optimize, and assign routes. Can view places and fleet availability but lacks access to sensitive HR data (contracts, payroll) or organization-level settings.
+
+4.  **Organization Admin (`role: 'admin'`)**:
+    *   **Scope:** Bound strictly to a single `orgId`.
+    *   **Permissions:** Full operational CRUD rights over routes, places, vehicles, and personnel within their organization. Can invite users and manage standard settings.
+
+5.  **Organization Owner (`role: 'owner'`)**:
+    *   **Scope:** Bound strictly to a single `orgId`.
+    *   **Permissions:** The highest authority *within* a specific organization. Inherits all `admin` rights plus exclusive access to the "Strategic Dashboard" (Phase 5), billing/subscription management, and the ability to delete the organization or export its data.
+
+6.  **Super Admin / Platform Owner (`role: 'super_admin'`)**:
     *   **Scope:** Global. Not bound by a specific `orgId`.
-    *   **Permissions:** Unrestricted read/write access across the entire database. This role is required for global platform management, creating/suspending organizations, and managing billing/subscriptions.
+    *   **Permissions:** Unrestricted read/write access across the entire database. Used solely for global platform management, customer support (impersonation), and system-wide billing.
 
 ### Access Control Architecture
 *   **Routing Segregation:** 
-    *   All Level 1 & 2 users log in and are routed to `/dashboard`, where the UI adapts based on their role (Driver Hub vs. Admin Operational Console).
-    *   Level 3 (`super_admin`) users are routed to a distinct `/super-admin` namespace, physically separating platform management from daily logistics operations.
+    *   Level 1-5 users log in and are routed to `/dashboard`. The UI dynamically adapts based on their specific role (e.g., Loaders only see the manifest view, Planners don't see the Workforce tab).
+    *   Level 6 (`super_admin`) users are routed to a distinct `/super-admin` namespace.
 ## Storage Rules (Cloud Storage)
 
 (Existing content remains the same)
