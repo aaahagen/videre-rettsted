@@ -18,10 +18,24 @@ VIDERE RettSted is a web-based application (deployed as a PWA/App Store wrapper)
 
 ## Core Features
 
-### 1. Multi-Tenancy & Onboarding
-- **Admin-First Registration**: The application starts with a landing page where an administrator can register a new organization. The first user to register an organization automatically becomes its administrator.
-- **Invitation-Only for Subsequent Users**: The administrator of an organization can invite other users (both drivers and other admins). Invited users receive an expiring link to set up their account.
+### 1. Multi-Tenancy & Onboarding Architecture
+The platform utilizes a dual-path onboarding strategy to maintain strict multi-tenancy:
 
+*   **Path A: Organization Registration (Self-Serve Funnel)**
+    *   **Target:** New customers/businesses.
+    *   **Flow:** An unauthenticated user visits the landing page and enters the registration funnel (`/register/organization`).
+    *   **Step 1 (Organization Details):** Collects company name, org number, and billing/contact details.
+    *   **Step 2 (Creator Details):** Collects the user's email and password.
+    *   **Backend Action:** A secure Cloud Function creates the Organization document, creates the User document, assigns them `role: 'admin'`, and links them to the new `orgId`.
+
+*   **Path B: Employee Invitation (Closed Loop)**
+    *   **Target:** Drivers and staff for existing organizations.
+    *   **Flow:** An existing Organization Admin generates a secure, expiring invitation link from their dashboard. 
+    *   The invited user follows the link to set their password. Their account is automatically created with the correct `orgId` and the role specified by the admin. There is no public registration page for drivers.
+
+*   **Super Admin Management:**
+    *   The platform owner utilizes the `super_admin` role.
+    *   Super Admins have a dedicated management console (`/super-admin`) to view all registered organizations, monitor global metrics, and toggle an organization's "active" status (e.g., suspending login access for non-payment).
 ### 2. Authentication
 - **Login Page**: A simple, dedicated login page for all existing users.
 - **Password Reset**: Users can reset their own passwords.

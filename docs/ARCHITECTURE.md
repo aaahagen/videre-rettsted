@@ -72,8 +72,27 @@ For high-level data aggregation and KPI reporting, we will adopt an API-first pr
 
 ## Security Rules (Firestore)
 
-(Existing content remains the same)
+The security model is fundamentally based on multi-tenancy and a strict role hierarchy. All queries and writes from the client must be validated against the user's `orgId` and their specific `role`.
 
+### Role Hierarchy
+The application enforces three distinct levels of authorization:
+
+1.  **Driver / Contractor (`role: 'driver' | 'contractor'`)**:
+    *   **Scope:** Bound strictly to a single `orgId`.
+    *   **Permissions:** Read access to data within their organization. Write access is heavily restricted (e.g., can update their own status, can mark assigned route stops as complete, can add photos to places). Cannot delete critical infrastructure or view administrative HR notes.
+
+2.  **Organization Admin (`role: 'admin'`)**:
+    *   **Scope:** Bound strictly to a single `orgId`.
+    *   **Permissions:** Full CRUD (Create, Read, Update, Delete) rights over routes, places, vehicles, and personnel *only within their specific organization*. Cannot read or modify data belonging to other organizations.
+
+3.  **Super Admin / Platform Owner (`role: 'super_admin'`)**:
+    *   **Scope:** Global. Not bound by a specific `orgId`.
+    *   **Permissions:** Unrestricted read/write access across the entire database. This role is required for global platform management, creating/suspending organizations, and managing billing/subscriptions.
+
+### Access Control Architecture
+*   **Routing Segregation:** 
+    *   All Level 1 & 2 users log in and are routed to `/dashboard`, where the UI adapts based on their role (Driver Hub vs. Admin Operational Console).
+    *   Level 3 (`super_admin`) users are routed to a distinct `/super-admin` namespace, physically separating platform management from daily logistics operations.
 ## Storage Rules (Cloud Storage)
 
 (Existing content remains the same)
