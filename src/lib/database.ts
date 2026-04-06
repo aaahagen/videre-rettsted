@@ -1,4 +1,4 @@
-import { Place, User, Organization, Route, Vehicle } from './types';
+import { Place, User, Organization, Route, Vehicle, WorkLog } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;
@@ -30,4 +30,12 @@ export interface Database {
   updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle>;
   deleteVehicle(id: string): Promise<void>;
 
+
+
+  createWorkLog(workLog: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<WorkLog>;
+  getWorkLog(id: string): Promise<WorkLog | null>;
+  getWorkLogsForDriver(driverId: string, startDate?: string, endDate?: string): Promise<WorkLog[]>;
+  getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
+  updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
+  deleteWorkLog(id: string): Promise<void>;
 }

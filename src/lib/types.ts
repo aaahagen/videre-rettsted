@@ -198,13 +198,32 @@ export interface Contract {
   salary?: number;
 }
 
-export interface TimeLog {
+export interface WorkLog {
   id: string;
-  date: string; // ISO date string
-  planned: { start: string; end: string; };
-  worked: { start: string; end: string; };
-  overtimeStatus: 'pending' | 'approved' | 'declined';
-  logMethod?: 'manual' | 'geofence';
+  orgId: string;
+  driverId: string;
+  
+  // Planned Schedule (Snapshot of what was expected)
+  plannedStart?: string; // ISO DateTime string
+  plannedEnd?: string;   // ISO DateTime string
+  
+  // Actual Punches
+  actualPunchIn?: string;  // ISO DateTime string
+  actualPunchOut?: string; // ISO DateTime string
+  
+  // Location Data
+  entryMethod: 'geofence' | 'gps_stamp' | 'manual_entry';
+  punchInLocation?: { lat: number, lng: number };
+  punchOutLocation?: { lat: number, lng: number };
+  
+  // Approval & Overtime Workflow
+  status: 'active' | 'pending_review' | 'needs_overtime_approval' | 'approved' | 'declined';
+  overtimeMinutes?: number;
+  
+  // Audit & Context
+  notes?: string;
+  createdAt: FieldValue | Date;
+  updatedAt: FieldValue | Date;
 }
 
 export interface DriverProfile extends User {
@@ -251,7 +270,7 @@ export interface DriverProfile extends User {
   adminNotes?: string;
   seniorityDate?: string; // ISO date string
   contracts?: Contract[];
-  timeLogs?: TimeLog[];
+  workLogs?: WorkLog[];
 
   // Personal Identification
   dateOfBirth?: string; // ISO date string

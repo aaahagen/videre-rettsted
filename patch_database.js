@@ -4,26 +4,21 @@ const path = require('path');
 const filePath = path.join(__dirname, 'src/lib/database.ts');
 let content = fs.readFileSync(filePath, 'utf8');
 
-if (!content.includes('Vehicle')) {
-    // 1. Add Vehicle to imports
-    content = content.replace(
-        "import { Place, User, Organization, Route } from './types';",
-        "import { Place, User, Organization, Route, Vehicle } from './types';"
-    );
+// 1. Add WorkLog to imports
+content = content.replace("import { Place, User, Organization, Route, Vehicle } from './types';", "import { Place, User, Organization, Route, Vehicle, WorkLog } from './types';");
 
-    // 2. Add Vehicle methods to the interface
-    const vehicleMethods = `
-  createVehicle(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle>;
-  getVehicle(id: string): Promise<Vehicle | null>;
-  getVehicles(orgId: string): Promise<Vehicle[]>;
-  updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle>;
-  deleteVehicle(id: string): Promise<void>;
-`;
+// 2. Add WorkLog methods
+const workLogMethods = `
 
-    content = content.replace(/}\s*$/, vehicleMethods + '\n}');
-    
-    fs.writeFileSync(filePath, content);
-    console.log('Added Vehicle methods to database.ts');
-} else {
-    console.log('Vehicle methods already exist in database.ts');
-}
+  createWorkLog(workLog: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<WorkLog>;
+  getWorkLog(id: string): Promise<WorkLog | null>;
+  getWorkLogsForDriver(driverId: string, startDate?: string, endDate?: string): Promise<WorkLog[]>;
+  getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
+  updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
+  deleteWorkLog(id: string): Promise<void>;`;
+
+// Insert before the last closing brace
+content = content.replace(/}\s*$/, workLogMethods + '\n}');
+
+fs.writeFileSync(filePath, content);
+console.log('Updated database interface');
