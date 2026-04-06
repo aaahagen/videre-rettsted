@@ -56,7 +56,7 @@ export function AnalyticsDashboard({ orgId }: AnalyticsDashboardProps) {
       <CardHeader className="px-4 sm:px-6 hidden">
         
       </CardHeader>
-      <CardContent className="px-4 sm:px-6">
+      <CardContent className="p-6">
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1 p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
