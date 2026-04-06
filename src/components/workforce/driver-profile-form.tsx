@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, X, UploadCloud, Trash2, FileText, Download, User as UserIcon, Briefcase, Phone, MapPin, Hash, Building2, UserCircle2, CalendarClock, Banknote, AlertCircle, Heart, StickyNote, Baby, ShieldCheck, BookOpenCheck } from 'lucide-react';
+import { Loader2, Plus, X, UploadCloud, Trash2, FileText, Download, User as UserIcon, Briefcase } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,7 +30,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const fileInputRef = useRef<HTMLInputElement>(null);
     const documentInputRef = useRef<HTMLInputElement>(null);
     
-    const [image, setImage] = useState< { url: string, preview?: string, file?: File } | null>(
+    const [image, setImage] = useState<{ url: string, preview?: string, file?: File } | null>(
         (user.images && user.images[0]) || null
     );
 
@@ -38,11 +38,11 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
         user.documents || []
     );
 
+    // Rotation state
     const [useRotation, setUseRotation] = useState<boolean>(!!user.rotation);
     const [rotationStartDateStr, setRotationStartDateStr] = useState<string>(
         user.rotation?.startDate || format(new Date(), 'yyyy-MM-dd')
     );
-    
     const defaultWeek = () => ({
         days: {
             monday: { isWorking: true, start: '08:00', end: '16:00' },
@@ -54,11 +54,9 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
             sunday: { isWorking: false }
         }
     });
+    const [rotationWeeks, setRotationWeeks] = useState<any[]>(user.rotation?.weeks || [defaultWeek()]);
 
-    const [rotationWeeks, setRotationWeeks] = useState<any[]>(
-        user.rotation?.weeks || [defaultWeek()]
-    );
-
+    // Schedule Overrides State
     const [scheduleOverrides, setScheduleOverrides] = useState<DriverProfile['scheduleOverrides']>(user.scheduleOverrides || {});
     const [overrideStartDateStr, setOverrideStartDateStr] = useState<string>('');
     const [overrideEndDateStr, setOverrideEndDateStr] = useState<string>('');
@@ -67,22 +65,24 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [overrideStart, setOverrideStart] = useState('08:00');
     const [overrideEnd, setOverrideEnd] = useState('16:00');
 
+    // Standard working hours
     const [workingHoursStart, setWorkingHoursStart] = useState(user.workingHours?.start || '08:00');
     const [workingHoursEnd, setWorkingHoursEnd] = useState(user.workingHours?.end || '16:00');
+    
+    // Certs & Skills
     const [certifications, setCertifications] = useState<string[]>(user.certifications || []);
     const [skills, setSkills] = useState<string[]>(user.skills || []);
     const [newCert, setNewCert] = useState('');
     const [newSkill, setNewSkill] = useState('');
-    const [employmentType, setEmploymentType] = useState<'internal' | 'external'>(user?.employmentType || 'internal');
-    
-    // Geofencing state
+
+    // Geofencing State
     const [timeTrackingMethod, setTimeTrackingMethod] = useState<'fixed_location' | 'flexible_location'>(user.timeTrackingMethod || 'fixed_location');
     const [baseAddress, setBaseAddress] = useState(user.baseLocation?.address || '');
     const [baseLat, setBaseLat] = useState(user.baseLocation?.coordinates?.lat?.toString() || '');
     const [baseLng, setBaseLng] = useState(user.baseLocation?.coordinates?.lng?.toString() || '');
     const [baseRadius, setBaseRadius] = useState(user.baseLocation?.radius || 500);
 
-    // HR fields
+    // Complete HR Fields State
     const [phone, setPhone] = useState(user.phone || '');
     const [address, setAddress] = useState(user.address || '');
     const [emergencyContact, setEmergencyContact] = useState(user.emergencyContact || '');
@@ -104,61 +104,58 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [taxCode, setTaxCode] = useState(user.taxCode || '');
     const [staffHandbookAcknowledged, setStaffHandbookAcknowledged] = useState(user.staffHandbookAcknowledged || false);
     const [backgroundCheckDate, setBackgroundCheckDate] = useState(user.backgroundCheckDate || '');
+
+    // Employment Type & Agency State
+    const [employmentType, setEmploymentType] = useState<'internal' | 'external'>(user?.employmentType || 'internal');
     const [agencyName, setAgencyName] = useState(user?.agencyInfo?.name || '');
     const [agencyContact, setAgencyContact] = useState(user?.agencyInfo?.contactPerson || '');
     const [agencyPhone, setAgencyPhone] = useState(user?.agencyInfo?.phone || '');
     const [agencyEmail, setAgencyEmail] = useState(user?.agencyInfo?.email || '');
+    
+    // Contracts
     const [contracts, setContracts] = useState<DriverProfile['contracts']>(user.contracts || []);
     const [newContractStart, setNewContractStart] = useState('');
     const [newContractEnd, setNewContractEnd] = useState('');
     const [newContractHours, setNewContractHours] = useState('');
     const [newContractRole, setNewContractRole] = useState('Sjåfør');
 
-    const updateRotationDay = (weekIndex: number, day: string, field: string, value: any) => {
-        const newWeeks = [...rotationWeeks];
-        newWeeks[weekIndex] = {
-            ...newWeeks[weekIndex],
-            days: {
-                ...newWeeks[weekIndex].days,
-                [day]: {
-                    ...newWeeks[weekIndex].days[day],
-                    [field]: value
+    // Helper functions for image/docs
+    const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = document.createElement('img');
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const scale = Math.min(1, MAX_WIDTH / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              const preview = canvas.toDataURL('image/jpeg', 0.8);
+              canvas.toBlob((blob) => {
+                if (blob) {
+                    const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                    callback(preview, resizedFile);
                 }
+              }, 'image/jpeg', 0.8);
             }
+          };
+          if (event.target?.result) {
+            img.src = event.target.result as string;
+          }
         };
-        setRotationWeeks(newWeeks);
+        reader.readAsDataURL(file);
     };
-
-    const addRotationWeek = () => setRotationWeeks([...rotationWeeks, defaultWeek()]);
-    const removeRotationWeek = (index: number) => setRotationWeeks(rotationWeeks.filter((_, i) => i !== index));
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = document.createElement('img');
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1200;
-                const scale = Math.min(1, MAX_WIDTH / img.width);
-                canvas.width = img.width * scale;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const preview = canvas.toDataURL('image/jpeg', 0.8);
-                    canvas.toBlob((blob) => {
-                        if (blob) {
-                            const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                            setImage({ url: '', preview, file: resizedFile });
-                        }
-                    }, 'image/jpeg', 0.8);
-                }
-            };
-            if (event.target?.result) img.src = event.target.result as string;
-        };
-        reader.readAsDataURL(file);
+        processFile(file, (preview, resizedFile) => {
+            setImage({ url: '', preview, file: resizedFile });
+        });
+        if (e.target) e.target.value = '';
     };
 
     const handleAddDocuments = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,65 +163,159 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
         if (!files.length) return;
         const newDocs = files.map(file => ({ url: '', name: file.name, type: file.type, file: file }));
         setDocuments(prev => [...prev, ...newDocs]);
+        if (e.target) e.target.value = '';
     };
 
-    const removeDocument = (index: number) => setDocuments(prev => prev.filter((_, i) => i !== index));
+    const removeDocument = (index: number) => {
+        setDocuments(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Helper functions for rotation/overrides
+    const addRotationWeek = () => setRotationWeeks([...rotationWeeks, defaultWeek()]);
+    const removeRotationWeek = (index: number) => setRotationWeeks(rotationWeeks.filter((_, i) => i !== index));
+    const updateRotationDay = (weekIndex: number, day: string, field: string, value: any) => {
+        const newWeeks = [...rotationWeeks];
+        newWeeks[weekIndex] = { ...newWeeks[weekIndex], days: { ...newWeeks[weekIndex].days, [day]: { ...newWeeks[weekIndex].days[day], [field]: value } } };
+        setRotationWeeks(newWeeks);
+    };
 
     const addOverride = () => {
         if (!overrideStartDateStr) return;
         const newOverrides = { ...scheduleOverrides };
         const overrideData = { type: overrideType, ...(overrideType === 'custom' ? { start: overrideStart, end: overrideEnd } : {}) };
+
         if (isPeriod && overrideEndDateStr) {
-             let currentDate = new Date(overrideStartDateStr);
-             const endDate = new Date(overrideEndDateStr);
+             const startParts = overrideStartDateStr.split('-');
+             const endParts = overrideEndDateStr.split('-');
+             const startDate = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]));
+             const endDate = new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]));
+
+             let currentDate = startDate;
              while (currentDate <= endDate) {
-                 newOverrides[format(currentDate, 'yyyy-MM-dd')] = overrideData;
+                 const dateStr = format(currentDate, 'yyyy-MM-dd');
+                 newOverrides[dateStr] = overrideData;
                  currentDate = addDays(currentDate, 1);
              }
         } else {
              newOverrides[overrideStartDateStr] = overrideData;
         }
+
         setScheduleOverrides(newOverrides);
-        setOverrideStartDateStr(''); setOverrideEndDateStr(''); setIsPeriod(false);
+        setOverrideStartDateStr('');
+        setOverrideEndDateStr('');
+        setIsPeriod(false);
     };
 
     const removeOverride = (dateStr: string) => {
-        const updated = { ...scheduleOverrides };
-        delete updated[dateStr];
-        setScheduleOverrides(updated);
+        setScheduleOverrides(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev };
+            delete updated[dateStr];
+            return updated;
+        });
     };
+
+    // Helper functions for skills/certs/contracts
+    const addCert = () => { if (newCert.trim() && !certifications.includes(newCert.trim())) { setCertifications([...certifications, newCert.trim()]); setNewCert(''); } };
+    const removeCert = (cert: string) => setCertifications(certifications.filter(c => c !== cert));
+    const addSkill = () => { if (newSkill.trim() && !skills.includes(newSkill.trim())) { setSkills([...skills, newSkill.trim()]); setNewSkill(''); } };
+    const removeSkill = (skill: string) => setSkills(skills.filter(s => s !== skill));
+    const addContract = () => {
+        if (!newContractStart || !newContractHours) return;
+        const newContract = { id: uuidv4(), startDate: newContractStart, endDate: newContractEnd || undefined, contractedHours: Number(newContractHours), role: newContractRole };
+        setContracts([...(contracts || []), newContract]);
+        setNewContractStart(''); setNewContractEnd(''); setNewContractHours(''); setNewContractRole('Sjåfør');
+    };
+    const removeContract = (id: string) => setContracts((contracts || []).filter(c => c.id !== id));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         setIsUploading(true);
+
         try {
-            let imageData = image?.file ? [{ url: await firebaseStorage.uploadFile(`users/${user.id}/profile/${uuidv4()}`, image.file) }] : (image ? [{ url: image.url }] : []);
-            let uploadedDocuments = [];
+            let imageData: { url: string; }[] = [];
+            if (image && image.file) {
+                const uniqueId = uuidv4();
+                const url = await firebaseStorage.uploadFile(`users/${user.id}/profile/${uniqueId}`, image.file);
+                imageData = [{ url }];
+            } else if (image) {
+                imageData = [{ url: image.url }];
+            }
+
+            let uploadedDocuments: { url: string; name: string; type: string; uploadedAt?: any }[] = [];
             for (const doc of documents) {
                 if (doc.file) {
-                    const url = await firebaseStorage.uploadFile(`users/${user.id}/documents/${uuidv4()}_${doc.name}`, doc.file);
+                    const safeName = doc.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+                    const url = await firebaseStorage.uploadFile(`users/${user.id}/documents/${uuidv4()}_${safeName}`, doc.file);
                     uploadedDocuments.push({ url, name: doc.name, type: doc.type, uploadedAt: new Date() });
-                } else uploadedDocuments.push({ url: doc.url, name: doc.name, type: doc.type });
+                } else {
+                    uploadedDocuments.push({ url: doc.url, name: doc.name, type: doc.type });
+                }
             }
 
             const dataToSubmit: Partial<DriverProfile> = {
-                certifications, skills, scheduleOverrides, images: imageData, documents: uploadedDocuments,
-                employmentType, timeTrackingMethod,
+                certifications,
+                skills,
+                scheduleOverrides,
+                images: imageData,
+                documents: uploadedDocuments,
+                employmentType,
+                timeTrackingMethod,
                 role: employmentType === 'external' ? 'contractor' : 'driver',
-                phone, address, emergencyContact, nextOfKin, children, adminNotes, seniorityDate,
-                dateOfBirth, socialSecurityNumber, gender, employeeId, jobTitle, department, supervisor,
-                employmentStatus, probationEndDate, hourlyRate: Number(hourlyRate) || deleteField() as any,
-                bankAccountNumber, taxCode, staffHandbookAcknowledged, backgroundCheckDate,
-                baseLocation: baseAddress ? {
+                phone,
+                address,
+                emergencyContact,
+                nextOfKin,
+                children,
+                adminNotes,
+                seniorityDate,
+                dateOfBirth,
+                socialSecurityNumber,
+                gender,
+                employeeId,
+                jobTitle,
+                department,
+                supervisor,
+                employmentStatus,
+                probationEndDate,
+                bankAccountNumber,
+                taxCode,
+                staffHandbookAcknowledged,
+                backgroundCheckDate,
+                contracts,
+            };
+
+            if (hourlyRate) {
+                dataToSubmit.hourlyRate = Number(hourlyRate);
+            } else {
+                dataToSubmit.hourlyRate = deleteField() as any;
+            }
+
+            if (employmentType === 'external') {
+                dataToSubmit.agencyInfo = { name: agencyName, contactPerson: agencyContact, phone: agencyPhone, email: agencyEmail };
+            } else {
+                dataToSubmit.agencyInfo = deleteField() as any;
+            }
+
+            if (baseAddress) {
+                dataToSubmit.baseLocation = {
                     address: baseAddress,
                     coordinates: { lat: parseFloat(baseLat) || 0, lng: parseFloat(baseLng) || 0 },
                     radius: baseRadius
-                } : deleteField() as any,
-                agencyInfo: employmentType === 'external' ? { name: agencyName, contactPerson: agencyContact, phone: agencyPhone, email: agencyEmail } : deleteField() as any,
-                rotation: useRotation ? { startDate: rotationStartDateStr, weeks: rotationWeeks } : deleteField() as any,
-                workingHours: useRotation ? deleteField() as any : { start: workingHoursStart, end: workingHoursEnd }
-            };
+                };
+            } else {
+                dataToSubmit.baseLocation = deleteField() as any;
+            }
+
+            if (useRotation) {
+                dataToSubmit.rotation = { startDate: rotationStartDateStr, weeks: rotationWeeks };
+                dataToSubmit.workingHours = deleteField() as any;
+            } else {
+                dataToSubmit.workingHours = { start: workingHoursStart, end: workingHoursEnd };
+                dataToSubmit.rotation = deleteField() as any;
+            }
+
             await onSubmit(dataToSubmit);
         } finally {
             setIsSubmitting(false);
@@ -235,11 +326,12 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col lg:flex-row items-start gap-6">
-                {/* LEFT COLUMN */}
+                
+                {/* ---------------- LEFT COLUMN (Images/Docs) ---------------- */}
                 <div className="w-full lg:w-1/3 space-y-6 lg:sticky top-0">
-                    <Card className="bg-slate-50/50">
+                     <Card className="bg-slate-50/50">
                         <CardHeader className="flex-row items-center gap-4">
-                            <Avatar className="h-16 w-16">
+                             <Avatar className="h-16 w-16">
                                 <AvatarImage src={image?.preview || image?.url} alt={user.name} />
                                 <AvatarFallback><UserIcon /></AvatarFallback>
                             </Avatar>
@@ -250,27 +342,101 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                         </CardHeader>
                         <CardContent>
                              <input type="file" accept="image/*" className="sr-only" ref={fileInputRef} onChange={handleImageChange} />
-                             <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}><UploadCloud className="mr-2 h-4 w-4" /> Endre bilde</Button>
+                             <Button type="button" variant="outline" className="w-full max-w-full" onClick={() => fileInputRef.current?.click()}>
+                                <UploadCloud className="mr-2 h-4 w-4" /> Endre bilde
+                            </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-50/50">
-                        <CardHeader><CardTitle>Dokumenter</CardTitle></CardHeader>
+                     <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <CardTitle>Dokumenter</CardTitle>
+                            <CardDescription>Last opp kursbevis, attester o.l.</CardDescription>
+                        </CardHeader>
                         <CardContent className="space-y-2">
                              <input type="file" multiple className="sr-only" ref={documentInputRef} onChange={handleAddDocuments} />
-                             {documents.map((doc, i) => (
-                                <div key={i} className="flex items-center justify-between p-2 border rounded-md bg-white">
-                                    <div className="flex items-center gap-2 overflow-hidden"><FileText className="h-5 w-5 text-slate-500" /><span className="text-sm truncate">{doc.name}</span></div>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeDocument(i)}><Trash2 className="h-4 w-4" /></Button>
+                             {documents.map((doc, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 pr-1 border rounded-md bg-white">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <FileText className="h-5 w-5 text-slate-500 shrink-0" />
+                                        <span className="font-medium text-sm truncate" title={doc.name}>{doc.name}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        {doc.url && (
+                                            <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7">
+                                                    <Download className="h-4 w-4" />
+                                                </Button>
+                                            </a>
+                                        )}
+                                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => removeDocument(index)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
-                            <Button type="button" variant="outline" className="w-full border-dashed mt-2" onClick={() => documentInputRef.current?.click()}><UploadCloud className="mr-2 h-4 w-4" /> Last opp</Button>
+                            <Button type="button" variant="outline" className="w-full border-dashed mt-2" onClick={() => documentInputRef.current?.click()}>
+                                <UploadCloud className="mr-2 h-4 w-4" /> Last opp
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* RIGHT COLUMN */}
+                
+                {/* ---------------- RIGHT COLUMN (Details) ---------------- */}
                 <div className="w-full lg:w-2/3 space-y-6">
+                    
+                    {/* Arbeidskontrakter Card */}
+                    <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <CardTitle>Arbeidskontrakter</CardTitle>
+                            <CardDescription>Oversikt over nåværende og tidligere kontrakter.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-end">
+                                <div className="space-y-2">
+                                    <Label>Fra dato</Label>
+                                    <Input type="date" value={newContractStart} onChange={e => setNewContractStart(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Til dato (valgfri)</Label>
+                                    <Input type="date" value={newContractEnd} onChange={e => setNewContractEnd(e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Timer/uke</Label>
+                                    <Input type="number" value={newContractHours} onChange={e => setNewContractHours(e.target.value)} placeholder="F.eks 37.5" />
+                                </div>
+                                <Button type="button" variant="secondary" onClick={addContract} disabled={!newContractStart || !newContractHours} className="w-full"><Plus className="h-4 w-4 mr-2" /> Legg til</Button>
+                            </div>
+
+                            {(contracts || []).length > 0 && (
+                                <div className="space-y-2 pt-4 border-t">
+                                    {(contracts || []).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(contract => (
+                                        <div key={contract.id} className="flex justify-between items-center p-3 border rounded-lg bg-white shadow-sm">
+                                            <div className="grid grid-cols-3 gap-4 flex-1">
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Periode</p>
+                                                    <p className="text-sm font-medium">{format(parseISO(contract.startDate), 'dd.MM.yyyy')} - {contract.endDate ? format(parseISO(contract.endDate), 'dd.MM.yyyy') : 'Pågående'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Stilling</p>
+                                                    <p className="text-sm font-medium">{contract.role}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Timer/uke</p>
+                                                    <p className="text-sm font-medium">{contract.contractedHours} t</p>
+                                                </div>
+                                            </div>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeContract(contract.id)} className="text-destructive hover:bg-destructive/10 ml-4 shrink-0">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Personalinformasjon Card (ALL HR FIELDS RESTORED) */}
                     <Card className="bg-slate-50/50">
                         <CardHeader>
                             <CardTitle>Personalinformasjon</CardTitle>
@@ -278,60 +444,11 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Telefonnummer</Label>
-                                    <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Tlf nr" type="tel" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Adresse</Label>
-                                    <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full adresse" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Nødkontakt / Pårørende</Label>
-                                    <Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} placeholder="Navn og tlf" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Ansatt siden</Label>
-                                    <Input type="date" value={seniorityDate} onChange={e => setSeniorityDate(e.target.value)} />
-                                </div>
-                            </div>
-                        
-                                <div className="space-y-2 mt-4">
-                                    <Label>Fødselsdato</Label>
-                                    <Input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Personnummer / D-nummer</Label>
-                                    <Input value={socialSecurityNumber} onChange={e => setSocialSecurityNumber(e.target.value)} placeholder="11 siffer" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Kjønn</Label>
-                                    <Select value={gender} onValueChange={setGender}>
-                                        <SelectTrigger><SelectValue placeholder="Velg kjønn" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">Mann</SelectItem>
-                                            <SelectItem value="female">Kvinne</SelectItem>
-                                            <SelectItem value="other">Annet</SelectItem>
-                                            <SelectItem value="prefer_not_to_say">Ønsker ikke å oppgi</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Ansattnummer</Label>
-                                    <Input value={employeeId} onChange={e => setEmployeeId(e.target.value)} placeholder="F.eks. 1001" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Stillingstittel</Label>
-                                    <Input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Sjåfør" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Avdeling</Label>
-                                    <Input value={department} onChange={e => setDepartment(e.target.value)} placeholder="Transport" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Nærmeste leder</Label>
-                                    <Input value={supervisor} onChange={e => setSupervisor(e.target.value)} placeholder="Navn på leder" />
-                                </div>
+                                <div className="space-y-2"><Label>Telefonnummer</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Tlf nr" type="tel" /></div>
+                                <div className="space-y-2"><Label>Adresse</Label><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Full adresse" /></div>
+                                <div className="space-y-2"><Label>Ansattnummer</Label><Input value={employeeId} onChange={e => setEmployeeId(e.target.value)} placeholder="F.eks. 1001" /></div>
+                                <div className="space-y-2"><Label>Stillingstittel</Label><Input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Sjåfør" /></div>
+                                <div className="space-y-2"><Label>Avdeling</Label><Input value={department} onChange={e => setDepartment(e.target.value)} placeholder="Transport" /></div>
                                 <div className="space-y-2">
                                     <Label>Stillingsprosent / Status</Label>
                                     <Select value={employmentStatus} onValueChange={setEmploymentStatus}>
@@ -344,118 +461,382 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="space-y-2"><Label>Ansatt siden</Label><Input type="date" value={seniorityDate} onChange={e => setSeniorityDate(e.target.value)} /></div>
+                                <div className="space-y-2"><Label>Timelønn / Lønn</Label><Input type="number" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} placeholder="NOK" /></div>
+                                <div className="space-y-2"><Label>Personnummer / D-nummer</Label><Input value={socialSecurityNumber} onChange={e => setSocialSecurityNumber(e.target.value)} placeholder="11 siffer" /></div>
+                                <div className="space-y-2"><Label>Fødselsdato</Label><Input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} /></div>
+                                <div className="space-y-2"><Label>Bankkontonummer</Label><Input value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} placeholder="11 siffer" /></div>
+                                <div className="space-y-2"><Label>Skattekort / Tabell</Label><Input value={taxCode} onChange={e => setTaxCode(e.target.value)} placeholder="F.eks. 7100" /></div>
+                                <div className="space-y-2"><Label>Nærmeste leder</Label><Input value={supervisor} onChange={e => setSupervisor(e.target.value)} placeholder="Navn på leder" /></div>
+                                <div className="space-y-2"><Label>Prøvetid utløper</Label><Input type="date" value={probationEndDate} onChange={e => setProbationEndDate(e.target.value)} /></div>
+                                <div className="space-y-2"><Label>Dato for bakgrunnssjekk</Label><Input type="date" value={backgroundCheckDate} onChange={e => setBackgroundCheckDate(e.target.value)} /></div>
+                                
                                 <div className="space-y-2">
-                                    <Label>Prøvetid utløper</Label>
-                                    <Input type="date" value={probationEndDate} onChange={e => setProbationEndDate(e.target.value)} />
+                                    <Label>Kjønn</Label>
+                                    <Select value={gender} onValueChange={setGender}>
+                                        <SelectTrigger><SelectValue placeholder="Velg kjønn" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="male">Mann</SelectItem>
+                                            <SelectItem value="female">Kvinne</SelectItem>
+                                            <SelectItem value="other">Annet</SelectItem>
+                                            <SelectItem value="prefer_not_to_say">Ønsker ikke å oppgi</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Timelønn / Lønn</Label>
-                                    <Input type="number" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} placeholder="NOK" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Bankkontonummer</Label>
-                                    <Input value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} placeholder="11 siffer" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Skattekort / Tabell</Label>
-                                    <Input value={taxCode} onChange={e => setTaxCode(e.target.value)} placeholder="F.eks. 7100" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Dato for bakgrunnssjekk</Label>
-                                    <Input type="date" value={backgroundCheckDate} onChange={e => setBackgroundCheckDate(e.target.value)} />
-                                </div>
+                                
                                 <div className="space-y-2 col-span-1 sm:col-span-2 flex items-center gap-2 pt-2 border-t mt-2">
                                     <Switch checked={staffHandbookAcknowledged} onCheckedChange={setStaffHandbookAcknowledged} id="handbook" />
                                     <Label htmlFor="handbook">Har lest og akseptert personalhåndboken</Label>
                                 </div>
-                            <div className="space-y-2 mt-4 pt-4 border-t">
-                                <Label>Admin Notat (Kun synlig for ledere)</Label>
-                                <textarea 
-                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={adminNotes} 
-                                    onChange={e => setAdminNotes(e.target.value)} 
-                                    placeholder="Interne notater..."
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    <Card className="bg-slate-50/50">
-                        <CardHeader><CardTitle>Tidsregistrering & Geofencing</CardTitle></CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <label className={`p-3 rounded-lg border cursor-pointer ${timeTrackingMethod === 'fixed_location' ? 'bg-white border-primary' : 'bg-slate-100'}`}>
-                                    <input type="radio" checked={timeTrackingMethod === 'fixed_location'} onChange={() => setTimeTrackingMethod('fixed_location')} className="mr-2" />
-                                    <span className="font-bold text-sm">Fast Oppmøte</span>
-                                </label>
-                                <label className={`p-3 rounded-lg border cursor-pointer ${timeTrackingMethod === 'flexible_location' ? 'bg-white border-primary' : 'bg-slate-100'}`}>
-                                    <input type="radio" checked={timeTrackingMethod === 'flexible_location'} onChange={() => setTimeTrackingMethod('flexible_location')} className="mr-2" />
-                                    <span className="font-bold text-sm">Fleksibel</span>
-                                </label>
-                            </div>
-                            <div className="space-y-4 border-t pt-4">
-                                <Label>Alternativt Depot (Valgfritt)</Label>
-                                <Input value={baseAddress} onChange={e => setBaseAddress(e.target.value)} placeholder="Adresse" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input value={baseLat} onChange={e => setBaseLat(e.target.value)} placeholder="Lat" />
-                                    <Input value={baseLng} onChange={e => setBaseLng(e.target.value)} placeholder="Lng" />
+                                <div className="space-y-2 sm:col-span-2 pt-4 border-t"><Label>Nødkontakt / Pårørende</Label><Input value={emergencyContact} onChange={e => setEmergencyContact(e.target.value)} placeholder="Navn og tlf" /></div>
+                                <div className="space-y-2 sm:col-span-2"><Label>Nærmeste Pårørende (Next of Kin)</Label><Input value={nextOfKin} onChange={e => setNextOfKin(e.target.value)} placeholder="Navn og relasjon" /></div>
+                                <div className="space-y-2 sm:col-span-2"><Label>Barn (Navn og fødselsdato)</Label><Input value={children} onChange={e => setChildren(e.target.value)} placeholder="Informasjon for tilpasning av goder/rettigheter" /></div>
+
+                                <div className="space-y-2 sm:col-span-2 mt-4 pt-4 border-t">
+                                    <Label>Admin Notat (Kun synlig for ledere)</Label>
+                                    <textarea 
+                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={adminNotes} 
+                                        onChange={e => setAdminNotes(e.target.value)} 
+                                        placeholder="Interne notater..."
+                                    />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
+                    {/* Geofencing Card */}
                     <Card className="bg-slate-50/50">
-                        <CardHeader><CardTitle>Avvik & Ferie</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="flex items-center gap-3 mb-4"><Switch checked={isPeriod} onCheckedChange={setIsPeriod} /> <Label>Periode?</Label></div>
-                            <div className="flex gap-2">
-                                <Input type="date" value={overrideStartDateStr} onChange={e => setOverrideStartDateStr(e.target.value)} />
-                                {isPeriod && <Input type="date" value={overrideEndDateStr} onChange={e => setOverrideEndDateStr(e.target.value)} />}
-                                <Button type="button" onClick={addOverride}>Legg til</Button>
+                        <CardHeader>
+                            <CardTitle>Tidsregistrering & Geofencing</CardTitle>
+                            <CardDescription>Bestem hvordan denne sjåføren skal stemple inn og ut.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-4">
+                                <Label>Stemplingsmetode</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <label className={`flex items-start p-3 rounded-lg border cursor-pointer transition-all ${timeTrackingMethod === 'fixed_location' ? 'bg-white border-primary shadow-sm' : 'bg-slate-100/50 hover:bg-slate-100'}`}>
+                                        <input 
+                                            type="radio" 
+                                            name="trackingMethod" 
+                                            className="mt-1 mr-3"
+                                            checked={timeTrackingMethod === 'fixed_location'}
+                                            onChange={() => setTimeTrackingMethod('fixed_location')}
+                                        />
+                                        <div>
+                                            <p className="font-bold text-sm">Fast Oppmøte</p>
+                                            <p className="text-xs text-slate-500">Må være innenfor geofence for å stemple. Best for depot-baserte ruter.</p>
+                                        </div>
+                                    </label>
+                                    <label className={`flex items-start p-3 rounded-lg border cursor-pointer transition-all ${timeTrackingMethod === 'flexible_location' ? 'bg-white border-primary shadow-sm' : 'bg-slate-100/50 hover:bg-slate-100'}`}>
+                                        <input 
+                                            type="radio" 
+                                            name="trackingMethod" 
+                                            className="mt-1 mr-3"
+                                            checked={timeTrackingMethod === 'flexible_location'}
+                                            onChange={() => setTimeTrackingMethod('flexible_location')}
+                                        />
+                                        <div>
+                                            <p className="font-bold text-sm">Fleksibel / Langtransport</p>
+                                            <p className="text-xs text-slate-500">Kan stemple fra hvor som helst. Posisjon lagres for verifisering.</p>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                            <div className="mt-4 space-y-2">
-                                {Object.entries(scheduleOverrides || {}).map(([date, details]) => (
-                                    <div key={date} className="flex justify-between items-center p-2 bg-white border rounded">
-                                        <span className="text-sm font-medium">{date}: {details.type}</span>
-                                        <Button variant="ghost" size="sm" onClick={() => removeOverride(date)}><X className="h-4 w-4" /></Button>
+
+                            <div className="space-y-4 border-t pt-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-sm font-bold">Alternativt Depot / Hjemmeadresse</Label>
+                                    <Badge variant="outline" className="text-[10px]">Valgfritt</Badge>
+                                </div>
+                                <p className="text-xs text-slate-500">Dersom denne sjåføren starter fra en annen lokasjon enn hoveddepotet, legg inn detaljene her.</p>
+                                <div className="grid gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="baseAddress" className="text-xs">Adresse</Label>
+                                        <Input id="baseAddress" value={baseAddress} onChange={e => setBaseAddress(e.target.value)} placeholder="F.eks. Hjemmeadresse" />
                                     </div>
-                                ))}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="baseLat" className="text-xs">Lat</Label>
+                                            <Input id="baseLat" value={baseLat} onChange={e => setBaseLat(e.target.value)} placeholder="59.9" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="baseLng" className="text-xs">Lng</Label>
+                                            <Input id="baseLng" value={baseLng} onChange={e => setBaseLng(e.target.value)} placeholder="10.7" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <Label htmlFor="baseRadius" className="text-xs">Radius: {baseRadius}m</Label>
+                                        </div>
+                                        <input type="range" min="100" max="2000" step="50" value={baseRadius} onChange={e => setBaseRadius(parseInt(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" />
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Avvik & Ferie Card */}
+                    <Card className="bg-slate-50/50">
+                         <CardHeader>
+                            <CardTitle>Avvik & Ferie</CardTitle>
+                            <CardDescription>Legg til sykemelding, ferie eller avvikende arbeidstid. Bruk perioder for lengre fravær.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="bg-white p-4 rounded-lg border space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <Switch id="isPeriod" checked={isPeriod} onCheckedChange={setIsPeriod} />
+                                    <Label htmlFor="isPeriod">Registrer for en periode (flere dager)</Label>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:flex md:flex-row gap-3 items-end">
+                                    <div className="space-y-2 col-span-2 md:w-[150px] max-w-full">
+                                        <Label>{isPeriod ? 'Fra dato' : 'Dato'}</Label>
+                                        <Input 
+                                            type="date" 
+                                            value={overrideStartDateStr} 
+                                            onChange={(e) => setOverrideStartDateStr(e.target.value)}
+                                            className="w-full max-w-full"
+                                        />
+                                    </div>
+
+                                    {isPeriod && (
+                                        <div className="space-y-2 col-span-2 md:w-[150px] max-w-full">
+                                            <Label>Til dato</Label>
+                                            <Input 
+                                                type="date" 
+                                                value={overrideEndDateStr} 
+                                                onChange={(e) => setOverrideEndDateStr(e.target.value)}
+                                                className="w-full max-w-full"
+                                                min={overrideStartDateStr}
+                                            />
+                                        </div>
+                                    )}
+                                    
+                                    <div className="space-y-2 col-span-2 md:w-[140px]">
+                                        <Label>Type</Label>
+                                        <Select value={overrideType} onValueChange={(v: any) => setOverrideType(v)}>
+                                            <SelectTrigger className="w-full max-w-full"><SelectValue /></SelectTrigger>
+                                            <SelectContent className="z-[150]">
+                                                <SelectItem value="off">Fridag</SelectItem>
+                                                <SelectItem value="vacation">Ferie</SelectItem>
+                                                <SelectItem value="sick">Sykemelding</SelectItem>
+                                                <SelectItem value="custom">Tilpasset tid</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {overrideType === 'custom' && (
+                                        <>
+                                            <div className="space-y-2 col-span-1 md:w-[90px]">
+                                                <Label>Start</Label>
+                                                <Input type="time" value={overrideStart} onChange={e => setOverrideStart(e.target.value)} />
+                                            </div>
+                                            <div className="space-y-2 col-span-1 md:w-[90px]">
+                                                <Label>Slutt</Label>
+                                                <Input type="time" value={overrideEnd} onChange={e => setOverrideEnd(e.target.value)} />
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className="col-span-2 md:w-auto">
+                                        <Button type="button" onClick={addOverride} disabled={!overrideStartDateStr || (isPeriod && !overrideEndDateStr)} className="w-full max-w-full">Legg til</Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {scheduleOverrides && Object.keys(scheduleOverrides).length > 0 && (
+                                <div className="space-y-2 mt-4 max-h-[300px] overflow-y-auto pr-2">
+                                    {Object.entries(scheduleOverrides || {}).sort(([a], [b]) => a.localeCompare(b)).map(([date, details]) => {
+                                        let typeLabel = ''; let colorClass = '';
+                                        switch(details.type) { case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700'; break; case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break; case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break; case 'custom': typeLabel = `Arbeider ${details.start} - ${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break; }
+                                        
+                                        const [year, month, day] = date.split('-');
+                                        const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+                                        
+                                        return (
+                                            <div key={date} className="flex justify-between items-center p-2 border rounded bg-white">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-medium w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                                                        {format(localDate, 'dd. MMM yyyy', { locale: nb })}
+                                                    </span>
+                                                    <span className={`px-2 py-0.5 rounded text-xs border ${colorClass}`}>{typeLabel}</span>
+                                                </div>
+                                                <Button variant="ghost" size="sm" type="button" onClick={() => removeOverride(date)} className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"><X className="h-4 w-4" /></Button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Kompetanse & Employment Type Card */}
+                     <Card className="bg-slate-50/50">
+                        <CardHeader>
+                            <CardTitle>Kompetanse</CardTitle>
+                            <CardDescription>Legg til sertifiseringer og spesialferdigheter.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label>Sertifiseringer</Label>
+                                <div className="flex gap-2">
+                                    <Input placeholder="F.eks. ADR, Truckførerbevis" value={newCert} onChange={(e) => setNewCert(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCert(); }}} />
+                                    <Button type="button" variant="secondary" onClick={addCert}><Plus className="h-4 w-4" /></Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    {certifications.map((cert, i) => ( <div key={i} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium border border-blue-200"> {cert} <button type="button" onClick={() => removeCert(cert)} className="hover:text-blue-900 ml-1"><X className="h-3 w-3" /></button></div>))}
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label>Spesialferdigheter</Label>
+                                <div className="flex gap-2">
+                                    <Input placeholder="F.eks. Montering, Kjøl/Frys" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); }}} />
+                                    <Button type="button" variant="secondary" onClick={addSkill}><Plus className="h-4 w-4" /></Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    {skills.map((skill, i) => (<div key={i} className="flex items-center gap-1 bg-slate-200 text-slate-800 px-3 py-1 rounded-full text-sm font-medium border border-slate-300"> {skill} <button type="button" onClick={() => removeSkill(skill)} className="hover:text-slate-900 ml-1"><X className="h-3 w-3" /></button></div>))}
+                                </div>
+                            </div>
+                            <div className="space-y-2 col-span-2 pt-2 border-t">
+                                <Label>Ansettelsestype</Label>
+                                <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                                    <label className="flex items-center space-x-2 cursor-pointer border p-3 rounded-lg flex-1 hover:bg-slate-50 transition-colors">
+                                        <input 
+                                            type="radio" 
+                                            name="employmentType" 
+                                            value="internal" 
+                                            checked={employmentType === 'internal'} 
+                                            onChange={() => setEmploymentType('internal')}
+                                            className="w-4 h-4 text-primary"
+                                        />
+                                        <span>Fast ansatt (Intern)</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer border p-3 rounded-lg flex-1 hover:bg-slate-50 transition-colors">
+                                        <input 
+                                            type="radio" 
+                                            name="employmentType" 
+                                            value="external" 
+                                            checked={employmentType === 'external'} 
+                                            onChange={() => setEmploymentType('external')}
+                                            className="w-4 h-4 text-primary"
+                                        />
+                                        <span>Innleid (Ekstern)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        
+                        {employmentType === 'external' && (
+                            <div className="pt-4 border-t space-y-4">
+                                <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="h-4 w-4" /> Bemanningsbyrå Info</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Byrånavn</Label>
+                                        <Input value={agencyName} onChange={e => setAgencyName(e.target.value)} placeholder="F.eks. Adecco, Manpower" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Kontaktperson</Label>
+                                        <Input value={agencyContact} onChange={e => setAgencyContact(e.target.value)} placeholder="Navn på kontaktperson" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Telefon</Label>
+                                        <Input value={agencyPhone} onChange={e => setAgencyPhone(e.target.value)} placeholder="Tlf nr" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>E-post</Label>
+                                        <Input value={agencyEmail} onChange={e => setAgencyEmail(e.target.value)} placeholder="E-postadresse" type="email" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        </CardContent>
+                    </Card>
+
                 </div>
             </div>
 
-            {/* FULL WIDTH BOTTOM CARD */}
+            {/* FULL WIDTH BOTTOM CARD - Arbeidstid */}
             <Card className="bg-slate-50/50">
-                <CardHeader className="flex-row justify-between items-center">
-                    <div><CardTitle>Arbeidstid</CardTitle><CardDescription>Turnus eller fast tid</CardDescription></div>
-                    <div className="flex items-center gap-2"><Label>Bruk turnus?</Label><Switch checked={useRotation} onCheckedChange={setUseRotation} /></div>
+                <CardHeader>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <CardTitle>Arbeidstid</CardTitle>
+                            <CardDescription>Definer standard arbeidstid eller en rullerende turnusplan.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 pt-1">
+                            <Label htmlFor="useRotation" className="text-sm font-normal text-muted-foreground">Bruk turnus?</Label>
+                            <Switch id="useRotation" checked={useRotation} onCheckedChange={setUseRotation} />
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    {useRotation ? (
-                        <div className="space-y-4">
-                            {rotationWeeks.map((week, wIdx) => (
-                                <div key={wIdx} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                                        <div key={day} className="p-2 border rounded bg-white">
-                                            <div className="flex justify-between mb-1"><Label className="text-[10px] uppercase font-bold">{day.slice(0,3)}</Label><Switch checked={week.days[day].isWorking} onCheckedChange={v => updateRotationDay(wIdx, day, 'isWorking', v)} className="scale-75" /></div>
-                                            {week.days[day].isWorking && <div className="space-y-1"><Input type="time" value={week.days[day].start} onChange={e => updateRotationDay(wIdx, day, 'start', e.target.value)} className="h-8 text-xs" /><Input type="time" value={week.days[day].end} onChange={e => updateRotationDay(wIdx, day, 'end', e.target.value)} className="h-8 text-xs" /></div>}
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                            <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full">Legg til uke</Button>
+                    {!useRotation ? (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="start">Standard starttid</Label>
+                                <Input id="start" type="time" required value={workingHoursStart} onChange={(e) => setWorkingHoursStart(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="end">Standard sluttid</Label>
+                                <Input id="end" type="time" required value={workingHoursEnd} onChange={(e) => setWorkingHoursEnd(e.target.value)} />
+                            </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4"><Input type="time" value={workingHoursStart} onChange={e => setWorkingHoursStart(e.target.value)} /><Input type="time" value={workingHoursEnd} onChange={e => setWorkingHoursEnd(e.target.value)} /></div>
+                       <div className="space-y-6">
+                            <div className="space-y-2 w-full max-w-full sm:max-w-[200px]">
+                                <Label>Startdato for turnus</Label>
+                                <Input 
+                                    type="date" 
+                                    value={rotationStartDateStr} 
+                                    onChange={(e) => setRotationStartDateStr(e.target.value)}
+                                    className="w-full max-w-full"
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">Denne datoen markerer uke 1 i rotasjonen.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                {rotationWeeks.map((week, weekIndex) => (
+                                    <div key={weekIndex} className="bg-white border rounded-lg p-4 space-y-3">
+                                        <div className="flex justify-between items-center border-b pb-2 mb-4">
+                                            <h4 className="font-semibold text-primary">Uke {weekIndex + 1}</h4>
+                                            {rotationWeeks.length > 1 && <Button variant="ghost" size="sm" type="button" onClick={() => removeRotationWeek(weekIndex)} className="text-destructive h-8 px-2">Fjern uke</Button>}
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                            {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((dayKey) => {
+                                                const dayData = week.days[dayKey];
+                                                const dayNames: Record<string, string> = { monday: 'Man', tuesday: 'Tir', wednesday: 'Ons', thursday: 'Tor', friday: 'Fre', saturday: 'Lør', sunday: 'Søn' };
+                                                return (
+                                                    <div key={dayKey} className={`border rounded p-2 flex flex-col gap-2 ${dayData.isWorking ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-100'}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs font-bold uppercase">{dayNames[dayKey]}</Label>
+                                                            <Switch checked={dayData.isWorking} onCheckedChange={(v) => updateRotationDay(weekIndex, dayKey, 'isWorking', v)} className="scale-75 origin-right" />
+                                                        </div>
+                                                        {dayData.isWorking ? (
+                                                            <div className="flex flex-col gap-1 mt-1">
+                                                                <Input type="time" value={dayData.start || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'start', e.target.value)} className="h-9 text-xs px-2 w-full" />
+                                                                <Input type="time" value={dayData.end || ''} onChange={(e) => updateRotationDay(weekIndex, dayKey, 'end', e.target.value)} className="h-9 text-xs px-2 w-full" />
+                                                            </div>
+                                                        ) : <div className="h-[76px] flex items-center justify-center text-xs text-muted-foreground italic">Fri</div>}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <Button type="button" variant="outline" onClick={addRotationWeek} className="w-full border-dashed"><Plus className="mr-2 h-4 w-4" /> Legg til uke i rotasjonen</Button>
+                        </div>
                     )}
                 </CardContent>
             </Card>
 
+            {/* Footer Buttons */}
             <div className="flex justify-end gap-3 border-t pt-6">
                 <Button type="button" variant="ghost" onClick={onCancel}>Avbryt</Button>
-                <Button type="submit" disabled={isSubmitting || isUploading}>{(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Lagre Profil</Button>
+                <Button type="submit" disabled={isSubmitting || isUploading}>
+                    {(isSubmitting || isUploading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Lagre Profil
+                </Button>
             </div>
         </form>
     );

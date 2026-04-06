@@ -278,8 +278,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         } else {
             await firebaseDB.createPlace({
                 ...placeData,
-                createdBy: authUser.uid,
-                createdAt: new Date(),
             });
             toast({
               title: 'Sted Opprettet',

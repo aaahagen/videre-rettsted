@@ -1,4 +1,5 @@
 'use client';
+import { useAuth } from '@/components/auth-provider';
 
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';

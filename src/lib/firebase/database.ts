@@ -83,16 +83,20 @@ const deleteUser = async (uid: string): Promise<void> => {
     await deleteDoc(docRef);
 };
 
-const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> => {
+const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Place> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User must be logged in to create a place");
+
   const docRef = await addDoc(collection(db, 'places'), {
     ...place,
+    createdBy: user.uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
 
   // Log event
   const orgId = place.orgId || place.organizationId;
-  const authorId = place.createdBy || place.authorId;
+  const authorId = user.uid;
   
   if (orgId && authorId) {
       logEvent(orgId, authorId, 'create_place', { placeId: docRef.id, name: place.name });
@@ -129,9 +133,12 @@ const getPlaces = async (orgId: string): Promise<Place[]> => {
 };
 
 const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User must be logged in to update a place");
   const docRef = doc(db, 'places', id);
   await updateDoc(docRef, {
     ...updates,
+    updatedBy: user.uid,
     updatedAt: serverTimestamp(),
   });
   const updated = await getDoc(docRef);

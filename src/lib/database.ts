@@ -12,7 +12,7 @@ export interface Database {
   updateUser(uid: string, data: Partial<User>): Promise<void>;
   deleteUser(uid: string): Promise<void>;
 
-  createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place>;
+  createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Place>;
   getPlace(id: string): Promise<Place | null>;
   getPlaces(orgId: string): Promise<Place[]>;
   updatePlace(id: string, updates: Partial<Place>): Promise<Place>;

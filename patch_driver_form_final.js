@@ -16,8 +16,8 @@ const newState = `
 content = content.replace(stateHook, stateHook + '\n' + newState);
 
 // 2. Add geofencing properties to the submission payload
-const submitHook = "backgroundCheckDate,";
-const newSubmitProps = `backgroundCheckDate,
+const submitHook = "staffHandbookAcknowledged,";
+const newSubmitProps = `staffHandbookAcknowledged,
                 timeTrackingMethod,
                 baseLocation: baseAddress ? {
                     address: baseAddress,

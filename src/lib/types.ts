@@ -83,11 +83,11 @@ export interface Place {
   organizationId?: string; // Alias or legacy
   
   authorId?: string;
-  createdBy?: string; // Database field might be createdBy
+  createdBy: string;
+  updatedBy?: string;
   
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
-  createdBy: string; updatedBy?: string;
 }
 
 export type DeliveryPlace = Place;
