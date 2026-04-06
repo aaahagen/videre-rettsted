@@ -8,6 +8,9 @@
 /out/
 /build
 
+# Firebase
+.firebase/
+
 # Local Environment
 .env.local
 
