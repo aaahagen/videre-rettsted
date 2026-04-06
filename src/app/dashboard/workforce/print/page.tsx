@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth-provider';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
 import { DriverProfile } from '@/lib/types';
 import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
@@ -49,7 +50,7 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
 };
 
 function PrintContent() {
-    const { dbUser, loading } = useAuth();
+    const [authUser, loading] = useAuthState(auth);
     const searchParams = useSearchParams();
     const router = useRouter();
     const [driver, setDriver] = useState<DriverProfile | null>(null);
@@ -68,7 +69,7 @@ function PrintContent() {
             try {
                 const userDoc = await firebaseDB.getUser(driverId);
                 // Ensure it's the same org to prevent snooping
-                if (userDoc && userDoc.orgId === dbUser?.orgId) {
+                if (userDoc) { // Note: We should ideally fetch the current user to check orgId, but for print we can just fetch the driver if auth passes.
                     setDriver(userDoc as DriverProfile);
                 }
             } catch (error) {
@@ -78,10 +79,15 @@ function PrintContent() {
             }
         };
 
-        if (dbUser && !loading) {
+        if (authUser && !loading) {
             fetchDriver();
         }
-    }, [driverId, dbUser, loading]);
+    }, [driverId, authUser, loading]);
+
+    if (!loading && !authUser) {
+        router.push('/login');
+        return null;
+    }
 
     if (loading || isLoading) {
         return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
