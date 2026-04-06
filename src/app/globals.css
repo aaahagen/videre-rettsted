@@ -82,3 +82,13 @@ input[type="search"]::-webkit-search-cancel-button {
   appearance: none;
 }
 
+
+
+/* iOS Date Input Overflow Fix */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+}

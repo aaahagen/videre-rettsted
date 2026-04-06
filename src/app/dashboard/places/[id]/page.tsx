@@ -67,7 +67,6 @@ export default function PlaceDetailsPage() {
   };
 
   useEffect(() => {
-  useEffect(() => {
     async function fetchAuthorName() {
       if (place?.createdBy && dbUser?.role === 'admin') {
         const author = await firebaseDB.getUser(place.createdBy);
@@ -75,8 +74,9 @@ export default function PlaceDetailsPage() {
       }
     }
     fetchAuthorName();
-  }, [place?.createdBy]);
+  }, [place?.createdBy, dbUser?.role]);
 
+  useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }

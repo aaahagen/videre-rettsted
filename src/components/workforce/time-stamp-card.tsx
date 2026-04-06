@@ -13,6 +13,8 @@ import { useGeolocation } from '@/hooks/use-geolocation';
 import { cn } from '@/lib/utils';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 interface TimeStampCardProps {
     user: User;
@@ -41,6 +43,8 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
     const [organization, setOrganization] = useState<Organization | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [confirmStartOpen, setConfirmStartOpen] = useState(false);
+    const [confirmEndOpen, setConfirmEndOpen] = useState(false);
     const [elapsedTime, setElapsedTime] = useState<string>('00:00:00');
     
     const [distanceToDepot, setDistanceToDepot] = useState<number | null>(null);
@@ -126,7 +130,9 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
         return () => clearInterval(interval);
     }, [activeWorkLog]);
 
-    const handleStartShift = async () => {
+    const handleStartShift = () => setConfirmStartOpen(true);
+    const executeStartShift = async () => {
+        setConfirmStartOpen(false);
         setIsProcessing(true);
         try {
             const loc = await getPosition();
@@ -154,7 +160,9 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
         }
     };
 
-    const handleEndShift = async () => {
+    const handleEndShift = () => setConfirmEndOpen(true);
+    const executeEndShift = async () => {
+        setConfirmEndOpen(false);
         if (!activeWorkLog) return;
         setIsProcessing(true);
         try {
@@ -179,6 +187,33 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
     }
 
     return (
+        <>
+            <AlertDialog open={confirmStartOpen} onOpenChange={setConfirmStartOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Start Vakt?</AlertDialogTitle>
+                        <AlertDialogDescription>Er du sikker på at du vil starte arbeidstiden din nå? Tiden vil begynne å løpe umiddelbart.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeStartShift} className="bg-green-600 hover:bg-green-700">Ja, start vakt</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={confirmEndOpen} onOpenChange={setConfirmEndOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Avslutt Vakt?</AlertDialogTitle>
+                        <AlertDialogDescription>Er du sikker på at du vil avslutte vakten din? Timene vil bli sendt til godkjenning hos en administrator som også kan korrigere tiden hvis det skjedde en feil.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                        <AlertDialogAction onClick={executeEndShift} className="bg-destructive hover:bg-destructive/90">Ja, avslutt vakt</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
         <Card className={cn("border-slate-200 shadow-md overflow-hidden transition-all duration-300", activeWorkLog ? "ring-2 ring-primary ring-offset-2" : "")}>
             <CardHeader className="pb-2 bg-slate-50/50 border-b">
                 <div className="flex items-center justify-between">
@@ -228,5 +263,6 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
                 </div>
             </CardContent>
         </Card>
+        </>
     );
 }
