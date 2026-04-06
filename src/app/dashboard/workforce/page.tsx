@@ -372,255 +372,222 @@ const stats = useMemo(() => {
                                                             )}
 
                                                             
-                                                            {dbUser?.role === 'admin' && (driver.phone || driver.address || driver.emergencyContact || driver.nextOfKin || driver.children || driver.seniorityDate || driver.adminNotes || driver.dateOfBirth || driver.socialSecurityNumber || driver.employeeId || driver.jobTitle || driver.department || driver.supervisor || driver.employmentStatus || driver.probationEndDate || driver.hourlyRate || driver.bankAccountNumber || driver.taxCode || driver.backgroundCheckDate || driver.staffHandbookAcknowledged) && (
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                                                {driver.phone && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Phone className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telefon</p>
-                                                                            <a href={`tel:${driver.phone}`} className="text-sm font-medium text-slate-900 hover:text-primary transition-colors">{driver.phone}</a>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.address && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <MapPin className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Adresse</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.address}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.employeeId && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansattnr</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.employeeId}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.jobTitle && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Briefcase className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stilling</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.jobTitle}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.department && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Building2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avdeling</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.department}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.employmentStatus && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <UserCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">
-                                                                                {driver.employmentStatus === 'full-time' ? 'Heltid' : driver.employmentStatus === 'part-time' ? 'Deltid' : driver.employmentStatus === 'temporary' ? 'Midlertidig' : 'Tilkalling'}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.seniorityDate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansatt Siden</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.seniorityDate), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.hourlyRate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Banknote className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Lønn</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.hourlyRate} kr</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
+                                                            {dbUser?.role === 'admin' && (
+                                                            <div className="space-y-4 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
                                                                 
-                                                                {driver.socialSecurityNumber && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personnummer</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.socialSecurityNumber}</p>
+                                                                {/* Kontaktinformasjon */}
+                                                                {(driver.phone || driver.address) && (
+                                                                    <div className="space-y-2">
+                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Kontaktinformasjon</h4>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                                                            {driver.phone && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Phone className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telefon</p>
+                                                                                        <a href={`tel:${driver.phone}`} className="text-sm font-medium text-slate-900 hover:text-primary transition-colors">{driver.phone}</a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.address && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <MapPin className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Adresse</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.address}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {driver.dateOfBirth && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Baby className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fødselsdato</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.dateOfBirth), 'dd.MM.yyyy')}</p>
+
+                                                                {/* Ansettelsesforhold */}
+                                                                {(driver.employeeId || driver.jobTitle || driver.department || driver.supervisor || driver.employmentStatus || driver.seniorityDate) && (
+                                                                    <div className="space-y-2">
+                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Ansettelsesforhold</h4>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                                                            {driver.employeeId && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansattnr</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.employeeId}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.jobTitle && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Briefcase className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stilling</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.jobTitle}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.department && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Building2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avdeling</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.department}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.supervisor && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <UserCircle2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nærmeste Leder</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.supervisor}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.employmentStatus && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <UserCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">
+                                                                                            {driver.employmentStatus === 'full-time' ? 'Heltid' : driver.employmentStatus === 'part-time' ? 'Deltid' : driver.employmentStatus === 'temporary' ? 'Midlertidig' : 'Tilkalling'}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.seniorityDate && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansatt Siden</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.seniorityDate), 'dd.MM.yyyy')}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {driver.bankAccountNumber && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Landmark className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bankkonto</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.bankAccountNumber}</p>
+
+                                                                {/* Lønn & Personalia */}
+                                                                {(driver.socialSecurityNumber || driver.dateOfBirth || driver.hourlyRate || driver.bankAccountNumber || driver.taxCode) && (
+                                                                    <div className="space-y-2">
+                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Lønn & Personalia</h4>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                                                            {driver.dateOfBirth && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Baby className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fødselsdato</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.dateOfBirth), 'dd.MM.yyyy')}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.socialSecurityNumber && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personnummer</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.socialSecurityNumber}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.hourlyRate && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Banknote className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Lønn</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.hourlyRate} kr</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.bankAccountNumber && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Landmark className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bankkonto</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.bankAccountNumber}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.taxCode && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <FileText className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skattekort</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.taxCode}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {driver.taxCode && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <FileText className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skattekort</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.taxCode}</p>
+
+                                                                {/* Sikkerhet & Beredskap */}
+                                                                {(driver.emergencyContact || driver.nextOfKin || driver.probationEndDate || driver.backgroundCheckDate || driver.staffHandbookAcknowledged !== undefined) && (
+                                                                    <div className="space-y-2">
+                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Sikkerhet & Beredskap</h4>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                                                                            {driver.emergencyContact && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <AlertCircle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Nødkontakt</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.emergencyContact}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.nextOfKin && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <Heart className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Pårørende</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.nextOfKin}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.probationEndDate && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prøvetid Utløper</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.probationEndDate), 'dd.MM.yyyy')}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.backgroundCheckDate && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <ShieldCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bakgrunnssjekk</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.backgroundCheckDate), 'dd.MM.yyyy')}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {driver.staffHandbookAcknowledged !== undefined && (
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <BookOpenCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                                                                                    <div>
+                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personalhåndbok</p>
+                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.staffHandbookAcknowledged ? 'Akseptert' : 'Ikke Akseptert'}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {driver.supervisor && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <UserCircle2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nærmeste Leder</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.supervisor}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.probationEndDate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prøvetid Utløper</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.probationEndDate), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.backgroundCheckDate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <ShieldCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bakgrunnssjekk</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.backgroundCheckDate), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.staffHandbookAcknowledged !== undefined && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <BookOpenCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personalhåndbok</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.staffHandbookAcknowledged ? 'Akseptert' : 'Ikke Akseptert'}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                
-                                                                {driver.socialSecurityNumber && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personnummer</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.socialSecurityNumber}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.dateOfBirth && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Baby className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fødselsdato</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.dateOfBirth), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.bankAccountNumber && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Landmark className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bankkonto</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.bankAccountNumber}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.taxCode && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <FileText className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skattekort</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.taxCode}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.supervisor && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <UserCircle2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nærmeste Leder</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.supervisor}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.probationEndDate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prøvetid Utløper</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.probationEndDate), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.backgroundCheckDate && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <ShieldCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bakgrunnssjekk</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.backgroundCheckDate), 'dd.MM.yyyy')}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.staffHandbookAcknowledged !== undefined && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <BookOpenCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personalhåndbok</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.staffHandbookAcknowledged ? 'Akseptert' : 'Ikke Akseptert'}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.emergencyContact && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <AlertCircle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Nødkontakt</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.emergencyContact}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {driver.nextOfKin && (
-                                                                    <div className="flex items-start gap-2">
-                                                                        <Heart className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Pårørende</p>
-                                                                            <p className="text-sm font-medium text-slate-900 leading-tight">{driver.nextOfKin}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
+
+                                                                {/* Admin Notat */}
                                                                 {driver.adminNotes && (
-                                                                    <div className="flex items-start gap-2 sm:col-span-2 mt-1 pt-2 border-t border-slate-200">
-                                                                        <StickyNote className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                                                                        <div>
-                                                                            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Admin Notat</p>
-                                                                            <p className="text-sm font-medium text-slate-800 leading-snug whitespace-pre-wrap">{driver.adminNotes}</p>
+                                                                    <div className="space-y-2 pt-1">
+                                                                        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
+                                                                            <StickyNote className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                                                                            <div>
+                                                                                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Admin Notat (Privat)</p>
+                                                                                <p className="text-sm font-medium text-amber-900 leading-snug whitespace-pre-wrap">{driver.adminNotes}</p>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 )}
+
                                                             </div>
                                                             )}
                                                             {dbUser?.role === 'admin' && driver.contracts && driver.contracts.length > 0 && (
