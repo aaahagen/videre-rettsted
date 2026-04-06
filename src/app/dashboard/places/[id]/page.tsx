@@ -52,6 +52,7 @@ export default function PlaceDetailsPage() {
   const params = useParams();
   const { id } = params;
   const { toast } = useToast();
+  const { dbUser } = useAuth();
 
   const requiredDeleteText = "Jeg er ansvarlig og vil slette dette stedet fra databasen. Denne handlingen kan ikke endres";
 
@@ -67,7 +68,7 @@ export default function PlaceDetailsPage() {
   useEffect(() => {
   useEffect(() => {
     async function fetchAuthorName() {
-      if (place?.createdBy) {
+      if (place?.createdBy && dbUser?.role === 'admin') {
         const author = await firebaseDB.getUser(place.createdBy);
         setAuthorName(author?.name || 'Ukjent bruker');
       }
@@ -417,10 +418,12 @@ export default function PlaceDetailsPage() {
             <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
               <h2 className="text-lg font-semibold border-b pb-2">Stedsinfo</h2>
               <div className="space-y-3">
+                {dbUser?.role === 'admin' && authorName && (
                 <div className="flex items-center text-sm text-slate-600">
                   <UserIcon className="mr-3 h-4 w-4 text-primary" />
                   <span>Lagt til av: <span className="font-medium text-slate-900">{authorName || 'Laster...'}</span></span>
                 </div>
+                )}
                 <div className="flex items-center text-sm text-slate-600">
                   <Calendar className="mr-3 h-4 w-4 text-primary" />
                   <span>Opprettet: <span className="font-medium text-slate-900">{formatDate(place.createdAt)}</span></span>
