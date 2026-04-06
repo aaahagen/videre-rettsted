@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Added
+- **Verification Infrastructure (Phase 3 Backend):** Scaffolded the core database models and Firestore operations for the End-to-End Verification phase.
+    - Added `loader` role to the system.
+    - Implemented a robust `ProofOfDelivery` data model that exceeds standard requirements by including GPS accuracy logging, explicit delivery method categorization, categorized photo evidence (e.g., distinguishing between package-in-situ and door-number photos), and structured failure reasons.
+    - Created database operations for creating `Orders` and linking them to a vehicle `Manifest`.
+    - Implemented backend verification logic allowing a loader to scan and cryptographically sign off on a package being loaded onto a specific vehicle.
+    - Created database schemas and operations for Digital Vehicle Inspections (pre/post-trip checks and damage reporting).
 - **Multi-Day Timeline View:** Added a "Timeline" view to the workforce page, allowing administrators to visualize schedules over a week or month. This provides a clear overview of who is working, on vacation, or sick, making it easier to compare planned vs. actual hours.
 - **Digital Contract Management:** Administrators can now upload and manage digital contracts for each driver. The system supports version history, allowing for a complete overview of a driver's contract changes over time.
 - **Centralized HR Information:** The driver profile has been expanded to include a dedicated section for essential HR information, including emergency contact, next of kin, and other relevant personalia.
@@ -126,8 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Digital Vehicle Inspections & Damage Reporting:** Allow drivers or mechanics to conduct digital inspections and log new damages with photos and notes, creating a full damage history for each vehicle.
     - **Document Management:** Upload and manage essential vehicle documents like registration, insurance certificates, and inspection reports.
 - **Vehicle Loading & Manifest System:** A new system to verify that the correct items are loaded onto the correct vehicle before a route begins.
-    - **New "Loader" Role:** A restricted user role for warehouse staff who only have permission to access the loading interface.
-    - **Manifest Verification:** A dedicated screen will display all items assigned to a route. Loaders will scan each item's barcode, changing its status from "Pending" to "Loaded" and preventing incorrect items from being loaded.
+        - **Manifest Verification:** A dedicated screen will display all items assigned to a route. Loaders will scan each item's barcode, changing its status from "Pending" to "Loaded" and preventing incorrect items from being loaded.
 - **Comprehensive Proof of Delivery (POD) System:** Upon completing a stop, drivers will be able to capture a full suite of POD information, creating a permanent, auditable record for each delivery.
     - **Photo Capture:** Reuse the existing camera and image compression functionality to take one or more photos as visual proof.
     - **Signature Capture:** Allow recipients to sign directly on the driver's device, with the signature saved as an image.

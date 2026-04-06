@@ -4,7 +4,7 @@ export interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'driver';
+  role: 'admin' | 'driver' | 'contractor' | 'loader';
   organizationId: string;
   photoURL?: string;
   disabled?: boolean;
@@ -110,7 +110,7 @@ export interface Route {
   organizationId?: string;
   places: string[]; // array of placeIds
   completedStops?: string[]; // array of placeIds that are marked as complete
-  completedStopEvents?: Record<string, CompletedStopEvent>; // map of placeId to completion event
+  completedStopEvents?: Record<string, CompletedStopEvent & { pod?: ProofOfDelivery }>; // map of placeId to completion event
   startAddress?: string; // The starting address of the route
   endAddress?: string; // The ending address of the route
   notes?: string; // Crucial information about the route
@@ -133,7 +133,7 @@ export interface Invitation {
   id: string;
   email: string;
   organizationId: string;
-  role: 'admin' | 'driver' | 'contractor';
+  role: 'admin' | 'driver' | 'contractor' | 'loader';
   expiresAt: FieldValue;
   organizationName?: string;
 }
@@ -144,7 +144,7 @@ export interface User {
   name: string;
   email: string;
   orgId: string;
-  role: 'admin' | 'driver' | 'contractor';
+  role: 'admin' | 'driver' | 'contractor' | 'loader';
   favorites: string[];
   visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
@@ -315,4 +315,106 @@ export interface Message {
   createdAt: FieldValue | Date;
   readBy: string[]; // array of userIds who have read the message
   type: 'direct' | 'broadcast';
+}
+
+// --- PHASE 3: END-TO-END VERIFICATION MODELS ---
+
+export interface ProofOfDelivery {
+  // Core Tracking
+  timestamp: string | Date | any;
+  coordinates?: { lat: number; lng: number; accuracy?: number }; // Accuracy is industry standard for geofencing disputes
+  
+  // Status
+  status: 'successful' | 'partially_successful' | 'failed_attempt';
+  
+  // Delivery Context
+  deliveryMethod?: 'handed_to_recipient' | 'left_at_door' | 'left_in_safe_place' | 'mailroom_reception' | 'neighbor';
+  
+  // Recipient Verification
+  signatureUrl?: string; // Image of signature
+  signatureName?: string; // Printed name of signee
+  recipientPhone?: string; // Optional: For verification
+
+  // Visual Proof (Crucial for redundancy)
+  photos?: { 
+    url: string; 
+    description?: string; 
+    type?: 'package_in_situ' | 'damage_proof' | 'door_number' | 'general';
+    uploadedAt?: any;
+  }[];
+  
+  // Package Tracking
+  scannedBarcodes?: string[]; // Verification that specific items were dropped
+  
+  // Exceptions & Damages
+  failureReason?: 'recipient_unavailable' | 'address_not_found' | 'access_denied' | 'package_damaged_refused' | 'other';
+  damageReported?: boolean;
+  damageDetails?: string;
+  
+  // Notes
+  notes?: string; 
+}
+
+export interface Order {
+  id: string;
+  orgId: string;
+  routeId?: string; // If assigned to a route
+  placeId: string; // The destination
+  status: 'pending' | 'loaded' | 'delivered' | 'failed';
+  barcode: string; // The primary tracking identifier
+  details: {
+    description: string;
+    weight?: number;
+    volume?: number;
+    form?: 'pallet' | 'package' | 'liquid' | 'other';
+    specialRequirements?: {
+      adr?: boolean;
+      temperatureControlled?: boolean;
+      fragile?: boolean;
+    };
+  };
+  createdAt: FieldValue | Date;
+  updatedAt: FieldValue | Date;
+}
+
+export interface Manifest {
+  id: string;
+  routeId: string;
+  orgId: string;
+  vehicleId: string;
+  status: 'pending' | 'loading' | 'verified' | 'departed';
+  orders: {
+    orderId: string;
+    barcode: string;
+    status: 'pending' | 'loaded';
+    loadedAt?: string | Date | FieldValue;
+    loadedBy?: string; // userId of the loader
+  }[];
+  verifiedAt?: string | Date | FieldValue;
+  verifiedBy?: string; // userId of the admin/loader who finalized it
+  createdAt: FieldValue | Date;
+  updatedAt: FieldValue | Date;
+}
+
+export interface VehicleInspection {
+  id: string;
+  orgId: string;
+  vehicleId: string;
+  driverId: string;
+  timestamp: string | Date | FieldValue;
+  type: 'pre_trip' | 'post_trip' | 'ad_hoc';
+  mileage: number;
+  checks: {
+    tires: boolean;
+    brakes: boolean;
+    lights: boolean;
+    fluids: boolean;
+    bodywork: boolean;
+  };
+  damagesReported: boolean;
+  damageDetails?: {
+    description: string;
+    photos?: { url: string; uploadedAt?: any }[];
+  }[];
+  notes?: string;
 }

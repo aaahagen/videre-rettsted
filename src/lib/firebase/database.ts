@@ -1,10 +1,10 @@
 'use client';
 
-import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { firebaseStorage } from './storage';
 import { Database } from '../database';
-import { Place, User, Organization, Route, LogEntry, Vehicle, WorkLog } from '../types';
+import { Place, User, Organization, Route, LogEntry, Vehicle, WorkLog, ProofOfDelivery, Order, Manifest, VehicleInspection } from '../types';
 
 export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login', details?: any) => {
     try {
@@ -400,6 +400,117 @@ const deleteWorkLog = async (id: string): Promise<void> => {
   await deleteDoc(docRef);
 };
 
+
+// --- Phase 3: Verification Methods ---
+
+const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const orgRef = doc(db, 'organizations', order.orgId);
+  const ordersRef = collection(orgRef, 'orders');
+  const docRef = await addDoc(ordersRef, {
+    ...order,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
+const getOrder = async (orgId: string, orderId: string): Promise<Order | null> => {
+  const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return null;
+  return { id: docSnap.id, ...docSnap.data() } as Order;
+};
+
+const getOrdersForRoute = async (orgId: string, routeId: string): Promise<Order[]> => {
+  const ordersRef = collection(db, `organizations/${orgId}/orders`);
+  const q = query(ordersRef, where('routeId', '==', routeId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+};
+
+const updateOrderStatus = async (orgId: string, orderId: string, status: Order['status']): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+  await updateDoc(docRef, { status, updatedAt: serverTimestamp() });
+};
+
+const createManifest = async (manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  const orgRef = doc(db, 'organizations', manifest.orgId);
+  const manifestsRef = collection(orgRef, 'manifests');
+  const docRef = await addDoc(manifestsRef, {
+    ...manifest,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
+const getManifestByRoute = async (orgId: string, routeId: string): Promise<Manifest | null> => {
+  const manifestsRef = collection(db, `organizations/${orgId}/manifests`);
+  const q = query(manifestsRef, where('routeId', '==', routeId), limit(1));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  const docSnap = snapshot.docs[0];
+  return { id: docSnap.id, ...docSnap.data() } as Manifest;
+};
+
+const verifyManifestItem = async (orgId: string, manifestId: string, orderId: string, userId: string): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) throw new Error('Manifest not found');
+
+  const manifest = docSnap.data() as Manifest;
+  const orderIndex = manifest.orders.findIndex(o => o.orderId === orderId);
+  
+  if (orderIndex === -1) throw new Error('Order not found in manifest');
+
+  manifest.orders[orderIndex].status = 'loaded';
+  manifest.orders[orderIndex].loadedAt = serverTimestamp() as any;
+  manifest.orders[orderIndex].loadedBy = userId;
+
+  await updateDoc(docRef, {
+    orders: manifest.orders,
+    updatedAt: serverTimestamp()
+  });
+
+  await updateOrderStatus(orgId, orderId, 'loaded');
+};
+
+const finalizeManifest = async (orgId: string, manifestId: string, userId: string): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+  await updateDoc(docRef, {
+    status: 'verified',
+    verifiedAt: serverTimestamp(),
+    verifiedBy: userId,
+    updatedAt: serverTimestamp()
+  });
+};
+
+const submitProofOfDelivery = async (orgId: string, routeId: string, placeId: string, pod: ProofOfDelivery): Promise<void> => {
+  const routeRef = doc(db, `organizations/${orgId}/routes/${routeId}`);
+  
+  await updateDoc(routeRef, {
+    [`completedStopEvents.${placeId}.pod`]: pod,
+    updatedAt: serverTimestamp()
+  });
+};
+
+const submitVehicleInspection = async (inspection: Omit<VehicleInspection, 'id'>): Promise<string> => {
+  const orgRef = doc(db, 'organizations', inspection.orgId);
+  const inspectionsRef = collection(orgRef, 'vehicleInspections');
+  const docRef = await addDoc(inspectionsRef, {
+    ...inspection,
+    timestamp: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
+const getVehicleInspections = async (orgId: string, vehicleId: string): Promise<VehicleInspection[]> => {
+  const inspectionsRef = collection(db, `organizations/${orgId}/vehicleInspections`);
+  const q = query(inspectionsRef, where('vehicleId', '==', vehicleId), orderBy('timestamp', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VehicleInspection));
+};
+
 export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
@@ -431,4 +542,8 @@ export const firebaseDB: Database = {
   getWorkLogsForOrganization,
   updateWorkLog,
   deleteWorkLog,
+
+  createOrder, getOrder, getOrdersForRoute, updateOrderStatus,
+  createManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
+  submitProofOfDelivery, submitVehicleInspection, getVehicleInspections,
 };

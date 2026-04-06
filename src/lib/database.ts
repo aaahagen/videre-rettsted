@@ -1,4 +1,4 @@
-import { Place, User, Organization, Route, Vehicle, WorkLog } from './types';
+import { Place, User, Organization, Route, Vehicle, WorkLog , ProofOfDelivery, Order, Manifest, VehicleInspection } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;
@@ -38,4 +38,25 @@ export interface Database {
   getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
   updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
   deleteWorkLog(id: string): Promise<void>;
+
+  // --- Phase 3: Verification Methods ---
+  
+  // Orders
+  createOrder(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
+  getOrder(orgId: string, orderId: string): Promise<Order | null>;
+  getOrdersForRoute(orgId: string, routeId: string): Promise<Order[]>;
+  updateOrderStatus(orgId: string, orderId: string, status: Order['status']): Promise<void>;
+  
+  // Manifests
+  createManifest(manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
+  getManifestByRoute(orgId: string, routeId: string): Promise<Manifest | null>;
+  verifyManifestItem(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
+  finalizeManifest(orgId: string, manifestId: string, userId: string): Promise<void>;
+  
+  // Proof of Delivery
+  submitProofOfDelivery(orgId: string, routeId: string, placeId: string, pod: ProofOfDelivery): Promise<void>;
+  
+  // Inspections
+  submitVehicleInspection(inspection: Omit<VehicleInspection, 'id'>): Promise<string>;
+  getVehicleInspections(orgId: string, vehicleId: string): Promise<VehicleInspection[]>;
 }
