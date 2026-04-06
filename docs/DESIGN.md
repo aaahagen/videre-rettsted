@@ -19,18 +19,15 @@ The primary goal of the UI is to enhance functionality, reliability, and ease of
 - **Driver Dashboard (`/dashboard`):** An "Operational Hub" layout, prioritizing the `TimeStampCard` and the user's active route for the day.
 - **Admin Dashboard (`/dashboard`):** A "Management Console" layout, prioritizing the `AdminDashboardContent` (user management, settings, etc.) at the top, with operational tools in a secondary section.
 
-### c. Owner's "Super Dashboard" & API-First Design (Future Vision)
-- **Goal:** To provide a high-level, strategic overview for organization owners or executives, focusing on Key Performance Indicators (KPIs) rather than day-to-day operational details.
-- **Design:** The dashboard will consist of clean, independent, and potentially embeddable widgets (using the `<Card>` component). Each widget will visualize a specific KPI.
-- **Potential KPIs:**
-    - Total kilometers driven (per week/month).
-    - Average route completion time vs. estimate.
-    - Total overtime hours logged vs. approved.
-    - Fleet utilization rate (% of vehicles in use).
-    - Most time-consuming delivery locations.
-- **API-First Principle:** This is critical. All data feeding this dashboard **must** be sourced from dedicated, well-structured backend functions. This architectural decision ensures that the same KPIs can be securely and easily exposed via an API endpoint. This will allow for seamless integration with third-party business intelligence tools like Geckoboard, Klipfolio, or custom internal dashboards, fulfilling the "data-out" requirement.
-
-## 3. Core UI Components & Patterns
+### c. Strategic "Super Dashboard" & API-First Design (Phase 5 Vision)
+- **Goal:** To provide a high-level, strategic overview for organization owners or executives, focusing on long-term Key Performance Indicators (KPIs) rather than daily operational details.
+- **Location:** This will be a new, dedicated view, likely accessible from the main dashboard, to keep it distinct from the real-time operational view.
+- **Design:** The dashboard will be a modular grid of clean, independent widgets (using the `<Card>` component). Each widget will visualize a specific KPI.
+- **Planned KPIs:**
+    - **Workforce:** Overtime vs. planned time, contractor usage rates, long-term sickness/absence trends.
+    - **Fleet:** Vehicle operational status (Active, Workshop), and alerts for upcoming regulated inspections (EU-Kontroll) and maintenance.
+    - **Routes:** Historical analysis of route completion times versus estimates.
+- **API-First Principle:** This is critical. All data feeding this dashboard **must** be sourced from dedicated, well-structured backend functions. This architectural decision ensures that the same KPIs can be securely and easily exposed via an API endpoint for seamless integration with third-party business intelligence tools (e.g., Geckoboard, Klipfolio), fulfilling the "data-out" requirement.## 3. Core UI Components & Patterns
 
 ### a. Cards
 - **Standard Card (`<Card>`):** The primary component for grouping related information. Used for Place cards, Vehicle cards, Personnel cards, and as containers for form sections. Features a subtle border, shadow, and rounded corners.

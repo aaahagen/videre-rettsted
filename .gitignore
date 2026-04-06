@@ -1,40 +1,30 @@
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# next.js
+# Next.js
 /.next/
 /out/
-
-# production
 /build
 
-# misc
-.DS_Store
-*.pem
+# Local Environment
+.env.local
 
-# debug
+# IDE / Editor
+/.vscode/
+.idea/
+
+# Temporary AI Scripts
+patch_*.js
+fix_*.js
+update_*.js
+add_*.js
+test_*.js
+display_*.js
+check_*.js
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-
-# firebase
-.firebase/
-firebase-debug.log*
-firestore-debug.log*
-pubsub-debug.log*
-ui-debug.log*
-firebase.log*
