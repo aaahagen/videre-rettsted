@@ -16,6 +16,12 @@
 *   **Authentication**: Firebase Authentication
 *   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations and data aggregation).
 
+## Data Privacy & GDPR Principle
+
+*   **Anonymization of Contributions:** To comply with GDPR and enhance user privacy, personally identifiable information (like names) will **not** be stored directly within content data objects like `places`.
+*   **Author Identification:** All contributions (creations, edits) will be logged using the user's non-personally identifiable `userId`.
+*   **Client-Side Resolution:** When the UI needs to display an author's name, it will resolve it client-side by looking up the `userId` in the `/users` collection. This decouples content from personal data and provides control over who can see the information.
+
 ## Core Philosophy: Function-First Design
 
 This project adheres to a "Function-First" design philosophy...
@@ -42,7 +48,21 @@ For high-level data aggregation and KPI reporting, we will adopt an API-first pr
 
 ## Database Schema (Firestore)
 
-(Existing content remains the same)
+### /places/{placeId}
+- name: string
+- address: string
+- location: geopoint
+- orgId: string (for data isolation)
+- notes: string
+- hashtags: array (of strings)
+- **createdBy: string (Stores the author's userId)**
+- **updatedBy: string (Stores the last editor's userId)**
+- **authorName: DEPRECATED - Do not store.**
+- createdAt: timestamp
+- updatedAt: timestamp
+- images: array (of objects { url, caption })
+
+(Rest of the schema remains the same)
 
 ## Security Rules (Firestore)
 

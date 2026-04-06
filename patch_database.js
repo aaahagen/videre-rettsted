@@ -1,24 +1,50 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.join(__dirname, 'src/lib/database.ts');
+const filePath = path.join(__dirname, 'src/lib/firebase/database.ts');
 let content = fs.readFileSync(filePath, 'utf8');
 
-// 1. Add WorkLog to imports
-content = content.replace("import { Place, User, Organization, Route, Vehicle } from './types';", "import { Place, User, Organization, Route, Vehicle, WorkLog } from './types';");
+// Update createPlace
+const oldCreate = `const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> => {
+  const docRef = await addDoc(collection(db, 'places'), {
+    ...place,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return { id: docRef.id, ...place, createdAt: new Date(), updatedAt: new Date() } as Place;
+};`;
 
-// 2. Add WorkLog methods
-const workLogMethods = `
+const newCreate = `const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated to create place");
+  const docRef = await addDoc(collection(db, 'places'), {
+    ...place,
+    createdBy: user.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  const docSnap = await getDoc(docRef);
+  return { id: docSnap.id, ...docSnap.data() } as Place;
+};`;
 
-  createWorkLog(workLog: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<WorkLog>;
-  getWorkLog(id: string): Promise<WorkLog | null>;
-  getWorkLogsForDriver(driverId: string, startDate?: string, endDate?: string): Promise<WorkLog[]>;
-  getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
-  updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
-  deleteWorkLog(id: string): Promise<void>;`;
+content = content.replace(oldCreate, newCreate);
 
-// Insert before the last closing brace
-content = content.replace(/}\s*$/, workLogMethods + '\n}');
+// Update updatePlace
+const oldUpdate = `const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> => {
+  const docRef = doc(db, 'places', id);
+  await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+  return getPlace(id) as Promise<Place>;
+};`;
+
+const newUpdate = `const updatePlace = async (id: string, updates: Partial<Place>): Promise<Place> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated to update place");
+  const docRef = doc(db, 'places', id);
+  await updateDoc(docRef, { ...updates, updatedBy: user.uid, updatedAt: serverTimestamp() });
+  return getPlace(id) as Promise<Place>;
+};`;
+
+content = content.replace(oldUpdate, newUpdate);
 
 fs.writeFileSync(filePath, content);
-console.log('Updated database interface');
+console.log('Patched database functions for places');

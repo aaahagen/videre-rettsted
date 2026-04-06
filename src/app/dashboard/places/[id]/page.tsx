@@ -44,6 +44,7 @@ export default function PlaceDetailsPage() {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [authorName, setAuthorName] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -64,6 +65,16 @@ export default function PlaceDetailsPage() {
   };
 
   useEffect(() => {
+  useEffect(() => {
+    async function fetchAuthorName() {
+      if (place?.createdBy) {
+        const author = await firebaseDB.getUser(place.createdBy);
+        setAuthorName(author?.name || 'Ukjent bruker');
+      }
+    }
+    fetchAuthorName();
+  }, [place?.createdBy]);
+
     if (!loading && !user) {
       router.push('/login');
     }
@@ -408,7 +419,7 @@ export default function PlaceDetailsPage() {
               <div className="space-y-3">
                 <div className="flex items-center text-sm text-slate-600">
                   <UserIcon className="mr-3 h-4 w-4 text-primary" />
-                  <span>Lagt til av: <span className="font-medium text-slate-900">{place.authorName || 'Ukjent bruker'}</span></span>
+                  <span>Lagt til av: <span className="font-medium text-slate-900">{authorName || 'Laster...'}</span></span>
                 </div>
                 <div className="flex items-center text-sm text-slate-600">
                   <Calendar className="mr-3 h-4 w-4 text-primary" />

@@ -1,15 +1,42 @@
 const fs = require('fs');
 const path = require('path');
 
-let changelogPath = path.join(__dirname, 'docs/CHANGELOG.md');
-let changelog = fs.readFileSync(changelogPath, 'utf8');
+const filePath = path.join(__dirname, 'docs/SPECS.md');
+let content = fs.readFileSync(filePath, 'utf8');
 
-const newChanges = `### Changed
-- **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
-- **Contextual Global Search:** Upgraded the global search bar in the top navigation to be context-aware. When viewing the Fleet ("Kjøretøy") or Workforce ("Personell") pages, the search bar now automatically filters the respective lists on those pages, rather than redirecting the user to the generic Places search.
+const newFeatureSection = `
+### 7. Workforce Management & HR
+The application serves as a central hub for personnel management.
+- **Driver Profiles:** Detailed profiles for each employee (both internal and external contractors).
+- **Core HR Data:** Profiles must store and display:
+    - Contact info (Phone, Address).
+    - Emergency contacts and Next of Kin.
+    - Employment details (Employee ID, Job Title, Department, Supervisor, Seniority Date, Employment Status).
+    - Payroll & Legal info (Social Security Number/D-nummer, Date of Birth, Gender, Hourly Rate, Bank Account, Tax Code).
+    - Compliance tracking (Probation End Date, Background Check Date, Staff Handbook Acknowledgment).
+- **Administrative Notes:** A private text field on each profile strictly visible only to administrators for internal observations.
+- **Contract Management:** Ability to upload and log multiple digital contracts per employee (Start Date, End Date, Role, Contracted Hours).
+- **Document Storage:** Secure upload for certificates, diplomas, and other HR-related documents.
 
+### 8. Time & Attendance (Stamping)
+- **Geofencing & Time Tracking:** The system tracks actual worked hours versus planned schedules.
+- **Organization Depot:** Admins define a main depot with GPS coordinates and a allowed stamping radius.
+- **Driver Settings:** Each driver is configured for either:
+    - *Fixed Location:* Must be within the depot's geofence (or their specific Alternative Depot) to start a shift.
+    - *Flexible Location:* Can stamp from anywhere; GPS coordinates are captured for audit.
+- **Admin Approval Workflow:** Time logs where actual hours exceed planned hours are automatically flagged for admin review and approval/decline.
+
+### 9. Fleet Management
+- Complete registry of company vehicles.
+- Tracks capacities (weight, volume, pallets), physical dimensions (height, width, length), and specialized capabilities (ADR, refrigeration, tail-lift, flatbed, trailer coupling).
+- Supports custom key-value attributes (e.g., "Jekketralle: 2 stk").
+- Document storage for vehicle registration and insurance.
 `;
 
-changelog = changelog.replace('### Changed\n', newChanges);
+content = content.replace(
+    '## Language Support',
+    newFeatureSection + '\n## Language Support'
+);
 
-fs.writeFileSync(changelogPath, changelog);
+fs.writeFileSync(filePath, content);
+console.log('Updated SPECS.md');

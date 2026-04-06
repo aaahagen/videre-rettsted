@@ -83,7 +83,7 @@ const deleteUser = async (uid: string): Promise<void> => {
     await deleteDoc(docRef);
 };
 
-const createPlace = async (place: Omit<Place, 'id'>): Promise<Place> => {
+const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> => {
   const docRef = await addDoc(collection(db, 'places'), {
     ...place,
     createdAt: serverTimestamp(),

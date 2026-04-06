@@ -87,7 +87,7 @@ export interface Place {
   
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
-  authorName?: string;
+  createdBy: string; updatedBy?: string;
 }
 
 export type DeliveryPlace = Place;
