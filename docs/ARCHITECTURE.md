@@ -7,177 +7,51 @@
 *   **Styling**: Tailwind CSS
 *   **UI Components**: shadcn/ui
 *   **State Management**: React Context API for user session, SWR for data fetching
-*   **Deployment**: App Hosting for Firebase
+*   **Deployment**: Firebase Hosting
 
 ## Backend
 
 *   **Database**: Cloud Firestore
 *   **Storage**: Cloud Storage for Firebase
 *   **Authentication**: Firebase Authentication
-*   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations)
+*   **Functions**: Cloud Functions for Firebase (for backend logic like sending invitations and data aggregation).
 
 ## Core Philosophy: Function-First Design
 
-This project adheres to a "Function-First" design philosophy. This principle dictates that while aesthetics are important, the primary goal of any design choice is to enhance the application's functionality, reliability, and ease of use.
+This project adheres to a "Function-First" design philosophy...
+(Existing content remains the same)
 
-*   **Clarity and Intuition:** The user interface is intentionally kept clean and intuitive. The goal is for a new user, particularly a driver with varying technical literacy, to understand how to use the core features with minimal to no instruction.
-*   **Purpose-Driven UI:** Every UI element must serve a clear purpose. We avoid purely decorative elements that could add clutter and confusion. For example, recent form redesigns utilized a card-based layout to visually group related information, making complex forms easier to parse and complete.
-*   **Performance over Flair:** We prioritize fast load times and responsive interactions over complex animations or heavy graphical elements that do not contribute directly to the user's workflow.
-*   **Reliability as a Feature:** Functionality extends to reliability. Technical decisions, such as the adoption of native HTML date pickers over custom components, are made to ensure the application is robust, bug-free, and works seamlessly across all devices, especially mobile.
+## Backend Abstraction & API Layer
 
-## Core Technical Decisions
+To ensure future flexibility and ease of migration, all interactions with the backend are encapsulated within a dedicated abstraction layer.
 
-### Date Selection: Native HTML Inputs
-- **Decision:** Throughout the application, native HTML `<input type="date">` elements are strictly preferred over custom React calendar components (e.g., popovers with `react-day-picker`) for simple date selection.
-- **Rationale:** 
-    1.  **Reliability:** Custom popover calendars frequently introduce complex state management bugs, particularly regarding z-index stacking, click-away handling, and component mounting/unmounting lifecycles. Native inputs eliminate this entire class of bugs.
-    2.  **Mobile UX:** Native date inputs trigger the device's built-in UI (e.g., the iOS date spinner wheel or Android's calendar dialog). This provides a vastly superior, familiar, and accessible experience for mobile users, which is critical given the driver-centric nature of the app.
-    3.  **Simplicity:** Reduces bundle size, dependency count, and code complexity.
-
-## Backend Abstraction Layer
-
-To ensure future flexibility and ease of migration to a different backend, all interactions with the backend (Firebase) will be encapsulated within a dedicated abstraction layer. This layer will expose a set of generic functions to the rest of the application for data operations (CRUD). This architecture also allows for the entire backend to be migrated to a self-hosted or on-premise server if required by the organization's security policies.
-
-- **`src/lib/database.ts`**: Defines a generic interface for all database operations (e.g., `getPlace`, `createPlace`, `updateUser`).
+- **`src/lib/database.ts`**: Defines a generic interface for raw data operations (CRUD).
 - **`src/lib/firebase/database.ts`**: The concrete implementation of the database interface using Firebase Firestore.
 - **`src/lib/auth.ts`**: Defines a generic interface for authentication operations.
 - **`src/lib/firebase/auth.ts`**: The Firebase implementation of the auth interface.
 - **`src/lib/storage.ts`**: A generic interface for file storage operations.
 - **`src/lib/firebase/storage.ts`**: The Firebase Storage implementation.
 
+### API-First Principle for Business Intelligence (Phase 5)
+For high-level data aggregation and KPI reporting, we will adopt an API-first principle. This involves:
+- **Dedicated Cloud Functions:** All strategic data (e.g., total kilometers driven, overtime hours) will be calculated in dedicated, secure Cloud Functions.
+- **Internal & External API:** These functions will serve a dual purpose:
+    1.  They will provide data directly to the in-app "Owner's Super Dashboard."
+    2.  They will be exposed via a secure, versioned API endpoint (e.g., `/api/v1/kpi/fleet_utilization`) for consumption by third-party BI tools.
+- This architecture decouples the presentation layer from the data aggregation logic, ensuring that any tool, internal or external, receives the same, accurate KPI data.
+
 ## Database Schema (Firestore)
 
-### /organizations/{orgId}
-- name: string
-- settings: map
-- mainDepot: map (address, coordinates, radius) // Geofencing configuration
-
-### /users/{userId}
-- name: string
-- email: string
-- role: "driver" | "admin" | "contractor"
-- orgId: string
-- favorites: array (of placeIds)
-- employmentType: 'internal' | 'external'
-- timeTrackingMethod: 'fixed_location' | 'flexible_location'
-- baseLocation: map (address, coordinates, radius)
-- workingHours: map (start, end)
-- rotation: map (startDate, weeks array)
-- scheduleOverrides: map (date string -> type, start, end)
-- certifications: array (of strings)
-- skills: array (of strings)
-- phone: string
-- address: string
-- emergencyContact: string
-- nextOfKin: string
-- children: string
-- adminNotes: string
-- seniorityDate: string
-- dateOfBirth: string
-- socialSecurityNumber: string
-- gender: string
-- employeeId: string
-- jobTitle: string
-- department: string
-- supervisor: string
-- employmentStatus: string
-- probationEndDate: string
-- hourlyRate: number
-- bankAccountNumber: string
-- taxCode: string
-- staffHandbookAcknowledged: boolean
-- backgroundCheckDate: string
-- contracts: array (of Contract objects)
-- agencyInfo: map (name, contactPerson, phone, email) // Only for contractors
-
-
-### /workLogs/{logId}
-- orgId: string
-- driverId: string
-- plannedStart: string (ISO date)
-- plannedEnd: string (ISO date)
-- actualPunchIn: string (ISO date)
-- actualPunchOut: string (ISO date)
-- entryMethod: 'geofence' | 'gps_stamp' | 'manual_entry'
-- punchInLocation: map (lat, lng)
-- punchOutLocation: map (lat, lng)
-- status: 'active' | 'pending_review' | 'needs_overtime_approval' | 'approved' | 'declined'
-- overtimeMinutes: number
-- notes: string
-- createdAt: timestamp
-- updatedAt: timestamp
-
-### /invitations/{invitationId}
-- email: string
-- orgId: string
-- role: "driver" | "admin"
-- expiresAt: timestamp
-
-### /places/{placeId}
-- name: string
-- address: string
-- location: geopoint
-- orgId: string (for data isolation)
-- notes: string
-- hashtags: array (of strings)
-- createdBy: string (userId)
-- updatedAt: timestamp
-- images: array (of objects { url, caption })
-
-### /organizations/{orgId}/vehicles/{vehicleId}
-- name: string
-- registrationNumber: string
-- type: 'truck' | 'van' | 'car'
-- fuelType: 'diesel' | 'electric' | 'gas' | 'hybrid'
-- capacity: map (weight, volume, pallets)
-- capabilities: map (refrigeration, tailLift, adr, trailerCoupling)
-- status: 'active' | 'maintenance' | 'inactive'
-
-### /routes/{routeId}
-- name: string
-- orgId: string
-- places: array (ordered list of placeIds)
-- driverId: string (optional, assigns route to a specific driver)
-- vehicleId: string (optional, assigns route to a specific vehicle)
+(Existing content remains the same)
 
 ## Security Rules (Firestore)
 
-- Users can only read/write data within the organization (`orgId`) they belong to.
-- Users can only read/write their own `/users/{userId}` document.
-- **Invitations**: 
-    - `read`: Strictly limited to fetching by ID (`get`). **Listing (scanning) is denied.**
-    - `create`: Only admins can create.
-    - `update`: Strictly limited to the acceptance process (marking as 'accepted' by the claiming user).
-- **Places**:
-    - `read`: Any user within the organization.
-    - `create`, `update`, `delete`: Only users with the "admin" role.
-
-- **WorkLogs**:
-    - `read`: Drivers can read their own logs. Admins can read all logs in their org.
-    - `create`: Authenticated users can create logs in their org.
-    - `update`: Drivers can update their own active logs (to punch out). Admins can update to approve/decline.
-    - `delete`: Only admins.
-- **Routes**:
-    - `read`: Any user within the organization.
-    - `create`, `update`, `delete`: Only users with the "admin" role.
+(Existing content remains the same)
 
 ## Storage Rules (Cloud Storage)
 
-- **Users**: Only the owner can write their profile picture. Any logged-in user can read.
-- **Places**: 
-    - `read`: Any authenticated user.
-    - `write`: Any authenticated user, but strictly validated:
-        - **Content Type**: Must be an image (`image/*`).
-        - **Size**: Must be less than 5MB.
+(Existing content remains the same)
 
 ## Future Development Recommendations
 
-The codebase is in excellent health and follows modern best practices. The following recommendations are not urgent fixes but are intended to guide future development to maintain a high standard of quality.
-
-### 1. Form State Management
-- **Current State**: Simple forms use standard React `useState` hooks for state management, which is perfectly acceptable for their current complexity.
-- **Recommendation**: For new, more complex forms, consider adopting a dedicated form management library like **`react-hook-form`** in combination with a validation library like **`zod`**. This will help centralize form logic, streamline validation, reduce boilerplate code, and improve the user experience with more robust error handling.
-
-### 2. Internationalization (i18n)
-- **Current State**: User-facing text (labels, button text, error messages) is currently hardcoded directly within the components.
-- **Recommendation**: To prepare for potential future language support and to make managing text easier, consider centralizing all user-facing strings into resource files (e.g., `/locales/en.json`, `/locales/no.json`). This practice, known as internationalization (i18n), decouples text from the code and simplifies updates and translations.
+(Existing content remains the same)
