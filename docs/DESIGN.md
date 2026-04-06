@@ -1,35 +1,52 @@
-# Design Guidelines: VIDERE RettSted
+# Design System & UI Guidelines: VIDERE RettSted
 
-## UI Principles
-- **Touch Targets**: All buttons and interactive elements must be large (minimum 44x44px).
-- **Simplicity**: No hidden menus. Important actions should be visible.
-- **Visual-First**: Use images to identify locations rather than just text.
+This document outlines the established design patterns, layout principles, and UI components that define the VIDERE RettSted application. Its purpose is to ensure a consistent, predictable, and functional user experience as new features are developed.
 
-## Screen Layouts (Based on Wireframes)
+## 1. Core Philosophy: Function-First Design
+The primary goal of the UI is to enhance functionality, reliability, and ease of use, especially for mobile users with varying technical literacy.
+- **Clarity over Clutter:** Every UI element must serve a clear purpose. We avoid purely decorative elements.
+- **Performance over Flair:** We prioritize fast load times and responsive interactions over complex animations.
+- **Reliability as a Feature:** Technical decisions (like using native date pickers) are made to ensure the application is robust and bug-free across all devices.
 
-### 1. Admin Onboarding & Registration
-- A dedicated landing page (`/`) designed to explain the value proposition of VIDERE RettSted to potential administrators and organizations.
-- This page will feature a clear "Get Started" or "Register Your Organization" call-to-action.
-- The registration form (`/register`) will allow the first user of an organization to create their admin account and define the organization's name. This user automatically becomes the administrator.
+## 2. Layout System
 
-### 2. User Login
-- A separate, clean login page (`/login`) for all registered users (both Drivers and Admins).
-- The page will contain fields for email and password, and a "Remember Me" option.
-- It will be the primary entry point for users who have already been invited.
+### a. Main Dashboard Layout (`/dashboard/*`)
+- **Persistent Sidebar:** A collapsible sidebar on the left provides primary navigation between modules (Oversikt, Steder, Ruter, etc.). On mobile, it is hidden by default and triggered by a burger icon.
+- **Sticky Header:** A top header bar contains a context-aware global search and a context-aware "New" action button.
+- **Content Area:** The main content for each page is rendered within a container that is horizontally centered and has a maximum width of `max-w-7xl` (1280px) to prevent stretching on ultra-wide screens.
 
-### 3. The Grid (Main View) - [Ref: IMG_8391]
-- **Header**: Left-aligned Menu (Burger), User Profile icon, Center Title "Leveringssteder", Right-aligned Logo.
-- **Body**: 2 or 3 column grid of square cards. 
-- **Card Design**: Large square image + Label bar at the bottom with the Place Name.
+### b. Role-Based Dashboards
+- **Driver Dashboard (`/dashboard`):** An "Operational Hub" layout, prioritizing the `TimeStampCard` and the user's active route for the day.
+- **Admin Dashboard (`/dashboard`):** A "Management Console" layout, prioritizing the `AdminDashboardContent` (user management, settings, etc.) at the top, with operational tools in a secondary section.
 
-### 4. Place Details - [Ref: IMG_8390]
-- **Header**: Back button ("Tilbake"), Place Name, Logo.
-- **Top Section**: Text description box + Image Carousel (swipeable).
-- **Middle Section**: Address display + Map Snippet.
-- **Map Interaction**: The map should be a static/interactive preview. Clicking it must trigger a deep link to the Google Maps app for turn-by-turn navigation.
-- **Footer**: "Edit" button (if permitted) and metadata (Created by...).
+## 3. Core UI Components & Patterns
 
-## Navigation Flow - [Ref: IMG_8389]
-- **Admins**: Landing Page -> Register Organization -> Dashboard (Grid)
-- **Invited Users (Drivers/Admins)**: Invitation Link -> Set Password -> Login Page -> Dashboard (Grid)
-- **Returning Users**: Login Page -> Dashboard (Grid) <-> Place Details -> External Google Maps Navigation.
+### a. Cards
+- **Standard Card (`<Card>`):** The primary component for grouping related information. Used for Place cards, Vehicle cards, Personnel cards, and as containers for form sections. Features a subtle border, shadow, and rounded corners.
+- **Interactive Cards:** Cards can be used as large touch targets, often revealing more details upon click (e.g., Personnel cards expanding to show HR info).
+- **Header (`<CardHeader>`):** Contains the `CardTitle` and `CardDescription`.
+- **Content (`<CardContent>`):** Contains the primary information or form inputs.
+
+### b. Forms
+- **Dialog-Based Forms (`<Dialog>`):** Complex creation and editing tasks (e.g., "Edit Driver Profile," "Register New Vehicle") are handled within full-screen modals to maintain context.
+- **Card-Based Sections:** Forms inside dialogs are broken down into logical sections using the `<Card>` component to improve readability and structure (e.g., "Personalinformasjon," "Arbeidstid").
+- **Native Inputs:** Native HTML inputs (especially `<input type="date">`) are strictly preferred over custom components for reliability and mobile user experience.
+
+### c. Buttons
+- **Primary Action Button:** The main "New" button in the global header is context-aware, changing its icon and label based on the current page (e.g., "Nytt Sted," "Ny Rute").
+- **Standard Buttons (`<Button>`):** Used for primary form submissions ("Lagre"), secondary actions (e.g., "Lagre som Mal"), and destructive actions (e.g., "Slett").
+
+### d. Data Display
+- **Grid View (`PlaceGrid`):** Used for visually rich, image-centric content like the Delivery Places.
+- **Timeline View (`WorkforceTimeline`):** A horizontal table-based layout for visualizing schedules over time. Features a sticky first column for driver names and horizontal scrolling for the days.
+- **List/Table View (`TimeApprovals`, Admin User List):** Used for displaying dense, transactional data that requires clear rows and columns for comparison and action.
+
+## 4. Color & Typography
+- **Primary Color:** Deep blue (`#1A237E`) - Used for primary buttons, active links, and key highlights.
+- **Background:** Light blue-gray (`#F0F4F8`) / White (`#FFFFFF`) - Provides a clean, neutral backdrop.
+- **Accent/Status Colors:**
+    - **Success/Approved:** Green
+    - **Warning/Pending:** Amber/Yellow
+    - **Error/Destructive:** Red
+    - **Informational:** Blue
+- **Font:** A single, highly legible sans-serif font ('Inter' or similar) is used throughout for consistency and clarity.
