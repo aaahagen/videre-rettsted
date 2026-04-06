@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Place, Route, CompletedStopEvent } from '@/lib/types';
+import { Place, Route, CompletedStopEvent, ProofOfDelivery } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -97,6 +97,9 @@ export default function RouteDetailsPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isFinishDialogOpen, setIsFinishDialogOpen] = useState(false);
   const [finishConfirmationText, setFinishConfirmationText] = useState('');
+  const [podModalOpen, setPodModalOpen] = useState(false);
+  const [currentPodPlaceId, setCurrentPodPlaceId] = useState<string | null>(null);
+  const [currentPodPlaceName, setCurrentPodPlaceName] = useState('');
 
   const router = useRouter();
   const params = useParams();
@@ -321,28 +324,22 @@ export default function RouteDetailsPage() {
     }
 
     const isNowCompleted = !completedStops[itemId];
+    
+    // If completing a PLACE, open the POD Modal instead of instantly checking it off.
+    if (isNowCompleted && itemId.startsWith('place_')) {
+       const placeId = itemId.replace('place_', '');
+       const placeName = routeItems.find(i => i.id === itemId)?.placeData?.name || 'Sted';
+       setCurrentPodPlaceId(placeId);
+       setCurrentPodPlaceName(placeName);
+       setPodModalOpen(true);
+       return; // Stop here, the modal will handle the save.
+    }
+
+    // For un-completing or for non-place items (start/end/break)
     setCompletedStops(prev => ({ ...prev, [itemId]: isNowCompleted }));
 
     let newEvents = { ...completedStopEvents };
-
-    if (isNowCompleted && itemId.startsWith('place_')) {
-      const placeId = itemId.replace('place_', '');
-      let coords;
-      try {
-        coords = await getPosition();
-      } catch (e) {
-        console.warn('Could not get location', e);
-      }
-      
-      const newEvent: CompletedStopEvent = {
-        placeId,
-        timestamp: new Date().toISOString(),
-      };
-      if (coords) {
-          newEvent.coordinates = coords;
-      }
-      newEvents[itemId] = newEvent;
-    } else {
+    if (!isNowCompleted) {
       delete newEvents[itemId];
     }
     setCompletedStopEvents(newEvents);
@@ -504,6 +501,74 @@ export default function RouteDetailsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  
+  const handlePodConfirm = async (podData: Partial<ProofOfDelivery>, filesToUpload: File[]) => {
+      if (!currentPodPlaceId || !userData?.orgId) return;
+      
+      const itemId = `place_${currentPodPlaceId}`;
+      setPodModalOpen(false);
+      setIsSaving(true);
+      
+      try {
+          // 1. Get Location
+          let coords;
+          try {
+            coords = await getPosition();
+          } catch (e) {
+            console.warn('Could not get location', e);
+          }
+          
+          // 2. Upload Photos if any
+          const uploadedPhotos: any[] = [];
+          if (filesToUpload.length > 0 && podData.photos) {
+              for (let i = 0; i < filesToUpload.length; i++) {
+                 const file = filesToUpload[i];
+                 const type = podData.photos[i].type;
+                 // Dummy upload for now, ideally use firebaseStorage.uploadFile
+                 // const url = await firebaseStorage.uploadFile(userData.orgId, `pod_photos/${routeId}/${currentPodPlaceId}/${Date.now()}_${i}`, file);
+                 // uploadedPhotos.push({ url, type, uploadedAt: new Date().toISOString() });
+              }
+          }
+          
+          // 3. Construct POD object
+          const finalPod: ProofOfDelivery = {
+              ...(podData as any),
+              timestamp: new Date().toISOString(),
+              coordinates: coords || undefined,
+              photos: uploadedPhotos.length > 0 ? uploadedPhotos : undefined,
+          };
+          
+          // 4. Update local state
+          const newEvent: CompletedStopEvent = {
+            placeId: currentPodPlaceId,
+            timestamp: finalPod.timestamp,
+            coordinates: coords,
+            pod: finalPod
+          };
+          
+          const newEvents = { ...completedStopEvents, [itemId]: newEvent };
+          setCompletedStopEvents(newEvents);
+          setCompletedStops(prev => ({ ...prev, [itemId]: true }));
+          
+          // 5. Save to DB
+          if (route && userData?.role !== 'admin') {
+             const currentCompletedStops = Object.entries({ ...completedStops, [itemId]: true }).filter(([_, isCompleted]) => isCompleted).map(([id]) => id);
+             await firebaseDB.updateRoute(routeId, { 
+                completedStops: currentCompletedStops,
+                completedStopEvents: newEvents
+             });
+             toast({ title: 'Stopp fullført', description: 'Leveringsbevis er lagret.' });
+          }
+          
+      } catch (e) {
+          console.error("Error saving POD", e);
+          toast({ title: 'Feil', description: 'Kunne ikke lagre leveringsbevis.', variant: 'destructive' });
+      } finally {
+          setIsSaving(false);
+          setCurrentPodPlaceId(null);
+      }
   };
 
   const handleFinishRoute = async () => {

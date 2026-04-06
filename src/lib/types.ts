@@ -99,6 +99,7 @@ export interface CompletedStopEvent {
         lat: number;
         lng: number;
     };
+    pod?: ProofOfDelivery;
 }
 
 export interface Route {
