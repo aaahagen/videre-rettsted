@@ -11,6 +11,9 @@ The goal of this phase is to establish the foundational data structures and add 
 
 This phase expands on the initial workforce module, introducing comprehensive HR and compliance features to provide administrators with deeper insights and control over personnel management.
 (Time & Attendance Tracking, Overtime Management, etc.)
+*Future additions:*
+- **Attendance Statistics:** A daily attendance overview card on the Admin Dashboard detailing check-ins, active presence, and check-outs.
+- **Expanded Personnel Statistics:** Adding an "Annet" (Other) category to the workforce statistics view.
 
 ## Phase 3: End-to-End Verification & Process Integrity (In Progress)
 

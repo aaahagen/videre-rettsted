@@ -131,6 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **Admin Attendance Dashboard Card:** Add a new card to the Admin Operational Dashboard that displays daily attendance statistics, showing how many scheduled personnel have checked in, are currently present, and have checked out.
+- **Workforce Statistics "Annet" Category:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
 - **Fleet Management System:** A comprehensive module for registering and tracking all vehicles within an organization.
     - **Vehicle Profiles:** Create detailed profiles for each vehicle, including type, loading capacity (weight, volume), fuel type, physical dimensions, and special capabilities (e.g., refrigeration, tail-lift). This data will directly inform the constraint-based route matching engine.
     - **Maintenance & Service Tracking:** Log service history and set reminders for future maintenance deadlines to ensure fleet compliance and operational readiness.
@@ -146,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop's address and the driver's captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
 
 ### Changed
+- **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or owner review.
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
     - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
     - **Tier 2: Order-Based Planning with Advanced Goods Definition:** An "Order" module will be introduced, allowing for the import of jobs. Each job/order will support detailed properties, including size, weight, form (e.g., pallet, package, liquid), and special handling requirements like temperature control, hazardous materials (ADR), or required legal documentation.

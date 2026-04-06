@@ -80,6 +80,8 @@ The application serves as a central hub for personnel management.
 - **Document Storage:** Secure upload for certificates, diplomas, and other HR-related documents.
 
 ### 8. Time & Attendance (Stamping)
+- **Admin Self-Approval Restriction (Future Upgrade):** Implement logic to prevent administrators from approving their own submitted work logs, requiring peer or owner approval instead.
+
 - **Geofencing & Time Tracking:** The system tracks actual worked hours versus planned schedules.
 - **Organization Depot:** Admins define a main depot with GPS coordinates and a allowed stamping radius.
 - **Driver Settings:** Each driver is configured for either:

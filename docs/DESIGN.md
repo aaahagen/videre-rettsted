@@ -18,7 +18,7 @@ The primary goal of the UI is to enhance functionality, reliability, and ease of
 ### b. Role-Based Dashboards (The `/dashboard` Entry Point)
 All authenticated users are directed to `/dashboard`. The application dynamically renders different layouts based on the user's role:
 - **Driver Dashboard:** An "Operational Hub" layout, prioritizing the `TimeStampCard` and the user's active route for the day.
-- **Admin Operational Dashboard:** A high-level overview featuring real-time statistics aggregated from the Workforce and Monitor modules, alongside operational quick-links.
+- **Admin Operational Dashboard:** A high-level overview featuring real-time statistics aggregated from the Workforce and Monitor modules, alongside operational quick-links. **(Future: Will include a dedicated daily attendance card showing check-ins, current presence, and check-outs for scheduled personnel).**
 - **Admin Management Console (`/dashboard/admin`):** A separate, dedicated route strictly for organizational settings, user/role management, and system administration.### c. Strategic "Super Dashboard" & API-First Design (Phase 5 Vision)
 - **Goal:** To provide a high-level, strategic overview for organization owners or executives, focusing on long-term Key Performance Indicators (KPIs) rather than daily operational details.
 - **Location:** This will be a new, dedicated view, likely accessible from the main dashboard, to keep it distinct from the real-time operational view.
