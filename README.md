@@ -10,7 +10,7 @@ Standard GPS often fails at the most critical point: the final approach. **Vider
 * **Smart Route Planning:** Admins can build ordered delivery routes, assign drivers, and save routes as templates.
 * **Real-time Route Monitoring:** A dedicated command-center view for admins to track the progress of active routes with live driver locations and stop-completion timestamps.
 * **Fleet Management:** A complete registry of company vehicles, including capacities and specialized capabilities (e.g., ADR, refrigeration).
-* **Workforce & Rotation Scheduling:** Advanced driver profiles supporting standard hours, single-day overrides, and multi-week rotation plans (turnus), complete with printable schedules.
+* **Workforce & Timeline Scheduling:** Advanced driver profiles supporting standard hours and multi-week rotation plans. Includes a timeline view for admins to visualize schedules across the entire workforce.
 * **Integrated Messaging:** Real-time chat with read receipts for seamless communication between admins and drivers.
 * **Navigation & Favorites:** Deep-linking to Google Maps for turn-by-turn navigation and personalized favorite locations for drivers.
 * **Offline-Ready:** Built-in Firestore IndexedDB caching ensures drivers can access critical route data even in network dead zones.
