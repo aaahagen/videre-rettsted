@@ -74,14 +74,13 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [newCert, setNewCert] = useState('');
     const [newSkill, setNewSkill] = useState('');
     const [employmentType, setEmploymentType] = useState<'internal' | 'external'>(user?.employmentType || 'internal');
-    
-    // Geofencing state
+
     const [timeTrackingMethod, setTimeTrackingMethod] = useState<'fixed_location' | 'flexible_location'>(user.timeTrackingMethod || 'fixed_location');
     const [baseAddress, setBaseAddress] = useState(user.baseLocation?.address || '');
     const [baseLat, setBaseLat] = useState(user.baseLocation?.coordinates?.lat?.toString() || '');
     const [baseLng, setBaseLng] = useState(user.baseLocation?.coordinates?.lng?.toString() || '');
     const [baseRadius, setBaseRadius] = useState(user.baseLocation?.radius || 500);
-
+    
     // HR fields
     const [phone, setPhone] = useState(user.phone || '');
     const [address, setAddress] = useState(user.address || '');
@@ -315,7 +314,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 <Button type="button" onClick={addOverride}>Legg til</Button>
                             </div>
                             <div className="mt-4 space-y-2">
-                                {Object.entries(scheduleOverrides).map(([date, details]) => (
+                                {Object.entries(scheduleOverrides || {}).map(([date, details]) => (
                                     <div key={date} className="flex justify-between items-center p-2 bg-white border rounded">
                                         <span className="text-sm font-medium">{date}: {details.type}</span>
                                         <Button variant="ghost" size="sm" onClick={() => removeOverride(date)}><X className="h-4 w-4" /></Button>
