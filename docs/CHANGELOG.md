@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
+- **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
+- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities.
+
+
 ### Added
 - **Multi-Day Timeline View:** Added a "Timeline" view to the workforce page, allowing administrators to visualize schedules over a week or month. This provides a clear overview of who is working, on vacation, or sick, making it easier to compare planned vs. actual hours.
 - **Digital Contract Management:** Administrators can now upload and manage digital contracts for each driver. The system supports version history, allowing for a complete overview of a driver's contract changes over time.

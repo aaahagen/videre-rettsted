@@ -53,8 +53,8 @@ export function AnalyticsDashboard({ orgId }: AnalyticsDashboardProps) {
 
   return (
     <Card>
-      <CardHeader className="px-4 sm:px-6">
-        <CardTitle className="font-headline text-xl sm:text-2xl">Oversikt</CardTitle>
+      <CardHeader className="px-4 sm:px-6 hidden">
+        
       </CardHeader>
       <CardContent className="px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-4">
