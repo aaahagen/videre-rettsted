@@ -1,7 +1,8 @@
-'use client';
+"use client";
+import { usePathname, useRouter } from "next/navigation";
 
-import { usePathname, useRouter } from 'next/navigation';
 import {
+  Activity,
   Clock, Star,
   Truck,
   Users,
@@ -30,6 +31,7 @@ import {
   SidebarMenuButton,
   useSidebar,
   SidebarGroup,
+  SidebarGroupLabel,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -61,19 +63,41 @@ import { firebaseDB } from '@/lib/firebase/database';
 import Link from 'next/link';
 import { useAuth } from '../auth-provider';
 
-const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Oversikt' },
-  { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
-  { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
-  { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
-  { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
-  { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
-  { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
-  { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },
-  { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true },
-  { href: '/dashboard/monitor', icon: Clock, label: 'Overvåkning', adminOnly: true },
-  { href: '/dashboard/admin', icon: Shield, label: 'Admin', adminOnly: true },
-  { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
+const navGroups = [
+  {
+    label: 'Daglig Drift',
+    items: [
+      { href: '/dashboard', icon: Home, label: 'Oversikt' },
+      { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', adminOnly: true },
+      { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
+    ]
+  },
+  {
+    label: 'Logistikk',
+    items: [
+      { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+      { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
+      { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
+      { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
+      { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
+    ]
+  },
+  {
+    label: 'Ressurser',
+    adminOnly: true,
+    items: [
+      { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true },
+      { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },
+    ]
+  },
+  {
+    label: 'Administrasjon',
+    adminOnly: true,
+    items: [
+      { href: '/dashboard/admin', icon: Shield, label: 'Innstillinger', adminOnly: true },
+      { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
+    ]
+  }
 ];
 
 export default function AppSidebar() {
@@ -255,32 +279,47 @@ export default function AppSidebar() {
         <ScrollArea className="flex-1 -mx-2 px-2">
             <SidebarGroup>
             <SidebarMenu>
-            {navItems.map((item) => {
-                if (item.adminOnly && !isAdmin) return null;
-                if (item.roles && !item.roles.includes(dbUser?.role || '')) return null;
+            {navGroups.map((group, index) => {
+              if (group.adminOnly && !isAdmin) return null;
+              
+              // Filter items based on roles/admin status
+              const visibleItems = group.items.filter(item => {
+                  if ((item as any).adminOnly && !isAdmin) return false;
+                  if ((item as any).roles && !(item as any).roles.includes(dbUser?.role || '')) return false;
+                  return true;
+              });
 
-                return (
-                <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={{ children: item.label, className: 'bg-primary' }}
-                    onClick={() => setOpenMobile(false)}
-                    >
-                    <Link href={item.href} className="flex justify-between items-center w-full">
-                        <div className="flex items-center gap-2">
-                           <item.icon />
-                           <span>{item.label}</span>
-                        </div>
-                        {item.href === '/dashboard/messages' && unreadMessages > 0 && (
-                            <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center">
-                                {unreadMessages}
-                            </span>
-                        )}
-                    </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                );
+              if (visibleItems.length === 0) return null;
+
+              return (
+                  <div key={index} className="mb-4">
+                      <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1 px-4">
+                          {group.label}
+                      </SidebarGroupLabel>
+                      {visibleItems.map((item) => (
+                          <SidebarMenuItem key={item.href}>
+                              <SidebarMenuButton
+                              asChild
+                              isActive={pathname === item.href}
+                              tooltip={{ children: item.label, className: 'bg-primary' }}
+                              onClick={() => setOpenMobile(false)}
+                              >
+                              <Link href={item.href} className="flex justify-between items-center w-full">
+                                  <div className="flex items-center gap-2">
+                                     <item.icon className="h-4 w-4" />
+                                     <span>{item.label}</span>
+                                  </div>
+                                  {item.href === '/dashboard/messages' && unreadMessages > 0 && (
+                                      <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center">
+                                          {unreadMessages}
+                                      </span>
+                                  )}
+                              </Link>
+                              </SidebarMenuButton>
+                          </SidebarMenuItem>
+                      ))}
+                  </div>
+              );
             })}
             {isAdmin && (
                 <Collapsible
