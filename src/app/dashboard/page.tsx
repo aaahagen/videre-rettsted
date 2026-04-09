@@ -18,7 +18,7 @@ import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { DriverProfile, Route as RouteType, Place } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
-import { UserCheck, Activity, Palmtree, Coffee, Briefcase } from 'lucide-react';
+import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck } from 'lucide-react';
 
 
 
@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [allRoutes, setAllRoutes] = useState<RouteType[]>([]);
   const [monitorStats, setMonitorStats] = useState({ total: 0, active: 0, finished: 0, totalPlaces: 0, completedPlaces: 0 });
+  const [fleetStats, setFleetStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
 
   const [activeRoute, setActiveRoute] = useState<Route | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(true);
@@ -131,7 +132,32 @@ export default function DashboardPage() {
         setMonitorStats({ total, active, finished, totalPlaces, completedPlaces });
       });
 
-      return () => unsubRoutes();
+      
+      const unsubVehicles = onSnapshot(collection(db, 'vehicles'), (snapshot) => {
+        const newStats = { ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 };
+        snapshot.forEach((doc) => {
+           const v = doc.data();
+           if (v.orgId === userData.orgId) {
+               const statuses = v.currentStatuses || [];
+               if (statuses.length === 0) {
+                   if (v.status === 'active') newStats.ready++;
+                   if (v.status === 'maintenance') newStats.workshop++;
+               } else {
+                   statuses.forEach((s: string) => {
+                       if (newStats[s as keyof typeof newStats] !== undefined) {
+                            newStats[s as keyof typeof newStats]++;
+                       }
+                   });
+               }
+           }
+        });
+        setFleetStats(newStats);
+      });
+
+      return () => {
+        unsubRoutes();
+        unsubVehicles();
+      };
     }
   }, [userData?.orgId, userData?.role === 'admin']);
 
@@ -208,6 +234,43 @@ export default function DashboardPage() {
                         <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 mb-1" />
                         <p className="text-lg sm:text-2xl font-bold text-amber-900">{workforceStats.contractors}</p>
                         <p className="text-[9px] sm:text-xs font-medium text-amber-700 uppercase tracking-tighter">Innleid</p>
+                    </div>
+                </div>
+            </div>
+
+            
+            {/* FLEET STATS */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
+                        <Truck className="h-5 w-5" />
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900">Kjøretøypark</h2>
+                </div>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-green-600">{fleetStats.ready}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Klar</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-blue-600">{fleetStats.on_tour}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">På rute</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-slate-600">{fleetStats.parked}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Parkert</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-yellow-600">{fleetStats.observation}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Obs.</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-orange-600">{fleetStats.pending_workshop}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Venter</p>
+                    </div>
+                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
+                        <p className="text-lg sm:text-2xl font-bold text-red-600">{fleetStats.workshop}</p>
+                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Verksted</p>
                     </div>
                 </div>
             </div>
