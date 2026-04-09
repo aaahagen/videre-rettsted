@@ -64,6 +64,8 @@ The platform utilizes a dual-path onboarding strategy to maintain strict multi-t
 - Admins can assign a specific driver to a route.
 - The route details page shows total estimated distance and time.
 - Integrated route optimization to automatically re-order stops for the shortest travel time using Google Maps Directions API.
+- **Manual Control Guarantee:** While automated routing and optimization are features, the system must always support fully manual route creation, drag-and-drop reordering, and mid-route ad-hoc changes to accommodate real-world unpredictability (e.g., traffic accidents, urgent pick-ups, vehicle breakdowns).
+
 
 
 ### 7. Workforce Management & HR
