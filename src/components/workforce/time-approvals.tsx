@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { firebaseDB } from '@/lib/firebase/database';
+import { auth } from '@/lib/firebase/firebase';
 import { WorkLog, DriverProfile } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,19 @@ export function TimeApprovals({ orgId, drivers }: TimeApprovalsProps) {
     useEffect(() => {
         loadPendingLogs();
     }, [orgId]);
+
+    useEffect(() => {
+        if (orgId && !isLoading && pendingLogs.length > 0) {
+             pendingLogs.forEach(async (log) => {
+                await firebaseDB.createLogEntry({
+                   orgId: orgId,
+                   userId: auth.currentUser!.uid,
+                   action: "admin_view_worklog",
+                   details: { workLogId: log.id, driverId: log.driverId }
+                });
+             });
+        }
+    }, [orgId, isLoading]);
 
     const loadPendingLogs = async () => {
         try {

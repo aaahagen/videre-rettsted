@@ -156,7 +156,7 @@ export interface LogEntry {
   id: string;
   orgId: string;
   userId: string;
-  action: 'create_place' | 'delete_place' | 'login';
+  action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog';
   timestamp: FieldValue | Date;
   details?: any;
 }

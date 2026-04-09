@@ -75,6 +75,14 @@ service cloud.firestore {
     }
 
     // Vehicles
+    // Logs
+    match /logs/{logId} {
+      allow read: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow update: if false;
+      allow delete: if false;
+    }
+
     match /vehicles/{vehicleId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();

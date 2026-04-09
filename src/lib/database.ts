@@ -38,6 +38,7 @@ export interface Database {
   getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
   updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
   deleteWorkLog(id: string): Promise<void>;
+  createLogEntry(logEntry: Omit<LogEntry, 'id' | 'timestamp'>): Promise<string>;
 
   // --- Phase 3: Verification Methods ---
   

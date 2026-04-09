@@ -360,6 +360,16 @@ const getWorkLog = async (id: string): Promise<WorkLog | null> => {
   return null;
 };
 
+const createLogEntry = async (logEntry: Omit<LogEntry, "id" | "timestamp">): Promise<string> => {
+  const docRef = await addDoc(collection(db, "logs"), {
+    ...logEntry,
+    timestamp: serverTimestamp(),
+  });
+  return docRef.id;
+};
+
+// TODO: Cronjob should delete stamps (workLogs) after 3-5 years
+
 const getWorkLogsForDriver = async (driverId: string, startDate?: string, endDate?: string): Promise<WorkLog[]> => {
   let q = query(collection(db, 'workLogs'), where('driverId', '==', driverId));
   
@@ -538,6 +548,7 @@ export const firebaseDB: Database = {
   deleteVehicle,
   createWorkLog,
   getWorkLog,
+  createLogEntry,
   getWorkLogsForDriver,
   getWorkLogsForOrganization,
   updateWorkLog,
