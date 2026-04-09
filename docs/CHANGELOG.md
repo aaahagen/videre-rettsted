@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Added
+- **GDPR Compliance (Work Logs Data Retention):** Implemented an automated background process (Cloud Function) that runs daily at midnight to permanently delete driver work logs (`workLogs` entries) that are older than 3 years.
+- **GDPR Compliance (Audit Logging):** Implemented an audit trail for sensitive data access. The system now logs an `admin_view_worklog` event whenever an administrator views a driver's time stamps in the "Time Approvals" module. These logs are stored in a newly created, restricted `/logs` collection.
+
 - **Proof of Delivery (POD) Driver UI:** Integrated a comprehensive Proof of Delivery modal into the active route view. 
     - When a driver completes a stop, they are now prompted to specify the delivery method (e.g., Handed to recipient, Left at door).
     - The UI dynamically enforces rules, such as requiring photo evidence if a package is left unattended.
@@ -131,6 +134,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **GDPR Compliance (Work Logs Data Retention):** Implemented an automated background process (Cloud Function) that runs daily at midnight to permanently delete driver work logs (`workLogs` entries) that are older than 3 years.
+- **GDPR Compliance (Audit Logging):** Implemented an audit trail for sensitive data access. The system now logs an `admin_view_worklog` event whenever an administrator views a driver's time stamps in the "Time Approvals" module. These logs are stored in a newly created, restricted `/logs` collection.
+
 - **Admin Attendance Dashboard Card:** Add a new card to the Admin Operational Dashboard that displays daily attendance statistics, showing how many scheduled personnel have checked in, are currently present, and have checked out.
 - **Workforce Statistics "Annet" Category:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
 - **Fleet Management System:** A comprehensive module for registering and tracking all vehicles within an organization.

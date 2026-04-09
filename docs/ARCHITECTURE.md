@@ -27,6 +27,8 @@ To support App Store / Google Play distribution for drivers, the frontend archit
 *   **Anonymization of Contributions:** To comply with GDPR and enhance user privacy, personally identifiable information (like names) will **not** be stored directly within content data objects like `places`.
 *   **Author Identification:** All contributions (creations, edits) will be logged using the user's non-personally identifiable `userId`.
 *   **Client-Side Resolution:** When the UI needs to display an author's name, it will resolve it client-side by looking up the `userId` in the `/users` collection. This decouples content from personal data and provides control over who can see the information.
+*   **Data Retention & Audit Trails:** Time stamps (`workLogs`) are subject to automated data retention policies, with a daily job deleting records older than 3 years. Furthermore, accessing sensitive user data, such as an admin viewing a driver's time approvals, triggers an explicit audit log stored securely in a `/logs` collection.
+
 
 ## Core Philosophy: Function-First Design
 

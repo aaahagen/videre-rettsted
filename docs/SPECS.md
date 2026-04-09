@@ -88,6 +88,8 @@ The application serves as a central hub for personnel management.
     - *Fixed Location:* Must be within the depot's geofence (or their specific Alternative Depot) to start a shift.
     - *Flexible Location:* Can stamp from anywhere; GPS coordinates are captured for audit.
 - **Admin Approval Workflow:** Time logs where actual hours exceed planned hours are automatically flagged for admin review and approval/decline.
+- **GDPR Audit & Retention:** The system automatically logs any instance where an administrator views a driver's time approvals (`admin_view_worklog`). Additionally, a background process permanently deletes all time stamps older than 3 years to comply with data retention policies.
+
 
 ### 9. Fleet Management
 - Complete registry of company vehicles.
