@@ -37,14 +37,15 @@ export default function DashboardLayout({
 
   const isRoutesPage = pathname === '/dashboard/routes';
   const isMonitorPage = pathname === '/dashboard/monitor';
+  const isPlacesPage = pathname === '/dashboard/places';
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     
-    // Only redirect to dashboard if we are not already on the dashboard AND not on a page that handles its own search
-    if (value && pathname !== '/dashboard' && !isRoutesPage && !isMonitorPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
-        router.push('/dashboard');
+    // Only redirect to places if we are not already on a page that handles its own search
+    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
+        router.push('/dashboard/places');
     }
   };
 
