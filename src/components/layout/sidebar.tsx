@@ -18,7 +18,8 @@ import {
   Info,
   Scale, MapPin,
   ChevronDown,
-  MessageSquare
+  MessageSquare,
+  Package
 } from 'lucide-react';
 import {
   Sidebar,
@@ -54,8 +55,8 @@ import { doc, onSnapshot } from 'firebase/firestore'; // Added onSnapshot
 import { useEffect, useState } from 'react';
 import { Organization, User } from '@/lib/types';
 import { collection, query, where, onSnapshot as onSnapshotFirestore } from 'firebase/firestore';
-import { Progress } from '@/components/ui/progress';
 import { Trophy } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
 import { firebaseDB } from '@/lib/firebase/database';
 import Link from 'next/link';
 import { useAuth } from '../auth-provider';
@@ -66,6 +67,7 @@ const navItems = [
   { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
   { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
   { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+  { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
   { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
   { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },
   { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true },
@@ -255,6 +257,7 @@ export default function AppSidebar() {
             <SidebarMenu>
             {navItems.map((item) => {
                 if (item.adminOnly && !isAdmin) return null;
+                if (item.roles && !item.roles.includes(dbUser?.role || '')) return null;
 
                 return (
                 <SidebarMenuItem key={item.href}>

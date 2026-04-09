@@ -36,9 +36,6 @@ This is the phase where we leverage all the data and structures from the previou
 (Google OR-Tools integration, Constraint-Based Automatic Route Generation)
 *Crucial Constraint:* Automation must be an *opt-in enhancement*, not a restrictive cage. The system must always support fully manual route creation, drag-and-drop overrides, and real-time ad-hoc adjustments to account for real-world unpredictability.
 
-*Crucial Constraint:* Automation must be an *opt-in enhancement*, not a restrictive cage. The system must always support fully manual route creation, drag-and-drop overrides, and real-time ad-hoc adjustments to account for real-world unpredictability.
-
-
 ## Phase 5: Business Intelligence & Data Exposure (Planned)
 
 This phase focuses on aggregating the rich operational data collected in previous phases into high-level, strategic insights for business owners. This will be implemented via a new "Strategic Dashboard" section for administrators, following an API-first principle.

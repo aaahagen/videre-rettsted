@@ -1,4 +1,4 @@
-import { Place, User, Organization, Route, Vehicle, WorkLog , ProofOfDelivery, Order, Manifest, VehicleInspection } from './types';
+import { Place, User, Organization, Route, Vehicle, WorkLog, LogEntry, ProofOfDelivery, Order, Manifest, VehicleInspection } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;

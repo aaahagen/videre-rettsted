@@ -22,6 +22,18 @@ service cloud.firestore {
 
     // Organizations
     match /organizations/{orgId} {
+      // Allow read/write for manifests subcollection for users in the org
+      match /manifests/{manifestId} {
+        allow read: if isAuthenticated() && isUserInOrg(orgId);
+        allow write: if isAuthenticated() && isUserInOrg(orgId) && (isAdmin() || getUserData().role == 'loader');
+      }
+      
+      // Allow read/write for orders subcollection
+      match /orders/{orderId} {
+        allow read: if isAuthenticated() && isUserInOrg(orgId);
+        allow write: if isAuthenticated() && isUserInOrg(orgId) && (isAdmin() || getUserData().role == 'loader');
+      }
+
       allow read: if isAuthenticated() && isUserInOrg(orgId);
       allow create: if isAuthenticated(); 
       allow update: if isAuthenticated() && isUserInOrg(orgId) && isAdmin();
