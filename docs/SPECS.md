@@ -58,7 +58,14 @@ The platform utilizes a dual-path onboarding strategy to maintain strict multi-t
 - Search by name, address, or hashtag.
 - "Favorite" system for individual users.
 
-### 6. Route Management
+### 6. Order Management (Intake & Redundancy)
+The system requires a robust order management system acting as the precursor to route planning.
+- **Dual Intake Strategy:** Orders must enter the system via two distinct paths to ensure operational redundancy:
+    1.  **Manual Registration:** A comprehensive UI form for planners to manually create orders. This ensures the system remains usable even if external integrations fail or for ad-hoc customer requests.
+    2.  **API Integration:** Secure endpoints to automatically ingest order data from external Transport Management Systems (TMS), ERPs, or external booking portals.
+- **Detailed Goods Specification:** Every order must strictly define the payload: dimensions (L/W/H), weight, type of goods (pallet, package, bulk), and handling requirements (ADR, temperature-controlled, fragile). This data is essential for the Constraint-Based routing engine.
+
+### 7. Route Management
 - Admins can create and delete delivery routes.
 - Routes consist of an ordered list of places.
 - Admins can assign a specific driver to a route.
@@ -68,7 +75,7 @@ The platform utilizes a dual-path onboarding strategy to maintain strict multi-t
 
 
 
-### 7. Workforce Management & HR
+### 8. Workforce Management & HR
 The application serves as a central hub for personnel management.
 - **Driver Profiles:** Detailed profiles for each employee (both internal and external contractors).
 - **Core HR Data:** Profiles must store and display:
@@ -81,7 +88,7 @@ The application serves as a central hub for personnel management.
 - **Contract Management:** Ability to upload and log multiple digital contracts per employee (Start Date, End Date, Role, Contracted Hours).
 - **Document Storage:** Secure upload for certificates, diplomas, and other HR-related documents.
 
-### 8. Time & Attendance (Stamping)
+### 9. Time & Attendance (Stamping)
 - **Admin Self-Approval Restriction (Future Upgrade):** Implement logic to prevent administrators from approving their own submitted work logs, requiring peer or owner approval instead.
 
 - **Geofencing & Time Tracking:** The system tracks actual worked hours versus planned schedules.
@@ -93,7 +100,7 @@ The application serves as a central hub for personnel management.
 - **GDPR Audit & Retention:** The system automatically logs any instance where an administrator views a driver's time approvals (`admin_view_worklog`). Additionally, a background process permanently deletes all time stamps older than 3 years to comply with data retention policies.
 
 
-### 9. Fleet Management
+### 10. Fleet Management
 - Complete registry of company vehicles.
 - Tracks capacities (weight, volume, pallets), physical dimensions (height, width, length), and specialized capabilities (ADR, refrigeration, tail-lift, flatbed, trailer coupling).
 - Supports custom key-value attributes (e.g., "Jekketralle: 2 stk").

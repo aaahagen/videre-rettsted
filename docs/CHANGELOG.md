@@ -157,7 +157,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or owner review.
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
     - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
-    - **Tier 2: Order-Based Planning with Advanced Goods Definition:** An "Order" module will be introduced, allowing for the import of jobs. Each job/order will support detailed properties, including size, weight, form (e.g., pallet, package, liquid), and special handling requirements like temperature control, hazardous materials (ADR), or required legal documentation.
+    - **Tier 2: Order-Based Planning & Multi-Channel Intake:** An "Order" module will be introduced to manage incoming jobs. To ensure redundancy and flexibility, this module will support a dual-intake strategy:
+        1.  **Manual Registration:** A comprehensive UI form for planners to manually input order details (type of goods, weight, exact dimensions, sender/receiver, special requirements like ADR or temperature control).
+        2.  **API Integration (Future):** A robust, versioned API endpoint to automatically ingest orders from external Transport Management Systems (TMS), ERPs, or customer portals.
+    Each order will act as the foundational unit for both manual and automated route assignment.
+
     - **Tier 3: Constraint-Based Automatic Generation:** An intelligent backend system will automatically generate optimized daily routes. This system will perform constraint-based matching, assigning orders not only based on location but also by matching the goods' requirements to defined vehicle capabilities from the Fleet Management module. It will flag any jobs that cannot be assigned due to a lack of compatible vehicles.
     - **Tier 4: Manual Override & Ad-Hoc Routing:** Despite automation, the real world is unpredictable. Planners must always retain the ability to manually override automated assignments, drag-and-drop orders between vehicles mid-route, and create completely custom, ad-hoc routes from scratch without relying on the automated engine.
 

@@ -33,6 +33,11 @@ This phase focuses on building the features that ensure what is planned is what 
 ## Phase 4: Intelligent Automation & Optimization
 
 This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
+1.  **Order Management Module:** Build the UI (`/dashboard/orders`) and backend to handle incoming delivery jobs.
+    *   **Manual Intake:** Create a robust form for administrators to manually register new orders, capturing precise details (dimensions, weight, goods type, special handling).
+    *   **API Intake (Foundation):** Design the backend schema to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
+2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
+
 (Google OR-Tools integration, Constraint-Based Automatic Route Generation)
 *Crucial Constraint:* Automation must be an *opt-in enhancement*, not a restrictive cage. The system must always support fully manual route creation, drag-and-drop overrides, and real-time ad-hoc adjustments to account for real-world unpredictability.
 
