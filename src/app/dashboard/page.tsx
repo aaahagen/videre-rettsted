@@ -199,144 +199,149 @@ export default function DashboardPage() {
     <div className="space-y-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       
       {isAdmin ? (
-        /* ADMIN VIEW */
-        <div className="space-y-8 max-w-5xl mx-auto">
+        
+        /* ADMIN VIEW - Bento Box Layout */
+        <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
             
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                        <UserIcon className="h-5 w-5" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900">Personell</h2>
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mb-1" />
-                        <p className="text-lg sm:text-2xl font-bold text-blue-900">{workforceStats.working}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-blue-700 uppercase tracking-tighter">På jobb</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mb-1" />
-                        <p className="text-lg sm:text-2xl font-bold text-red-900">{workforceStats.sick}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-red-700 uppercase tracking-tighter">Syk</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <Palmtree className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mb-1" />
-                        <p className="text-lg sm:text-2xl font-bold text-green-900">{workforceStats.vacation}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-green-700 uppercase tracking-tighter">Ferie</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <Coffee className="h-5 w-5 sm:h-6 sm:w-6 text-slate-500 mb-1" />
-                        <p className="text-lg sm:text-2xl font-bold text-slate-700">{workforceStats.off}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Fridag</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 mb-1" />
-                        <p className="text-lg sm:text-2xl font-bold text-amber-900">{workforceStats.contractors}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-amber-700 uppercase tracking-tighter">Innleid</p>
-                    </div>
-                </div>
-            </div>
-
-            
-            {/* FLEET STATS */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                        <Truck className="h-5 w-5" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900">Kjøretøypark</h2>
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-green-600">{fleetStats.ready}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Klar</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-blue-600">{fleetStats.on_tour}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">På rute</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-slate-600">{fleetStats.parked}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Parkert</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-yellow-600">{fleetStats.observation}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Obs.</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-orange-600">{fleetStats.pending_workshop}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Venter</p>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-3 flex flex-col items-center justify-center text-center hover:bg-slate-100 transition-colors">
-                        <p className="text-lg sm:text-2xl font-bold text-red-600">{fleetStats.workshop}</p>
-                        <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter">Verksted</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                        <RouteIcon className="h-5 w-5" />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-900">Ruter & Stopp</h2>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <span className="text-3xl font-bold text-slate-900">{monitorStats.total}</span>
-                    <span className="text-sm text-muted-foreground">Totale Ruter</span>
-                    </div>
-                    <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg border border-blue-100/50">
-                    <span className="text-3xl font-bold text-blue-600">{monitorStats.active}</span>
-                    <span className="text-sm text-blue-600/80">Aktive Ruter</span>
-                    </div>
-                    <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg border border-green-100/50">
-                    <span className="text-3xl font-bold text-green-600">{monitorStats.finished}</span>
-                    <span className="text-sm text-green-600/80">Fullførte Ruter</span>
-                    </div>
-                    <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg border border-primary/10">
-                    <span className="text-3xl font-bold text-primary">{monitorStats.totalPlaces}</span>
-                    <span className="text-sm text-primary/80">Totale Stopp</span>
-                    </div>
-                </div>
+            {/* MAIN CANVAS (Left - 66%) */}
+            <div className="w-full lg:w-2/3 space-y-6">
                 
-                <div className="space-y-2 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <div className="flex justify-between text-sm">
-                    <span className="font-medium text-slate-700">Total Fremdrift for Dagen</span>
-                    <span className="text-muted-foreground font-medium">{monitorStats.completedPlaces} / {monitorStats.totalPlaces} stopp fullført ({Math.round(overallProgress)}%)</span>
+                {/* 1. ROUTE PROGRESS (Hero Metric) */}
+                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                        <RouteIcon className="h-32 w-32" />
                     </div>
-                    <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary transition-all duration-500" style={{ width: `${overallProgress}%` }} />
-                    </div>
-                </div>
-            </div>
-
-            {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
-            {userData.orgId && <PendingInvitations orgId={userData.orgId} />}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TimeStampCard user={userData} />
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-slate-100 rounded-lg text-slate-500">
-                                <RouteIcon className="h-5 w-5" />
-                            </div>
-                            <h3 className="text-lg font-bold text-slate-900">Operativ oversikt</h3>
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <RouteIcon className="h-5 w-5 text-primary" />
+                                Ruter & Stopp
+                            </h2>
+                            <span className="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">I dag</span>
                         </div>
-                    <p className="text-slate-500 text-sm">
-                        Bruk navigasjonen under for rask tilgang til operative verktøy.
-                    </p>
-                    <div className="mt-6 grid grid-cols-2 gap-3">
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/dashboard/monitor">Overvåkning</Link>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="flex flex-col items-start p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                <span className="text-sm text-muted-foreground font-medium uppercase tracking-tighter">Totale Ruter</span>
+                                <span className="text-3xl font-black text-slate-900">{monitorStats.total}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-4 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                                <span className="text-sm text-blue-600/80 font-medium uppercase tracking-tighter">Aktive</span>
+                                <span className="text-3xl font-black text-blue-600">{monitorStats.active}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-4 bg-green-50/50 rounded-lg border border-green-100/50">
+                                <span className="text-sm text-green-700/80 font-medium uppercase tracking-tighter">Fullførte</span>
+                                <span className="text-3xl font-black text-green-600">{monitorStats.finished}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-4 bg-primary/5 rounded-lg border border-primary/10">
+                                <span className="text-sm text-primary/80 font-medium uppercase tracking-tighter">Totale Stopp</span>
+                                <span className="text-3xl font-black text-primary">{monitorStats.totalPlaces}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="font-semibold text-slate-700">Total Fremdrift for Dagen</span>
+                                <span className="text-muted-foreground font-bold">{monitorStats.completedPlaces} / {monitorStats.totalPlaces} stopp ({Math.round(overallProgress)}%)</span>
+                            </div>
+                            <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${overallProgress}%` }} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. DENSE TELEMETRY ROW (Workforce & Fleet side-by-side) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* WORKFORCE LIST */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
+                            <UserIcon className="h-5 w-5 text-blue-600" />
+                            <h3 className="text-lg font-bold text-slate-900">Personell</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><UserCheck className="h-4 w-4 text-blue-500"/> På jobb</span>
+                                <span className="font-bold text-slate-900">{workforceStats.working}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Briefcase className="h-4 w-4 text-amber-500"/> Innleid</span>
+                                <span className="font-bold text-slate-900">{workforceStats.contractors}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Activity className="h-4 w-4 text-red-500"/> Syk</span>
+                                <span className="font-bold text-slate-900">{workforceStats.sick}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Palmtree className="h-4 w-4 text-green-500"/> Ferie</span>
+                                <span className="font-bold text-slate-900">{workforceStats.vacation}</span>
+                            </div>
+                            <div className="flex items-center justify-between opacity-50">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Coffee className="h-4 w-4"/> Fridag</span>
+                                <span className="font-bold text-slate-900">{workforceStats.off}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* FLEET LIST */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
+                            <Truck className="h-5 w-5 text-slate-700" />
+                            <h3 className="text-lg font-bold text-slate-900">Kjøretøypark</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500" /> Klar</span>
+                                <span className="font-bold text-slate-900">{fleetStats.ready}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> På rute</span>
+                                <span className="font-bold text-slate-900">{fleetStats.on_tour}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-orange-400" /> Venter verksted</span>
+                                <span className="font-bold text-slate-900">{fleetStats.pending_workshop}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500" /> På verksted</span>
+                                <span className="font-bold text-slate-900">{fleetStats.workshop}</span>
+                            </div>
+                            <div className="flex items-center justify-between opacity-50">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300" /> Parkert</span>
+                                <span className="font-bold text-slate-900">{fleetStats.parked}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
+            </div>
+
+            {/* ACTION SIDEBAR (Right - 33%) */}
+            <div className="w-full lg:w-1/3 space-y-6">
+                <TimeStampCard user={userData} />
+
+                {/* QUICK ACTIONS */}
+                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Snarveier</h3>
+                    <div className="space-y-3">
+                        <Button variant="outline" className="w-full justify-start h-12" asChild>
+                            <Link href="/dashboard/monitor">
+                                <Activity className="mr-2 h-5 w-5 text-blue-500" />
+                                Live Overvåkning
+                            </Link>
                         </Button>
-                        <Button variant="outline" size="sm" asChild>
-                            <Link href="/dashboard/routes">Alle Ruter</Link>
+                        <Button variant="outline" className="w-full justify-start h-12" asChild>
+                            <Link href="/dashboard/routes">
+                                <RouteIcon className="mr-2 h-5 w-5 text-primary" />
+                                Ruteplanlegger
+                            </Link>
                         </Button>
                     </div>
                 </div>
+
+                {userData.orgId && <PendingInvitations orgId={userData.orgId} />}
             </div>
         </div>
       ) : (
