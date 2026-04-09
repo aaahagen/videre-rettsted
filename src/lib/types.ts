@@ -188,7 +188,8 @@ export interface Vehicle {
     notes?: string;
     customFields?: { name: string; value: string }[];
   };
-  status: 'active' | 'maintenance' | 'inactive';
+  status: 'active' | 'maintenance' | 'inactive'; // DEPRECATED: Use currentStatuses array instead.
+  currentStatuses: ("ready" | "pending_workshop" | "workshop" | "observation" | "on_tour" | "parked")[];
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
   images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];

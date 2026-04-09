@@ -33,6 +33,26 @@ export default function FleetPage() {
     const { query: searchQuery, setContext } = useSearch();
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const { toast } = useToast();
+    const [stats, setStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
+    
+    useEffect(() => {
+        const newStats = { ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 };
+        vehicles.forEach(v => {
+            const statuses = v.currentStatuses || [];
+            if (statuses.length === 0) {
+                if (v.status === 'active') newStats.ready++;
+                if (v.status === 'maintenance') newStats.workshop++;
+            } else {
+                statuses.forEach(s => {
+                    if (newStats[s as keyof typeof newStats] !== undefined) {
+                         newStats[s as keyof typeof newStats]++;
+                    }
+                });
+            }
+        });
+        setStats(newStats);
+    }, [vehicles]);
+
 
     useEffect(() => {
         const handleOpen = () => handleOpenForm();
@@ -132,6 +152,58 @@ export default function FleetPage() {
                     
                 </div>
 
+                {/* Statistics Dashboard */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">Klar</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-green-600">{stats.ready}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">På rute</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-blue-600">{stats.on_tour}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">Parkert</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-slate-600">{stats.parked}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">Observasjon</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-yellow-600">{stats.observation}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">Venter på verksted</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-orange-600">{stats.pending_workshop}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-slate-200">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">På verksted</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-red-600">{stats.workshop}</div>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 {filteredVehicles.length === 0 && searchQuery ? (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-slate-200">
                         <div className="rounded-full bg-slate-100 p-6 mb-4">
@@ -164,9 +236,24 @@ export default function FleetPage() {
                                         <CardTitle className="text-xl font-bold">{v.name}</CardTitle>
                                         <div className="flex gap-2 mt-2">
                                             <Badge variant="outline">{v.registrationNumber}</Badge>
-                                            <Badge variant={v.status === 'active' ? 'default' : v.status === 'maintenance' ? 'destructive' : 'secondary'}>
-                                                {v.status === 'active' ? 'I drift' : v.status === 'maintenance' ? 'Verksted' : 'Inaktiv'}
-                                            </Badge>
+                                            {v.currentStatuses && v.currentStatuses.length > 0 ? (
+                                                v.currentStatuses.map(s => {
+                                                    const statusMap: any = {
+                                                        'ready': { label: 'Klar', color: 'bg-green-100 text-green-800 hover:bg-green-100' },
+                                                        'on_tour': { label: 'På rute', color: 'bg-blue-100 text-blue-800 hover:bg-blue-100' },
+                                                        'parked': { label: 'Parkert', color: 'bg-slate-100 text-slate-800 hover:bg-slate-100' },
+                                                        'observation': { label: 'Obs', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' },
+                                                        'pending_workshop': { label: 'Venter verksted', color: 'bg-orange-100 text-orange-800 hover:bg-orange-100' },
+                                                        'workshop': { label: 'Verksted', color: 'bg-red-100 text-red-800 hover:bg-red-100' }
+                                                    };
+                                                    const sm = statusMap[s] || { label: s, color: 'bg-slate-100' };
+                                                    return <Badge key={s} variant="outline" className={`border-0 ${sm.color}`}>{sm.label}</Badge>
+                                                })
+                                            ) : (
+                                                <Badge variant={v.status === 'active' ? 'default' : v.status === 'maintenance' ? 'destructive' : 'secondary'}>
+                                                    {v.status === 'active' ? 'Klar (Gammel)' : v.status === 'maintenance' ? 'Verksted (Gammel)' : 'Inaktiv'}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1 items-end -mt-2 -mr-2">

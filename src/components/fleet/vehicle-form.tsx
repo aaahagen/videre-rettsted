@@ -38,7 +38,7 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
             registrationNumber: '',
             type: 'van',
             fuelType: 'diesel',
-            status: 'active',
+            currentStatuses: ['ready'], status: 'active',
             capacity: { weight: undefined, volume: undefined, pallets: undefined },
             dimensions: { length: undefined, height: undefined, width: undefined },
             capabilities: { refrigeration: false, tailLift: false, adr: false, trailerCoupling: false },
