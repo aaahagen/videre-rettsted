@@ -208,9 +208,6 @@ export default function DashboardPage() {
                 
                 {/* 1. ROUTE PROGRESS (Hero Metric) */}
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-                        <RouteIcon className="h-32 w-32" />
-                    </div>
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
