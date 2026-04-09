@@ -75,3 +75,9 @@ This phase focuses on extending the application's reach, ensuring offline reliab
     *   **Background Geolocation:** Enable reliable "Always-on" location tracking to trigger geofence alerts even when the app is minimized.
     *   **Native Push Notifications:** Utilize Apple APNs and Firebase Cloud Messaging (FCM) for highly reliable schedule updates and dispatch alerts.
 3.  **True Offline Capabilities:** Move beyond browser-based IndexedDB (which can be aggressively cleared by the OS) and implement persistent, native device storage to guarantee the app remains functional in severe network dead zones.
+## Phase 8: Telematics & Hardware Ecosystem (Exploratory)
+
+This phase focuses on closing the gap between the software plan and the physical realities of the vehicle, moving beyond reliance on the driver's smartphone.
+
+1.  **OEM & Third-Party API Aggregation:** Investigate and build integrations with major vehicle manufacturers (Volvo Connect, Scania Fleet) and popular aftermarket telematics providers (e.g., ABAX, GSGroup) to automatically ingest real odometer readings, fuel consumption, and diagnostic trouble codes (DTCs).
+2.  **Proprietary Hardware Development (R&D):** Since the telematics landscape is fragmented and many companies operate mixed or older fleets, explore the feasibility of designing and manufacturing a proprietary 'VIDERE' OBD-II plug-and-play tracker. This would guarantee a unified, low-cost, and reliable data stream directly into our Fleet Management module, independent of the vehicle's age or brand.

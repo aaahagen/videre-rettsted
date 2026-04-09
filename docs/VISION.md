@@ -20,6 +20,8 @@ Historically, the logistics industry relies on fragmented systems:
 ## Key Differentiators
 *   **Function-First & Driver-Centric:** Designed for the reality of the cab, not just the office. If the driver doesn't use it, the data is useless.
 *   **API-First Extensibility:** We are not building an ERP. We are building the operational engine that *feeds* the ERP. Everything from route completion to time tracking will be accessible via API for seamless integration with accounting software.
+*   **Hardware Agnostic Telematics (Future Exploration):** While modern vehicles have APIs, the landscape is fragmented. Our strategy is to explore ingesting telemetry data (mileage, fuel, diagnostics) from various OEM APIs, third-party aftermarket trackers, and potentially developing our own proprietary OBD-II/GPS hardware module to guarantee a unified data stream for older or mixed fleets.
+
 *   **Constraint-Based Intelligence (Future):** Moving beyond simple routing to true optimization—matching the specific physical requirements of an order to the capabilities of the fleet and the legal compliance of the driver.
 *   **Immutable Audit Trail:** From the moment a loader scans a package onto a truck, to the GPS-verified Proof of Delivery, to the admin approving the overtime, every action is logged, ensuring complete process integrity and GDPR compliance.
 
