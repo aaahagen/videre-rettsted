@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
 - **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops. 
 - **Intelligent Capacity Checking:** Implemented real-time dynamic capacity warnings in the route planner. When a vehicle is assigned, the system continually calculates the cumulative weight, volume, and pallet count from all assigned orders and instantly warns the planner if the vehicle's safe limits are exceeded.
+- **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
 
 ### Changed
 - **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
