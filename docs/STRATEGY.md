@@ -103,6 +103,11 @@ This phase introduces a comprehensive suite of tools to ensure the company opera
 4.  **Incident & Audit Log:**
     *   A dedicated log to systematically record events like roadside inspections, accidents, and internal deviations, including corrective actions taken.
 
+5.  **User-Facing Compliance Dashboards & Visualizations:**
+    *   **Driver Dashboard:** A dedicated, simple visual widget on the driver's main dashboard that clearly displays the status and upcoming deadlines for their personal compliance items (YSK, Driver's License, next Tachograph download).
+    *   **Administrator Dashboard:** A compact, high-level infographic on the admin dashboard summarizing the overall compliance status of the workforce and fleet. This includes upcoming EU-controls for vehicles and a summary of driver duty statuses.
+    *   **Enhanced Workforce View:** The employee cards on the main workforce page will be enhanced to show key compliance dates (e.g., YSK expiry) directly, allowing for quick, at-a-glance status checks by administrators.
+
 ## Phase 7: Commercialization & Multi-Tenancy
 
 This phase focuses on building the features necessary to offer the application as a multi-tenant, subscription-based service (SaaS).
@@ -120,6 +125,7 @@ This phase focuses on extending the application's reach, ensuring offline reliab
     *   **Background Geolocation:** Enable reliable "Always-on" location tracking to trigger geofence alerts even when the app is minimized.
     *   **Native Push Notifications:** Utilize Apple APNs and Firebase Cloud Messaging (FCM) for highly reliable schedule updates and dispatch alerts.
 3.  **True Offline Capabilities:** Move beyond browser-based IndexedDB (which can be aggressively cleared by the OS) and implement persistent, native device storage to guarantee the app remains functional in severe network dead zones.
+
 ## Phase 9: Telematics & Hardware Ecosystem (Exploratory)
 
 This phase focuses on closing the gap between the software plan and the physical realities of the vehicle, moving beyond reliance on the driver's smartphone.
