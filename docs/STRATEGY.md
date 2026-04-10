@@ -107,6 +107,7 @@ This phase introduces a comprehensive suite of tools to ensure the company opera
     *   **Driver Dashboard:** A dedicated, simple visual widget on the driver's main dashboard that clearly displays the status and upcoming deadlines for their personal compliance items (YSK, Driver's License, next Tachograph download).
     *   **Administrator Dashboard:** A compact, high-level infographic on the admin dashboard summarizing the overall compliance status of the workforce and fleet. This includes upcoming EU-controls for vehicles and a summary of driver duty statuses.
     *   **Enhanced Workforce View:** The employee cards on the main workforce page will be enhanced to show key compliance dates (e.g., YSK expiry) directly, allowing for quick, at-a-glance status checks by administrators.
+    *   **Admin-Controlled Driver Dashboard Banner:** A system for administrators to create and schedule informational banners on the driver's dashboard. This will support rich text and images for seasonal reminders (e.g., winter chain checks), safety campaigns, or other timely announcements.
 
 ## Phase 7: Commercialization & Multi-Tenancy
 
