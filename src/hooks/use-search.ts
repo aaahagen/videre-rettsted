@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Order } from '../lib/types';
 
 interface SearchStore {
   query: string;
@@ -11,6 +12,8 @@ interface SearchStore {
 export const useSearch = create<SearchStore>((set) => ({
   query: '',
   setQuery: (query) => set({ query }),
+   
+   
   contextName: 'Steder',
   contextLink: '/dashboard/new',
   setContext: (name, link) => set({ contextName: name, contextLink: link }),

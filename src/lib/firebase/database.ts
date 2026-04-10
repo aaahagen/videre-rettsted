@@ -431,6 +431,13 @@ const getOrder = async (orgId: string, orderId: string): Promise<Order | null> =
   return { id: docSnap.id, ...docSnap.data() } as Order;
 };
 
+const getOrders = async (orgId: string): Promise<Order[]> => {
+  const ordersRef = collection(db, `organizations/${orgId}/orders`);
+  const q = query(ordersRef, orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+};
+
 const getOrdersForRoute = async (orgId: string, routeId: string): Promise<Order[]> => {
   const ordersRef = collection(db, `organizations/${orgId}/orders`);
   const q = query(ordersRef, where('routeId', '==', routeId));
@@ -554,7 +561,7 @@ export const firebaseDB: Database = {
   updateWorkLog,
   deleteWorkLog,
 
-  createOrder, getOrder, getOrdersForRoute, updateOrderStatus,
+  createOrder, getOrder, getOrders, getOrdersForRoute, updateOrderStatus,
   createManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
   submitProofOfDelivery, submitVehicleInspection, getVehicleInspections,
 };

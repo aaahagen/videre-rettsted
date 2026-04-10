@@ -45,6 +45,7 @@ export interface Database {
   // Orders
   createOrder(order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
   getOrder(orgId: string, orderId: string): Promise<Order | null>;
+  getOrders(orgId: string): Promise<Order[]>;
   getOrdersForRoute(orgId: string, routeId: string): Promise<Order[]>;
   updateOrderStatus(orgId: string, orderId: string, status: Order['status']): Promise<void>;
   

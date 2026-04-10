@@ -1,4 +1,4 @@
-# Development Strategy & Roadmap
+"""# Development Strategy & Roadmap
 
 This document outlines the phased implementation plan for future features. The goal is to build new functionality in a logical order that minimizes technical conflicts and delivers value incrementally.
 
@@ -30,10 +30,10 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **Inspection Models:** Database schemas created for logging pre/post-trip checks (tires, brakes, fluids) and reporting damages with photos.
     *   *Next Steps:* Build the driver/mechanic UI form.
 
-## Phase 4: Intelligent Automation & Optimization
+## Phase 4: Intelligent Automation & Optimization (In Progress)
 
 This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
-1.  **Order Management Module:** Build the UI (`/dashboard/orders`) and backend to handle incoming delivery jobs.
+1.  **Order Management Module (Completed):** The UI (`/dashboard/orders`) and backend to handle incoming delivery jobs have been built.
     *   **Manual Intake:** Create a robust form for administrators to manually register new orders, capturing precise details (dimensions, weight, goods type, special handling).
     *   **API Intake (Foundation):** Design the backend schema to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
 2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
@@ -81,3 +81,4 @@ This phase focuses on closing the gap between the software plan and the physical
 
 1.  **OEM & Third-Party API Aggregation:** Investigate and build integrations with major vehicle manufacturers (Volvo Connect, Scania Fleet) and popular aftermarket telematics providers (e.g., ABAX, GSGroup) to automatically ingest real odometer readings, fuel consumption, and diagnostic trouble codes (DTCs).
 2.  **Proprietary Hardware Development (R&D):** Since the telematics landscape is fragmented and many companies operate mixed or older fleets, explore the feasibility of designing and manufacturing a proprietary 'VIDERE' OBD-II plug-and-play tracker. This would guarantee a unified, low-cost, and reliable data stream directly into our Fleet Management module, independent of the vehicle's age or brand.
+""

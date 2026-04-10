@@ -76,6 +76,7 @@ const navGroups = [
     label: 'Logistikk',
     items: [
       { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+      { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true },
       { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
       { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
       { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },

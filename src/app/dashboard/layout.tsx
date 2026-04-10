@@ -3,7 +3,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/sidebar';
 import { Button } from '@/components/ui/button';
-import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon, Activity, UserPlus, Truck } from 'lucide-react';
+import { FilePlus2, Search, X, RefreshCw, Route as RouteIcon, Activity, UserPlus, Truck, Package } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { useSearch } from '@/hooks/use-search';
@@ -38,13 +38,14 @@ export default function DashboardLayout({
   const isRoutesPage = pathname === '/dashboard/routes';
   const isMonitorPage = pathname === '/dashboard/monitor';
   const isPlacesPage = pathname === '/dashboard/places';
+  const isOrdersPage = pathname === '/dashboard/orders';
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     
     // Only redirect to places if we are not already on a page that handles its own search
-    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
+    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && !isOrdersPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
         router.push('/dashboard/places');
     }
   };
@@ -103,8 +104,8 @@ export default function DashboardLayout({
                         }
                     }}
                   >
-                    {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : contextName === 'Personell' ? <UserPlus className="mr-2 h-4 w-4" /> : contextName === 'Kjøretøy' ? <Truck className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
-                    {contextName === 'Ruter' ? 'Ny Rute' : contextName === 'Personell' ? 'Nytt personell' : contextName === 'Kjøretøy' ? 'Nytt Kjøretøy' : 'Nytt Sted'}
+                    {contextName === 'Ruter' ? <RouteIcon className="mr-2 h-4 w-4" /> : contextName === 'Personell' ? <UserPlus className="mr-2 h-4 w-4" /> : contextName === 'Kjøretøy' ? <Truck className="mr-2 h-4 w-4" /> : contextName === 'Ordrer' ? <Package className="mr-2 h-4 w-4" /> : <FilePlus2 className="mr-2 h-4 w-4" />}
+                    {contextName === 'Ruter' ? 'Ny Rute' : contextName === 'Personell' ? 'Nytt personell' : contextName === 'Kjøretøy' ? 'Nytt Kjøretøy' : contextName === 'Ordrer' ? 'Ny Ordre' : 'Nytt Sted'}
                   </Button>
                   <Button 
                     size="icon" 
@@ -117,7 +118,7 @@ export default function DashboardLayout({
                         }
                     }}
                   >
-                    {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : contextName === 'Personell' ? <UserPlus className="h-5 w-5" /> : contextName === 'Kjøretøy' ? <Truck className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
+                    {contextName === 'Ruter' ? <RouteIcon className="h-5 w-5" /> : contextName === 'Personell' ? <UserPlus className="h-5 w-5" /> : contextName === 'Kjøretøy' ? <Truck className="h-5 w-5" /> : contextName === 'Ordrer' ? <Package className="h-5 w-5" /> : <FilePlus2 className="h-5 w-5" />}
                   </Button>
                 </div>
             )}
