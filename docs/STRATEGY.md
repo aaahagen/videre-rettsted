@@ -59,7 +59,7 @@ This is the phase where we leverage all the data and structures from the previou
 
 ## Phase 5: Business Intelligence & Data Exposure (Planned)
 
-This phase focuses on aggregating the rich operational data collected in previous phases into high-level, strategic insights for business owners. This will be implemented via a new "Strategic Dashboard" section for administrators, following an API-first principle.
+This phase focuses on aggregating the rich operational data collected in previous phases into high-level, a href="https://github.com/features/actions"strategic insights for business owners. This will be implemented via a new "Strategic Dashboard" section for administrators, following an API-first principle.
 
 1.  **Develop Backend Data Aggregation Layer:** Create dedicated, efficient backend Cloud Functions to compute Key Performance Indicators (KPIs) without impacting frontend performance. These functions will be the single source of truth for all strategic data.
 
@@ -108,6 +108,10 @@ This phase introduces a comprehensive suite of tools to ensure the company opera
     *   **Administrator Dashboard:** A compact, high-level infographic on the admin dashboard summarizing the overall compliance status of the workforce and fleet. This includes upcoming EU-controls for vehicles and a summary of driver duty statuses.
     *   **Enhanced Workforce View:** The employee cards on the main workforce page will be enhanced to show key compliance dates (e.g., YSK expiry) directly, allowing for quick, at-a-glance status checks by administrators.
     *   **Admin-Controlled Driver Dashboard Banner:** A system for administrators to create and schedule informational banners on the driver's dashboard. This will support rich text and images for seasonal reminders (e.g., winter chain checks), safety campaigns, or other timely announcements.
+
+6.  **Regulatory & Company Knowledge Base:**
+    *   **Driver View:** A dedicated section on the driver's dashboard providing direct links to essential external regulations (e.g., Lovdata, Statens vegvesen) and internal company policy documents.
+    *   **Admin View:** A comprehensive resource center in the admin menu allowing administrators to manage the links and documents available to drivers, ensuring information is always up-to-date.
 
 ## Phase 7: Commercialization & Multi-Tenancy
 
