@@ -1,4 +1,4 @@
-"""# Development Strategy & Roadmap
+# Development Strategy & Roadmap
 
 This document outlines the phased implementation plan for future features. The goal is to build new functionality in a logical order that minimizes technical conflicts and delivers value incrementally.
 
@@ -34,8 +34,16 @@ This phase focuses on building the features that ensure what is planned is what 
 
 This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
 1.  **Order Management Module (Completed):** The UI (`/dashboard/orders`) and backend to handle incoming delivery jobs have been built.
-    *   **Manual Intake:** Create a robust form for administrators to manually register new orders, capturing precise details (dimensions, weight, goods type, special handling).
-    *   **API Intake (Foundation):** Design the backend schema to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
+    *   **Manual Intake:** A robust form for administrators to manually register new orders.
+    *   **Hybrid Barcode Strategy (Future Enhancement):** Implement a dual-system for generating and using barcodes to ensure both external compatibility and internal efficiency. Printed labels will feature both a traditional barcode and a QR code.
+        *   **1. External Compliance (The "License Plate"):**
+            *   **Standard:** The system will generate industry-standard **GS1 SSCC (Serial Shipping Container Code)** numbers to uniquely identify each logistics unit (pallet, container, etc.).
+            *   **Symbology:** This SSCC will be encoded in a **GS1-128 linear barcode**. This is mandatory for interoperability with external partners and the global supply chain.
+        *   **2. Internal Efficiency (The "Digital Twin"):**
+            *   **Standard:** The system will also generate a **QR Code** for the same logistics unit.
+            *   **Data-Rich:** Unlike the linear barcode, this QR code will contain a rich data payload. This can include the SSCC, destination address, special handling instructions, a direct link to the order in the app, and other relevant details.
+            *   **Benefits:** This provides significant advantages for internal operations: faster, omni-directional scanning via smartphone for drivers; high damage resistance; and the ability to access detailed information without a database lookup, which is ideal for offline scenarios.
+    *   **API Intake (Foundation):** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
 2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
 
 (Google OR-Tools integration, Constraint-Based Automatic Route Generation)
@@ -58,7 +66,8 @@ This phase focuses on aggregating the rich operational data collected in previou
         *   **Vehicle Status Overview:** A dedicated module showing the operational status of all vehicles (e.g., Active, In Workshop, Off-road).
         *   **Maintenance & Inspection Tracking:** Proactive alerts for upcoming regulated check-ups (e.g., EU-Kontroll), service intervals, and workshop visits.
     *   **Route Performance Analytics:**
-        *   **Long-term Route Efficiency:** Statistics on average route completion times versus estimates over historical periods.## Phase 6: Commercialization & Multi-Tenancy
+        *   **Long-term Route Efficiency:** Statistics on average route completion times versus estimates over historical periods.
+## Phase 6: Commercialization & Multi-Tenancy
 
 This phase focuses on building the features necessary to offer the application as a multi-tenant, subscription-based service (SaaS).
 
@@ -81,4 +90,3 @@ This phase focuses on closing the gap between the software plan and the physical
 
 1.  **OEM & Third-Party API Aggregation:** Investigate and build integrations with major vehicle manufacturers (Volvo Connect, Scania Fleet) and popular aftermarket telematics providers (e.g., ABAX, GSGroup) to automatically ingest real odometer readings, fuel consumption, and diagnostic trouble codes (DTCs).
 2.  **Proprietary Hardware Development (R&D):** Since the telematics landscape is fragmented and many companies operate mixed or older fleets, explore the feasibility of designing and manufacturing a proprietary 'VIDERE' OBD-II plug-and-play tracker. This would guarantee a unified, low-cost, and reliable data stream directly into our Fleet Management module, independent of the vehicle's age or brand.
-""
