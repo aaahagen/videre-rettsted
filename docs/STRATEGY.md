@@ -75,14 +75,42 @@ This phase focuses on aggregating the rich operational data collected in previou
         *   **Maintenance & Inspection Tracking:** Proactive alerts for upcoming regulated check-ups (e.g., EU-Kontroll), service intervals, and workshop visits.
     *   **Route Performance Analytics:**
         *   **Long-term Route Efficiency:** Statistics on average route completion times versus estimates over historical periods.
-## Phase 6: Commercialization & Multi-Tenancy
+
+## Phase 6: Compliance & Risk Management (Planned)
+This phase introduces a comprehensive suite of tools to ensure the company operates in full compliance with Norwegian and EU transport regulations, minimizing risk and preparing the business for official audits (veikontroll and virksomhetskontroll).
+
+1.  **Centralized Deadline & Certificate Management:** A core module for tracking all time-sensitive licenses and certifications.
+    *   **Automated Tracking:** The system will track expiry dates for:
+        *   **Personnel:** YSK (Professional Driver Competence), ADR (Hazardous Goods) certificates, Driver's Licenses (Førerkort), and Driver Cards (Sjåførkort).
+        *   **Vehicles:** EU-kontroll, ADR-godkjenning (annual check for hazardous goods vehicles).
+        *   **Company:** Fellesskapsløyve (Community License) and individual Løyveutskrifter (vehicle permits).
+    *   **Proactive Alerts:** Automatic email and in-app notifications will be sent to administrators and relevant employees 90, 60, and 30 days before an expiration date.
+
+2.  **Tachograph & Driving Time Analysis:** Integration to manage and analyze driver and vehicle data.
+    *   **Data Download Reminders:** Automated reminders to download data from vehicle units (every 90 days) and driver cards (every 28 days).
+    *   **Violation Analysis:** The system will analyze tachograph data for breaches of driving and rest time regulations (EU 561/2006). It will flag infringements for internal review.
+    *   **Secure Archiving:** All downloaded tachograph data will be securely stored for the mandatory 12-month period, ready for audits.
+
+3.  **Digital Compliance Archive:** A unified document repository for all regulatory needs.
+    *   **Centralized Storage:** A single, searchable location for storing:
+        *   Employment contracts and working time records.
+        *   Tachograph analysis reports.
+        *   Vehicle inspection and maintenance records.
+        *   HMS (HSE) internal control documentation.
+        *   Records of completed internal and external audits.
+    *   **Audit-Ready:** This feature will allow administrators to quickly compile and export all necessary documentation in the event of a `virksomhetskontroll` (company audit).
+
+4.  **Incident & Audit Log:**
+    *   A dedicated log to systematically record events like roadside inspections, accidents, and internal deviations, including corrective actions taken.
+
+## Phase 7: Commercialization & Multi-Tenancy
 
 This phase focuses on building the features necessary to offer the application as a multi-tenant, subscription-based service (SaaS).
 
 1.  **Super-Admin & Organization Management:** Create a "Super-Admin" role (for the platform owner) with the ability to manage different customer organizations, users, and permissions.
 2.  **Stripe Payment Integration:** Integrate the Stripe API to handle customer subscriptions, billing, and payments.
 
-## Phase 7: Resilience & Native Mobile Distribution
+## Phase 8: Resilience & Native Mobile Distribution
 
 This phase focuses on extending the application's reach, ensuring offline reliability, and removing technical friction for drivers by distributing a native application.
 
@@ -92,7 +120,7 @@ This phase focuses on extending the application's reach, ensuring offline reliab
     *   **Background Geolocation:** Enable reliable "Always-on" location tracking to trigger geofence alerts even when the app is minimized.
     *   **Native Push Notifications:** Utilize Apple APNs and Firebase Cloud Messaging (FCM) for highly reliable schedule updates and dispatch alerts.
 3.  **True Offline Capabilities:** Move beyond browser-based IndexedDB (which can be aggressively cleared by the OS) and implement persistent, native device storage to guarantee the app remains functional in severe network dead zones.
-## Phase 8: Telematics & Hardware Ecosystem (Exploratory)
+## Phase 9: Telematics & Hardware Ecosystem (Exploratory)
 
 This phase focuses on closing the gap between the software plan and the physical realities of the vehicle, moving beyond reliance on the driver's smartphone.
 
