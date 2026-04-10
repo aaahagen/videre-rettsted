@@ -46,7 +46,9 @@ This is the phase where we leverage all the data and structures from the previou
                 *   A `text field` for miscellaneous human-readable notes (e.g., "Fragile," "Top-load only").
                 *   A `web-link field` to point to external resources like safety data sheets, detailed handling instructions, or customer-provided documentation.
             *   **Benefits:** This provides significant advantages for internal operations: faster, omni-directional scanning via smartphone for drivers; high damage resistance; and the ability to access detailed information without a database lookup, which is ideal for offline scenarios.
-    *   **API Intake (Foundation):** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
+    *   **API Intake & Data Enrichment (Future Enhancement):**
+        *   **API Foundation:** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP).
+        *   **Data Enrichment Workflow:** A crucial part of the API intake process will be a manual verification and enrichment step. Orders received via API may lack the specific data required for automated route planning (e.g., precise dimensions, special handling notes). The system must provide a user interface for an administrator to review these orders, add the necessary details, and formally approve them for inclusion in the automated planning engine. This ensures data quality and the reliability of the automation.
 2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
 
 (Google OR-Tools integration, Constraint-Based Automatic Route Generation)
