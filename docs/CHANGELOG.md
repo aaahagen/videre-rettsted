@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
+- **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops to help prevent vehicle overloading.
+
+### Changed
 - **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
 - **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
 - **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities.

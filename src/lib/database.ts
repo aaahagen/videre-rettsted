@@ -48,6 +48,7 @@ export interface Database {
   getOrders(orgId: string): Promise<Order[]>;
   getOrdersForRoute(orgId: string, routeId: string): Promise<Order[]>;
   updateOrderStatus(orgId: string, orderId: string, status: Order['status']): Promise<void>;
+  updateOrder(orgId: string, orderId: string, updates: Partial<Order>): Promise<void>;
   
   // Manifests
   createManifest(manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;

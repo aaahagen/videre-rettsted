@@ -34,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Place, Route, CompletedStopEvent, ProofOfDelivery } from '@/lib/types';
+import { Place, Route, CompletedStopEvent, ProofOfDelivery, Order } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -45,6 +45,8 @@ interface RouteItem {
   type: RouteItemType;
   placeId?: string;
   placeData?: Place;
+  orderId?: string;
+  orderData?: Order;
   duration?: number;
 }
 
@@ -70,8 +72,10 @@ export default function RouteDetailsPage() {
   const [userData, setUserData] = useState<any>(null);
   const [route, setRoute] = useState<Route | null>(null);
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
+  const [allVehicles, setAllVehicles] = useState<any[]>([]);
   
   const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
   const [distance, setDistance] = useState('N/A');
@@ -210,10 +214,12 @@ export default function RouteDetailsPage() {
               setIsEditMode(true);
             }
             
-            const [routeData, placesData, usersData] = await Promise.all([
+            const [routeData, placesData, usersData, allOrdersData, vehiclesData] = await Promise.all([
               firebaseDB.getRoute(routeId),
               firebaseDB.getPlaces(userDoc.orgId),
               firebaseDB.getUsers(userDoc.orgId),
+              firebaseDB.getOrders(userDoc.orgId),
+              firebaseDB.getVehicles(userDoc.orgId),
             ]);
             
             if (routeData && routeData.vehicleId) {
@@ -228,7 +234,9 @@ export default function RouteDetailsPage() {
             if (routeData) {
               setRoute(routeData);
               setAllPlaces(placesData);
+              setPendingOrders(allOrdersData.filter(o => o.status === 'pending' || (o.routeId === routeId)));
               setOrganizationUsers(usersData);
+              setAllVehicles(vehiclesData);
               setRouteNotes(routeData.notes || '');
               
               const legacyBaseAddress = (routeData as any).baseAddress || '';
@@ -252,10 +260,15 @@ export default function RouteDetailsPage() {
               let initialItems: RouteItem[] = [];
               if (routeData.prepTimeStart && routeData.prepTimeStart > 0) initialItems.push({ id: 'special_start', type: 'start', duration: routeData.prepTimeStart });
               if (routeData.places) {
-                routeData.places.forEach(placeId => {
+                routeData.places.forEach(placeId => { const orderId = placeId; const order = allOrdersData.find(o => o.id === orderId);
+                if (order) { const placeData = placesData.find(p => p.id === order.placeId);
+                  if (placeData) initialItems.push({ id: `order_${orderId}`, type: 'place', placeId: placeData.id, placeData, orderId: orderId, orderData: order });
+                } else {
                   const placeData = placesData.find(p => p.id === placeId);
-                  if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData });
+                  if (placeData) initialItems.push({ id: `place_${placeId}`, type: 'place', placeId: placeId, placeData }); }
                 });
+ 
+ 
               }
               if (routeData.breakTime && routeData.breakTime > 0) initialItems.push({ id: 'special_break', type: 'break', duration: routeData.breakTime });
               if (routeData.fuelServiceTime && routeData.fuelServiceTime > 0) initialItems.push({ id: 'special_service', type: 'service', duration: routeData.fuelServiceTime });
@@ -277,10 +290,12 @@ export default function RouteDetailsPage() {
 
   // --- Handlers ---
 
-  const handleAddPlace = (placeId: string) => {
-    const placeToAdd = allPlaces.find(p => p.id === placeId);
-    if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.placeId === placeId)) {
-      setRouteItems(prev => [...prev, { id: `place_${placeId}`, type: 'place', placeId, placeData: placeToAdd }]);
+  const handleAddOrder = (orderId: string) => {
+    const orderToAdd = pendingOrders.find(o => o.id === orderId);
+    if (!orderToAdd) return;
+    const placeToAdd = allPlaces.find(p => p.id === orderToAdd.placeId);
+    if (placeToAdd && !routeItems.some(i => i.type === 'place' && i.orderId === orderId)) {
+      setRouteItems(prev => [...prev, { id: `order_${orderId}`, type: 'place', placeId: placeToAdd.id, placeData: placeToAdd, orderId: orderId, orderData: orderToAdd }]);
     }
   };
 
@@ -465,7 +480,7 @@ export default function RouteDetailsPage() {
         .filter(([_, isCompleted]) => isCompleted)
         .map(([id]) => id);
         
-      const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+      const placeIds = routeItems.filter(i => i.type === 'place').map(i => i.orderId ? i.orderId : i.placeId!);
 
       const updatedRoute: Partial<Route> = {
         ...route,
@@ -490,6 +505,11 @@ export default function RouteDetailsPage() {
       (updatedRoute as any).baseAddress = deleteField();
       
       await firebaseDB.updateRoute(routeId, updatedRoute);
+      for (const item of routeItems) {
+        if (item.type === 'place' && item.orderId) {
+          await firebaseDB.updateOrder(route.orgId, item.orderId, { routeId: routeId });
+        }
+      }
       toast({ title: 'Suksess', description: 'Ruten er lagret.' });
       
       if (!isAdmin) {
@@ -859,18 +879,40 @@ export default function RouteDetailsPage() {
                         <CardTitle className="text-lg">Legg til Stopp</CardTitle>
                         </CardHeader>
                         <CardContent>
-                        <Select onValueChange={handleAddPlace}>
+                        <div className="flex flex-col gap-4">
+                    <Select onValueChange={handleAddOrder}>
                             <SelectTrigger className="shadow-sm">
                             <SelectValue placeholder="Søk og velg et sted..." />
                             </SelectTrigger>
                             <SelectContent>
-                            {allPlaces.map(place => (
-                                <SelectItem key={place.id} value={place.id} disabled={routeItems.some(i => i.type === 'place' && i.placeId === place.id)}>
-                                {place.name}
+                            {pendingOrders.map(order => (
+                                <SelectItem key={order.id} value={order.id} disabled={routeItems.some(i => i.type === 'place' && i.orderId === order.id)}>
+                                {order.barcode} - {allPlaces.find(p => p.id === order.placeId)?.name}
+
                                 </SelectItem>
                             ))}
+
                             </SelectContent>
                         </Select>
+                    <Select 
+                      value={route.vehicleId || "unassigned"} 
+                      onValueChange={(val) => {
+                        const newRoute = {...route, vehicleId: val === "unassigned" ? "" : val};
+                        setRoute(newRoute);
+                        setAssignedVehicle(allVehicles.find(v => v.id === val));
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
+                        <SelectValue placeholder="Velg kjøretøy..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                        {allVehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    </div>
                         </CardContent>
                     </Card>
                 )}
@@ -1016,6 +1058,20 @@ export default function RouteDetailsPage() {
                                             <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                                               {item.placeData?.name}
                                             </span>
+                                            {item.orderData && (
+                                                <span className="text-xs text-muted-foreground break-words">
+                                                    Ordre: {item.orderData.barcode} - Vekt: {item.orderData.details.weight || 'Ikke satt'} kg - Volum: {item.orderData.details.volume || 'Ikke satt'} m³ - Type: {item.orderData.details.form || 'Pakke'}
+                                                </span>
+                                            )}
+                                            {item.orderData && (item.orderData.details.specialRequirements?.adr || item.orderData.details.specialRequirements?.temperatureControlled || item.orderData.details.specialRequirements?.fragile) && (
+                                                <div className="flex gap-1 mt-1">
+                                                    {item.orderData.details.specialRequirements?.adr && <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200">ADR</Badge>}
+                                                    {item.orderData.details.specialRequirements?.temperatureControlled && <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">Kjøl/Frys</Badge>}
+                                                    {item.orderData.details.specialRequirements?.fragile && <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">Skjør</Badge>}
+                                                </div>
+                                            )}
+                                            <span className={`font-semibold break-words transition-colors ${isCompleted ? 'text-slate-400 line-through' : 'text-slate-700'}`} style={{display: 'none'}}>
+                                            </span>
                                           </div>
                                         </div>
                                         
@@ -1144,6 +1200,7 @@ export default function RouteDetailsPage() {
                         />
                     </div>
                 ) : (
+                    <div className="flex flex-col gap-4">
                     <Select 
                       value={route.driverId || "unassigned"} 
                       onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
@@ -1158,6 +1215,25 @@ export default function RouteDetailsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <Select 
+                      value={route.vehicleId || "unassigned"} 
+                      onValueChange={(val) => {
+                        const newRoute = {...route, vehicleId: val === "unassigned" ? "" : val};
+                        setRoute(newRoute);
+                        setAssignedVehicle(allVehicles.find(v => v.id === val));
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
+                        <SelectValue placeholder="Velg kjøretøy..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                        {allVehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    </div>
                 )}
             </div>
           </CardContent>
@@ -1186,7 +1262,7 @@ export default function RouteDetailsPage() {
                          if (!route) return;
                          setIsSaving(true);
                          try {
-                           const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+                           const placeIds = routeItems.filter(i => i.type === 'place').map(i => i.orderId ? i.orderId : i.placeId!);
                            const newRoute = await firebaseDB.createRoute({
                              name: `Ny rute fra ${route.name}`,
                              orgId: route.orgId,
@@ -1200,6 +1276,7 @@ export default function RouteDetailsPage() {
                              breakTime,
                              fuelServiceTime,
                            });
+            
                            toast({ title: 'Rute Opprettet', description: 'En ny aktiv rute ble opprettet fra malen.' });
                            router.push(`/dashboard/routes/${newRoute.id}`);
                          } catch(e) {
@@ -1221,7 +1298,7 @@ export default function RouteDetailsPage() {
                          if (!route) return;
                          setIsSaving(true);
                          try {
-                           const placeIds = routeItems.filter(i => i.type === 'place' && i.placeId).map(i => i.placeId!);
+                           const placeIds = routeItems.filter(i => i.type === 'place').map(i => i.orderId ? i.orderId : i.placeId!);
                            await firebaseDB.createRoute({
                              name: `Mal: ${route.name}`,
                              orgId: route.orgId,
@@ -1235,6 +1312,7 @@ export default function RouteDetailsPage() {
                              breakTime,
                              fuelServiceTime,
                            });
+            
                            toast({ title: 'Mal Lagret', description: 'En kopi av ruten ble lagret som mal.' });
                          } catch(e) {
                            toast({ title: 'Feil', description: 'Kunne ikke lagre mal', variant: 'destructive' });

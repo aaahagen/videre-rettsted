@@ -528,6 +528,11 @@ const getVehicleInspections = async (orgId: string, vehicleId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VehicleInspection));
 };
 
+const updateOrder = async (orgId: string, orderId: string, updates: Partial<Order>): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+  await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+};
+
 export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
@@ -561,7 +566,7 @@ export const firebaseDB: Database = {
   updateWorkLog,
   deleteWorkLog,
 
-  createOrder, getOrder, getOrders, getOrdersForRoute, updateOrderStatus,
+  createOrder, getOrder, getOrders, getOrdersForRoute, updateOrderStatus, updateOrder,
   createManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
   submitProofOfDelivery, submitVehicleInspection, getVehicleInspections,
 };
