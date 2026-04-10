@@ -34,14 +34,17 @@ This phase focuses on building the features that ensure what is planned is what 
 
 This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
 1.  **Order Management Module (Completed):** The UI (`/dashboard/orders`) and backend to handle incoming delivery jobs have been built.
-    *   **Manual Intake:** A robust form for administrators to manually register new orders.
+    *   **Manual Intake (Future Enhancement):** The form for administrators to manually register new orders will be enhanced to capture more granular detail, which is crucial for automated planning. This includes:
+        *   **Precise Physical Dimensions:** Fields for `height`, `length`, and `depth` will be added to calculate volumetric weight and ensure items fit within vehicle constraints.
     *   **Hybrid Barcode Strategy (Future Enhancement):** Implement a dual-system for generating and using barcodes to ensure both external compatibility and internal efficiency. Printed labels will feature both a traditional barcode and a QR code.
         *   **1. External Compliance (The "License Plate"):**
             *   **Standard:** The system will generate industry-standard **GS1 SSCC (Serial Shipping Container Code)** numbers to uniquely identify each logistics unit (pallet, container, etc.).
             *   **Symbology:** This SSCC will be encoded in a **GS1-128 linear barcode**. This is mandatory for interoperability with external partners and the global supply chain.
         *   **2. Internal Efficiency (The "Digital Twin"):**
             *   **Standard:** The system will also generate a **QR Code** for the same logistics unit.
-            *   **Data-Rich:** Unlike the linear barcode, this QR code will contain a rich data payload. This can include the SSCC, destination address, special handling instructions, a direct link to the order in the app, and other relevant details.
+            *   **Data-Rich:** The QR code will contain an extensible data payload. In addition to the SSCC and destination, it will include:
+                *   A `text field` for miscellaneous human-readable notes (e.g., "Fragile," "Top-load only").
+                *   A `web-link field` to point to external resources like safety data sheets, detailed handling instructions, or customer-provided documentation.
             *   **Benefits:** This provides significant advantages for internal operations: faster, omni-directional scanning via smartphone for drivers; high damage resistance; and the ability to access detailed information without a database lookup, which is ideal for offline scenarios.
     *   **API Intake (Foundation):** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP) in the future.
 2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
