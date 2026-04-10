@@ -14,6 +14,9 @@ This phase expands on the initial workforce module, introducing comprehensive HR
 *Future additions:*
 - **Attendance Statistics:** A daily attendance overview card on the Admin Dashboard detailing check-ins, active presence, and check-outs.
 - **Expanded Personnel Statistics:** Adding an "Annet" (Other) category to the workforce statistics view.
+- **Web-Based Training Module:** A lightweight Learning Management System (LMS) integrated into the workforce page.
+    - **Course Management:** Administrators will be able to create, upload (e.g., PDFs, videos), and manage a library of training courses.
+    - **Assignment & Tracking:** Courses can be assigned to individual employees or roles. The system will track completion status, dates, and send reminders for required recertifications.
 
 ## Phase 3: End-to-End Verification & Process Integrity (In Progress)
 
