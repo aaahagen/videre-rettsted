@@ -6,7 +6,7 @@ import { useGeolocation } from '@/hooks/use-geolocation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -91,6 +91,7 @@ export default function RouteDetailsPage() {
   const [baseDurationSeconds, setBaseDurationSeconds] = useState<number>(0);
   
   const [isCalculating, setIsCalculating] = useState(false);
+  const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
   const [completedStopEvents, setCompletedStopEvents] = useState<Record<string, CompletedStopEvent>>({});
   const { getPosition } = useGeolocation();
@@ -118,6 +119,40 @@ export default function RouteDetailsPage() {
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCalculatedPlaceIdsRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!assignedVehicle) {
+      setCapacityWarnings([]);
+      return;
+    }
+    
+    let totalWeight = 0;
+    let totalVolume = 0;
+    let totalPallets = 0;
+    
+    routeItems.forEach(item => {
+      if (item.type === 'place' && item.orderData) {
+        totalWeight += item.orderData.details.weight || 0;
+        totalVolume += item.orderData.details.volume || 0;
+        if (item.orderData.details.form === 'pallet') {
+          totalPallets += 1;
+        }
+      }
+    });
+    
+    const warnings: string[] = [];
+    if (assignedVehicle.capacity?.weight && totalWeight > assignedVehicle.capacity.weight) {
+      warnings.push(`Total vekt (${totalWeight} kg) overstiger kjøretøyets kapasitet (${assignedVehicle.capacity.weight} kg).`);
+    }
+    if (assignedVehicle.capacity?.volume && totalVolume > assignedVehicle.capacity.volume) {
+      warnings.push(`Totalt volum (${totalVolume} m³) overstiger kjøretøyets kapasitet (${assignedVehicle.capacity.volume} m³).`);
+    }
+    if (assignedVehicle.capacity?.pallets && totalPallets > assignedVehicle.capacity.pallets) {
+      warnings.push(`Totalt antall paller (${totalPallets}) overstiger kjøretøyets kapasitet (${assignedVehicle.capacity.pallets}).`);
+    }
+    
+    setCapacityWarnings(warnings);
+  }, [routeItems, assignedVehicle]);
 
   // --- 1. Fast Local UI Update for Total Time ---
   // This runs instantly whenever any time component changes, without waiting for the backend.
