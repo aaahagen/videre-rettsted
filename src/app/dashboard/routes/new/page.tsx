@@ -15,6 +15,7 @@ export default function NewRoutePage() {
   const [user, loading, error] = useAuthState(auth);
   const [name, setName] = useState('');
   const [shipmentNumber, setShipmentNumber] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -32,7 +33,7 @@ export default function NewRoutePage() {
         const userDoc = await firebaseDB.getUser(user.uid);
         const orgId = userDoc?.orgId;
         if(!orgId) throw new Error('No orgId'); 
-        await firebaseDB.createRoute({ name, shipmentNumber, places: [], orgId });
+        await firebaseDB.createRoute({ name, shipmentNumber, date, places: [], orgId });
         router.push('/dashboard/routes');
       } catch (err) {
         console.error(err);

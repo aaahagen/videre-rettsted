@@ -126,6 +126,7 @@ export interface Route {
   prepTimeEnd?: number; // in minutes
   breakTime?: number; // in minutes
   fuelServiceTime?: number; // in minutes
+  date?: string; // ISO date string (YYYY-MM-DD) for when the route is planned
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }

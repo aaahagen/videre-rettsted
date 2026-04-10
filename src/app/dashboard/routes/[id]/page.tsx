@@ -75,6 +75,7 @@ export default function RouteDetailsPage() {
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
   const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
+  const [assignedDriver, setAssignedDriver] = useState<any>(null);
   const [allVehicles, setAllVehicles] = useState<any[]>([]);
   
   const [routeItems, setRouteItems] = useState<RouteItem[]>([]);
@@ -84,6 +85,7 @@ export default function RouteDetailsPage() {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
   const [routeNotes, setRouteNotes] = useState('');
+  const [routeDate, setRouteDate] = useState(new Date().toISOString().split('T')[0]);
   const [prepTimeStart, setPrepTimeStart] = useState<number>(0);
   const [prepTimeEnd, setPrepTimeEnd] = useState<number>(0);
   const [breakTime, setBreakTime] = useState<number>(0);
@@ -92,6 +94,7 @@ export default function RouteDetailsPage() {
   
   const [isCalculating, setIsCalculating] = useState(false);
   const [capacityWarnings, setCapacityWarnings] = useState<string[]>([]);
+  const [workHoursWarning, setWorkHoursWarning] = useState<string | null>(null);
   const [completedStops, setCompletedStops] = useState<Record<string, boolean>>({});
   const [completedStopEvents, setCompletedStopEvents] = useState<Record<string, CompletedStopEvent>>({});
   const { getPosition } = useGeolocation();
@@ -119,6 +122,49 @@ export default function RouteDetailsPage() {
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastCalculatedPlaceIdsRef = useRef<string>('');
+
+  useEffect(() => {
+    if (!assignedDriver || !routeDate) {
+      setWorkHoursWarning(null);
+      return;
+    }
+    
+    const driverProfile = assignedDriver as import('@/lib/types').DriverProfile;
+    if (!driverProfile.workingHours || !driverProfile.workingHours.start || !driverProfile.workingHours.end) {
+       setWorkHoursWarning(null);
+       return;
+    }
+
+    const routeDateObj = new Date(routeDate);
+    const dayOfWeekStr = routeDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    if (driverProfile.rotation && driverProfile.rotation.weeks && driverProfile.rotation.weeks.length > 0) {
+        const week = driverProfile.rotation.weeks[0];
+        const dayConfig = (week.days as any)[dayOfWeekStr];
+        if (dayConfig && !dayConfig.isWorking) {
+            setWorkHoursWarning(`Sjåføren er ikke satt opp til å jobbe denne dagen (${routeDate}).`);
+            return;
+        }
+    }
+
+    if (driverProfile.scheduleOverrides) {
+       for (const overrideId in driverProfile.scheduleOverrides) {
+          const override = driverProfile.scheduleOverrides[overrideId];
+          if (override.start && override.end) {
+             const overrideStart = new Date(override.start);
+             const overrideEnd = new Date(override.end);
+             if (routeDateObj >= overrideStart && routeDateObj <= overrideEnd) {
+                if (override.type === 'off' || override.type === 'sick' || override.type === 'vacation') {
+                    setWorkHoursWarning(`Sjåføren har registrert fravær (${override.type}) denne dagen.`);
+                    return;
+                }
+             }
+          }
+       }
+    }
+    
+    setWorkHoursWarning(null);
+  }, [assignedDriver, routeDate]);
 
   useEffect(() => {
     if (!assignedVehicle) {
@@ -157,6 +203,49 @@ export default function RouteDetailsPage() {
   // --- 1. Fast Local UI Update for Total Time ---
   // This runs instantly whenever any time component changes, without waiting for the backend.
   useEffect(() => {
+    if (!assignedDriver || !routeDate) {
+      setWorkHoursWarning(null);
+      return;
+    }
+    
+    const driverProfile = assignedDriver as import('@/lib/types').DriverProfile;
+    if (!driverProfile.workingHours || !driverProfile.workingHours.start || !driverProfile.workingHours.end) {
+       setWorkHoursWarning(null);
+       return;
+    }
+
+    const routeDateObj = new Date(routeDate);
+    const dayOfWeekStr = routeDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    if (driverProfile.rotation && driverProfile.rotation.weeks && driverProfile.rotation.weeks.length > 0) {
+        const week = driverProfile.rotation.weeks[0];
+        const dayConfig = (week.days as any)[dayOfWeekStr];
+        if (dayConfig && !dayConfig.isWorking) {
+            setWorkHoursWarning(`Sjåføren er ikke satt opp til å jobbe denne dagen (${routeDate}).`);
+            return;
+        }
+    }
+
+    if (driverProfile.scheduleOverrides) {
+       for (const overrideId in driverProfile.scheduleOverrides) {
+          const override = driverProfile.scheduleOverrides[overrideId];
+          if (override.start && override.end) {
+             const overrideStart = new Date(override.start);
+             const overrideEnd = new Date(override.end);
+             if (routeDateObj >= overrideStart && routeDateObj <= overrideEnd) {
+                if (override.type === 'off' || override.type === 'sick' || override.type === 'vacation') {
+                    setWorkHoursWarning(`Sjåføren har registrert fravær (${override.type}) denne dagen.`);
+                    return;
+                }
+             }
+          }
+       }
+    }
+    
+    setWorkHoursWarning(null);
+  }, [assignedDriver, routeDate]);
+
+  useEffect(() => {
     const totalPlacesDeliveryTimeMinutes = routeItems
       .filter(item => item.type === 'place' && item.placeData?.estimatedDeliveryTime)
       .reduce((sum, item) => sum + (item.placeData!.estimatedDeliveryTime || 0), 0);
@@ -175,6 +264,49 @@ export default function RouteDetailsPage() {
 
   // --- 2. Debounced Backend Call for Driving Distance/Time ---
   // This ONLY runs when the physical locations or their order changes.
+  useEffect(() => {
+    if (!assignedDriver || !routeDate) {
+      setWorkHoursWarning(null);
+      return;
+    }
+    
+    const driverProfile = assignedDriver as import('@/lib/types').DriverProfile;
+    if (!driverProfile.workingHours || !driverProfile.workingHours.start || !driverProfile.workingHours.end) {
+       setWorkHoursWarning(null);
+       return;
+    }
+
+    const routeDateObj = new Date(routeDate);
+    const dayOfWeekStr = routeDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    if (driverProfile.rotation && driverProfile.rotation.weeks && driverProfile.rotation.weeks.length > 0) {
+        const week = driverProfile.rotation.weeks[0];
+        const dayConfig = (week.days as any)[dayOfWeekStr];
+        if (dayConfig && !dayConfig.isWorking) {
+            setWorkHoursWarning(`Sjåføren er ikke satt opp til å jobbe denne dagen (${routeDate}).`);
+            return;
+        }
+    }
+
+    if (driverProfile.scheduleOverrides) {
+       for (const overrideId in driverProfile.scheduleOverrides) {
+          const override = driverProfile.scheduleOverrides[overrideId];
+          if (override.start && override.end) {
+             const overrideStart = new Date(override.start);
+             const overrideEnd = new Date(override.end);
+             if (routeDateObj >= overrideStart && routeDateObj <= overrideEnd) {
+                if (override.type === 'off' || override.type === 'sick' || override.type === 'vacation') {
+                    setWorkHoursWarning(`Sjåføren har registrert fravær (${override.type}) denne dagen.`);
+                    return;
+                }
+             }
+          }
+       }
+    }
+    
+    setWorkHoursWarning(null);
+  }, [assignedDriver, routeDate]);
+
   useEffect(() => {
     if (isDataLoading) return;
 
@@ -236,6 +368,49 @@ export default function RouteDetailsPage() {
   // --- Data Fetching ---
 
   useEffect(() => {
+    if (!assignedDriver || !routeDate) {
+      setWorkHoursWarning(null);
+      return;
+    }
+    
+    const driverProfile = assignedDriver as import('@/lib/types').DriverProfile;
+    if (!driverProfile.workingHours || !driverProfile.workingHours.start || !driverProfile.workingHours.end) {
+       setWorkHoursWarning(null);
+       return;
+    }
+
+    const routeDateObj = new Date(routeDate);
+    const dayOfWeekStr = routeDateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    if (driverProfile.rotation && driverProfile.rotation.weeks && driverProfile.rotation.weeks.length > 0) {
+        const week = driverProfile.rotation.weeks[0];
+        const dayConfig = (week.days as any)[dayOfWeekStr];
+        if (dayConfig && !dayConfig.isWorking) {
+            setWorkHoursWarning(`Sjåføren er ikke satt opp til å jobbe denne dagen (${routeDate}).`);
+            return;
+        }
+    }
+
+    if (driverProfile.scheduleOverrides) {
+       for (const overrideId in driverProfile.scheduleOverrides) {
+          const override = driverProfile.scheduleOverrides[overrideId];
+          if (override.start && override.end) {
+             const overrideStart = new Date(override.start);
+             const overrideEnd = new Date(override.end);
+             if (routeDateObj >= overrideStart && routeDateObj <= overrideEnd) {
+                if (override.type === 'off' || override.type === 'sick' || override.type === 'vacation') {
+                    setWorkHoursWarning(`Sjåføren har registrert fravær (${override.type}) denne dagen.`);
+                    return;
+                }
+             }
+          }
+       }
+    }
+    
+    setWorkHoursWarning(null);
+  }, [assignedDriver, routeDate]);
+
+  useEffect(() => {
     if (user && routeId) {
       const fetchData = async () => {
         setIsDataLoading(true);
@@ -266,6 +441,9 @@ export default function RouteDetailsPage() {
                }
             }
             
+            if (routeData && routeData.driverId) {
+               setAssignedDriver(usersData.find(u => u.id === routeData.driverId));
+            }
             if (routeData) {
               setRoute(routeData);
               setAllPlaces(placesData);
@@ -273,6 +451,7 @@ export default function RouteDetailsPage() {
               setOrganizationUsers(usersData);
               setAllVehicles(vehiclesData);
               setRouteNotes(routeData.notes || '');
+              setRouteDate(routeData.date || new Date().toISOString().split('T')[0]);
               
               const legacyBaseAddress = (routeData as any).baseAddress || '';
               setStartAddress(routeData.startAddress || legacyBaseAddress);
@@ -523,6 +702,7 @@ export default function RouteDetailsPage() {
         startAddress,
         endAddress,
         notes: routeNotes,
+                             date: routeDate,
         completedStops: currentCompletedStops,
         completedStopEvents: completedStopEvents,
         prepTimeStart,
@@ -915,6 +1095,16 @@ export default function RouteDetailsPage() {
                         </CardHeader>
                         <CardContent>
                         <div className="flex flex-col gap-4">
+                    <div className="w-full sm:w-[300px] space-y-2">
+                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
+                        <Input 
+                            id="route-date"
+                            type="date"
+                            value={routeDate}
+                            onChange={(e) => setRouteDate(e.target.value)}
+                            className="h-10 border-slate-200 shadow-sm"
+                        />
+                    </div>
                     <Select onValueChange={handleAddOrder}>
                             <SelectTrigger className="shadow-sm">
                             <SelectValue placeholder="Søk og velg et sted..." />
@@ -929,6 +1119,16 @@ export default function RouteDetailsPage() {
 
                             </SelectContent>
                         </Select>
+                    <div className="w-full sm:w-[300px] space-y-2">
+                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
+                        <Input 
+                            id="route-date"
+                            type="date"
+                            value={routeDate}
+                            onChange={(e) => setRouteDate(e.target.value)}
+                            className="h-10 border-slate-200 shadow-sm"
+                        />
+                    </div>
                     <Select 
                       value={route.vehicleId || "unassigned"} 
                       onValueChange={(val) => {
@@ -1236,6 +1436,16 @@ export default function RouteDetailsPage() {
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4">
+                    <div className="w-full sm:w-[300px] space-y-2">
+                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
+                        <Input 
+                            id="route-date"
+                            type="date"
+                            value={routeDate}
+                            onChange={(e) => setRouteDate(e.target.value)}
+                            className="h-10 border-slate-200 shadow-sm"
+                        />
+                    </div>
                     <Select 
                       value={route.driverId || "unassigned"} 
                       onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
@@ -1250,6 +1460,16 @@ export default function RouteDetailsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <div className="w-full sm:w-[300px] space-y-2">
+                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
+                        <Input 
+                            id="route-date"
+                            type="date"
+                            value={routeDate}
+                            onChange={(e) => setRouteDate(e.target.value)}
+                            className="h-10 border-slate-200 shadow-sm"
+                        />
+                    </div>
                     <Select 
                       value={route.vehicleId || "unassigned"} 
                       onValueChange={(val) => {
@@ -1306,6 +1526,7 @@ export default function RouteDetailsPage() {
                              startAddress,
                              endAddress,
                              notes: routeNotes,
+                             date: routeDate,
                              prepTimeStart,
                              prepTimeEnd,
                              breakTime,
@@ -1342,6 +1563,7 @@ export default function RouteDetailsPage() {
                              startAddress,
                              endAddress,
                              notes: routeNotes,
+                             date: routeDate,
                              prepTimeStart,
                              prepTimeEnd,
                              breakTime,
