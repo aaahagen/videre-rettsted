@@ -25,37 +25,41 @@ This phase focuses on building the features that ensure what is planned is what 
 1.  **Comprehensive Proof of Delivery (POD) System (Completed):**
     *   **Data Models & Redundancy:** Implemented industry-standard models capturing GPS accuracy, specific delivery methods (e.g., 'left_at_door'), categorical photo evidence, and failure exceptions.
     *   **Driver UI:** Built a responsive POD Modal integrated directly into the route completion flow. It dynamically enforces logic (e.g., requiring photos if left at the door, capturing failure reasons) and compresses images client-side before upload.
-2.  **Vehicle Loading & Manifest System (Backend complete):**
+2.  **Vehicle Loading & Manifest System (In Progress):**
     *   **"Loader" Role:** A restricted user role for warehouse staff.
-    *   **Manifest Verification:** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
-    *   *Next Steps:* Build the `/dashboard/manifests` UI for loaders.
+    *   **Manifest Verification (Completed):** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
+    *   **Manifest UI (Completed):** Built the `/dashboard/manifests` UI for loaders, including item-level barcode scanning, manual overrides for loading progress, and full verification workflows.
+    *   *Next Steps:* Implement Barcode/QR code generation and printing from the Order details view.
 3.  **Digital Vehicle Inspections (Backend complete):**
     *   **Inspection Models:** Database schemas created for logging pre/post-trip checks (tires, brakes, fluids) and reporting damages with photos.
     *   *Next Steps:* Build the driver/mechanic UI form.
 
-## Phase 4: Intelligent Automation & Optimization (In Progress)
+## Phase 4: Intelligent Automation & Order Management (In Progress)
 
-This is the phase where we leverage all the data and structures from the previous phases to enable true, intelligent automation.
-1.  **Order Management Module (Completed):** The UI (`/dashboard/orders`) and backend to handle incoming delivery jobs have been built.
-    *   **Manual Intake (Future Enhancement):** The form for administrators to manually register new orders will be enhanced to capture more granular detail, which is crucial for automated planning. This includes:
-        *   **Precise Physical Dimensions:** Fields for `height`, `length`, and `depth` will be added to calculate volumetric weight and ensure items fit within vehicle constraints.
-    *   **Hybrid Barcode Strategy (Future Enhancement):** Implement a dual-system for generating and using barcodes to ensure both external compatibility and internal efficiency. Printed labels will feature both a traditional barcode and a QR code.
-        *   **1. External Compliance (The "License Plate"):**
-            *   **Standard:** The system will generate industry-standard **GS1 SSCC (Serial Shipping Container Code)** numbers to uniquely identify each logistics unit (pallet, container, etc.).
-            *   **Symbology:** This SSCC will be encoded in a **GS1-128 linear barcode**. This is mandatory for interoperability with external partners and the global supply chain.
-        *   **2. Internal Efficiency (The "Digital Twin"):**
-            *   **Standard:** The system will also generate a **QR Code** for the same logistics unit.
-            *   **Data-Rich:** The QR code will contain an extensible data payload. In addition to the SSCC and destination, it will include:
-                *   A `text field` for miscellaneous human-readable notes (e.g., "Fragile," "Top-load only").
-                *   A `web-link field` to point to external resources like safety data sheets, detailed handling instructions, or customer-provided documentation.
-            *   **Benefits:** This provides significant advantages for internal operations: faster, omni-directional scanning via smartphone for drivers; high damage resistance; and the ability to access detailed information without a database lookup, which is ideal for offline scenarios.
-    *   **API Intake & Data Enrichment (Future Enhancement):**
-        *   **API Foundation:** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP).
-        *   **Data Enrichment Workflow:** A crucial part of the API intake process will be a manual verification and enrichment step. Orders received via API may lack the specific data required for automated route planning (e.g., precise dimensions, special handling notes). The system must provide a user interface for an administrator to review these orders, add the necessary details, and formally approve them for inclusion in the automated planning engine. This ensures data quality and the reliability of the automation.
-2.  **Constraint-Based Engine:** Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
+This phase leverages the data structures from previous phases to manage incoming jobs and enable intelligent automation. A key focus is transforming the application to support high-volume terminal operations.
 
-(Google OR-Tools integration, Constraint-Based Automatic Route Generation)
-*Crucial Constraint:* Automation must be an *opt-in enhancement*, not a restrictive cage. The system must always support fully manual route creation, drag-and-drop overrides, and real-time ad-hoc adjustments to account for real-world unpredictability.
+1.  **Multi-Modal Order Intake & Management (In Progress):** 
+    The system must handle orders originating from various sources, balancing external interoperability with internal efficiency.
+    *   **Manual Registration (Completed):** UI (`/dashboard/orders/new`) built for administrators to manually input order details (destinations, physical details, special requirements). *Future enhancement:* Capture precise physical dimensions (`height`, `length`, `depth`) for volumetric weight calculations.
+    *   **Rapid "Scan-to-Receive" (Planned):** For acting as a middleman/hub for 3rd party carriers where API integration is unavailable. Terminal workers will use a dedicated mobile view to rapidly scan incoming 3rd party barcodes. The system will instantly generate a "shell" order, allowing the worker to quickly sort the package to a specific route or zone.
+    *   **Bulk Import (Planned):** Allow administrators to upload CSV/Excel spreadsheets to generate orders en masse.
+    *   **API Intake & Data Enrichment (Future Enhancement):** 
+        *   **API Foundation:** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP) via Electronic Data Interchange (EDI) or REST APIs.
+        *   **Data Enrichment Workflow:** Orders received via API may lack specific data required for automated route planning. A manual verification step will allow administrators to review, enrich, and approve these orders.
+
+2.  **Intelligent Labeling & Item-Level Tracking (Planned):**
+    The system must accommodate both external and internally generated tracking standards down to the individual item (e.g., pallet) level.
+    *   **Item-Level Tracking:** Evolve the `Order` model to generate and track individual barcodes for each item within a multi-item order (e.g., 5 distinct barcodes for an order of 5 pallets).
+    *   **3rd Party Goods (Cross-Docking):** The system must respect and track existing 3rd party barcodes without requiring re-labeling.
+    *   **Own Goods (Pick & Pack):** When producing or repacking goods, the system will offer an "Auto-Generate Labels" feature.
+    *   **Hybrid Barcode Strategy:** Automatically generated labels will feature both:
+        *   **External Compliance (GS1-128):** Industry-standard SSCC numbers for interoperability with external partners.
+        *   **Internal Efficiency (QR Code):** Data-rich QR codes containing extensible payloads (SSCC, destination, notes, safety data links) for rapid, offline-capable internal scanning.
+
+3.  **Constraint-Based Routing Engine (Planned):** 
+    Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
+    *   *Implementation:* Integrate Google OR-Tools for constraint-based automatic route generation.
+    *   *Crucial Constraint:* Automation must be an *opt-in enhancement*, not a restrictive cage. The system must always support fully manual route creation, drag-and-drop overrides, and real-time ad-hoc adjustments to account for real-world unpredictability.
 
 ## Phase 5: Business Intelligence & Data Exposure (Planned)
 
