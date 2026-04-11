@@ -33,7 +33,18 @@ export default function NewRoutePage() {
         const userDoc = await firebaseDB.getUser(user.uid);
         const orgId = userDoc?.orgId;
         if(!orgId) throw new Error('No orgId'); 
-        await firebaseDB.createRoute({ name, shipmentNumber, date, places: [], orgId });
+        const newRoute = await firebaseDB.createRoute({ name, shipmentNumber, date, places: [], orgId });
+
+        // Create a new manifest for the newly created route
+        await firebaseDB.createManifest({
+          orgId,
+          routeId: newRoute.id,
+          vehicleId: '', // Initially no vehicle assigned
+          status: 'pending', // Initial status
+          orders: [], // No orders initially
+          driverId: '', // No driver initially
+        });
+
         router.push('/dashboard/routes');
       } catch (err) {
         console.error(err);

@@ -13,6 +13,7 @@ import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star } from 'lu
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { firebaseDB } from '@/lib/firebase/database'; // Import firebaseDB
 
 interface VehicleFormProps {
     initialData?: Vehicle | null;
@@ -150,12 +151,25 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
         setIsSubmitting(true);
         setIsUploading(true);
         try {
+            let currentVehicleId = initialData?.id;
+            let finalFormData = { ...formData };
+
+            // If creating a new vehicle, create it first to get an ID
+            if (!currentVehicleId && finalFormData.orgId) { // Ensure orgId is present for new vehicles
+                const newVehicle = await firebaseDB.createVehicle(finalFormData as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>);
+                currentVehicleId = newVehicle.id;
+                finalFormData = { ...finalFormData, id: newVehicle.id }; // Update formData with the new ID
+            } else if (!currentVehicleId && !finalFormData.orgId) {
+                throw new Error("Organization ID is missing for new vehicle creation.");
+            }
+
+
             const finalImages = [];
             for (const img of images) {
                 if (img.file) {
                     const ext = img.file.name.split('.').pop() || 'jpg';
-                    const vehicleIdFolder = initialData?.id || `temp_${uuidv4()}`;
-                    const path = `vehicles/${vehicleIdFolder}/${uuidv4()}.${ext}`;
+                    // Use the permanent currentVehicleId
+                    const path = `vehicles/${currentVehicleId}/${uuidv4()}.${ext}`;
                     const url = await firebaseStorage.uploadFile(path, img.file);
                     finalImages.push({ url, isMain: img.isMain });
                 } else {
@@ -166,8 +180,8 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
             const finalDocuments = [];
             for (const doc of documents) {
                 if (doc.file) {
-                    const vehicleIdFolder = initialData?.id || `temp_${uuidv4()}`;
-                    const path = `vehicles/${vehicleIdFolder}/documents/${doc.file.name}`;
+                    // Use the permanent currentVehicleId
+                    const path = `vehicles/${currentVehicleId}/documents/${doc.file.name}`;
                     const url = await firebaseStorage.uploadFile(path, doc.file, {
                         customMetadata: {
                             originalName: doc.file.name,
@@ -180,7 +194,8 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
                 }
             }
 
-            await onSubmit({ ...formData, images: finalImages, documents: finalDocuments });
+            // Now call onSubmit with the updated formData (including the new ID if created)
+            await onSubmit({ ...finalFormData, images: finalImages, documents: finalDocuments });
         } catch (error) {
             console.error("Error submitting vehicle form:", error);
             throw error; // Let the parent component's catch block handle it

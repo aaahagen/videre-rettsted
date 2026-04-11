@@ -470,6 +470,14 @@ const getManifestByRoute = async (orgId: string, routeId: string): Promise<Manif
   return { id: docSnap.id, ...docSnap.data() } as Manifest;
 };
 
+const updateManifest = async (orgId: string, manifestId: string, updates: Partial<Manifest>): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+  await updateDoc(docRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+};
+
 const verifyManifestItem = async (orgId: string, manifestId: string, orderId: string, userId: string): Promise<void> => {
   const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
   const docSnap = await getDoc(docRef);
@@ -567,6 +575,6 @@ export const firebaseDB: Database = {
   deleteWorkLog,
 
   createOrder, getOrder, getOrders, getOrdersForRoute, updateOrderStatus, updateOrder,
-  createManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
+  createManifest, updateManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
   submitProofOfDelivery, submitVehicleInspection, getVehicleInspections,
 };
