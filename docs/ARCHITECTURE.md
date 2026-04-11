@@ -7,7 +7,7 @@
 *   **Styling**: Tailwind CSS
 *   **UI Components**: shadcn/ui
 *   **State Management**: React Context API for user session, SWR for data fetching
-*   **Deployment**: Firebase Hosting
+*   **Deployment**: Firebase App Hosting
 
 ### Future Mobile Architecture (Phase 7)
 To support App Store / Google Play distribution for drivers, the frontend architecture will eventually be split:
@@ -32,8 +32,7 @@ To support App Store / Google Play distribution for drivers, the frontend archit
 
 ## Core Philosophy: Function-First Design
 
-This project adheres to a "Function-First" design philosophy...
-(Existing content remains the same)
+This project adheres to a "Function-First" design philosophy. The UI is built to serve the physical reality of the logistics operator, prioritizing speed, offline resilience, and error prevention over superficial aesthetics.
 
 ## Backend Abstraction & API Layer
 
@@ -45,6 +44,23 @@ To ensure future flexibility and ease of migration, all interactions with the ba
 - **`src/lib/firebase/auth.ts`**: The Firebase implementation of the auth interface.
 - **`src/lib/storage.ts`**: A generic interface for file storage operations.
 - **`src/lib/firebase/storage.ts`**: The Firebase Storage implementation.
+
+### Technical Debt Mitigation Strategy (Scaling Plan)
+As the application transitions from MVP to Enterprise Scale, the following architectural refactoring is planned:
+
+1.  **Database Repository Pattern (Addressing the "God Object"):**
+    *   *Current State:* `src/lib/firebase/database.ts` contains all domain logic (~600 lines), making it a "God Object."
+    *   *Resolution:* Split this file into domain-specific repositories (e.g., `src/lib/db/orders.ts`, `src/lib/db/fleet.ts`, `src/lib/db/workforce.ts`). The `Database` interface will act as an aggregator of these repositories. This improves maintainability, reduces merge conflicts, and isolates domain logic.
+
+2.  **React Server Components (RSC) Migration:**
+    *   *Current State:* Heavy reliance on Client Components (`'use client'`) and `useEffect` for data fetching, leading to waterfall rendering.
+    *   *Resolution:* Shift data fetching to Server Components (e.g., `OrdersPage` fetches initial data server-side). Pass this data to smaller Client Components for interactivity (e.g., a `ClientOrdersList` that handles search filtering). This drastically improves initial load times and SEO/Metadata performance.
+
+3.  **Automated Testing Suite Integration:**
+    *   *Current State:* Reliance on manual QA scripts (`docs/TESTING.md`).
+    *   *Resolution:* Implement a dual-layered testing strategy:
+        *   **Unit Testing (Vitest/Jest):** Test pure business logic (e.g., constraint calculations, volumetric weight, shift rotation logic).
+        *   **End-to-End Testing (Playwright/Cypress):** Automate the core operational loops (e.g., creating an order, assigning it to a route, simulating a loader scanning the manifest, and a driver completing the POD).
 
 ### API-First Principle for Business Intelligence (Phase 5)
 For high-level data aggregation and KPI reporting, we will adopt an API-first principle. This involves:
@@ -63,18 +79,22 @@ For high-level data aggregation and KPI reporting, we will adopt an API-first pr
 - orgId: string (for data isolation)
 - notes: string
 - hashtags: array (of strings)
-- **createdBy: string (Stores the author's userId)**
-- **updatedBy: string (Stores the last editor's userId)**
-- **authorName: DEPRECATED - Do not store.**
+- createdBy: string (Stores the author's userId)
+- updatedBy: string (Stores the last editor's userId)
 - createdAt: timestamp
 - updatedAt: timestamp
 - images: array (of objects { url, caption })
 
-(Rest of the schema remains the same)
+*(Other schemas defined in `src/lib/types.ts`)*
 
 ## Security Rules (Firestore)
 
-The security model is fundamentally based on multi-tenancy and a strict role hierarchy. All queries and writes from the client must be validated against the user's `orgId` and their specific `role`.
+The security model is fundamentally based on multi-tenancy and a strict role hierarchy. All queries and writes from the client **must** be validated against the user's `orgId` and their specific `role` within `firestore.rules`.
+
+### Strict Rule Enforcement (Scaling Requirement)
+To ensure enterprise-grade security and prevent cross-tenant data leaks, `firestore.rules` must be strictly defined, rejecting the wildcard `allow read, write: if request.auth != null;` pattern used in early prototyping. 
+*   Every collection must verify `request.auth.token.orgId == resource.data.orgId` (or similar custom claim/document lookup logic).
+*   Role-based access control (RBAC) must be enforced at the database level, not just hidden in the UI.
 
 ### Role Hierarchy
 The application enforces granular authorization levels to support diverse operational workflows:
@@ -107,10 +127,3 @@ The application enforces granular authorization levels to support diverse operat
 *   **Routing Segregation:** 
     *   Level 1-5 users log in and are routed to `/dashboard`. The UI dynamically adapts based on their specific role (e.g., Loaders only see the manifest view, Planners don't see the Workforce tab).
     *   Level 6 (`super_admin`) users are routed to a distinct `/super-admin` namespace.
-## Storage Rules (Cloud Storage)
-
-(Existing content remains the same)
-
-## Future Development Recommendations
-
-(Existing content remains the same)
