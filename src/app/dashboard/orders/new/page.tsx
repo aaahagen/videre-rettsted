@@ -45,6 +45,7 @@ const orderSchema = z.object({
   weight: z.number().optional(),
   volume: z.number().optional(),
   form: z.enum(['pallet', 'package', 'liquid', 'other']),
+  numberOfItems: z.number().int().min(1, 'Antall varer må være minst 1.').default(1), // Added validation for number of items
   adr: z.boolean().default(false),
   temperatureControlled: z.boolean().default(false),
   fragile: z.boolean().default(false),
@@ -69,6 +70,7 @@ export default function NewOrderPage() {
       weight: 0,
       volume: 0,
       form: 'package',
+      numberOfItems: 1, // Default value
       adr: false,
       temperatureControlled: false,
       fragile: false,
@@ -117,6 +119,7 @@ export default function NewOrderPage() {
           weight: data.weight,
           volume: data.volume,
           form: data.form,
+          numberOfItems: data.numberOfItems, // Save the number of items
           specialRequirements: {
             adr: data.adr,
             temperatureControlled: data.temperatureControlled,
@@ -128,7 +131,22 @@ export default function NewOrderPage() {
       await firebaseDB.createOrder(orderData);
       toast({
         title: 'Ordre Opprettet',
-        description: `Ordre med strekkode ${data.barcode} er nå registrert.`,
+        description: `Ordre med strekkode ${data.barcode} og ${data.numberOfItems} varer er nå registrert.`,
+        action: (
+          <Button 
+            variant="secondary"
+            onClick={() => {
+              // TODO: Implement actual barcode/QR code generation and printing here
+              console.log(`Printing barcode for order: ${data.barcode}, items: ${data.numberOfItems}`);
+              toast({
+                title: "Printfunksjon",
+                description: "Denne funksjonen er under utvikling."
+              });
+            }}
+          >
+            Print Strekkode/QR
+          </Button>
+        )
       });
       router.push('/dashboard/orders');
     } catch (error: any) {
@@ -265,6 +283,29 @@ export default function NewOrderPage() {
                           <SelectItem value="other">Annet</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField // New field for numberOfItems
+                  control={form.control}
+                  name="numberOfItems"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Antall Kolli/Paller</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="1" 
+                          {...field} 
+                          onChange={e => field.onChange(parseInt(e.target.value))}
+                          min={1}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Antall individuelle pakker eller paller i denne ordren.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,7 +41,6 @@ export default function NewRoutePage() {
           vehicleId: '', // Initially no vehicle assigned
           status: 'pending', // Initial status
           orders: [], // No orders initially
-          driverId: '', // No driver initially
         });
 
         router.push('/dashboard/routes');

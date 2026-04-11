@@ -52,8 +52,10 @@ export interface Database {
   
   // Manifests
   createManifest(manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
+  updateManifest(orgId: string, manifestId: string, updates: Partial<Manifest>): Promise<void>;
   getManifestByRoute(orgId: string, routeId: string): Promise<Manifest | null>;
-  verifyManifestItem(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
+  incrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
+  decrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string): Promise<void>;
   finalizeManifest(orgId: string, manifestId: string, userId: string): Promise<void>;
   
   // Proof of Delivery

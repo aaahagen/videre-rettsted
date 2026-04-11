@@ -370,6 +370,7 @@ export interface Order {
     weight?: number;
     volume?: number;
     form?: 'pallet' | 'package' | 'liquid' | 'other';
+    numberOfItems?: number; // Added: How many individual items/pallets are in this order
     specialRequirements?: {
       adr?: boolean;
       temperatureControlled?: boolean;
@@ -390,6 +391,8 @@ export interface Manifest {
     orderId: string;
     barcode: string;
     status: 'pending' | 'loaded';
+    totalItems: number; // Added: The total number of items/pallets for this order
+    loadedItems: number; // Added: Count of items/pallets scanned so far for this order
     loadedAt?: string | Date | FieldValue;
     loadedBy?: string; // userId of the loader
   }[];

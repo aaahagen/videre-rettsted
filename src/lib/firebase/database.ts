@@ -169,7 +169,6 @@ const deletePlace = async (id: string): Promise<void> => {
                       // Attempt to delete using the URL directly, or extract the path if needed by your storage class.
                       // Usually FirebaseStorage.deleteFile expects a path. If you only have a download URL, 
                       // you can create a ref from the URL in firebase storage, but your wrapper takes a path.
-                      // Let's use the standard firebase/storage method directly for safety here to parse the URL.
                       const { ref, getStorage } = await import('firebase/storage');
                       const storageRef = ref(getStorage(), image.url);
                       const { deleteObject } = await import('firebase/storage');
@@ -211,12 +210,7 @@ const getRoutes = async (orgId: string): Promise<Route[]> => {
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => {
     const data = doc.data();
-    return {
-      ...data,
-      id: doc.id,
-      createdAt: data.createdAt?.toDate?.() || new Date(),
-      updatedAt: data.updatedAt?.toDate?.() || new Date(),
-    } as Route;
+    return { ...data, id: doc.id } as Route;
   });
 };
 
@@ -450,15 +444,30 @@ const updateOrderStatus = async (orgId: string, orderId: string, status: Order['
   await updateDoc(docRef, { status, updatedAt: serverTimestamp() });
 };
 
+const updateOrder = async (orgId: string, orderId: string, updates: Partial<Order>): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+  await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+};
+
 const createManifest = async (manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
-  const orgRef = doc(db, 'organizations', manifest.orgId);
-  const manifestsRef = collection(orgRef, 'manifests');
-  const docRef = await addDoc(manifestsRef, {
-    ...manifest,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+    const orgRef = doc(db, 'organizations', manifest.orgId);
+    const manifestsRef = collection(orgRef, 'manifests');
+
+    // Ensure totalItems and loadedItems are initialized for each order
+    const ordersWithInitializedCounts = manifest.orders.map(orderItem => ({
+        ...orderItem,
+        totalItems: orderItem.totalItems || 1, // Default to 1 if not specified
+        loadedItems: 0, // Always start at 0
+        status: 'pending' as const, // Ensure initial status is pending
+    }));
+
+    const docRef = await addDoc(manifestsRef, {
+        ...manifest,
+        orders: ordersWithInitializedCounts,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    });
+    return docRef.id;
 };
 
 const getManifestByRoute = async (orgId: string, routeId: string): Promise<Manifest | null> => {
@@ -478,9 +487,15 @@ const updateManifest = async (orgId: string, manifestId: string, updates: Partia
   });
 };
 
-const verifyManifestItem = async (orgId: string, manifestId: string, orderId: string, userId: string): Promise<void> => {
+const incrementManifestItemLoadedCount = async (
+  orgId: string, 
+  manifestId: string, 
+  orderId: string, 
+  userId: string
+): Promise<void> => {
   const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
   const docSnap = await getDoc(docRef);
+
   if (!docSnap.exists()) throw new Error('Manifest not found');
 
   const manifest = docSnap.data() as Manifest;
@@ -488,16 +503,59 @@ const verifyManifestItem = async (orgId: string, manifestId: string, orderId: st
   
   if (orderIndex === -1) throw new Error('Order not found in manifest');
 
-  manifest.orders[orderIndex].status = 'loaded';
-  manifest.orders[orderIndex].loadedAt = serverTimestamp() as any;
-  manifest.orders[orderIndex].loadedBy = userId;
+  const currentItem = manifest.orders[orderIndex];
 
-  await updateDoc(docRef, {
-    orders: manifest.orders,
-    updatedAt: serverTimestamp()
-  });
+  if (currentItem.loadedItems < currentItem.totalItems) {
+      currentItem.loadedItems += 1;
+      if (currentItem.loadedItems === currentItem.totalItems) {
+          currentItem.status = 'loaded';
+          currentItem.loadedAt = serverTimestamp() as any;
+          currentItem.loadedBy = userId;
+          // Optionally update the main order status if all items are loaded
+          await updateOrder(orgId, orderId, { status: 'loaded' });
+      }
+      
+      await updateDoc(docRef, {
+          orders: manifest.orders,
+          updatedAt: serverTimestamp()
+      });
+  } else {
+      throw new Error(`All items for order ${orderId} have already been loaded.`);
+  }
+};
 
-  await updateOrderStatus(orgId, orderId, 'loaded');
+const decrementManifestItemLoadedCount = async (
+  orgId: string, 
+  manifestId: string, 
+  orderId: string
+): Promise<void> => {
+  const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) throw new Error('Manifest not found');
+
+  const manifest = docSnap.data() as Manifest;
+  const orderIndex = manifest.orders.findIndex(o => o.orderId === orderId);
+  
+  if (orderIndex === -1) throw new Error('Order not found in manifest');
+
+  const currentItem = manifest.orders[orderIndex];
+
+  if (currentItem.loadedItems > 0) {
+      currentItem.loadedItems -= 1;
+      currentItem.status = 'pending'; // Revert to pending if items are unloaded
+      currentItem.loadedAt = undefined; // Clear loadedAt if items are unloaded
+      currentItem.loadedBy = undefined; // Clear loadedBy if items are unloaded
+
+      await updateDoc(docRef, {
+          orders: manifest.orders,
+          updatedAt: serverTimestamp()
+      });
+      // Optionally update the main order status if items are unloaded
+      await updateOrder(orgId, orderId, { status: 'pending' });
+  } else {
+      throw new Error(`No items for order ${orderId} to unload.`);
+  }
 };
 
 const finalizeManifest = async (orgId: string, manifestId: string, userId: string): Promise<void> => {
@@ -536,11 +594,6 @@ const getVehicleInspections = async (orgId: string, vehicleId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VehicleInspection));
 };
 
-const updateOrder = async (orgId: string, orderId: string, updates: Partial<Order>): Promise<void> => {
-  const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
-  await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
-};
-
 export const firebaseDB: Database = {
   createOrganization,
   getOrganization,
@@ -575,6 +628,7 @@ export const firebaseDB: Database = {
   deleteWorkLog,
 
   createOrder, getOrder, getOrders, getOrdersForRoute, updateOrderStatus, updateOrder,
-  createManifest, updateManifest, getManifestByRoute, verifyManifestItem, finalizeManifest,
+  createManifest, updateManifest, getManifestByRoute, 
+  incrementManifestItemLoadedCount, decrementManifestItemLoadedCount, finalizeManifest,
   submitProofOfDelivery, submitVehicleInspection, getVehicleInspections,
 };
