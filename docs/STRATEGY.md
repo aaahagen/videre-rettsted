@@ -29,6 +29,7 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **"Loader" Role:** A restricted user role for warehouse staff.
     *   **Manifest Verification (Completed):** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
     *   **Manifest UI (Completed):** Built the `/dashboard/manifests` UI for loaders, including item-level barcode scanning, manual overrides for loading progress, and full verification workflows.
+    *   **Loader Notes & Issue Reporting (Planned):** Allow loaders to add notes to a manifest (e.g., "Missing one pallet, delayed by 15 mins") and flag issues. These notes will be instantly visible to administrators on the Monitor dashboard and to the assigned driver on their active route view.
     *   *Next Steps:* Implement Barcode/QR code generation and printing from the Order details view.
 3.  **Digital Vehicle Inspections (Backend complete):**
     *   **Inspection Models:** Database schemas created for logging pre/post-trip checks (tires, brakes, fluids) and reporting damages with photos.
@@ -70,6 +71,9 @@ This phase focuses on aggregating the rich operational data collected in previou
 2.  **API-First Design:** Expose these aggregated KPIs through a secure, well-documented API endpoint. This ensures that the same data powering our internal dashboard can be seamlessly consumed by third-party business intelligence tools (e.g., Geckoboard, Klipfolio, Power BI).
 
 3.  **Build the "Strategic Dashboard":** Create a new dashboard view composed of clean widgets to visualize the following KPIs:
+    *   **Terminal & Loading Analytics:**
+        *   **Daily Loading Status:** An overview card aggregating data across all active manifests (total items to load, currently loaded, percentage complete).
+        *   **Loading Delays:** Tracking the frequency and reasons for loading delays based on loader issue reports.
     *   **Workforce Analytics:**
         *   **Overtime Analysis:** A long-term view comparing approved overtime hours against planned/standard hours.
         *   **Contractor Usage:** Statistics on the utilization of hired extras, including total hours and percentage of the workforce.
