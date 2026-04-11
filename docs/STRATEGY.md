@@ -30,6 +30,9 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **Manifest Verification (Completed):** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
     *   **Manifest UI (Completed):** Built the `/dashboard/manifests` UI for loaders, including item-level barcode scanning, manual overrides for loading progress, and full verification workflows.
     *   **Loader Notes & Issue Reporting (Planned):** Allow loaders to add notes to a manifest (e.g., "Missing one pallet, delayed by 15 mins") and flag issues. These notes will be instantly visible to administrators on the Monitor dashboard and to the assigned driver on their active route view.
+    *   **Exception Handling vs. Deletion (Planned):**
+        *   **Loaders:** Must be able to gracefully *remove* an item from a manifest if scanned by mistake, reverting its status to pending. They cannot delete orders.
+        *   **Administrators:** Need the ability to securely *delete* or cancel an order. This must trigger a cascading deletion, automatically removing the order from any associated routes and manifests to prevent system errors.
     *   *Next Steps:* Implement Barcode/QR code generation and printing from the Order details view.
 3.  **Digital Vehicle Inspections (Backend complete):**
     *   **Inspection Models:** Database schemas created for logging pre/post-trip checks (tires, brakes, fluids) and reporting damages with photos.
