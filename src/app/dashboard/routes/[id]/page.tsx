@@ -1095,60 +1095,20 @@ export default function RouteDetailsPage() {
                         </CardHeader>
                         <CardContent>
                         <div className="flex flex-col gap-4">
-                    <div className="w-full sm:w-[300px] space-y-2">
-                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
-                        <Input 
-                            id="route-date"
-                            type="date"
-                            value={routeDate}
-                            onChange={(e) => setRouteDate(e.target.value)}
-                            className="h-10 border-slate-200 shadow-sm"
-                        />
-                    </div>
-                    <Select onValueChange={handleAddOrder}>
-                            <SelectTrigger className="shadow-sm">
-                            <SelectValue placeholder="Søk og velg et sted..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                            {pendingOrders.map(order => (
-                                <SelectItem key={order.id} value={order.id} disabled={routeItems.some(i => i.type === 'place' && i.orderId === order.id)}>
-                                {order.barcode} - {allPlaces.find(p => p.id === order.placeId)?.name}
-
-                                </SelectItem>
-                            ))}
-
-                            </SelectContent>
-                        </Select>
-                    <div className="w-full sm:w-[300px] space-y-2">
-                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
-                        <Input 
-                            id="route-date"
-                            type="date"
-                            value={routeDate}
-                            onChange={(e) => setRouteDate(e.target.value)}
-                            className="h-10 border-slate-200 shadow-sm"
-                        />
-                    </div>
-                    <Select 
-                      value={route.vehicleId || "unassigned"} 
-                      onValueChange={(val) => {
-                        const newRoute = {...route, vehicleId: val === "unassigned" ? "" : val};
-                        setRoute(newRoute);
-                        setAssignedVehicle(allVehicles.find(v => v.id === val));
-                      }}
-                    >
-                      <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
-                        <SelectValue placeholder="Velg kjøretøy..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                        {allVehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    </div>
-                        </CardContent>
+                            <Select onValueChange={handleAddOrder}>
+                                <SelectTrigger className="shadow-sm">
+                                    <SelectValue placeholder="Søk og velg et sted for aktiv ordre..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {pendingOrders.map(order => (
+                                        <SelectItem key={order.id} value={order.id} disabled={routeItems.some(i => i.type === 'place' && i.orderId === order.id)}>
+                                            {order.barcode} - {allPlaces.find(p => p.id === order.placeId)?.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
                     </Card>
                 )}
             
@@ -1402,8 +1362,8 @@ export default function RouteDetailsPage() {
       {/* Driver Assignment - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="space-y-4 flex-1">
+          <CardContent className="p-6 flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                <div>
                    <h3 className="font-semibold text-lg flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user h-5 w-5 text-slate-500"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1412,7 +1372,7 @@ export default function RouteDetailsPage() {
                    <p className="text-sm text-muted-foreground">Velg hvem som skal kjøre denne ruten.</p>
                </div>
                
-               <div className="flex items-center gap-2 mt-4">
+               <div className="flex items-center gap-2 mt-4 sm:mt-0">
                     <Switch 
                         id="is3ps" 
                         checked={route.isThirdParty || false} 
@@ -1422,73 +1382,74 @@ export default function RouteDetailsPage() {
                </div>
             </div>
             
-            <div className="flex-1 w-full flex justify-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
+                <div className="space-y-2 w-full">
+                    <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
+                    <Input 
+                        id="route-date"
+                        type="date"
+                        value={routeDate}
+                        onChange={(e) => setRouteDate(e.target.value)}
+                        className="h-10 border-slate-200 shadow-sm w-full"
+                    />
+                </div>
+
                 {route.isThirdParty ? (
-                    <div className="w-full sm:w-[300px] space-y-2">
+                    <div className="space-y-2 w-full">
                         <Label htmlFor="3ps-name" className="text-xs text-muted-foreground">Navn på transportør (3PS)</Label>
                         <Input 
                             id="3ps-name"
                             placeholder="F.eks. Bring, PostNord..." 
                             value={route.thirdPartySupplier || ''}
                             onChange={(e) => setRoute({...route, thirdPartySupplier: e.target.value})}
-                            className="h-10 border-slate-200 shadow-sm"
+                            className="h-10 border-slate-200 shadow-sm w-full"
                         />
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-4">
-                    <div className="w-full sm:w-[300px] space-y-2">
-                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
-                        <Input 
-                            id="route-date"
-                            type="date"
-                            value={routeDate}
-                            onChange={(e) => setRouteDate(e.target.value)}
-                            className="h-10 border-slate-200 shadow-sm"
-                        />
-                    </div>
-                    <Select 
-                      value={route.driverId || "unassigned"} 
-                      onValueChange={(val) => setRoute({...route, driverId: val === "unassigned" ? "" : val})}
-                    >
-                      <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm mt-6">
-                        <SelectValue placeholder="Velg intern sjåfør..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                        {organizationUsers.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="w-full sm:w-[300px] space-y-2">
-                        <Label htmlFor="route-date" className="text-xs text-muted-foreground">Planlagt Dato</Label>
-                        <Input 
-                            id="route-date"
-                            type="date"
-                            value={routeDate}
-                            onChange={(e) => setRouteDate(e.target.value)}
-                            className="h-10 border-slate-200 shadow-sm"
-                        />
-                    </div>
-                    <Select 
-                      value={route.vehicleId || "unassigned"} 
-                      onValueChange={(val) => {
-                        const newRoute = {...route, vehicleId: val === "unassigned" ? "" : val};
-                        setRoute(newRoute);
-                        setAssignedVehicle(allVehicles.find(v => v.id === val));
-                      }}
-                    >
-                      <SelectTrigger className="w-full sm:w-[300px] h-10 border-slate-200 shadow-sm">
-                        <SelectValue placeholder="Velg kjøretøy..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
-                        {allVehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    </div>
+                    <>
+                        <div className="space-y-2 w-full">
+                            <Label className="text-xs text-muted-foreground">Velg intern sjåfør</Label>
+                            <Select 
+                              value={route.driverId || "unassigned"} 
+                              onValueChange={(val) => {
+                                setRoute({...route, driverId: val === "unassigned" ? "" : val});
+                                setAssignedDriver(organizationUsers.find(u => u.id === val));
+                              }}
+                            >
+                              <SelectTrigger className="h-10 border-slate-200 shadow-sm w-full">
+                                <SelectValue placeholder="Velg intern sjåfør..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                                {organizationUsers.map(u => (
+                                  <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                        </div>
+                        
+                        <div className="space-y-2 w-full">
+                            <Label className="text-xs text-muted-foreground">Velg kjøretøy</Label>
+                            <Select 
+                              value={route.vehicleId || "unassigned"} 
+                              onValueChange={(val) => {
+                                const newRoute = {...route, vehicleId: val === "unassigned" ? "" : val};
+                                setRoute(newRoute);
+                                setAssignedVehicle(allVehicles.find(v => v.id === val));
+                              }}
+                            >
+                              <SelectTrigger className="h-10 border-slate-200 shadow-sm w-full">
+                                <SelectValue placeholder="Velg kjøretøy..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unassigned" className="text-muted-foreground italic">Ikke tildelt</SelectItem>
+                                {allVehicles.map(v => (
+                                  <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                        </div>
+                    </>
                 )}
             </div>
           </CardContent>
