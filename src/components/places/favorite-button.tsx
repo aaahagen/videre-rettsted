@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/firebase';
-import { firebaseDB, toggleFavorite } from '@/lib/firebase/database';
+import { firebaseDB } from '@/lib/firebase/database';
 import { User } from '@/lib/types';
 
 export function FavoriteButton({ placeId }: { placeId: string }) {
@@ -29,55 +29,36 @@ export function FavoriteButton({ placeId }: { placeId: string }) {
     fetchUser();
   }, [authUser, placeId]);
 
-  const handleToggleFavorite = async () => {
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!authUser || isPending) return;
 
     setIsPending(true);
-    const optimisticFavoriteState = !isFavorite;
-    setIsFavorite(optimisticFavoriteState);
-
     try {
-      await toggleFavorite(authUser.uid, placeId);
-      // Refresh user data to get the true state
-      await fetchUser();
+      await firebaseDB.toggleFavorite(authUser.uid, placeId);
+      setIsFavorite(!isFavorite);
     } catch (error) {
-      console.error('Failed to toggle favorite', error);
-      // Revert optimistic update on error
-      setIsFavorite(!optimisticFavoriteState);
+      console.error("Error toggling favorite:", error);
     } finally {
       setIsPending(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-10 w-10 rounded-full bg-black/30 text-white hover:bg-black/50 hover:text-white"
-        disabled
-      >
-        <Star className="h-5 w-5" />
-      </Button>
-    );
-  }
+  if (loading || !authUser) return null;
 
   return (
     <Button
-      size="icon"
       variant="ghost"
-      onClick={handleToggleFavorite}
+      size="icon"
+      onClick={handleToggle}
       disabled={isPending}
       className={cn(
-        'h-10 w-10 rounded-full bg-black/30 text-white transition-colors hover:bg-black/50 hover:text-white',
-        isFavorite && 'text-yellow-400 hover:text-yellow-300',
-        isPending && 'animate-pulse'
+        "h-8 w-8 rounded-full bg-white/80 hover:bg-white",
+        isFavorite ? "text-yellow-500 hover:text-yellow-600" : "text-gray-400 hover:text-gray-600"
       )}
-      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     >
-      <Star
-        className={cn('h-5 w-5 transition-transform', isFavorite && 'fill-current')}
-      />
+      <Star className={cn("h-4 w-4", isFavorite && "fill-current")} />
     </Button>
   );
 }

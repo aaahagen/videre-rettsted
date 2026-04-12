@@ -39,18 +39,19 @@ This project adheres to a "Function-First" design philosophy. The UI is built to
 To ensure future flexibility and ease of migration, all interactions with the backend are encapsulated within a dedicated abstraction layer.
 
 - **`src/lib/database.ts`**: Defines a generic interface for raw data operations (CRUD).
-- **`src/lib/firebase/database.ts`**: The concrete implementation of the database interface using Firebase Firestore.
+- **`src/lib/firebase/database.ts`**: The main aggregator for the database interface using Firebase Firestore. It delegates specific operations to domain-specific modules.
+- **`src/lib/db/*`**: Domain-specific database modules (e.g., `users.ts`, `places.ts`, `orders.ts`) implementing the actual Firestore logic, addressing the previous "God Object" architecture.
 - **`src/lib/auth.ts`**: Defines a generic interface for authentication operations.
 - **`src/lib/firebase/auth.ts`**: The Firebase implementation of the auth interface.
 - **`src/lib/storage.ts`**: A generic interface for file storage operations.
 - **`src/lib/firebase/storage.ts`**: The Firebase Storage implementation.
 
 ### Technical Debt Mitigation Strategy (Scaling Plan)
-As the application transitions from MVP to Enterprise Scale, the following architectural refactoring is planned:
+As the application transitions from MVP to Enterprise Scale, the following architectural refactoring is planned/ongoing:
 
 1.  **Database Repository Pattern (Addressing the "God Object"):**
-    *   *Current State:* `src/lib/firebase/database.ts` contains all domain logic (~600 lines), making it a "God Object."
-    *   *Resolution:* Split this file into domain-specific repositories (e.g., `src/lib/db/orders.ts`, `src/lib/db/fleet.ts`, `src/lib/db/workforce.ts`). The `Database` interface will act as an aggregator of these repositories. This improves maintainability, reduces merge conflicts, and isolates domain logic.
+    *   *Current State:* Completed. `src/lib/firebase/database.ts` has been split into domain-specific repositories within the `src/lib/db/` directory. The main file now acts as an aggregator, fulfilling the `Database` interface.
+    *   *Resolution:* Maintain the domain-specific repository structure (`src/lib/db/orders.ts`, `src/lib/db/vehicles.ts`, etc.) for any new database entities to ensure maintainability and isolate domain logic.
 
 2.  **React Server Components (RSC) Migration:**
     *   *Current State:* Heavy reliance on Client Components (`'use client'`) and `useEffect` for data fetching, leading to waterfall rendering.

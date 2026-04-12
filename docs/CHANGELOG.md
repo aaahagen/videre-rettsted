@@ -7,22 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
-- **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops. 
-- **Intelligent Capacity Checking:** Implemented real-time dynamic capacity warnings in the route planner. When a vehicle is assigned, the system continually calculates the cumulative weight, volume, and pallet count from all assigned orders and instantly warns the planner if the vehicle's safe limits are exceeded.
-- **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
-
-### Changed
-- **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
-- **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
-- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities.
-
-
 ### Added
+- **Testing Infrastructure:** Integrated Jest and React Testing Library for unit testing, and Playwright for end-to-end (E2E) testing.
+- **Firebase Local Emulator Integration:** Configured the application and Project IDX environment to automatically connect to the Firebase Local Emulator Suite during development and testing, ensuring safe, isolated test environments without affecting production data.
+- **Vehicle Loading & Manifest UI:** Built the `/dashboard/manifests` and `/dashboard/manifests/[id]` UI for loaders. Features include:
+    - Real-time tracking of route loading progress.
+    - Item-level barcode/QR code scanning to mark individual packages/pallets as loaded.
+    - Manual override buttons (increment/decrement) for situations where scanning fails.
+    - Automatic status updates for orders once all items are loaded.
+    - Final verification workflow to lock the manifest before departure.
+- **Order Creation Enhancements:** Added a `numberOfItems` field to the manual order creation form (`/dashboard/orders/new`). This data is now correctly linked to the Manifest system to ensure loaders scan the correct number of items per order.
+- **Order Details View:** Created a dedicated details page (`/dashboard/orders/[id]`) to view the status, description, physical details, and routing information of individual orders.
 - **GDPR Compliance (Work Logs Data Retention):** Implemented an automated background process (Cloud Function) that runs daily at midnight to permanently delete driver work logs (`workLogs` entries) that are older than 3 years.
 - **GDPR Compliance (Audit Logging):** Implemented an audit trail for sensitive data access. The system now logs an `admin_view_worklog` event whenever an administrator views a driver's time stamps in the "Time Approvals" module. These logs are stored in a newly created, restricted `/logs` collection.
-
 - **Proof of Delivery (POD) Driver UI:** Integrated a comprehensive Proof of Delivery modal into the active route view. 
     - When a driver completes a stop, they are now prompted to specify the delivery method (e.g., Handed to recipient, Left at door).
     - The UI dynamically enforces rules, such as requiring photo evidence if a package is left unattended.
@@ -59,7 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Driver Image Upload:** Enabled uploading a profile picture for drivers in the Workforce Management module. The picture is displayed in the personnel overview.
 - **Period Schedule Overrides:** Added the ability to register schedule overrides (vacation, sick leave, etc.) for entire periods by specifying a start and end date, simplifying data entry for extended absences.
 - **Upcoming Overrides Display:** The main workforce page now prominently displays a driver's upcoming schedule overrides (up to 3) directly on their profile card for quick visibility.
-
 - **Fleet Management Module:** Added a complete system for administrators to register and manage the organization's vehicle fleet.
     - **Vehicle Profiles:** Created database structures and UI to capture detailed vehicle properties including type (truck, van, car), fuel type, dimensions, capacity (weight, volume, pallets), and special capabilities (refrigeration, tail-lift, ADR, trailer coupling).
     - **Fleet Overview Page:** Added `/dashboard/fleet` for admins to view, add, edit, and delete vehicles.
@@ -75,7 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Vehicle Display:** Route cards now prominently display the assigned vehicle alongside the assigned driver.
     - **Clear Completion State:** Route cards now have a static color header (red for active, green for finished) and display a clear "Rute ferdigstilt" message when 100% complete.
 - **Offline Persistence:** Explicitly enabled Firestore's IndexedDB local cache to ensure the application remains readable and can queue writes even during network outages.
-
 - **Monitor Page Statistics Card:** Added a "Dagens Status" (Today's Status) card to the top of the monitor page (`/dashboard/monitor`). This card provides a high-level overview of the day's operations, displaying the total number of routes, active routes, finished routes, total stops across all routes, and an overall progress bar calculating the total number of stops completed against the total number of stops.
 - **Route Monitor Dashboard:** Created a new real-time dashboard for administrators (`/dashboard/monitor`) to track the progress of all active routes. It displays a visual progress bar, the current/next stop, and the assigned driver for each route.
 - **Finished Route Color-Coding:** The main routes list page now uses real-time listeners to automatically change the color of a route's card to green ("Rute fullført") as soon as the assigned driver marks the final stop as complete.
@@ -90,13 +85,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Database Architecture Refactoring:** Addressed technical debt by dismantling the "God Object" in `src/lib/firebase/database.ts`. Extracted domain-specific database operations into separate repository files within `src/lib/db/` (e.g., `users.ts`, `places.ts`, `orders.ts`, `routes.ts`, `vehicles.ts`). The main `database.ts` file now serves cleanly as an aggregator.
+- **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
+- **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops. 
+- **Intelligent Capacity Checking:** Implemented real-time dynamic capacity warnings in the route planner. When a vehicle is assigned, the system continually calculates the cumulative weight, volume, and pallet count from all assigned orders and instantly warns the planner if the vehicle's safe limits are exceeded.
+- **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
+- **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
+- **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
+- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities.
 - **Maximum Width Constraints:** Removed aggressive "container" overrides across all major dashboard views (Workforce, Monitor, Fleet, Routes, Places) to ensure the interface does not stretch awkwardly on ultra-wide desktop monitors. The entire application now maxes out at a comfortable 1280px width (max-w-7xl) and remains perfectly centered.
 - **Vehicle Form UI:** Significantly enhanced the visual hierarchy of the "Registrer Nytt Kjøretøy" (Register New Vehicle) dialog. Employed stark white cards, distinct header backgrounds, subtle drop shadows on inputs, and rounded interactive toggles to make data entry much clearer and easier on the eyes.
 - **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
 - **Sidebar Navigation:** The "Meldinger" (Messages) link has been repositioned directly below "Ruter" in the sidebar for better workflow grouping.
 - **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
 - **Contextual Global Search:** Upgraded the global search bar in the top navigation to be context-aware. When viewing the Fleet ("Kjøretøy") or Workforce ("Personell") pages, the search bar now automatically filters the respective lists on those pages, rather than redirecting the user to the generic Places search.
-
 - **Workforce Form Redesign:** Completely redesigned the "Edit Driver Profile" and "Register Vehicle" forms to use a clean, card-based layout, significantly improving readability and usability.
 - **Workforce Print UI:** The "Plan (12 uker)" print button on the workforce overview is now conditionally rendered, appearing only if the driver has an active rotation schedule configured.
 - **Workforce Status Text:** Updated the fallback status text for drivers on a rotation schedule without a specific daily plan to say "Bruker Turnusplan" instead of "Ingen plan satt".
@@ -110,6 +112,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Favorite Button Import:** Fixed an import error in `FavoriteButton` caused by refactoring the database file.
+- **Vehicle Document Upload:** Fixed an issue where uploading documents/images to a new vehicle would fail due to an invalid Firestore document reference. The vehicle is now created first to secure an ID before file upload.
+- **Manifest Route Linking:** Fixed an issue where newly created routes did not appear on the Lasterampe (Manifests) page. Creating a route now automatically generates a corresponding pending manifest.
 - **Firestore Permissions:** Resolved permission-denied errors related to the new real-time messaging system and the revocation/deletion of pending invitations by administrators.
 - **Monitor Page Rendering:** Fixed an issue where the completion state of routes (e.g., green styling, checkmarks) occasionally failed to render due to broken template literals.
 - **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card, ensuring it stacks properly on smaller screens.
@@ -140,23 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
-- **GDPR Compliance (Work Logs Data Retention):** Implemented an automated background process (Cloud Function) that runs daily at midnight to permanently delete driver work logs (`workLogs` entries) that are older than 3 years.
-- **GDPR Compliance (Audit Logging):** Implemented an audit trail for sensitive data access. The system now logs an `admin_view_worklog` event whenever an administrator views a driver's time stamps in the "Time Approvals" module. These logs are stored in a newly created, restricted `/logs` collection.
-
 - **Admin Attendance Dashboard Card:** Add a new card to the Admin Operational Dashboard that displays daily attendance statistics, showing how many scheduled personnel have checked in, are currently present, and have checked out.
 - **Workforce Statistics "Annet" Category:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
-- **Fleet Management System:** A comprehensive module for registering and tracking all vehicles within an organization.
-    - **Vehicle Profiles:** Create detailed profiles for each vehicle, including type, loading capacity (weight, volume), fuel type, physical dimensions, and special capabilities (e.g., refrigeration, tail-lift). This data will directly inform the constraint-based route matching engine.
-    - **Maintenance & Service Tracking:** Log service history and set reminders for future maintenance deadlines to ensure fleet compliance and operational readiness.
-    - **Digital Vehicle Inspections & Damage Reporting:** Allow drivers or mechanics to conduct digital inspections and log new damages with photos and notes, creating a full damage history for each vehicle.
-    - **Document Management:** Upload and manage essential vehicle documents like registration, insurance certificates, and inspection reports.
-- **Vehicle Loading & Manifest System:** A new system to verify that the correct items are loaded onto the correct vehicle before a route begins.
-        - **Manifest Verification:** A dedicated screen will display all items assigned to a route. Loaders will scan each item's barcode, changing its status from "Pending" to "Loaded" and preventing incorrect items from being loaded.
-- **Comprehensive Proof of Delivery (POD) System:** Upon completing a stop, drivers will be able to capture a full suite of POD information, creating a permanent, auditable record for each delivery.
-    - **Photo Capture:** Reuse the existing camera and image compression functionality to take one or more photos as visual proof.
-    - **Signature Capture:** Allow recipients to sign directly on the driver's device, with the signature saved as an image.
-    - **Barcode Scanning:** Use the device's camera to scan package barcodes, linking specific items to the delivery confirmation.
-    - **Damage & Note Reporting:** Provide a text field for drivers to report any issues, damages, or other important delivery notes.
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop's address and the driver's captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
 
 ### Changed
@@ -167,7 +157,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         1.  **Manual Registration:** A comprehensive UI form for planners to manually input order details (type of goods, weight, exact dimensions, sender/receiver, special requirements like ADR or temperature control).
         2.  **API Integration (Future):** A robust, versioned API endpoint to automatically ingest orders from external Transport Management Systems (TMS), ERPs, or customer portals.
     Each order will act as the foundational unit for both manual and automated route assignment.
-
     - **Tier 3: Constraint-Based Automatic Generation:** An intelligent backend system will automatically generate optimized daily routes. This system will perform constraint-based matching, assigning orders not only based on location but also by matching the goods' requirements to defined vehicle capabilities from the Fleet Management module. It will flag any jobs that cannot be assigned due to a lack of compatible vehicles.
     - **Tier 4: Manual Override & Ad-Hoc Routing:** Despite automation, the real world is unpredictable. Planners must always retain the ability to manually override automated assignments, drag-and-drop orders between vehicles mid-route, and create completely custom, ad-hoc routes from scratch without relying on the automated engine.
-
