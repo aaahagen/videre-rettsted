@@ -11,6 +11,8 @@ export interface Database {
   getUsers(orgId: string): Promise<User[]>;
   updateUser(uid: string, data: Partial<User>): Promise<void>;
   deleteUser(uid: string): Promise<void>;
+  toggleFavorite(userId: string, placeId: string): Promise<void>;
+  markPlaceVisited(userId: string, placeId: string): Promise<void>;
 
   createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Place>;
   getPlace(id: string): Promise<Place | null>;
@@ -38,6 +40,10 @@ export interface Database {
   getWorkLogsForOrganization(orgId: string, status?: WorkLog['status']): Promise<WorkLog[]>;
   updateWorkLog(id: string, updates: Partial<WorkLog>): Promise<WorkLog>;
   deleteWorkLog(id: string): Promise<void>;
+  
+  // Logging methods
+  logEvent(orgId: string, userId: string, action: string, details?: any): Promise<void>;
+  getLogs(orgId: string): Promise<LogEntry[]>;
   createLogEntry(logEntry: Omit<LogEntry, 'id' | 'timestamp'>): Promise<string>;
 
   // --- Phase 3: Verification Methods ---

@@ -15,7 +15,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { deleteField } from 'firebase/firestore';
 
-import { firebaseDB, markPlaceVisited } from '@/lib/firebase/database';
+import { firebaseDB } from '@/lib/firebase/database';
 import { auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -587,7 +587,7 @@ export default function RouteDetailsPage() {
            const placeId = itemId.replace('place_', '');
            if (userData?.id) {
                try {
-                  await markPlaceVisited(userData.id, placeId);
+                  await firebaseDB.markPlaceVisited(userData.id, placeId);
                } catch (e) {
                   console.error("Could not mark place as visited", e);
                }
