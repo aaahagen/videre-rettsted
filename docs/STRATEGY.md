@@ -27,6 +27,8 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **Driver UI:** Built a responsive POD Modal integrated directly into the route completion flow. It dynamically enforces logic (e.g., requiring photos if left at the door, capturing failure reasons) and compresses images client-side before upload.
 2.  **Vehicle Loading & Manifest System (In Progress):**
     *   **"Loader" Role:** A restricted user role for warehouse staff.
+    *   **Dynamic Role Contexts (Planned):** Allow administrators to temporarily switch a user's role (e.g., from 'admin' to 'loader') without creating duplicate accounts, or implement a flexible permissions model where a single user can hold multiple operational roles simultaneously based on their current physical task (e.g., packing vs. planning).
+    *   **Dedicated Loader Dashboard (Planned):** Create a stripped-down, focused dashboard view exclusively for the 'loader' role. This view will hide planning/administrative tools and immediately present active manifests and scanning interfaces to maximize warehouse efficiency.
     *   **Manifest Verification (Completed):** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
     *   **Manifest UI (Completed):** Built the `/dashboard/manifests` UI for loaders, including item-level barcode scanning, manual overrides for loading progress, and full verification workflows.
     *   **Loader Notes & Issue Reporting (Planned):** Allow loaders to add notes to a manifest (e.g., "Missing one pallet, delayed by 15 mins") and flag issues. These notes will be instantly visible to administrators on the Monitor dashboard and to the assigned driver on their active route view.
@@ -67,7 +69,7 @@ This phase leverages the data structures from previous phases to manage incoming
 
 ## Phase 5: Business Intelligence & Data Exposure (Planned)
 
-This phase focuses on aggregating the rich operational data collected in previous phases into high-level, a href="https://github.com/features/actions"strategic insights for business owners. This will be implemented via a new "Strategic Dashboard" section for administrators, following an API-first principle.
+This phase focuses on aggregating the rich operational data collected in previous phases into high-level, strategic insights for business owners. This will be implemented via a new "Strategic Dashboard" section for administrators, following an API-first principle.
 
 1.  **Develop Backend Data Aggregation Layer:** Create dedicated, efficient backend Cloud Functions to compute Key Performance Indicators (KPIs) without impacting frontend performance. These functions will be the single source of truth for all strategic data.
 
