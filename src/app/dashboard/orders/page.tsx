@@ -12,7 +12,8 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Trash2
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
@@ -23,6 +24,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSearch } from '@/hooks/use-search';
 import { Order, Place } from '@/lib/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function OrdersPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -30,8 +43,12 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [places, setPlaces] = useState<Record<string, Place>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const { query: searchQuery, setContext } = useSearch();
   const { setQuery } = useSearch();
+  const { toast } = useToast();
 
   useEffect(() => {
     setQuery("");
@@ -103,6 +120,30 @@ export default function OrdersPage() {
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent, order: Order) => {
+    e.stopPropagation();
+    setOrderToDelete(order);
+    setDeleteConfirmation('');
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete || deleteConfirmation.toLowerCase() !== 'slett ordre' || !userData?.orgId) return;
+    
+    setIsDeleting(true);
+    try {
+      await firebaseDB.deleteOrder(userData.orgId, orderToDelete.id as string);
+      toast({ title: 'Slettet', description: 'Ordren ble slettet.' });
+      setOrderToDelete(null);
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      toast({ title: 'Feil', description: 'Kunne ikke slette ordren.', variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmation('');
+    }
+  };
+
+
   if (loading || isLoading) {
     return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -111,6 +152,8 @@ export default function OrdersPage() {
     router.push('/login');
     return null;
   }
+
+  const isAdmin = userData?.role === 'admin';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 mx-auto w-full px-4 max-w-7xl py-8">
@@ -205,9 +248,9 @@ export default function OrdersPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {displayedOrders.map((order) => (
-            <Card key={order.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(`/dashboard/orders/${order.id}`)}>
+            <Card key={order.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push(`/dashboard/orders/${order.id}`)}>
               <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 relative">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-slate-100 rounded text-slate-600">
                       <Package className="h-5 w-5" />
@@ -221,7 +264,7 @@ export default function OrdersPage() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 pr-8 sm:pr-12">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <MapPin className="h-4 w-4" />
                       <span>{places[order.placeId]?.name || 'Ukjent sted'}</span>
@@ -235,12 +278,54 @@ export default function OrdersPage() {
                       </span>
                     </div>
                   </div>
+
+                  {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                        onClick={(e) => handleDeleteClick(e, order)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!orderToDelete} onOpenChange={(open) => !open && setOrderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slett ordre</AlertDialogTitle>
+            <AlertDialogDescription>
+              Er du sikker på at du vil slette ordren <strong>{orderToDelete?.barcode || 'uten strekkode'}</strong>? 
+              <br/><br/>
+              Skriv <span className="font-bold text-slate-900">slett ordre</span> i feltet under for å bekrefte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input 
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              placeholder="Skriv 'slett ordre' her..."
+              className="bg-slate-50 border-slate-200"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteOrder}
+              disabled={deleteConfirmation.toLowerCase() !== 'slett ordre' || isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Slett permanent'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

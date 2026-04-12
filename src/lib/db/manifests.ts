@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, addDoc, updateDoc, query, where, getDocs, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Manifest, Order } from '../types';
 import { updateOrder } from './orders'; // Assuming updateOrder is now in orders.ts
@@ -39,6 +39,11 @@ export const updateManifest = async (orgId: string, manifestId: string, updates:
     ...updates,
     updatedAt: serverTimestamp(),
   });
+};
+
+export const deleteManifest = async (orgId: string, manifestId: string): Promise<void> => {
+    const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+    await deleteDoc(docRef);
 };
 
 export const incrementManifestItemLoadedCount = async (

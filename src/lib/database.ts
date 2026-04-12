@@ -24,7 +24,7 @@ export interface Database {
   getRoute(id: string): Promise<Route | null>;
   getRoutes(orgId: string): Promise<Route[]>;
   updateRoute(id: string, updates: Partial<Route>): Promise<Route>;
-  deleteRoute(id: string): Promise<void>;
+  deleteRoute(orgId: string, id: string): Promise<void>;
 
   createVehicle(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle>;
   getVehicle(id: string): Promise<Vehicle | null>;
@@ -55,10 +55,12 @@ export interface Database {
   getOrdersForRoute(orgId: string, routeId: string): Promise<Order[]>;
   updateOrderStatus(orgId: string, orderId: string, status: Order['status']): Promise<void>;
   updateOrder(orgId: string, orderId: string, updates: Partial<Order>): Promise<void>;
+  deleteOrder(orgId: string, orderId: string): Promise<void>;
   
   // Manifests
   createManifest(manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string>;
   updateManifest(orgId: string, manifestId: string, updates: Partial<Manifest>): Promise<void>;
+  deleteManifest(orgId: string, manifestId: string): Promise<void>;
   getManifestByRoute(orgId: string, routeId: string): Promise<Manifest | null>;
   incrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
   decrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string): Promise<void>;

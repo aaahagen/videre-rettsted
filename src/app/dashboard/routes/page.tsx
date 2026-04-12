@@ -94,11 +94,11 @@ export default function RoutesPage() {
   };
 
   const confirmDeleteRoute = async () => {
-    if (!routeToDelete || deleteConfirmation.toLowerCase() !== 'slett rute') return;
+    if (!routeToDelete || deleteConfirmation.toLowerCase() !== 'slett rute' || !userData?.orgId) return;
     
     setIsDeleting(true);
     try {
-      await firebaseDB.deleteRoute(routeToDelete.id as string);
+      await firebaseDB.deleteRoute(userData.orgId, routeToDelete.id as string);
       // We don't need to manually update state because the onSnapshot listener will handle it
       setRouteToDelete(null);
     } catch (err) {

@@ -55,7 +55,11 @@ export default function ManifestDetailPage() {
                     firebaseDB.getRoute(data.routeId).then(setRoute);
                 }
                 if (!vehicle || vehicle.id !== data.vehicleId) {
-                    firebaseDB.getVehicle(data.vehicleId).then(setVehicle);
+                    if (data.vehicleId) {
+                        firebaseDB.getVehicle(data.vehicleId).then(setVehicle);
+                    } else {
+                        setVehicle(null);
+                    }
                 }
 
                 // Real-time listener for orders associated with this manifest's route
@@ -227,7 +231,7 @@ export default function ManifestDetailPage() {
                     <h1 className="text-2xl font-bold tracking-tight">{route?.name || 'Lasteplan'}</h1>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Truck className="h-3.5 w-3.5" />
-                        {vehicle?.registrationNumber} • {vehicle?.type}
+                        {vehicle?.registrationNumber || 'Ingen bil'} • {vehicle?.type || 'Ukjent'}
                     </p>
                 </div>
             </div>

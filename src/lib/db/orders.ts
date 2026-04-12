@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, addDoc, updateDoc, query, where, getDocs, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Order } from '../types';
 
@@ -42,4 +42,9 @@ export const updateOrderStatus = async (orgId: string, orderId: string, status: 
 export const updateOrder = async (orgId: string, orderId: string, updates: Partial<Order>): Promise<void> => {
   const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
   await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+};
+
+export const deleteOrder = async (orgId: string, orderId: string): Promise<void> => {
+    const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+    await deleteDoc(docRef);
 };

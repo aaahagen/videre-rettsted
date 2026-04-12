@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Message Read Receipts & Unread Badges:** Implemented a real-time read receipt system. Senders can see when their messages have been read (single vs double checkmarks). A dynamic unread badge also appears in the sidebar for any user with new messages.
 - **Advanced Admin Read Receipts:** Upgraded the messaging system for administrators sending broadcasts. Hovering over the read status icon now reveals a detailed "Hover Card" that explicitly lists the names of users who have read the message ("Lest av") and those who have not yet read it ("Venter på"), accurately filtered by the target audience (e.g., all drivers).
 - **Message Deletion:** Added the ability to delete messages. Administrators can delete any message, while standard users can delete their own sent messages. Features a confirmation dialog.
+- **Order Deletion:** Added the ability for administrators to delete orders from the orders list view, complete with a safeguard confirmation dialog.
 - **Proof of Delivery Foundation (Location & Timestamps):** When a driver completes a stop, the application now requests the device's location. A timestamp and the GPS coordinates are securely saved to the database.
 - **Enhanced Monitor Dashboard:** The Monitor page now displays the exact time a delivery was completed next to the checkmark, replacing the generic "Fullført" text. Additionally, a clickable "Vis kart" link appears, allowing administrators to open Google Maps pinned to the exact location where the driver was when they completed the stop.
 - **External Workforce (Contractors):** Introduced a new system to register and manage hired external extras (Innleid). They receive a dedicated role with customized access, and administrators can log their specific agency contact information.
@@ -94,7 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
 - **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
 - **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
-- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities.
+- **Admin Operational Dashboard Expansion:** Added real-time order statistics (Totalt, Venter, Lastet, Levert) directly to the main admin dashboard for a more complete operational overview.
+- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities. The "Utestående Invitasjoner" (Pending Invitations) component was relocated here to fit the management context.
 - **Maximum Width Constraints:** Removed aggressive "container" overrides across all major dashboard views (Workforce, Monitor, Fleet, Routes, Places) to ensure the interface does not stretch awkwardly on ultra-wide desktop monitors. The entire application now maxes out at a comfortable 1280px width (max-w-7xl) and remains perfectly centered.
 - **Vehicle Form UI:** Significantly enhanced the visual hierarchy of the "Registrer Nytt Kjøretøy" (Register New Vehicle) dialog. Employed stark white cards, distinct header backgrounds, subtle drop shadows on inputs, and rounded interactive toggles to make data entry much clearer and easier on the eyes.
 - **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
@@ -115,6 +117,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Cascade Deletion:** Fixed an issue where deleting a route would leave orphaned loading manifests. Deleting a route now automatically deletes any associated manifest from the database.
+- **Null Reference Errors:** Fixed `Invalid document reference` errors in Firestore by ensuring the vehicle ID is validated before fetching. Graceful handling was added to both Route and Manifest views for routes without assigned vehicles.
 - **Favorite Button Import:** Fixed an import error in `FavoriteButton` caused by refactoring the database file.
 - **Vehicle Document Upload:** Fixed an issue where uploading documents/images to a new vehicle would fail due to an invalid Firestore document reference. The vehicle is now created first to secure an ID before file upload.
 - **Manifest Route Linking:** Fixed an issue where newly created routes did not appear on the Lasterampe (Manifests) page. Creating a route now automatically generates a corresponding pending manifest.
@@ -144,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
 - **Removed Redundant Admin Panel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
+- **Removed Redundant Quick Actions Card**: Removed the "Snarveier" card from the operational dashboard sidebar.
 
 ## [Future]
 

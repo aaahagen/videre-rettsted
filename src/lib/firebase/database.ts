@@ -75,9 +75,11 @@ export const firebaseDB: Database = {
   getOrdersForRoute: ordersDb.getOrdersForRoute,
   updateOrderStatus: ordersDb.updateOrderStatus,
   updateOrder: ordersDb.updateOrder,
+  deleteOrder: ordersDb.deleteOrder,
 
   createManifest: manifestsDb.createManifest,
   updateManifest: manifestsDb.updateManifest,
+  deleteManifest: manifestsDb.deleteManifest,
   getManifestByRoute: manifestsDb.getManifestByRoute,
   incrementManifestItemLoadedCount: manifestsDb.incrementManifestItemLoadedCount,
   decrementManifestItemLoadedCount: manifestsDb.decrementManifestItemLoadedCount,

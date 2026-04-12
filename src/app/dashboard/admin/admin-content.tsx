@@ -450,8 +450,8 @@ export default function AdminDashboardContent({ authUser }: { authUser: Firebase
       <div className="space-y-6 sm:space-y-8">
         
         <h1 className="text-3xl font-bold font-headline px-1">Adminpanel</h1>
-
         
+        {organization && <PendingInvitations orgId={organization.id} />}
 
         <Card>
           <CardHeader className="px-4 sm:px-6">

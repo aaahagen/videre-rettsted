@@ -16,9 +16,9 @@ import Link from 'next/link';
 
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
-import { DriverProfile, Route as RouteType, Place } from '@/lib/types';
+import { DriverProfile, Route as RouteType, Place, Order } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
-import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck } from 'lucide-react';
+import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3 } from 'lucide-react';
 
 
 
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [allRoutes, setAllRoutes] = useState<RouteType[]>([]);
   const [monitorStats, setMonitorStats] = useState({ total: 0, active: 0, finished: 0, totalPlaces: 0, completedPlaces: 0 });
   const [fleetStats, setFleetStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
+  const [orderStats, setOrderStats] = useState({ total: 0, pending: 0, loaded: 0, delivered: 0, failed: 0 });
 
   const [activeRoute, setActiveRoute] = useState<Route | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(true);
@@ -95,8 +96,8 @@ export default function DashboardPage() {
       };
       fetchDrivers();
       
-      const q = query(collection(db, 'routes'), where('orgId', '==', userData.orgId));
-      const unsubRoutes = onSnapshot(q, (snapshot) => {
+      const qRoutes = query(collection(db, 'routes'), where('orgId', '==', userData.orgId));
+      const unsubRoutes = onSnapshot(qRoutes, (snapshot) => {
         const routesData: RouteType[] = [];
         let total = 0;
         let active = 0;
@@ -154,9 +155,29 @@ export default function DashboardPage() {
         setFleetStats(newStats);
       });
 
+      const unsubOrders = onSnapshot(collection(db, 'organizations', userData.orgId, 'orders'), (snapshot) => {
+          let total = 0;
+          let pending = 0;
+          let loaded = 0;
+          let delivered = 0;
+          let failed = 0;
+          
+          snapshot.forEach((doc) => {
+              total++;
+              const order = doc.data() as Order;
+              if (order.status === 'pending') pending++;
+              if (order.status === 'loaded') loaded++;
+              if (order.status === 'delivered') delivered++;
+              if (order.status === 'failed') failed++;
+          });
+          
+          setOrderStats({ total, pending, loaded, delivered, failed });
+      });
+
       return () => {
         unsubRoutes();
         unsubVehicles();
+        unsubOrders();
       };
     }
   }, [userData?.orgId, userData?.role === 'admin']);
@@ -248,16 +269,42 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* ORDER STATS */}
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
+                        <Package className="h-5 w-5 text-indigo-600" />
+                        <h3 className="text-lg font-bold text-slate-900">Ordrestatistikk</h3>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex flex-col items-start p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <span className="text-sm text-muted-foreground font-medium uppercase tracking-tighter flex items-center gap-1"><Package className="h-3 w-3"/> Totalt</span>
+                            <span className="text-2xl font-black text-slate-900">{orderStats.total}</span>
+                        </div>
+                        <div className="flex flex-col items-start p-4 bg-amber-50 rounded-lg border border-amber-100">
+                            <span className="text-sm text-amber-600/80 font-medium uppercase tracking-tighter flex items-center gap-1"><Clock className="h-3 w-3"/> Venter</span>
+                            <span className="text-2xl font-black text-amber-600">{orderStats.pending}</span>
+                        </div>
+                        <div className="flex flex-col items-start p-4 bg-blue-50 rounded-lg border border-blue-100">
+                            <span className="text-sm text-blue-600/80 font-medium uppercase tracking-tighter flex items-center gap-1"><BarChart3 className="h-3 w-3"/> Lastet</span>
+                            <span className="text-2xl font-black text-blue-600">{orderStats.loaded}</span>
+                        </div>
+                        <div className="flex flex-col items-start p-4 bg-green-50 rounded-lg border border-green-100">
+                            <span className="text-sm text-green-700/80 font-medium uppercase tracking-tighter flex items-center gap-1"><CheckCircle2 className="h-3 w-3"/> Levert</span>
+                            <span className="text-2xl font-black text-green-600">{orderStats.delivered}</span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* 2. DENSE TELEMETRY ROW (Workforce & Fleet side-by-side) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     {/* WORKFORCE LIST */}
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100 shrink-0">
                             <UserIcon className="h-5 w-5 text-blue-600" />
                             <h3 className="text-lg font-bold text-slate-900">Personell</h3>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex-1 flex flex-col justify-around">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><UserCheck className="h-4 w-4 text-blue-500"/> På jobb</span>
                                 <span className="font-bold text-slate-900">{workforceStats.working}</span>
@@ -282,12 +329,12 @@ export default function DashboardPage() {
                     </div>
 
                     {/* FLEET LIST */}
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100 shrink-0">
                             <Truck className="h-5 w-5 text-slate-700" />
                             <h3 className="text-lg font-bold text-slate-900">Kjøretøypark</h3>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex-1 flex flex-col justify-around">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500" /> Klar</span>
                                 <span className="font-bold text-slate-900">{fleetStats.ready}</span>
@@ -318,27 +365,6 @@ export default function DashboardPage() {
             {/* ACTION SIDEBAR (Right - 33%) */}
             <div className="w-full lg:w-1/3 space-y-6">
                 <TimeStampCard user={userData} />
-
-                {/* QUICK ACTIONS */}
-                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Snarveier</h3>
-                    <div className="space-y-3">
-                        <Button variant="outline" className="w-full justify-start h-12" asChild>
-                            <Link href="/dashboard/monitor">
-                                <Activity className="mr-2 h-5 w-5 text-blue-500" />
-                                Live Overvåkning
-                            </Link>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start h-12" asChild>
-                            <Link href="/dashboard/routes">
-                                <RouteIcon className="mr-2 h-5 w-5 text-primary" />
-                                Ruteplanlegger
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-
-                {userData.orgId && <PendingInvitations orgId={userData.orgId} />}
             </div>
         </div>
       ) : (

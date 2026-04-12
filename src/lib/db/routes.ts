@@ -54,7 +54,22 @@ export const updateRoute = async (id: string, updates: Partial<Route>): Promise<
   } as Route;
 };
 
-export const deleteRoute = async (id: string): Promise<void> => {
+export const deleteRoute = async (orgId: string, id: string): Promise<void> => {
   const docRef = doc(db, 'routes', id);
   await deleteDoc(docRef);
+  
+  // Also delete associated manifest if it exists
+  try {
+     const manifestsRef = collection(db, `organizations/${orgId}/manifests`);
+     const q = query(manifestsRef, where('routeId', '==', id));
+     const snapshot = await getDocs(q);
+     
+     if (!snapshot.empty) {
+         const deletePromises = snapshot.docs.map(docSnap => deleteDoc(doc(db, `organizations/${orgId}/manifests`, docSnap.id)));
+         await Promise.all(deletePromises);
+     }
+  } catch (error) {
+      console.error("Failed to delete associated manifest when deleting route", error);
+      // We still want the route deletion to succeed even if manifest cleanup fails
+  }
 };

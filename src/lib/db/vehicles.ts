@@ -17,6 +17,7 @@ export const createVehicle = async (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 
 };
 
 export const getVehicle = async (id: string): Promise<Vehicle | null> => {
+  if (!id) return null; // Added check for empty id
   const docRef = doc(db, 'vehicles', id);
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) return null;
@@ -44,6 +45,7 @@ export const getVehicles = async (orgId: string): Promise<Vehicle[]> => {
 };
 
 export const updateVehicle = async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
+  if (!id) throw new Error("Vehicle ID is required for update."); // Added check
   const docRef = doc(db, 'vehicles', id);
   await updateDoc(docRef, {
     ...updates,
@@ -60,6 +62,7 @@ export const updateVehicle = async (id: string, updates: Partial<Vehicle>): Prom
 };
 
 export const deleteVehicle = async (id: string): Promise<void> => {
+  if (!id) throw new Error("Vehicle ID is required for deletion."); // Added check
   const docRef = doc(db, 'vehicles', id);
   await deleteDoc(docRef);
 };
