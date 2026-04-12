@@ -25,7 +25,7 @@ export default defineConfig({
 
   // Run the local dev server and Firebase emulator before starting the tests
   webServer: {
-    command: 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev -- --port 9003',
+    command: 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-app npm run dev -- --port 9003',
     url: 'http://localhost:9003',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

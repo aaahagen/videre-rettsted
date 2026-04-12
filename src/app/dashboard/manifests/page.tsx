@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useSearch } from '@/hooks/use-search';
 
 type ManifestWithDetails = Manifest & { route?: Route, vehicle?: Vehicle };
 
@@ -22,7 +23,7 @@ export default function ManifestsPage() {
     const { toast } = useToast();
     const [manifests, setManifests] = useState<ManifestWithDetails[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const { query } = useSearch();
 
     useEffect(() => {
         if (dbUser?.orgId) {
@@ -64,8 +65,8 @@ export default function ManifestsPage() {
     };
 
     const filteredManifests = manifests.filter(m => 
-        m.route?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.vehicle?.registrationNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+        m.route?.name.toLowerCase().includes(query.toLowerCase()) ||
+        m.vehicle?.registrationNumber?.toLowerCase().includes(query.toLowerCase())
     );
 
     if (isLoading) {
@@ -87,16 +88,6 @@ export default function ManifestsPage() {
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Oppdater
                 </Button>
-            </div>
-
-            <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Søk i ruter eller biler..." 
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
             </div>
 
             {filteredManifests.length === 0 ? (

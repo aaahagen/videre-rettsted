@@ -84,6 +84,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
       allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId);
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId);
     }
 
     // Vehicles

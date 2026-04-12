@@ -40,15 +40,29 @@ export default function DashboardLayout({
   const isPlacesPage = pathname === '/dashboard/places';
   const isOrdersPage = pathname === '/dashboard/orders';
 
+  // Check if we are on a manifests page (e.g., /dashboard/manifests or /dashboard/manifests/[id])
+  const isManifestsPage = pathname.startsWith('/dashboard/manifests');
+  
+  // Check if we are on the messages page
+  const isMessagesPage = pathname === '/dashboard/messages';
+
+  // Define paths where search bar should NOT be shown
+  const hideSearchPaths = ['/dashboard', '/dashboard/admin', '/dashboard/new'];
+  const showSearch = !hideSearchPaths.includes(pathname);
+
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     
     // Only redirect to places if we are not already on a page that handles its own search
-    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && !isOrdersPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet') {
+    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && !isOrdersPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet' && !isManifestsPage && !isMessagesPage) {
         router.push('/dashboard/places');
     }
   };
+
+  const searchPlaceholder = isManifestsPage ? "Søk etter ruter eller biler..." : isMessagesPage ? "Søk i meldinger..." : `Søk etter ${contextName.toLowerCase()}...`;
+  const showNewButton = !isManifestsPage && !isMessagesPage && ((isAdmin || contextName === 'Steder') && showSearch);
 
   return (
     <SidebarProvider>
@@ -72,26 +86,30 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b bg-background px-4 sm:px-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <SidebarTrigger className="md:hidden" />
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={`Søk etter ${contextName.toLowerCase()}...`}
-                className="w-full rounded-full bg-secondary/50 pl-10 pr-10 border-none focus-visible:ring-primary h-10"
-                value={query}
-                onChange={handleSearchChange}
-              />
-              {query && (
-                <button 
-                  onClick={() => setQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-slate-200 rounded-full transition-colors"
-                >
-                  <X className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
+              {showSearch && (
+                <>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder={searchPlaceholder}
+                    className="w-full rounded-full bg-secondary/50 pl-10 pr-10 border-none focus-visible:ring-primary h-10"
+                    value={query}
+                    onChange={handleSearchChange}
+                  />
+                  {query && (
+                    <button 
+                      onClick={() => setQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-slate-200 rounded-full transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  )}
+                </>
               )}
             </div>
             
             {/* Only show the New button if user is an admin, OR if the context is 'Steder' (since drivers can add places) */}
-            {(isAdmin || contextName === 'Steder') && (
+            {showNewButton && (
                 <div className="flex items-center gap-2">
                   <Button 
                     size="sm" 

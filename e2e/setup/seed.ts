@@ -4,7 +4,9 @@ import * as admin from 'firebase-admin';
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
 process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 
-// We use a dummy project ID that matches what the emulator expects
+// Important: When running Playwright, the emulators are already started by IDX
+// using `--project=demo-app`.
+// The seed script must match this to write to the correct emulator instances.
 if (!admin.apps.length) {
   admin.initializeApp({
     projectId: 'demo-app', 
