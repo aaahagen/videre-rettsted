@@ -9,14 +9,16 @@
     pkgs.zulu
   ];
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+    PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
+    PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "true";
+  };
   # This adds a file watcher to startup the firebase emulators. The emulators will only start if
   # a firebase.json file is written into the user's directory
   services.firebase.emulators = {
-    # Disabling because we are using prod backends right now
-    detect = false;
+    detect = true;
     projectId = "demo-app";
-    services = ["auth" "firestore"];
+    services = ["auth" "firestore" "storage" "functions"];
   };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"

@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+// Load the .env file so Playwright has access to Firebase config
+dotenv.config();
 
 export default defineConfig({
   testDir: './e2e',
@@ -8,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:9003',
     trace: 'on-first-retry',
   },
 
@@ -19,9 +23,11 @@ export default defineConfig({
     },
   ],
 
+  // Run the local dev server and Firebase emulator before starting the tests
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev -- --port 9003',
+    url: 'http://localhost:9003',
     reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 });

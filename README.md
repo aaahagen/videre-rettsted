@@ -14,6 +14,7 @@ Standard GPS often fails at the most critical point: the final approach. **Vider
 * **Integrated Messaging:** Real-time chat with read receipts for seamless communication between admins and drivers.
 * **Navigation & Favorites:** Deep-linking to Google Maps for turn-by-turn navigation and personalized favorite locations for drivers.
 * **Offline-Ready:** Built-in Firestore IndexedDB caching ensures drivers can access critical route data even in network dead zones.
+* **Robust Testing Infrastructure:** Fully integrated with Jest for unit testing and Playwright for End-to-End (E2E) testing against the local Firebase Emulator Suite.
 
 ## 🗺️ Roadmap & Future Vision
 
@@ -51,7 +52,17 @@ This project is under active development. The roadmap is organized into phases t
 
 ## 🛠 Tech Stack
 * **Frontend:** Next.js 14 (App Router) with TypeScript and Tailwind CSS.
+* **Testing:** Jest, React Testing Library, Playwright.
 * **UI Components:** shadcn/ui.
-* **Backend:** Firebase (Firestore, Authentication, Storage, Functions).
+* **Backend:** Firebase (Firestore, Authentication, Storage, Functions, Local Emulators).
 * **Hosting:** Firebase Hosting.
 * **Maps:** Google Maps Platform API.
+
+## 🧪 Testing
+
+This project utilizes a dual-layered testing strategy against the local Firebase Emulator Suite:
+
+1.  **Start Emulators:** Ensure your emulators are running (`npm run dev` in IDX handles this automatically, or use `npx firebase emulators:start`).
+2.  **Seed Database:** Populate the emulator with test data: `npm run test:seed`
+3.  **Unit Tests (Jest):** `npm run test`
+4.  **End-to-End Tests (Playwright):** `npm run test:e2e`

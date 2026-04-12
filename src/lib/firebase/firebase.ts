@@ -24,9 +24,9 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
-// Connect to Emulators if running locally
-if (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
-  // Check if emulators are already connected to prevent errors on hot reload
+// ONLY connect to Emulators if the specific environment variable is true.
+// This prevents the web preview browser from trying to connect to localhost over HTTPS.
+if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
   if (!globalThis._firebaseEmulatorsConnected) {
     console.log('Connecting to Firebase Emulators...');
     connectFirestoreEmulator(db, '127.0.0.1', 8080);
