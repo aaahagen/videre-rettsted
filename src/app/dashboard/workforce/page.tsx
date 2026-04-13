@@ -54,7 +54,7 @@ export default function WorkforcePage() {
         try {
             setIsLoading(true);
             const users = await firebaseDB.getUsers(dbUser!.orgId);
-            // Only show drivers
+            // Show drivers, contractors, and potentially other operational roles in the future
             setDrivers(users.filter(u => u.role === 'driver' || u.role === 'contractor') as DriverProfile[]);
         } catch (error) {
             console.error("Failed to load drivers", error);
@@ -66,7 +66,7 @@ export default function WorkforcePage() {
     const handleUpdateDriverProfile = async (data: Partial<DriverProfile>) => {
         if (!editingDriverProfile) return;
         try {
-            await updateDoc(doc(db, 'users', editingDriverProfile.id), data);
+            await firebaseDB.updateUser(editingDriverProfile.id, data);
             toast({
                 title: "Profil oppdatert",
                 description: "Profilen ble lagret.",
