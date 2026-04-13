@@ -23,7 +23,25 @@ export const getUsers = async (orgId: string): Promise<User[]> => {
 
 export const updateUser = async (uid: string, data: Partial<User>): Promise<void> => {
   const docRef = doc(db, 'users', uid);
-  await updateDoc(docRef, data);
+  
+  // Firestore does not allow undefined values in updateDoc. We must remove them or convert them to null/deleteField.
+  // We'll clean the data object before sending it to Firestore.
+  const cleanData = { ...data };
+  
+  // Recursively clean object to remove undefined values
+  const cleanObject = (obj: any) => {
+    Object.keys(obj).forEach(key => {
+      if (obj[key] === undefined) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]) && !(obj[key] instanceof Date) && !obj[key]._methodName) {
+        cleanObject(obj[key]);
+      }
+    });
+  };
+  
+  cleanObject(cleanData);
+
+  await updateDoc(docRef, cleanData);
 };
 
 export const deleteUser = async (uid: string): Promise<void> => {
