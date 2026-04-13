@@ -2,8 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase/firebase';
+import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
 import { DriverProfile } from '@/lib/types';
 import { format, differenceInWeeks, isValid, startOfWeek, addDays } from 'date-fns';
@@ -50,7 +49,7 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
 };
 
 function PrintContent() {
-    const [authUser, loading] = useAuthState(auth);
+    const { user: authUser, loading } = useAuth();
     const searchParams = useSearchParams();
     const router = useRouter();
     const [driver, setDriver] = useState<DriverProfile | null>(null);
@@ -68,8 +67,7 @@ function PrintContent() {
             }
             try {
                 const userDoc = await firebaseDB.getUser(driverId);
-                // Ensure it's the same org to prevent snooping
-                if (userDoc) { // Note: We should ideally fetch the current user to check orgId, but for print we can just fetch the driver if auth passes.
+                if (userDoc) { 
                     setDriver(userDoc as DriverProfile);
                 }
             } catch (error) {
@@ -85,8 +83,8 @@ function PrintContent() {
     }, [driverId, authUser, loading]);
 
     if (!loading && !authUser) {
-        router.push('/login');
-        return null;
+        // The global auth provider handles redirects, but just in case
+        return <div className="flex h-screen items-center justify-center">Omdirigerer til innlogging...</div>;
     }
 
     if (loading || isLoading) {
