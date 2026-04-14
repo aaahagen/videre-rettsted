@@ -3,7 +3,7 @@ import { doc, setDoc, addDoc, collection, getDoc, serverTimestamp } from 'fireba
 import { auth, db, functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 
-const deleteUser = httpsCallable(functions, 'deleteUser');
+const deleteUserCallable = httpsCallable(functions, 'deleteUser');
 
 export const firebaseAuth = {
   async registerOrganization(email: string, password: string, organizationName: string, name: string, orgNumber: string) {
@@ -121,6 +121,14 @@ export const firebaseAuth = {
         await firebaseUpdateProfile(auth.currentUser, profile);
     } catch (error: any) {
         throw new Error(error.message);
+    }
+  },
+
+  async deleteUser(uid: string) {
+    try {
+      await deleteUserCallable({ uid });
+    } catch (error: any) {
+      throw new Error(error.message);
     }
   }
 };
