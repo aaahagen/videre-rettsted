@@ -56,5 +56,5 @@ export default function AdminPage() {
       return null; // Will be redirected by useEffect
   }
 
-  return <AdminDashboardContent authUser={authUser!} />;
+  return <AdminDashboardContent />;
 }

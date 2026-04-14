@@ -1,14 +1,12 @@
-
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, sendPasswordResetEmail, updateProfile as firebaseUpdateProfile, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { doc, setDoc, addDoc, collection, getDoc, serverTimestamp } from 'firebase/firestore';
-import { Auth } from '../auth';
 import { auth, db, functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
 
 const deleteUser = httpsCallable(functions, 'deleteUser');
 
-export const firebaseAuth: Auth = {
-  async registerOrganization(email, password, organizationName, name, orgNumber) {
+export const firebaseAuth = {
+  async registerOrganization(email: string, password: string, organizationName: string, name: string, orgNumber: string) {
     // 1. Create user with email/password in Firebase Auth.
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
@@ -46,7 +44,7 @@ export const firebaseAuth: Auth = {
     return { uid, orgId };
   },
 
-  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor', name?: string) {
+  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor' | 'loader' | 'planner', name?: string) {
     const user = auth.currentUser;
     if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
 
@@ -82,39 +80,47 @@ export const firebaseAuth: Auth = {
     return `${window.location.origin}/invite?id=${invitationRef.id}`;
   },
 
-  async signIn(email, password, rememberMe = false) {
-    // Set persistence based on "rememberMe"
-    const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-    await setPersistence(auth, persistence);
-    
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return { uid: userCredential.user.uid };
+  async signIn(email: string, password: string, rememberMe = false) {
+    try {
+      const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+      await setPersistence(auth, persistence);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
   },
 
   async signOut() {
-    await firebaseSignOut(auth);
-  },
-
-  async sendPasswordResetEmail(email) {
-    await sendPasswordResetEmail(auth, email);
-  },
-
-  getCurrentUser() {
-    return auth.currentUser;
-  },
-
-  async updateProfile(profile) {
-    if (auth.currentUser) {
-      await firebaseUpdateProfile(auth.currentUser, profile);
-    }
-  },
-
-  async deleteUser(userId: string) {
     try {
-      await deleteUser({ userId });
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      throw error;
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+        throw new Error(error.message);
     }
   },
+
+  async resetPassword(email: string) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  },
+
+  async sendPasswordResetEmail(email: string) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  },
+
+  async updateProfile(profile: { displayName?: string | null; photoURL?: string | null }) {
+    if (!auth.currentUser) throw new Error('User not authenticated');
+    try {
+        await firebaseUpdateProfile(auth.currentUser, profile);
+    } catch (error: any) {
+        throw new Error(error.message);
+    }
+  }
 };
