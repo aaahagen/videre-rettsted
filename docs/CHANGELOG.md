@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Splash Screen:** Updated the splash screen to feature a bouncing logo and the slogan "Presisjon helt frem til døren".
+
 ### Added
 - **Testing Infrastructure:** Integrated Jest and React Testing Library for unit testing, and Playwright for end-to-end (E2E) testing.
 - **Firebase Local Emulator Integration:** Configured the application and Project IDX environment to automatically connect to the Firebase Local Emulator Suite during development and testing, ensuring safe, isolated test environments without affecting production data.
