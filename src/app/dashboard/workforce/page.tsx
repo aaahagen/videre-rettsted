@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck } from 'lucide-react';
+import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ import { useSearch } from '@/hooks/use-search';
 import { WorkforceTimeline } from "@/components/workforce/workforce-timeline";
 import { TimeApprovals } from "@/components/workforce/time-approvals";
 import { getDriverStatus } from "@/lib/workforce-utils";
+import { saveAs } from 'file-saver';
+import { logEvent } from '@/lib/db/logs';
 
 // --- Core Logic for computing a driver's status on a specific date ---
 
@@ -32,6 +34,7 @@ export default function WorkforcePage() {
     const { query: searchQuery, setContext } = useSearch();
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [searchDateStr, setSearchDateStr] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
     const [viewMode, setViewMode] = useState<'cards' | 'timeline' | 'approvals'>('cards');
     
@@ -80,6 +83,68 @@ export default function WorkforcePage() {
                 description: error.message,
                 variant: "destructive",
             });
+        }
+    };
+
+    const handleExportCSV = async () => {
+        if (!dbUser || dbUser.role !== 'admin') return;
+        
+        setIsExporting(true);
+        try {
+            // Log the export action for GDPR compliance
+            await logEvent(dbUser.orgId, dbUser.id, 'export_hr_data');
+
+            const headers = [
+                "Navn", "E-post", "Telefon", "Rolle", "Ansatt Type", "Status",
+                "Ansattnummer", "Stilling", "Avdeling", "Nærmeste Leder", "Ansatt Siden",
+                "Fødselsdato", "Personnummer", "Timelønn", "Bankkonto", "Skattekort",
+                "Adresse", "Nødkontakt", "Pårørende", "Kompetanse"
+            ];
+
+            const csvContent = [
+                headers.join(";"), // Header row
+                ...drivers.map(d => [
+                    `"${d.name || ''}"`,
+                    `"${d.email || ''}"`,
+                    `"${d.phone || ''}"`,
+                    `"${d.role === 'contractor' ? 'Innleid' : 'Fast'}"`,
+                    `"${d.employmentStatus === 'full-time' ? 'Heltid' : d.employmentStatus === 'part-time' ? 'Deltid' : d.employmentStatus === 'temporary' ? 'Midlertidig' : d.employmentStatus || ''}"`,
+                    `"${d.disabled ? 'Deaktivert' : (d.status === 'paused' ? 'Pauset' : 'Aktiv')}"`,
+                    `"${d.employeeId || ''}"`,
+                    `"${d.jobTitle || ''}"`,
+                    `"${d.department || ''}"`,
+                    `"${d.supervisor || ''}"`,
+                    `"${d.seniorityDate ? format(new Date(d.seniorityDate), 'dd.MM.yyyy') : ''}"`,
+                    `"${d.dateOfBirth ? format(new Date(d.dateOfBirth), 'dd.MM.yyyy') : ''}"`,
+                    `"${d.socialSecurityNumber || ''}"`,
+                    `"${d.hourlyRate || ''}"`,
+                    `"${d.bankAccountNumber || ''}"`,
+                    `"${d.taxCode || ''}"`,
+                    `"${d.address || ''}"`,
+                    `"${d.emergencyContact || ''}"`,
+                    `"${d.nextOfKin || ''}"`,
+                    `"${[...(d.certifications || []), ...(d.skills || [])].join(', ')}"`
+                ].join(";"))
+            ].join("\n");
+
+            // BOM to support UTF-8 in Excel
+            const BOM = "\uFEFF";
+            const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
+            saveAs(blob, `personell-eksport-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+
+            toast({
+                title: "Eksport fullført",
+                description: "Personell-listen er lastet ned som CSV-fil. Handlingen er loggført.",
+            });
+        } catch (error: any) {
+            console.error("Export error:", error);
+            toast({
+                title: "Eksport feilet",
+                description: "Kunne ikke generere eksportfil.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -170,15 +235,27 @@ const stats = useMemo(() => {
                             Tidslinje
                         </Button>
                         {dbUser?.role === 'admin' && (
-                        <Button 
-                            variant={viewMode === "approvals" ? "default" : "ghost"} 
-                            size="sm" 
-                            onClick={() => setViewMode('approvals')}
-                            className={cn("h-8 px-3 text-xs font-medium", viewMode === 'approvals' && "shadow-sm")}
-                        >
-                            <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />
-                            Godkjenninger
-                        </Button>
+                            <>
+                                <Button 
+                                    variant={viewMode === "approvals" ? "default" : "ghost"} 
+                                    size="sm" 
+                                    onClick={() => setViewMode('approvals')}
+                                    className={cn("h-8 px-3 text-xs font-medium", viewMode === 'approvals' && "shadow-sm")}
+                                >
+                                    <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />
+                                    Godkjenninger
+                                </Button>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleExportCSV}
+                                    disabled={isExporting || drivers.length === 0}
+                                    className="h-8 px-3 text-xs font-medium ml-2 bg-white"
+                                >
+                                    {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
+                                    Eksport (CSV)
+                                </Button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -627,6 +704,15 @@ const stats = useMemo(() => {
                                                                                 </div>
                                                                             </div>
                                                                         ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {driver.employmentType === 'external' && driver.agencyInfo && (
+                                                                <div className="flex flex-col gap-1 bg-amber-50 text-amber-800 p-2 rounded border border-amber-200 text-xs">
+                                                                    <span className="font-bold text-[10px] uppercase tracking-wider text-amber-600/80">Byrå Info</span>
+                                                                    <div className="flex justify-between font-medium">
+                                                                        <span>{driver.agencyInfo.name}</span>
+                                                                        {driver.agencyInfo.phone && <span>{driver.agencyInfo.phone}</span>}
                                                                     </div>
                                                                 </div>
                                                             )}

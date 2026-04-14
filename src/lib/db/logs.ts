@@ -2,7 +2,7 @@ import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'fire
 import { db } from '../firebase/firebase';
 import { LogEntry } from '../types';
 
-export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog', details?: any) => {
+export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data', details?: any) => {
     try {
         await addDoc(collection(db, 'audit_logs'), {
             orgId,
