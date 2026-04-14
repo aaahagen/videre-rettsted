@@ -17,7 +17,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +37,8 @@ export default function FleetPage() {
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const { toast } = useToast();
     const [stats, setStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
+    const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
     
     useEffect(() => {
         const newStats = { ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 };
@@ -114,18 +119,26 @@ export default function FleetPage() {
     };
 
     const handleDeleteClick = async (e: React.MouseEvent, vehicle: Vehicle) => {
-        e.stopPropagation(); 
         e.preventDefault();
-        
-        if (!confirm(`Er du sikker på at du vil slette ${vehicle.name}? Dette kan ikke angres.`)) return;
-        
+        e.stopPropagation();
+        setVehicleToDelete(vehicle);
+    };
+
+    const confirmDelete = async () => {
+        if (!vehicleToDelete || deleteConfirmationText !== "slett kjøretøy") return;
         try {
-            await firebaseDB.deleteVehicle(vehicle.id);
+            await firebaseDB.deleteVehicle(vehicleToDelete.id);
             toast({ title: "Slettet", description: "Kjøretøyet ble fjernet." });
+            setVehicleToDelete(null);
+            setDeleteConfirmationText("");
             await loadVehicles();
-        } catch (error) {
-            console.error("Failed to delete vehicle", error);
-            toast({ title: "Feil", description: "Kunne ikke slette kjøretøyet.", variant: "destructive" });
+        } catch (error: any) {
+            console.error("Failed to delete vehicle:", error);
+            toast({ 
+                title: "Feil", 
+                description: `Kunne ikke slette kjøretøyet: ${error.message || 'Ukjent feil'}`, 
+                variant: "destructive" 
+            });
         }
     };
 
@@ -224,7 +237,7 @@ export default function FleetPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredVehicles.map(v => (
-                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden bg-white border-slate-200">
+                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden bg-white border-slate-200 group">
                                 {v.images && v.images.length > 0 && (
                                     <div className="w-full h-48 relative bg-slate-100 border-b border-slate-100">
                                         <img 
@@ -234,8 +247,8 @@ export default function FleetPage() {
                                         />
                                     </div>
                                 )}
-                                <CardHeader className="pb-3 flex flex-row items-start justify-between relative z-10">
-                                    <div className="flex-1 min-w-0 pr-12">
+                                <CardHeader className="pb-3 flex flex-row items-start justify-between relative">
+                                    <div className="flex-1 min-w-0 pr-20">
                                         <CardTitle className="text-xl font-bold truncate">{v.name}</CardTitle>
                                         <div className="flex gap-2 mt-2 flex-wrap">
                                             <Badge variant="outline">{v.registrationNumber}</Badge>
@@ -259,24 +272,27 @@ export default function FleetPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="absolute top-4 right-4 flex flex-col gap-1 items-end z-20">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 bg-white shadow-sm" onClick={() => handleOpenForm(v)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <div 
-                                            role="button"
-                                            tabIndex={0}
-                                            className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer bg-white shadow-sm" 
-                                            onClick={(e) => handleDeleteClick(e, v)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    handleDeleteClick(e as any, v);
-                                                }
-                                            }}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
+                                    
+                                    {dbUser?.role === 'admin' && (
+                                        <div className="absolute top-4 right-4 flex items-center gap-1 z-30">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-slate-400 hover:text-slate-900 bg-white/90 backdrop-blur shadow-sm border border-slate-100" 
+                                                onClick={(e) => { e.stopPropagation(); handleOpenForm(v); }}
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 bg-white/90 backdrop-blur shadow-sm border border-slate-100" 
+                                                onClick={(e) => handleDeleteClick(e, v)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                    </div>
+                                    )}
                                 </CardHeader>
                                 <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
                                     <div>
@@ -369,6 +385,35 @@ export default function FleetPage() {
                               onCancel={handleCloseForm} 
                           />
                         </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={!!vehicleToDelete} onOpenChange={(open) => {
+                    if (!open) {
+                        setVehicleToDelete(null);
+                        setDeleteConfirmationText("");
+                    }
+                }}>
+                    <DialogContent className="max-w-md" aria-describedby={undefined}>
+                        <DialogHeader>
+                            <DialogTitle>Bekreft sletting</DialogTitle>
+                            <DialogDescription>
+                                Er du sikker på at du vil slette <strong>{vehicleToDelete?.name}</strong>? Dette kan ikke angres.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <Label htmlFor="confirm-delete">Skriv "slett kjøretøy" for å bekrefte</Label>
+                            <Input 
+                                id="confirm-delete"
+                                value={deleteConfirmationText}
+                                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                                placeholder="slett kjøretøy"
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => { setVehicleToDelete(null); setDeleteConfirmationText(""); }}>Avbryt</Button>
+                            <Button variant="destructive" onClick={confirmDelete} disabled={deleteConfirmationText !== "slett kjøretøy"}>Slett Kjøretøy</Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

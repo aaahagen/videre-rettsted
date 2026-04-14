@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Geofence Constraints for Stamping:** Drivers are now prevented from starting their shift ("Start vakt") if their current GPS location is outside the permitted radius of their assigned base location or the organization's main depot.
 - **Dashboard Telemetry Links:** Added quick navigation links to the headers of the main dashboard telemetry cards (Workforce, Fleet, Orders), allowing administrators to quickly jump to the relevant management page.
 - **Splash Screen:** Updated the splash screen to feature a bouncing logo and the slogan "Presisjon helt frem til døren".
 - **Database Architecture Refactoring:** Addressed technical debt by dismantling the "God Object" in `src/lib/firebase/database.ts`. Extracted domain-specific database operations into separate repository files within `src/lib/db/` (e.g., `users.ts`, `places.ts`, `orders.ts`, `routes.ts`, `vehicles.ts`). The main `database.ts` file now serves cleanly as an aggregator.

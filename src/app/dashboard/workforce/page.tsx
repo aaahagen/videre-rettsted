@@ -223,7 +223,7 @@ const stats = useMemo(() => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
                         <Button 
                             variant={viewMode === "cards" ? "default" : "ghost"} 
                             size="sm" 
