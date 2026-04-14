@@ -50,12 +50,12 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
 
   if (loading) {
     return (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm animate-pulse flex flex-col h-full">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm animate-pulse flex flex-col">
             <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
             <div className="h-32 bg-slate-200 rounded w-full mb-4"></div>
             <div className="h-3 bg-slate-200 rounded w-3/4 mb-2"></div>
             <div className="h-3 bg-slate-200 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-slate-200 rounded w-full mt-auto"></div>
+            <div className="h-8 bg-slate-200 rounded w-full mt-2"></div>
         </div>
     );
   }
@@ -67,8 +67,8 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
   const mainImage = newestPlace.images?.find(img => img.isMain)?.url || newestPlace.images?.[0]?.url;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col h-full">
-        <div className="flex justify-between items-center mb-4 shrink-0">
+    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col h-fit">
+        <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Star className="h-5 w-5 text-amber-500" />
                 Nyeste Sted
@@ -95,7 +95,7 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
             <p className="text-sm text-slate-500 truncate">{newestPlace.address}</p>
         </div>
 
-        <div className="mt-auto pt-2 shrink-0">
+        <div className="mt-auto pt-2">
             <Button asChild size="sm" className="w-full">
                 <Link href={`/dashboard/places/${newestPlace.id}`}>
                     Se Detaljer <ArrowRight className="h-4 w-4 ml-2" />
