@@ -3,8 +3,11 @@ import { db } from '../firebase/firebase';
 import { Vehicle } from '../types';
 
 export const createVehicle = async (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> => {
+  // Recursively remove undefined values from the object before saving to Firestore
+  const cleanData = JSON.parse(JSON.stringify(vehicle));
+
   const docRef = await addDoc(collection(db, 'vehicles'), {
-    ...vehicle,
+    ...cleanData,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -46,11 +49,16 @@ export const getVehicles = async (orgId: string): Promise<Vehicle[]> => {
 
 export const updateVehicle = async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
   if (!id) throw new Error("Vehicle ID is required for update."); // Added check
+  
+  // Recursively remove undefined values to prevent Firestore errors
+  const cleanUpdates = JSON.parse(JSON.stringify(updates));
+
   const docRef = doc(db, 'vehicles', id);
   await updateDoc(docRef, {
-    ...updates,
+    ...cleanUpdates,
     updatedAt: serverTimestamp(),
   });
+  
   const updated = await getDoc(docRef);
   const data = updated.data()!;
   return {
