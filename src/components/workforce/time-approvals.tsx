@@ -153,7 +153,7 @@ export function TimeApprovals({ orgId, drivers }: TimeApprovalsProps) {
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {log.punchInLocation && (
                                         <a 
-                                            href={`https://www.google.com/maps?q=${log.punchInLocation.lat},${log.punchInLocation.lng}`}
+                                            href={`https://www.google.com/maps/search/?api=1&query=${log.punchInLocation.lat},${log.punchInLocation.lng}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline bg-blue-50 px-2 py-0.5 rounded"
@@ -165,7 +165,7 @@ export function TimeApprovals({ orgId, drivers }: TimeApprovalsProps) {
                                     )}
                                     {log.punchOutLocation && (
                                         <a 
-                                            href={`https://www.google.com/maps?q=${log.punchOutLocation.lat},${log.punchOutLocation.lng}`}
+                                            href={`https://www.google.com/maps/search/?api=1&query=${log.punchOutLocation.lat},${log.punchOutLocation.lng}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline bg-blue-50 px-2 py-0.5 rounded"
