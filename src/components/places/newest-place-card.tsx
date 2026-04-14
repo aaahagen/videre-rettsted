@@ -68,7 +68,7 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col h-full">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 shrink-0">
             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Star className="h-5 w-5 text-amber-500" />
                 Nyeste Sted
@@ -76,7 +76,7 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
         </div>
 
         {mainImage ? (
-             <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden border border-slate-100 bg-slate-50">
+             <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 shrink-0">
                  <Image 
                      src={mainImage} 
                      alt={`Bilde av ${newestPlace.name}`}
@@ -85,21 +85,23 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
                  />
              </div>
         ) : (
-            <div className="w-full h-32 mb-4 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-center">
+            <div className="w-full h-32 mb-4 rounded-lg border border-slate-100 bg-slate-50 flex items-center justify-center shrink-0">
                  <ImageIcon className="h-8 w-8 text-slate-300" />
             </div>
         )}
 
-        <div className="flex-1 mb-4 flex flex-col justify-end">
+        <div className="mb-4">
             <p className="font-bold text-slate-800 truncate">{newestPlace.name}</p>
             <p className="text-sm text-slate-500 truncate">{newestPlace.address}</p>
         </div>
 
-        <Button asChild size="sm" className="w-full mt-auto">
-            <Link href={`/dashboard/places/${newestPlace.id}`}>
-                Se Detaljer <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-        </Button>
+        <div className="mt-auto pt-2 shrink-0">
+            <Button asChild size="sm" className="w-full">
+                <Link href={`/dashboard/places/${newestPlace.id}`}>
+                    Se Detaljer <ArrowRight className="h-4 w-4 ml-2" />
+                </Link>
+            </Button>
+        </div>
     </div>
   );
 };
