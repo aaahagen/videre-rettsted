@@ -217,12 +217,12 @@ export default function DashboardPage() {
   const isAdmin = userData.role === 'admin';
 
   return (
-    <div className="space-y-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="space-y-8 p-4 sm:p-6 lg:p-8 w-full">
       
       {isAdmin ? (
         
         /* ADMIN VIEW - Bento Box Layout */
-        <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-6 w-full">
             
             {/* MAIN CANVAS (Left - 66%) */}
             <div className="w-full lg:w-2/3 space-y-6">
@@ -369,7 +369,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         /* DRIVER VIEW */
-        <div className="space-y-8 max-w-5xl mx-auto">
+        <div className="space-y-8 w-full">
             <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <UserIcon className="h-6 w-6 text-primary" />
