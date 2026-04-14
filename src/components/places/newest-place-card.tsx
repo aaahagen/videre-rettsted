@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/firebase';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { Place } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,10 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
         return;
     };
 
+    // Corrected path to root 'places' collection and added where filter for orgId
     const q = query(
-        collection(db, 'organizations', orgId, 'places'), 
+        collection(db, 'places'), 
+        where('orgId', '==', orgId),
         orderBy('createdAt', 'desc'), 
         limit(1)
     );
