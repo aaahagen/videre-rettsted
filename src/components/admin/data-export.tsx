@@ -8,7 +8,6 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Place } from '@/lib/types';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DataExportProps {
   orgId: string;
@@ -133,52 +132,40 @@ export function DataExport({ orgId }: DataExportProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="px-4 sm:px-6">
-        <CardTitle className="font-headline text-xl sm:text-2xl">
-          Dataeksport & Backup
-        </CardTitle>
-        <CardDescription>
-          Last ned all data for din organisasjon. JSON-filen inneholder referanser til mappene i ZIP-filen.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-4 sm:px-6 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            variant="outline" 
-            className="w-full sm:w-auto h-auto py-4 flex flex-col gap-2 items-center justify-center"
-            onClick={handleExportJson}
-            disabled={isExportingJson || isExportingImages}
-          >
-            {isExportingJson ? (
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            ) : (
-                <FileJson className="h-6 w-6 text-primary" />
-            )}
-            <div className="text-center">
-                <span className="block font-semibold">Last ned JSON</span>
-                <span className="text-xs text-muted-foreground">Stedsdata med referanser</span>
-            </div>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            className="w-full sm:w-auto h-auto py-4 flex flex-col gap-2 items-center justify-center"
-            onClick={handleExportImages}
-            disabled={isExportingJson || isExportingImages}
-          >
-            {isExportingImages ? (
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            ) : (
-                <ImageIcon className="h-6 w-6 text-primary" />
-            )}
-            <div className="text-center">
-                <span className="block font-semibold">Backup av Bilder (ZIP)</span>
-                <span className="text-xs text-muted-foreground">Alle bilder sortert i mapper</span>
-            </div>
-          </Button>
+    <div className="flex flex-col sm:flex-row gap-4">
+      <Button 
+        variant="outline" 
+        className="w-full sm:w-auto h-auto py-4 flex flex-col gap-2 items-center justify-center bg-white hover:bg-slate-50"
+        onClick={handleExportJson}
+        disabled={isExportingJson || isExportingImages}
+      >
+        {isExportingJson ? (
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        ) : (
+            <FileJson className="h-6 w-6 text-primary" />
+        )}
+        <div className="text-center">
+            <span className="block font-semibold">Last ned JSON</span>
+            <span className="text-xs text-muted-foreground">Stedsdata med referanser</span>
         </div>
-      </CardContent>
-    </Card>
+      </Button>
+
+      <Button 
+        variant="outline" 
+        className="w-full sm:w-auto h-auto py-4 flex flex-col gap-2 items-center justify-center bg-white hover:bg-slate-50"
+        onClick={handleExportImages}
+        disabled={isExportingJson || isExportingImages}
+      >
+        {isExportingImages ? (
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        ) : (
+            <ImageIcon className="h-6 w-6 text-primary" />
+        )}
+        <div className="text-center">
+            <span className="block font-semibold">Backup Bilder (ZIP)</span>
+            <span className="text-xs text-muted-foreground">Alle bilder i mapper</span>
+        </div>
+      </Button>
+    </div>
   );
 }

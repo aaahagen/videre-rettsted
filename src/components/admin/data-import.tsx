@@ -6,9 +6,7 @@ import { Upload, Loader2, AlertTriangle, FileJson, FileArchive } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import { firebaseDB } from '@/lib/firebase/database';
 import { firebaseStorage } from '@/lib/firebase/storage';
-import { Place } from '@/lib/types';
 import JSZip from 'jszip';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -133,8 +131,6 @@ export function DataImport({ orgId }: DataImportProps) {
                 }
              }
           } else if (!zipFile && p.images && p.images.length > 0) {
-             // If no ZIP is provided, but they have image URLs, we might want to warn them or just keep the old URLs 
-             // (Keeping old URLs is dangerous if the old org deletes them, but it's an option. Here we ignore them for safety)
              console.warn(`Skipping images for ${p.name} because no ZIP was provided.`);
           }
 
@@ -150,7 +146,7 @@ export function DataImport({ orgId }: DataImportProps) {
 
       toast({
         title: "Import fullført",
-        description: `Vellykket: ${successCount}. Feilet: ${failCount}.`,
+        description: `Opprettet ${successCount} nye steder. Feilet: ${failCount}.`,
         variant: failCount > 0 ? "destructive" : "default"
       });
       
@@ -174,26 +170,21 @@ export function DataImport({ orgId }: DataImportProps) {
   };
 
   return (
-    <Card className="mt-8 border-dashed border-2">
-      <CardHeader className="px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-           <AlertTriangle className="h-5 w-5 text-amber-500" />
-           <CardTitle className="font-headline text-xl sm:text-2xl">
-            Dataimport
-           </CardTitle>
-        </div>
-        <CardDescription>
-          Last opp JSON og ZIP fra en tidligere eksport. Dette vil opprette <strong>nye</strong> steder i denne organisasjonen. Eksisterende data overskrives ikke.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-4 sm:px-6 space-y-6">
-         
-         <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2 p-4 bg-slate-50 border rounded-lg">
-                <Label htmlFor="json-upload" className="font-semibold flex items-center gap-2">
-                    <FileJson className="h-4 w-4" /> 1. Last opp JSON (Påkrevd)
+    <div className="space-y-6">
+         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-3 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>
+                <strong>Viktig informasjon om import:</strong> Når du importerer data, vil systemet opprette <strong>nye steder</strong> basert på innholdet i JSON-filen. 
+                Dersom du har eksisterende steder i systemet, vil disse <strong>ikke</strong> bli slettet eller overskrevet. For å unngå duplikater, bør du kun importere steder som ikke allerede finnes i systemet.
+            </p>
+         </div>
+
+         <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                <Label htmlFor="json-upload" className="font-semibold flex items-center gap-2 text-sm">
+                    <FileJson className="h-4 w-4 text-blue-600" /> 1. Last opp JSON
                 </Label>
-                <p className="text-xs text-muted-foreground mb-2">Inneholder tekst, adresser og koordinater.</p>
+                <p className="text-[10px] text-muted-foreground mb-1">Inneholder tekst og koordinater (Påkrevd).</p>
                 <Input 
                     id="json-upload" 
                     type="file" 
@@ -201,14 +192,15 @@ export function DataImport({ orgId }: DataImportProps) {
                     onChange={handleJsonChange}
                     ref={jsonInputRef}
                     disabled={isImporting}
+                    className="text-xs"
                 />
             </div>
 
-            <div className="space-y-2 p-4 bg-slate-50 border rounded-lg">
-                <Label htmlFor="zip-upload" className="font-semibold flex items-center gap-2">
-                    <FileArchive className="h-4 w-4" /> 2. Last opp Bilder ZIP (Valgfritt)
+            <div className="space-y-2 p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                <Label htmlFor="zip-upload" className="font-semibold flex items-center gap-2 text-sm">
+                    <FileArchive className="h-4 w-4 text-amber-600" /> 2. Bilder ZIP
                 </Label>
-                <p className="text-xs text-muted-foreground mb-2">Hvis du også vil gjenopprette bildene.</p>
+                <p className="text-[10px] text-muted-foreground mb-1">Inkluder hvis du vil gjenopprette bilder.</p>
                 <Input 
                     id="zip-upload" 
                     type="file" 
@@ -216,42 +208,48 @@ export function DataImport({ orgId }: DataImportProps) {
                     onChange={handleZipChange}
                     ref={zipInputRef}
                     disabled={isImporting}
+                    className="text-xs"
                 />
             </div>
          </div>
 
          {progress && (
-            <div className="p-4 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-200">
-               <div className="flex items-center gap-2 mb-1">
-                 <Loader2 className="h-4 w-4 animate-spin" />
-                 <span className="font-medium">{progress.stage}</span>
+            <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-xs border border-blue-200">
+               <div className="flex items-center justify-between mb-1">
+                 <div className="flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="font-medium">{progress.stage}</span>
+                 </div>
+                 {progress.total > 0 && (
+                     <span className="font-bold">{progress.current} / {progress.total}</span>
+                 )}
                </div>
                {progress.total > 0 && (
-                   <div className="w-full bg-blue-200 rounded-full h-2.5 mt-2">
-                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
+                   <div className="w-full bg-blue-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                      <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
                    </div>
                )}
             </div>
          )}
 
-        <Button 
-            className="w-full sm:w-auto"
-            onClick={handleImport}
-            disabled={isImporting || !jsonFile}
-        >
-            {isImporting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Importerer...
-                </>
-            ) : (
-                <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Start Import
-                </>
-            )}
-        </Button>
-      </CardContent>
-    </Card>
+        <div className="flex justify-end">
+            <Button 
+                onClick={handleImport}
+                disabled={isImporting || !jsonFile}
+            >
+                {isImporting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Importerer...
+                    </>
+                ) : (
+                    <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Start Import
+                    </>
+                )}
+            </Button>
+        </div>
+    </div>
   );
 }
