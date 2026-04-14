@@ -113,7 +113,10 @@ export default function FleetPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card clicks if we ever add them
+        e.preventDefault();
+        
         if (!confirm("Er du sikker på at du vil slette dette kjøretøyet?")) return;
         
         try {
@@ -260,8 +263,8 @@ export default function FleetPage() {
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" onClick={() => handleOpenForm(v)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(v.id)}>
-                                            <Trash2 className="h-4 w-4" />
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer pointer-events-auto" onClick={(e) => handleDelete(v.id, e)}>
+                                            <Trash2 className="h-4 w-4 pointer-events-none" />
                                         </Button>
                                     </div>
                                 </CardHeader>
