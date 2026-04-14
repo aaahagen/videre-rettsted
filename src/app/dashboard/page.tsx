@@ -17,9 +17,9 @@ import Link from 'next/link';
 
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
-import { DriverProfile, Route as RouteType, Place, Order } from '@/lib/types';
+import { DriverProfile, Route as RouteType, Place, Order, Manifest } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
-import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3 } from 'lucide-react';
+import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight } from 'lucide-react';
 
 
 
@@ -32,8 +32,10 @@ export default function DashboardPage() {
   const [monitorStats, setMonitorStats] = useState({ total: 0, active: 0, finished: 0, totalPlaces: 0, completedPlaces: 0 });
   const [fleetStats, setFleetStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
   const [orderStats, setOrderStats] = useState({ total: 0, pending: 0, loaded: 0, delivered: 0, failed: 0 });
+  const [manifestStats, setManifestStats] = useState({ totalManifests: 0, activeManifests: 0, totalKolli: 0, loadedKolli: 0 });
 
   const [activeRoute, setActiveRoute] = useState<Route | null>(null);
+  const [activeManifest, setActiveManifest] = useState<Manifest | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(true);
   const { setContext } = useSearch();
   const router = useRouter();
@@ -83,6 +85,23 @@ export default function DashboardPage() {
       fetchActiveRoute();
     }
   }, [userData?.id]);
+
+  useEffect(() => {
+    if (!userData?.orgId || !activeRoute?.id) return;
+    const q = query(
+      collection(db, 'organizations', userData.orgId, 'manifests'),
+      where('routeId', '==', activeRoute.id),
+      limit(1)
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        setActiveManifest({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Manifest);
+      } else {
+        setActiveManifest(null);
+      }
+    });
+    return () => unsub();
+  }, [userData?.orgId, activeRoute?.id]);
 
   
   useEffect(() => {
@@ -175,10 +194,31 @@ export default function DashboardPage() {
           setOrderStats({ total, pending, loaded, delivered, failed });
       });
 
+      const unsubManifests = onSnapshot(collection(db, 'organizations', userData.orgId, 'manifests'), (snapshot) => {
+        let totalManifests = 0;
+        let activeManifests = 0;
+        let totalKolli = 0;
+        let loadedKolli = 0;
+
+        snapshot.forEach((docSnap) => {
+          totalManifests++;
+          const manifest = docSnap.data() as Manifest;
+          if (manifest.status === 'loading' || manifest.status === 'pending') activeManifests++;
+
+          manifest.orders.forEach(item => {
+            totalKolli += item.totalItems || 0;
+            loadedKolli += item.loadedItems || 0;
+          });
+        });
+
+        setManifestStats({ totalManifests, activeManifests, totalKolli, loadedKolli });
+      });
+
       return () => {
         unsubRoutes();
         unsubVehicles();
         unsubOrders();
+        unsubManifests();
       };
     }
   }, [userData?.orgId, userData?.role === 'admin']);
@@ -208,6 +248,17 @@ export default function DashboardPage() {
   }, [drivers]);
   
   const overallProgress = monitorStats.totalPlaces > 0 ? (monitorStats.completedPlaces / monitorStats.totalPlaces) * 100 : 0;
+  const manifestProgress = manifestStats.totalKolli > 0 ? (manifestStats.loadedKolli / manifestStats.totalKolli) * 100 : 0;
+
+  let driverLoadedKolli = 0;
+  let driverTotalKolli = 0;
+  if (activeManifest) {
+      activeManifest.orders.forEach(item => {
+          driverTotalKolli += item.totalItems || 0;
+          driverLoadedKolli += item.loadedItems || 0;
+      });
+  }
+  const driverManifestProgress = driverTotalKolli > 0 ? (driverLoadedKolli / driverTotalKolli) * 100 : 0;
 
   if (loadingAuth || (loadingRoute && !userData)) {
     return <SplashScreen />;
@@ -270,28 +321,81 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* ORDER STATS */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100">
-                        <Package className="h-5 w-5 text-indigo-600" />
-                        <h3 className="text-lg font-bold text-slate-900">Ordrestatistikk</h3>
+                {/* LOGISTICS ROW (Lasterampe & Ordre side-by-side) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* LASTERAMPE (Manifests) */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                    <Truck className="h-5 w-5 text-indigo-600" />
+                                    Lasterampe
+                                </h3>
+                                <Link href="/dashboard/manifests" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group">
+                                    Gå til <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                            </div>
+
+                            <div className="flex justify-between items-end mb-2">
+                                <div className="space-y-1">
+                                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Lastefremdrift</span>
+                                    <div className="text-3xl font-black text-slate-800">{Math.round(manifestProgress)}%</div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-sm font-mono font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                                        {manifestStats.loadedKolli} / {manifestStats.totalKolli} KOLli
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner mb-6">
+                                <div 
+                                    className="h-full bg-indigo-500 transition-all duration-1000 ease-out" 
+                                    style={{ width: `${manifestProgress}%` }} 
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 flex flex-col">
+                                <span className="text-[10px] uppercase font-bold text-slate-500">Aktive planer</span>
+                                <span className="text-lg font-black text-slate-800">{manifestStats.activeManifests}</span>
+                            </div>
+                            <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 flex flex-col">
+                                <span className="text-[10px] uppercase font-bold text-slate-500">Totale planer</span>
+                                <span className="text-lg font-black text-slate-800">{manifestStats.totalManifests}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="flex flex-col items-start p-4 bg-slate-50 rounded-lg border border-slate-100">
-                            <span className="text-sm text-muted-foreground font-medium uppercase tracking-tighter flex items-center gap-1"><Package className="h-3 w-3"/> Totalt</span>
-                            <span className="text-2xl font-black text-slate-900">{orderStats.total}</span>
+
+                    {/* ORDER STATS */}
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Package className="h-5 w-5 text-indigo-600" />
+                                Ordrestatistikk
+                            </h3>
+                            <Link href="/dashboard/orders" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group">
+                                Se ordre <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                            </Link>
                         </div>
-                        <div className="flex flex-col items-start p-4 bg-amber-50 rounded-lg border border-amber-100">
-                            <span className="text-sm text-amber-600/80 font-medium uppercase tracking-tighter flex items-center gap-1"><Clock className="h-3 w-3"/> Venter</span>
-                            <span className="text-2xl font-black text-amber-600">{orderStats.pending}</span>
-                        </div>
-                        <div className="flex flex-col items-start p-4 bg-blue-50 rounded-lg border border-blue-100">
-                            <span className="text-sm text-blue-600/80 font-medium uppercase tracking-tighter flex items-center gap-1"><BarChart3 className="h-3 w-3"/> Lastet</span>
-                            <span className="text-2xl font-black text-blue-600">{orderStats.loaded}</span>
-                        </div>
-                        <div className="flex flex-col items-start p-4 bg-green-50 rounded-lg border border-green-100">
-                            <span className="text-sm text-green-700/80 font-medium uppercase tracking-tighter flex items-center gap-1"><CheckCircle2 className="h-3 w-3"/> Levert</span>
-                            <span className="text-2xl font-black text-green-600">{orderStats.delivered}</span>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col items-start p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter flex items-center gap-1"> Totalt</span>
+                                <span className="text-xl font-black text-slate-900">{orderStats.total}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                <span className="text-[10px] text-amber-600/80 font-bold uppercase tracking-tighter flex items-center gap-1"><Clock className="h-3 w-3"/> Venter</span>
+                                <span className="text-xl font-black text-amber-600">{orderStats.pending}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <span className="text-[10px] text-blue-600/80 font-bold uppercase tracking-tighter flex items-center gap-1"><BarChart3 className="h-3 w-3"/> Lastet</span>
+                                <span className="text-xl font-black text-blue-600">{orderStats.loaded}</span>
+                            </div>
+                            <div className="flex flex-col items-start p-3 bg-green-50 rounded-lg border border-green-100">
+                                <span className="text-[10px] text-green-700/80 font-bold uppercase tracking-tighter flex items-center gap-1"><CheckCircle2 className="h-3 w-3"/> Levert</span>
+                                <span className="text-xl font-black text-green-600">{orderStats.delivered}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -301,9 +405,14 @@ export default function DashboardPage() {
                     
                     {/* WORKFORCE LIST */}
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col">
-                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100 shrink-0">
-                            <UserIcon className="h-5 w-5 text-blue-600" />
-                            <h3 className="text-lg font-bold text-slate-900">Personell</h3>
+                        <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 shrink-0">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <UserIcon className="h-5 w-5 text-blue-600" />
+                                Personell
+                            </h3>
+                            <Link href="/dashboard/workforce" className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 group">
+                                Se plan <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                            </Link>
                         </div>
                         <div className="space-y-3 flex-1 flex flex-col justify-around">
                             <div className="flex items-center justify-between">
@@ -331,9 +440,14 @@ export default function DashboardPage() {
 
                     {/* FLEET LIST */}
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col">
-                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100 shrink-0">
-                            <Truck className="h-5 w-5 text-slate-700" />
-                            <h3 className="text-lg font-bold text-slate-900">Kjøretøypark</h3>
+                        <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3 shrink-0">
+                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-slate-700" />
+                                Kjøretøypark
+                            </h3>
+                            <Link href="/dashboard/fleet" className="text-xs font-semibold text-slate-600 hover:text-slate-800 flex items-center gap-1 group">
+                                Se flåte <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                            </Link>
                         </div>
                         <div className="space-y-3 flex-1 flex flex-col justify-around">
                             <div className="flex items-center justify-between">
@@ -404,6 +518,28 @@ export default function DashboardPage() {
                                     <p className="text-lg font-bold text-slate-900">{activeRoute.name}</p>
                                     <p className="text-xs text-slate-500">{activeRoute.places.length} stopp i dag</p>
                                 </div>
+
+                                {activeManifest && (
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lastefremdrift</span>
+                                            <span className="text-xs font-bold text-slate-700 font-mono">{driverLoadedKolli} / {driverTotalKolli}</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-2">
+                                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${driverManifestProgress}%` }} />
+                                        </div>
+                                        <div>
+                                            {activeManifest.status === 'verified' ? (
+                                                <span className="text-[10px] text-green-700 bg-green-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><CheckCircle2 className="h-3 w-3"/> Verifisert & Klar</span>
+                                            ) : activeManifest.status === 'loading' ? (
+                                                <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Loader2 className="h-3 w-3 animate-spin"/> Laster...</span>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-600 bg-slate-200 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Clock className="h-3 w-3"/> Venter på lasting</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <Button asChild className="w-full">
                                     <Link href={`/dashboard/routes/${activeRoute.id}`}>
                                         Åpne Rute
