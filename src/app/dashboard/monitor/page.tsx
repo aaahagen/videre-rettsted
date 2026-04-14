@@ -1,3 +1,4 @@
+import { SplashScreen } from "@/components/ui/splash-screen";
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -120,7 +121,7 @@ export default function MonitorPage() {
 
 
   if (loading || isDataLoading || !userData) {
-    return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return <SplashScreen />;
   }
 
   const totalRoutes = filteredRoutes.length;
