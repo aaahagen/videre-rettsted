@@ -114,7 +114,7 @@ export default function FleetPage() {
     };
 
     const handleDelete = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent card clicks if we ever add them
+        e.stopPropagation(); 
         e.preventDefault();
         
         if (!confirm("Er du sikker på at du vil slette dette kjøretøyet?")) return;
@@ -234,10 +234,10 @@ export default function FleetPage() {
                                         />
                                     </div>
                                 )}
-                                <CardHeader className="pb-3 flex flex-row items-start justify-between">
-                                    <div>
-                                        <CardTitle className="text-xl font-bold">{v.name}</CardTitle>
-                                        <div className="flex gap-2 mt-2">
+                                <CardHeader className="pb-3 flex flex-row items-start justify-between relative z-10">
+                                    <div className="flex-1 min-w-0 pr-12">
+                                        <CardTitle className="text-xl font-bold truncate">{v.name}</CardTitle>
+                                        <div className="flex gap-2 mt-2 flex-wrap">
                                             <Badge variant="outline">{v.registrationNumber}</Badge>
                                             {v.currentStatuses && v.currentStatuses.length > 0 ? (
                                                 v.currentStatuses.map(s => {
@@ -259,11 +259,11 @@ export default function FleetPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-1 items-end -mt-2 -mr-2">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900" onClick={() => handleOpenForm(v)}>
+                                    <div className="absolute top-4 right-4 flex flex-col gap-1 items-end z-20">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 bg-white shadow-sm" onClick={() => handleOpenForm(v)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer pointer-events-auto" onClick={(e) => handleDelete(v.id, e)}>
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer pointer-events-auto bg-white shadow-sm" onClick={(e) => handleDelete(v.id, e)}>
                                             <Trash2 className="h-4 w-4 pointer-events-none" />
                                         </Button>
                                     </div>
