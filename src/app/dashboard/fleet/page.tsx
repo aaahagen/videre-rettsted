@@ -113,14 +113,14 @@ export default function FleetPage() {
         }
     };
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
+    const handleDeleteClick = async (e: React.MouseEvent, vehicle: Vehicle) => {
         e.stopPropagation(); 
         e.preventDefault();
         
-        if (!confirm("Er du sikker på at du vil slette dette kjøretøyet?")) return;
+        if (!confirm(`Er du sikker på at du vil slette ${vehicle.name}? Dette kan ikke angres.`)) return;
         
         try {
-            await firebaseDB.deleteVehicle(id);
+            await firebaseDB.deleteVehicle(vehicle.id);
             toast({ title: "Slettet", description: "Kjøretøyet ble fjernet." });
             await loadVehicles();
         } catch (error) {
@@ -263,9 +263,19 @@ export default function FleetPage() {
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 bg-white shadow-sm" onClick={() => handleOpenForm(v)}>
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer pointer-events-auto bg-white shadow-sm" onClick={(e) => handleDelete(v.id, e)}>
-                                            <Trash2 className="h-4 w-4 pointer-events-none" />
-                                        </Button>
+                                        <div 
+                                            role="button"
+                                            tabIndex={0}
+                                            className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer bg-white shadow-sm" 
+                                            onClick={(e) => handleDeleteClick(e, v)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    handleDeleteClick(e as any, v);
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
