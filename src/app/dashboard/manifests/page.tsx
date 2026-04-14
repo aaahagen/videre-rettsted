@@ -1,4 +1,5 @@
 'use client';
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth-provider';
@@ -70,11 +71,7 @@ export default function ManifestsPage() {
     );
 
     if (isLoading) {
-        return (
-            <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
+        return <SplashScreen />;
     }
 
     return (
