@@ -13,6 +13,7 @@ import { doc, onSnapshot, collection, query, where, getDocs, limit } from 'fireb
 import { useSearch } from '@/hooks/use-search';
 import { TimeStampCard } from '@/components/workforce/time-stamp-card';
 import Link from 'next/link';
+import { NewestPlaceCard } from '@/components/places/newest-place-card';
 
 
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
@@ -480,6 +481,7 @@ export default function DashboardPage() {
             {/* ACTION SIDEBAR (Right - 33%) */}
             <div className="w-full lg:w-1/3 space-y-6">
                 <TimeStampCard user={userData} />
+                {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
             </div>
         </div>
       ) : (
@@ -497,65 +499,64 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <TimeStampCard user={userData} />
                 
-                <div className="space-y-6">
-                    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                    <RouteIcon className="h-5 w-5" />
-                                </div>
-                                <h3 className="font-bold text-slate-900">Din Rute</h3>
+                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <RouteIcon className="h-5 w-5" />
                             </div>
-                            {activeRoute && <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Aktiv</span>}
+                            <h3 className="font-bold text-slate-900">Din Rute</h3>
                         </div>
-
-                        {activeRoute ? (
-                            <div className="flex-1 space-y-4">
-                                <div>
-                                    <p className="text-lg font-bold text-slate-900">{activeRoute.name}</p>
-                                    <p className="text-xs text-slate-500">{activeRoute.places.length} stopp i dag</p>
-                                </div>
-
-                                {activeManifest && (
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lastefremdrift</span>
-                                            <span className="text-xs font-bold text-slate-700 font-mono">{driverLoadedKolli} / {driverTotalKolli}</span>
-                                        </div>
-                                        <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-2">
-                                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${driverManifestProgress}%` }} />
-                                        </div>
-                                        <div>
-                                            {activeManifest.status === 'verified' ? (
-                                                <span className="text-[10px] text-green-700 bg-green-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><CheckCircle2 className="h-3 w-3"/> Verifisert & Klar</span>
-                                            ) : activeManifest.status === 'loading' ? (
-                                                <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Loader2 className="h-3 w-3 animate-spin"/> Laster...</span>
-                                            ) : (
-                                                <span className="text-[10px] text-slate-600 bg-slate-200 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Clock className="h-3 w-3"/> Venter på lasting</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <Button asChild className="w-full">
-                                    <Link href={`/dashboard/routes/${activeRoute.id}`}>
-                                        Åpne Rute
-                                    </Link>
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
-                                <p className="text-slate-400 text-sm font-medium mb-4">Ingen rute tildelt i dag</p>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href="/dashboard/routes">Se alle ruter</Link>
-                                </Button>
-                            </div>
-                        )}
+                        {activeRoute && <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Aktiv</span>}
                     </div>
+
+                    {activeRoute ? (
+                        <div className="flex-1 space-y-4">
+                            <div>
+                                <p className="text-lg font-bold text-slate-900">{activeRoute.name}</p>
+                                <p className="text-xs text-slate-500">{activeRoute.places.length} stopp i dag</p>
+                            </div>
+
+                            {activeManifest && (
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lastefremdrift</span>
+                                        <span className="text-xs font-bold text-slate-700 font-mono">{driverLoadedKolli} / {driverTotalKolli}</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden mb-2">
+                                        <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${driverManifestProgress}%` }} />
+                                    </div>
+                                    <div>
+                                        {activeManifest.status === 'verified' ? (
+                                            <span className="text-[10px] text-green-700 bg-green-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><CheckCircle2 className="h-3 w-3"/> Verifisert & Klar</span>
+                                        ) : activeManifest.status === 'loading' ? (
+                                            <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Loader2 className="h-3 w-3 animate-spin"/> Laster...</span>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-600 bg-slate-200 px-2 py-1 rounded font-bold flex items-center gap-1 w-fit"><Clock className="h-3 w-3"/> Venter på lasting</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            <Button asChild className="w-full">
+                                <Link href={`/dashboard/routes/${activeRoute.id}`}>
+                                    Åpne Rute
+                                </Link>
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
+                            <p className="text-slate-400 text-sm font-medium mb-4">Ingen rute tildelt i dag</p>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href="/dashboard/routes">Se alle ruter</Link>
+                            </Button>
+                        </div>
+                    )}
                 </div>
+                {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

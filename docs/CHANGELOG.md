@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Dashboard - Newest Place Card:** Added a new card to the dashboard (visible to both administrators and drivers) that displays the most recently registered place in the organization's database, providing a quick link to its details.
 - **Admin Dashboard - Manifest/Lasterampe Card:** Added a new "Lasterampe" (Manifests) statistics card to the administrator dashboard. This card displays the overall loading progress, including the percentage of loaded items, the exact count of loaded vs. total items, and a summary of active vs. total manifests.
 - **Driver Dashboard - Route Loading Progress:** The driver's dashboard now shows the real-time loading progress for their assigned route. A progress bar, item count, and status (e.g., "Loading," "Verified") are displayed on the "Your Route" card.
 - **Testing Infrastructure:** Integrated Jest and React Testing Library for unit testing, and Playwright for end-to-end (E2E) testing.
