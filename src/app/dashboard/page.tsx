@@ -1,5 +1,5 @@
-import { SplashScreen } from "@/components/ui/splash-screen";
 'use client';
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';

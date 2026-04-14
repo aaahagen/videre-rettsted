@@ -1,5 +1,5 @@
-import { SplashScreen } from "@/components/ui/splash-screen";
 'use client';
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/components/auth-provider';
