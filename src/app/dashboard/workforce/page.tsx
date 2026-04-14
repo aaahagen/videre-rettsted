@@ -103,14 +103,10 @@ export default function WorkforcePage() {
 
             const escapeField = (field: string | number | undefined | null) => {
                 if (field === null || field === undefined) return '';
-                // Excel in Norwegian locales uses semicolon as delimiter
-                // We need to escape existing semicolons and newlines within the field by wrapping in double quotes
                 const str = String(field);
-                if (str.includes(';') || str.includes('\n') || str.includes('\r') || str.includes('"')) {
-                    // Double up any existing quotes
-                    return `"${str.replace(/"/g, '""')}"`;
-                }
-                return str;
+                // ALWAYS wrap in double quotes for robust CSV parsing,
+                // and escape any internal double quotes by doubling them.
+                return `"${str.replace(/"/g, '""')}"`;
             };
 
             const csvContent = [
