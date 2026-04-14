@@ -70,6 +70,13 @@ export default function ManifestsPage() {
         m.vehicle?.registrationNumber?.toLowerCase().includes(query.toLowerCase())
     );
 
+    const getProgress = (manifest: ManifestWithDetails) => {
+        const loadedCount = manifest.orders.reduce((sum, item) => sum + (item.loadedItems || 0), 0);
+        const totalCount = manifest.orders.reduce((sum, item) => sum + (item.totalItems || 0), 0);
+        const percentage = totalCount > 0 ? (loadedCount / totalCount) * 100 : 0;
+        return { loadedCount, totalCount, percentage };
+    };
+
     if (isLoading) {
         return <SplashScreen />;
     }
@@ -97,55 +104,58 @@ export default function ManifestsPage() {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredManifests.map((manifest) => (
-                        <Card key={manifest.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                            <CardHeader className="bg-slate-50/50 border-b pb-4">
-                                <div className="flex justify-between items-start mb-2">
-                                    <Badge 
-                                        variant="secondary"
-                                        className={cn(
-                                            "capitalize",
-                                            manifest.status === 'verified' ? "bg-green-100 text-green-700 hover:bg-green-100" :
-                                            manifest.status === 'loading' ? "bg-amber-100 text-amber-700 hover:bg-amber-100" : ""
-                                        )}
-                                    >
-                                        {manifest.status === 'verified' ? 'Verifisert' : 
-                                         manifest.status === 'loading' ? 'Laster...' : 'Venter'}
-                                    </Badge>
-                                    <div className="text-xs text-muted-foreground font-mono">
-                                        {manifest.id.slice(0, 8)}
+                    {filteredManifests.map((manifest) => {
+                        const { loadedCount, totalCount, percentage } = getProgress(manifest);
+                        return (
+                            <Card key={manifest.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                                <CardHeader className="bg-slate-50/50 border-b pb-4">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <Badge 
+                                            variant="secondary"
+                                            className={cn(
+                                                "capitalize",
+                                                manifest.status === 'verified' ? "bg-green-100 text-green-700 hover:bg-green-100" :
+                                                manifest.status === 'loading' ? "bg-amber-100 text-amber-700 hover:bg-amber-100" : ""
+                                            )}
+                                        >
+                                            {manifest.status === 'verified' ? 'Verifisert' : 
+                                             manifest.status === 'loading' ? 'Laster...' : 'Venter'}
+                                        </Badge>
+                                        <div className="text-xs text-muted-foreground font-mono">
+                                            {manifest.id.slice(0, 8)}
+                                        </div>
                                     </div>
-                                </div>
-                                <CardTitle className="text-xl">{manifest.route?.name || 'Navnløs rute'}</CardTitle>
-                                <CardDescription className="flex items-center gap-2">
-                                    <Truck className="h-3 w-3" />
-                                    {manifest.vehicle?.registrationNumber || 'Uten bil'} • {manifest.vehicle?.type || 'Lastebil'}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-6">
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-muted-foreground">Fremdrift:</span>
-                                        <span className="font-bold">
-                                            {manifest.orders.filter(o => o.status === 'loaded').length} / {manifest.orders.length} kolli
-                                        </span>
+                                    <CardTitle className="text-xl">{manifest.route?.name || 'Navnløs rute'}</CardTitle>
+                                    <CardDescription className="flex items-center gap-2">
+                                        <Truck className="h-3 w-3" />
+                                        {manifest.vehicle?.registrationNumber || 'Uten bil'} • {manifest.vehicle?.type || 'Lastebil'}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="pt-6">
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-muted-foreground">Fremdrift:</span>
+                                            <span className="font-bold">
+                                                {loadedCount} / {totalCount} kolli
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-slate-100 rounded-full h-2">
+                                            <div 
+                                                className="bg-primary h-2 rounded-full transition-all duration-500" 
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                        </div>
+                                        <Button asChild className="w-full mt-2" variant={manifest.status === 'verified' ? 'outline' : 'default'}>
+                                            <Link href={`/dashboard/manifests/${manifest.id}`}>
+                                                <QrCode className="mr-2 h-4 w-4" />
+                                                {manifest.status === 'verified' ? 'Se detaljer' : 'Start skanning'}
+                                            </Link>
+                                        </Button>
                                     </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2">
-                                        <div 
-                                            className="bg-primary h-2 rounded-full transition-all duration-500" 
-                                            style={{ width: `${(manifest.orders.filter(o => o.status === 'loaded').length / manifest.orders.length) * 100}%` }}
-                                        />
-                                    </div>
-                                    <Button asChild className="w-full mt-2" variant={manifest.status === 'verified' ? 'outline' : 'default'}>
-                                        <Link href={`/dashboard/manifests/${manifest.id}`}>
-                                            <QrCode className="mr-2 h-4 w-4" />
-                                            {manifest.status === 'verified' ? 'Se detaljer' : 'Start skanning'}
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
         </div>

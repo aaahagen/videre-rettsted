@@ -7,8 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Manifest Page Statistics:** Fixed an issue on the main manifests overview page (`/dashboard/manifests`) where the progress bar and item count were calculated incorrectly. The page now uses the same accurate `loadedItems` and `totalItems` calculation as the individual manifest detail page, ensuring consistency.
+- **Cascade Deletion:** Fixed an issue where deleting a route would leave orphaned loading manifests. Deleting a route now automatically deletes any associated manifest from the database.
+- **Null Reference Errors:** Fixed `Invalid document reference` errors in Firestore by ensuring the vehicle ID is validated before fetching. Graceful handling was added to both Route and Manifest views for routes without assigned vehicles.
+- **Favorite Button Import:** Fixed an import error in `FavoriteButton` caused by refactoring the database file.
+- **Vehicle Document Upload:** Fixed an issue where uploading documents/images to a new vehicle would fail due to an invalid Firestore document reference. The vehicle is now created first to secure an ID before file upload.
+- **Manifest Route Linking:** Fixed an issue where newly created routes did not appear on the Lasterampe (Manifests) page. Creating a route now automatically generates a corresponding pending manifest.
+- **Firestore Permissions:** Resolved permission-denied errors related to the new real-time messaging system and the revocation/deletion of pending invitations by administrators. Updated Firestore security rules to explicitly permit message deletion.
+- **Monitor Page Rendering:** Fixed an issue where the completion state of routes (e.g., green styling, checkmarks) occasionally failed to render due to broken template literals.
+- **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card, ensuring it stacks properly on smaller screens.
+- **Date Picker State Bug:** Fixed an issue where the selected date for an override in the driver profile was not being registered correctly by migrating to the native HTML date input.
+- **Admin Dialog Freeze:** Fixed an issue where the screen would remain unclickable (frozen pointer events) after saving or closing the "Edit Driver Profile" dialog in the Admin Panel.
+- **Calendar Layout Issue:** Corrected styling issues with the `react-day-picker` integration that caused the rotation start-date calendar to render incorrectly.
+- **Driver Profile Save Error:** Fixed a backend error that occurred when saving a driver's profile by explicitly using `deleteField()` instead of setting fields to undefined.
+- **Driver Profile Storage Permissions:** Updated Firebase Storage rules to allow administrators to upload profile pictures on behalf of drivers.
+- **Mobile Route Item Display:** Corrected a layout bug in the detailed route view that caused the estimated delivery time badge for each place to be hidden on smaller mobile screens.
+- **Dynamic Route Recalculation:** Fixed an issue where the total estimated route time failed to update instantly when a user manually dragged and dropped stops to reorder them. The UI now reliably recalculates driving distance and total duration upon every physical route alteration.
+- **Android Touch Support:** Resolved a bug preventing drag-and-drop reordering of route items on Android devices by implementing a dedicated `TouchSensor` with an activation delay.
+- **Optimization API Lock:** Corrected a bug in the backend `calculateRouteDistance` function where Google Maps was permanently instructed to "optimize" the route. It now correctly respects manual user ordering during a standard calculation and only invokes the optimization engine when the explicit "Optimer Rekkefølge" button is pressed.
+- **Memory Leak in Route Calculation:** Resolved a memory leak caused by unresolved Promises in the debounce function for distance calculations on the route page.
+- **Route Optimization Logic:** Fixed a bug where the "Optimer Rekkefølge" (Optimize Order) button would fail to update the visual order of the stops on the screen.
+- **Frontend Build Error:** Fixed a syntax error in the `page.tsx` file for the detailed route view.
+- **Distance Calculation Crash:** Resolved an issue where the distance calculation would crash the backend function if Google Maps returned ZERO_RESULTS.
+- **Distance Calculation Loop:** Fixed an infinite re-render loop in the route details page.
+- **Backend API Key Conflict:** The backend Cloud Function now securely loads a dedicated API key directly from Google Cloud Secret Manager.
+- **Smart Waypoint Fallback:** Improved the robustness of the `calculateRouteDistance` function to fall back to text addresses if GPS coordinates are missing.
+- **Complete Place Deletion**: Updated the "Slett Sted" (Delete Place) functionality to ensure associated images are permanently deleted.
+- **Invitation Deletion Bug**: Fixed an issue where accepted invitations were not being deleted from the database.
+- **Admin Invitation Fetch Error**: Transitioned invitation fetching logic to a secure server-side Cloud Function.
+
 ### Changed
 - **Splash Screen:** Updated the splash screen to feature a bouncing logo and the slogan "Presisjon helt frem til døren".
+- **Database Architecture Refactoring:** Addressed technical debt by dismantling the "God Object" in `src/lib/firebase/database.ts`. Extracted domain-specific database operations into separate repository files within `src/lib/db/` (e.g., `users.ts`, `places.ts`, `orders.ts`, `routes.ts`, `vehicles.ts`). The main `database.ts` file now serves cleanly as an aggregator.
+- **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
+- **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops. 
+- **Intelligent Capacity Checking:** Implemented real-time dynamic capacity warnings in the route planner. When a vehicle is assigned, the system continually calculates the cumulative weight, volume, and pallet count from all assigned orders and instantly warns the planner if the vehicle's safe limits are exceeded.
+- **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
+- **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
+- **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
+- **Admin Operational Dashboard Expansion:** Added real-time order statistics (Totalt, Venter, Lastet, Levert) directly to the main admin dashboard for a more complete operational overview.
+- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities. The "Utestående Invitasjoner" (Pending Invitations) component was relocated here to fit the management context.
+- **Maximum Width Constraints:** Removed aggressive "container" overrides across all major dashboard views (Workforce, Monitor, Fleet, Routes, Places) to ensure the interface does not stretch awkwardly on ultra-wide desktop monitors. The entire application now maxes out at a comfortable 1280px width (max-w-7xl) and remains perfectly centered.
+- **Vehicle Form UI:** Significantly enhanced the visual hierarchy of the "Registrer Nytt Kjøretøy" (Register New Vehicle) dialog. Employed stark white cards, distinct header backgrounds, subtle drop shadows on inputs, and rounded interactive toggles to make data entry much clearer and easier on the eyes.
+- **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
+- **Sidebar Navigation:** The "Meldinger" (Messages) link has been repositioned directly below "Ruter" in the sidebar for better workflow grouping.
+- **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
+- **Contextual Global Search:** Upgraded the global search bar in the top navigation to be context-aware. When viewing the Fleet ("Kjøretøy") or Workforce ("Personell") pages, the search bar now automatically filters the respective lists on those pages, rather than redirecting the user to the generic Places search.
+- **Global Search UI:** The global search bar logic has been improved. Navigating to the `/dashboard/manifests` or `/dashboard/messages` pages now removes any duplicate local search bars and utilizes the single global search bar in the header to instantly filter the local lists. 
+- **Workforce Form Redesign:** Completely redesigned the "Edit Driver Profile" and "Register Vehicle" forms to use a clean, card-based layout, significantly improving readability and usability.
+- **Workforce Print UI:** The "Plan (12 uker)" print button on the workforce overview is now conditionally rendered, appearing only if the driver has an active rotation schedule configured.
+- **Workforce Status Text:** Updated the fallback status text for drivers on a rotation schedule without a specific daily plan to say "Bruker Turnusplan" instead of "Ingen plan satt".
+- **Sidebar Navigation:** Wrapped the main sidebar navigation links in a scroll area to prevent overflow and ensure all items remain accessible on smaller screens.
+- **Date Picker Reliability:** Replaced the custom Popover/Calendar component used for selecting dates across the entire application (including the main Workforce page) with a native HTML `<input type="date">` for improved reliability and vastly superior mobile support.
+- **Driver Profile Image limit**: Limited the number of images a driver can upload to their profile to 1.
+- **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
+- **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on a saved Place ID.
+- **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service.
+- **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
+- **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Added
 - **Testing Infrastructure:** Integrated Jest and React Testing Library for unit testing, and Playwright for end-to-end (E2E) testing.
@@ -89,64 +146,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Update Notification:** Implemented a non-intrusive notification system that alerts users when a new version of the application is available.
 - **Estimated Driving Time:** The detailed route view now includes the total estimated driving time, calculated by the backend using the Google Maps Directions API.
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
-
-### Changed
-- **Database Architecture Refactoring:** Addressed technical debt by dismantling the "God Object" in `src/lib/firebase/database.ts`. Extracted domain-specific database operations into separate repository files within `src/lib/db/` (e.g., `users.ts`, `places.ts`, `orders.ts`, `routes.ts`, `vehicles.ts`). The main `database.ts` file now serves cleanly as an aggregator.
-- **Route Planning Workflow:** Updated the route planner interface to add pending orders instead of standalone places to routes. Selecting an order from the list automatically associates the corresponding place with the route. When saving the route, the orders are updated to contain the `routeId`.
-- **Route Planner Enhancements:** Added a vehicle selection dropdown in the route edit interface to assign a specific vehicle from the organization's fleet. Order dimensions (weight, volume, form) and special requirement badges (ADR, Kjøl/Frys, Skjør) are now displayed on the route stops. 
-- **Intelligent Capacity Checking:** Implemented real-time dynamic capacity warnings in the route planner. When a vehicle is assigned, the system continually calculates the cumulative weight, volume, and pallet count from all assigned orders and instantly warns the planner if the vehicle's safe limits are exceeded.
-- **Intelligent Schedule Checking:** Implemented real-time dynamic warnings regarding driver availability in the route planner. The system now validates the assigned driver's registered working hours, weekly rotation, and absence schedule (e.g., sickness, vacation) against the specifically planned date for the route.
-- **Admin Dashboard Separation:** Redesigned the admin experience by clearly separating the operational dashboard (`/dashboard`) from the management console (`/dashboard/admin`).
-- **Admin Operational Dashboard:** The main dashboard for administrators now features a high-level operational overview, directly integrating real-time statistics from both the Workforce (Personnel working/sick/vacation) and Monitor (Routes & Stops progress) modules. It also includes their personal time-stamping card and pending invitations.
-- **Admin Operational Dashboard Expansion:** Added real-time order statistics (Totalt, Venter, Lastet, Levert) directly to the main admin dashboard for a more complete operational overview.
-- **Admin Management Console:** The `/dashboard/admin` page is now strictly dedicated to organizational settings, user/role management, and data import/export functionalities. The "Utestående Invitasjoner" (Pending Invitations) component was relocated here to fit the management context.
-- **Maximum Width Constraints:** Removed aggressive "container" overrides across all major dashboard views (Workforce, Monitor, Fleet, Routes, Places) to ensure the interface does not stretch awkwardly on ultra-wide desktop monitors. The entire application now maxes out at a comfortable 1280px width (max-w-7xl) and remains perfectly centered.
-- **Vehicle Form UI:** Significantly enhanced the visual hierarchy of the "Registrer Nytt Kjøretøy" (Register New Vehicle) dialog. Employed stark white cards, distinct header backgrounds, subtle drop shadows on inputs, and rounded interactive toggles to make data entry much clearer and easier on the eyes.
-- **Route Notes Visibility:** "Viktig Ruteinformasjon" (Important Route Information) for drivers has been integrated directly into the top of the task list as a high-contrast amber box. This ensures it is immediately visible before they start their route.
-- **Sidebar Navigation:** The "Meldinger" (Messages) link has been repositioned directly below "Ruter" in the sidebar for better workflow grouping.
-- **Unified Action Button:** Streamlined the user interface by replacing local "Create New" buttons on various pages (like the Routes page and Fleet page) with a single, context-aware action button in the top right corner of the global header. This button automatically adapts its icon and action (e.g., "Nytt Kjøretøy", "Ny Rute", "Nytt personell") based on the current active view.
-- **Contextual Global Search:** Upgraded the global search bar in the top navigation to be context-aware. When viewing the Fleet ("Kjøretøy") or Workforce ("Personell") pages, the search bar now automatically filters the respective lists on those pages, rather than redirecting the user to the generic Places search.
-- **Global Search UI:** The global search bar logic has been improved. Navigating to the `/dashboard/manifests` or `/dashboard/messages` pages now removes any duplicate local search bars and utilizes the single global search bar in the header to instantly filter the local lists. 
-- **Workforce Form Redesign:** Completely redesigned the "Edit Driver Profile" and "Register Vehicle" forms to use a clean, card-based layout, significantly improving readability and usability.
-- **Workforce Print UI:** The "Plan (12 uker)" print button on the workforce overview is now conditionally rendered, appearing only if the driver has an active rotation schedule configured.
-- **Workforce Status Text:** Updated the fallback status text for drivers on a rotation schedule without a specific daily plan to say "Bruker Turnusplan" instead of "Ingen plan satt".
-- **Sidebar Navigation:** Wrapped the main sidebar navigation links in a scroll area to prevent overflow and ensure all items remain accessible on smaller screens.
-- **Date Picker Reliability:** Replaced the custom Popover/Calendar component used for selecting dates across the entire application (including the main Workforce page) with a native HTML `<input type="date">` for improved reliability and vastly superior mobile support.
-- **Driver Profile Image limit**: Limited the number of images a driver can upload to their profile to 1.
-- **Driver Route View Permissions:** Refined the detailed route view (`/dashboard/routes/[id]`) to hide administrative controls from drivers. The "Tidsinnstillinger" (Time Settings), "Tildelt Sjåfør" (Assigned Driver) panels, and the "Lagre Rute" (Save Route) button are now exclusively visible to admin users. The route name input is also read-only for drivers. Drivers still retain the ability to add/remove stops, reorder them, and optimize the route.
-- **Route Calculation Logic:** The backend Google Maps integration was updated to natively support calculating routes that begin and end at arbitrary base addresses, rather than solely relying on a saved Place ID.
-- **Deployment Strategy:** Migrated the project from Firebase's classic static hosting to the modern App Hosting service.
-- **Driver Assignment Display:** Improved the display for the assigned driver. If the current user does not have permission to change the driver, it now correctly shows the assigned driver's name or "Ikke tildelt" (Unassigned) instead of showing a disabled dropdown.
-- **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
-
-### Fixed
-- **Cascade Deletion:** Fixed an issue where deleting a route would leave orphaned loading manifests. Deleting a route now automatically deletes any associated manifest from the database.
-- **Null Reference Errors:** Fixed `Invalid document reference` errors in Firestore by ensuring the vehicle ID is validated before fetching. Graceful handling was added to both Route and Manifest views for routes without assigned vehicles.
-- **Favorite Button Import:** Fixed an import error in `FavoriteButton` caused by refactoring the database file.
-- **Vehicle Document Upload:** Fixed an issue where uploading documents/images to a new vehicle would fail due to an invalid Firestore document reference. The vehicle is now created first to secure an ID before file upload.
-- **Manifest Route Linking:** Fixed an issue where newly created routes did not appear on the Lasterampe (Manifests) page. Creating a route now automatically generates a corresponding pending manifest.
-- **Firestore Permissions:** Resolved permission-denied errors related to the new real-time messaging system and the revocation/deletion of pending invitations by administrators. Updated Firestore security rules to explicitly permit message deletion.
-- **Monitor Page Rendering:** Fixed an issue where the completion state of routes (e.g., green styling, checkmarks) occasionally failed to render due to broken template literals.
-- **Form Layout Fixes:** Corrected several layout and alignment issues in the driver profile form, particularly within the "Avvik & Ferie" card, ensuring it stacks properly on smaller screens.
-- **Date Picker State Bug:** Fixed an issue where the selected date for an override in the driver profile was not being registered correctly by migrating to the native HTML date input.
-- **Admin Dialog Freeze:** Fixed an issue where the screen would remain unclickable (frozen pointer events) after saving or closing the "Edit Driver Profile" dialog in the Admin Panel.
-- **Calendar Layout Issue:** Corrected styling issues with the `react-day-picker` integration that caused the rotation start-date calendar to render incorrectly.
-- **Driver Profile Save Error:** Fixed a backend error that occurred when saving a driver's profile by explicitly using `deleteField()` instead of setting fields to undefined.
-- **Driver Profile Storage Permissions:** Updated Firebase Storage rules to allow administrators to upload profile pictures on behalf of drivers.
-- **Mobile Route Item Display:** Corrected a layout bug in the detailed route view that caused the estimated delivery time badge for each place to be hidden on smaller mobile screens.
-- **Dynamic Route Recalculation:** Fixed an issue where the total estimated route time failed to update instantly when a user manually dragged and dropped stops to reorder them. The UI now reliably recalculates driving distance and total duration upon every physical route alteration.
-- **Android Touch Support:** Resolved a bug preventing drag-and-drop reordering of route items on Android devices by implementing a dedicated `TouchSensor` with an activation delay.
-- **Optimization API Lock:** Corrected a bug in the backend `calculateRouteDistance` function where Google Maps was permanently instructed to "optimize" the route. It now correctly respects manual user ordering during a standard calculation and only invokes the optimization engine when the explicit "Optimer Rekkefølge" button is pressed.
-- **Memory Leak in Route Calculation:** Resolved a memory leak caused by unresolved Promises in the debounce function for distance calculations on the route page.
-- **Route Optimization Logic:** Fixed a bug where the "Optimer Rekkefølge" (Optimize Order) button would fail to update the visual order of the stops on the screen.
-- **Frontend Build Error:** Fixed a syntax error in the `page.tsx` file for the detailed route view.
-- **Distance Calculation Crash:** Resolved an issue where the distance calculation would crash the backend function if Google Maps returned ZERO_RESULTS.
-- **Distance Calculation Loop:** Fixed an infinite re-render loop in the route details page.
-- **Backend API Key Conflict:** The backend Cloud Function now securely loads a dedicated API key directly from Google Cloud Secret Manager.
-- **Smart Waypoint Fallback:** Improved the robustness of the `calculateRouteDistance` function to fall back to text addresses if GPS coordinates are missing.
-- **Complete Place Deletion**: Updated the "Slett Sted" (Delete Place) functionality to ensure associated images are permanently deleted.
-- **Invitation Deletion Bug**: Fixed an issue where accepted invitations were not being deleted from the database.
-- **Admin Invitation Fetch Error**: Transitioned invitation fetching logic to a secure server-side Cloud Function.
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
