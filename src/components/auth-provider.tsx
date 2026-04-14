@@ -1,4 +1,5 @@
 'use client';
+import { SplashScreen } from "@/components/ui/splash-screen";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -84,8 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50"><SplashScreen />
       </div>
     );
   }
