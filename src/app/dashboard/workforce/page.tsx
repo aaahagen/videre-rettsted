@@ -101,29 +101,41 @@ export default function WorkforcePage() {
                 "Adresse", "Nødkontakt", "Pårørende", "Kompetanse"
             ];
 
+            const escapeField = (field: string | number | undefined | null) => {
+                if (field === null || field === undefined) return '';
+                // Excel in Norwegian locales uses semicolon as delimiter
+                // We need to escape existing semicolons and newlines within the field by wrapping in double quotes
+                const str = String(field);
+                if (str.includes(';') || str.includes('\n') || str.includes('\r') || str.includes('"')) {
+                    // Double up any existing quotes
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
             const csvContent = [
                 headers.join(";"), // Header row
                 ...drivers.map(d => [
-                    `"${d.name || ''}"`,
-                    `"${d.email || ''}"`,
-                    `"${d.phone || ''}"`,
-                    `"${d.role === 'contractor' ? 'Innleid' : 'Fast'}"`,
-                    `"${d.employmentStatus === 'full-time' ? 'Heltid' : d.employmentStatus === 'part-time' ? 'Deltid' : d.employmentStatus === 'temporary' ? 'Midlertidig' : d.employmentStatus || ''}"`,
-                    `"${d.disabled ? 'Deaktivert' : (d.status === 'paused' ? 'Pauset' : 'Aktiv')}"`,
-                    `"${d.employeeId || ''}"`,
-                    `"${d.jobTitle || ''}"`,
-                    `"${d.department || ''}"`,
-                    `"${d.supervisor || ''}"`,
-                    `"${d.seniorityDate ? format(new Date(d.seniorityDate), 'dd.MM.yyyy') : ''}"`,
-                    `"${d.dateOfBirth ? format(new Date(d.dateOfBirth), 'dd.MM.yyyy') : ''}"`,
-                    `"${d.socialSecurityNumber || ''}"`,
-                    `"${d.hourlyRate || ''}"`,
-                    `"${d.bankAccountNumber || ''}"`,
-                    `"${d.taxCode || ''}"`,
-                    `"${d.address || ''}"`,
-                    `"${d.emergencyContact || ''}"`,
-                    `"${d.nextOfKin || ''}"`,
-                    `"${[...(d.certifications || []), ...(d.skills || [])].join(', ')}"`
+                    escapeField(d.name),
+                    escapeField(d.email),
+                    escapeField(d.phone),
+                    escapeField(d.role === 'contractor' ? 'Innleid' : 'Fast'),
+                    escapeField(d.employmentStatus === 'full-time' ? 'Heltid' : d.employmentStatus === 'part-time' ? 'Deltid' : d.employmentStatus === 'temporary' ? 'Midlertidig' : d.employmentStatus),
+                    escapeField(d.disabled ? 'Deaktivert' : (d.status === 'paused' ? 'Pauset' : 'Aktiv')),
+                    escapeField(d.employeeId),
+                    escapeField(d.jobTitle),
+                    escapeField(d.department),
+                    escapeField(d.supervisor),
+                    escapeField(d.seniorityDate ? format(new Date(d.seniorityDate), 'dd.MM.yyyy') : ''),
+                    escapeField(d.dateOfBirth ? format(new Date(d.dateOfBirth), 'dd.MM.yyyy') : ''),
+                    escapeField(d.socialSecurityNumber),
+                    escapeField(d.hourlyRate),
+                    escapeField(d.bankAccountNumber),
+                    escapeField(d.taxCode),
+                    escapeField(d.address),
+                    escapeField(d.emergencyContact),
+                    escapeField(d.nextOfKin),
+                    escapeField([...(d.certifications || []), ...(d.skills || [])].join(', '))
                 ].join(";"))
             ].join("\n");
 
