@@ -299,15 +299,34 @@ const stats = useMemo(() => {
                                                     <CardTitle className="text-lg font-bold truncate" title={driver.name || driver.email}>
                                                         {driver.name || driver.email}
                                                     </CardTitle>
-                                                    <div className="flex items-center mt-1">
-                                                        {driver.employmentType === 'external' ? (
-                                                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">
-                                                                Innleid
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] px-1.5 py-0">
-                                                                Fast
-                                                            </Badge>
+                                                    <div className="flex flex-col gap-1 mt-1">
+                                                        <div className="flex items-center">
+                                                            {driver.employmentType === 'external' ? (
+                                                                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">
+                                                                    Innleid
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] px-1.5 py-0">
+                                                                    Fast
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        {driver.employmentType === 'external' && driver.agencyInfo && (
+                                                            <div className="text-xs text-muted-foreground flex flex-col mt-0.5 border-t border-slate-100 pt-1">
+                                                                <span className="font-medium truncate">{driver.agencyInfo.name}</span>
+                                                                {driver.agencyInfo.contactPerson && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <UserIcon className="h-3 w-3 shrink-0" />
+                                                                        <span className="truncate">{driver.agencyInfo.contactPerson}</span>
+                                                                    </div>
+                                                                )}
+                                                                {driver.agencyInfo.phone && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Phone className="h-3 w-3 shrink-0" />
+                                                                        <a href={`tel:${driver.agencyInfo.phone}`} className="truncate hover:text-primary">{driver.agencyInfo.phone}</a>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -608,15 +627,6 @@ const stats = useMemo(() => {
                                                                                 </div>
                                                                             </div>
                                                                         ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            {driver.employmentType === 'external' && driver.agencyInfo && (
-                                                                <div className="flex flex-col gap-1 bg-amber-50 text-amber-800 p-2 rounded border border-amber-200 text-xs">
-                                                                    <span className="font-bold text-[10px] uppercase tracking-wider text-amber-600/80">Byrå Info</span>
-                                                                    <div className="flex justify-between font-medium">
-                                                                        <span>{driver.agencyInfo.name}</span>
-                                                                        {driver.agencyInfo.phone && <span>{driver.agencyInfo.phone}</span>}
                                                                     </div>
                                                                 </div>
                                                             )}
