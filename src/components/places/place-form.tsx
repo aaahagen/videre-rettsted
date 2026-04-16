@@ -275,6 +275,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               description: `Vellykket oppdatering av "${data.name}".`,
             });
             if (onSuccess) onSuccess();
+            else router.push('/dashboard/places');
         } else {
             await firebaseDB.createPlace({
                 ...placeData,
@@ -283,7 +284,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               title: 'Sted Opprettet',
               description: `Vellykket opprettelse av "${data.name}".`,
             });
-            router.push('/dashboard');
+            router.push('/dashboard/places');
         }
     } catch (error: any) {
         console.error(error);
