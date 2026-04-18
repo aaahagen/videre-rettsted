@@ -121,7 +121,7 @@ export default function PlaceDetailsPage() {
         title: "Sted slettet",
         description: "Stedet er permanent fjernet.",
       });
-      router.push('/dashboard');
+      router.push('/dashboard/places');
     } catch (error: any) {
       console.error("Delete place error:", error);
       toast({
@@ -190,13 +190,13 @@ export default function PlaceDetailsPage() {
       <div className="container mx-auto px-4 py-8 max-w-5xl print:hidden">
         
         {/* Top Back Button */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Button 
-            variant="ghost" 
+            size="lg" 
             asChild 
-            className="pl-0 hover:bg-transparent hover:text-primary"
+            className="w-full sm:w-auto h-12 px-6 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
           >
-            <Link href="/dashboard">
+            <Link href={`/dashboard/places#place-${place.id}`}>
               <ArrowLeft className="mr-2 h-5 w-5" />
               Tilbake til oversikt
             </Link>
@@ -482,7 +482,7 @@ export default function PlaceDetailsPage() {
                 asChild 
                 className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
               >
-                <Link href="/dashboard">
+                <Link href={`/dashboard/places#place-${place.id}`}>
                   <ArrowLeft className="mr-2 h-5 w-5" />
                   Tilbake til oversikt
                 </Link>

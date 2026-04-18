@@ -27,9 +27,21 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
     return format(date, 'PPP', { locale: nb });
   };
 
+  const images = place.images || [];
+  const mainImage = images.find(img => img.isMain) || images[0];
+  const secondaryImages = images.filter(img => img !== mainImage);
+
+  // Group secondary images into chunks of 4 per page
+  const secondaryImagePages = [];
+  for (let i = 0; i < secondaryImages.length; i += 4) {
+    secondaryImagePages.push(secondaryImages.slice(i, i + 4));
+  }
+
   return (
-    <div className="print-place-container hidden print:block print:w-full print:h-full bg-white text-black p-8 page-break-after-always">
-      <div className="space-y-6">
+    <div className="print-place-container hidden print:block print:w-full bg-white text-black">
+      
+      {/* PAGE 1: Text Info & Main Image */}
+      <div className="p-8 page-break-after-always">
         {/* Header */}
         <div className="border-b-2 border-black pb-4 mb-6">
           <h1 className="text-3xl font-bold uppercase tracking-tight">{place.name}</h1>
@@ -104,25 +116,21 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
             </div>
           </div>
 
-          {/* Right Column: Images */}
+          {/* Right Column: Main Image */}
           <div className="space-y-4">
-            {place.images && place.images.length > 0 ? (
-                place.images.slice(0, 4).map((img, index) => (
-                    <div key={index} className="border border-gray-200 p-1">
-                        <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-                            {/* We use standard img tag for print to avoid next/image complexity with external domains during print if not configured perfectly, 
-                                though next/image usually works. Let's try regular img for reliability in print mode. */}
-                            <img 
-                                src={img.url} 
-                                alt={img.description || `Bilde ${index + 1}`}
-                                className="object-cover w-full h-full"
-                            />
-                        </div>
-                        {img.description && (
-                            <p className="text-xs text-center mt-1 italic text-gray-600">{img.description}</p>
-                        )}
+            {mainImage ? (
+                <div className="border border-gray-200 p-1">
+                    <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                        <img 
+                            src={mainImage.url} 
+                            alt={mainImage.description || `Hovedbilde for ${place.name}`}
+                            className="object-cover w-full h-full"
+                        />
                     </div>
-                ))
+                    {mainImage.description && (
+                        <p className="text-xs text-center mt-1 italic text-gray-600">{mainImage.description}</p>
+                    )}
+                </div>
             ) : (
                 <div className="border border-dashed border-gray-300 p-8 text-center text-gray-400">
                     Ingen bilder.
@@ -131,6 +139,32 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           </div>
         </div>
       </div>
+
+      {/* SUBSEQUENT PAGES: Remaining Images (Grid of 4 per page) */}
+      {secondaryImagePages.map((pageImages, pageIndex) => (
+        <div key={pageIndex} className="p-8 page-break-after-always">
+          <div className="border-b-2 border-black pb-4 mb-6">
+            <h1 className="text-2xl font-bold uppercase tracking-tight">{place.name} - Vedlegg {pageIndex + 1}</h1>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-8">
+            {pageImages.map((img, imgIndex) => (
+              <div key={imgIndex} className="border border-gray-200 p-1 h-fit">
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                  <img 
+                    src={img.url} 
+                    alt={img.description || `Ekstra bilde ${imgIndex + 1}`}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                {img.description && (
+                  <p className="text-xs text-center mt-1 italic text-gray-600">{img.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
       
       {/* Page break handling via CSS class */}
       <style jsx global>{`

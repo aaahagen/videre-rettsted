@@ -24,7 +24,7 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-xl">
+    <Card id={`place-${place.id}`} className="flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24">
       <CardHeader className="p-0">
         <div className="relative">
           <AspectRatio ratio={16 / 9}>
