@@ -382,6 +382,14 @@ export interface Order {
   updatedAt: FieldValue | Date;
 }
 
+export interface ManifestNote {
+    content: string;
+    createdAt: string | Date | FieldValue;
+    createdBy: string; // userId
+    userName?: string; // name of the creator
+    type: 'note' | 'issue';
+}
+
 export interface Manifest {
   id: string;
   routeId: string;
@@ -397,6 +405,7 @@ export interface Manifest {
     loadedAt?: string | Date | FieldValue;
     loadedBy?: string; // userId of the loader
   }[];
+  notes?: ManifestNote[]; // Added: Loader notes and issue reports
   verifiedAt?: string | Date | FieldValue;
   verifiedBy?: string; // userId of the admin/loader who finalized it
   createdAt: FieldValue | Date;

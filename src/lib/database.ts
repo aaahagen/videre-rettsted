@@ -1,10 +1,10 @@
-import { Place, User, Organization, Route, Vehicle, WorkLog, LogEntry, ProofOfDelivery, Order, Manifest, VehicleInspection } from './types';
+import { Place, User, Organization, Route, Vehicle, WorkLog, LogEntry, ProofOfDelivery, Order, Manifest, VehicleInspection, ManifestNote } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;
   getOrganization(orgId: string): Promise<Organization | null>;
   deleteOrganization(orgId: string): Promise<void>;
-  updateOrganization(orgId: string, data: Partial<Organization>): Promise<void>; // Added this
+  updateOrganization(orgId: string, data: Partial<Organization>): Promise<void>; 
   
   createUser(uid: string, name: string, email: string, orgId: string, role: 'admin' | 'driver'): Promise<void>;
   getUser(uid: string): Promise<User | null>;
@@ -65,7 +65,8 @@ export interface Database {
   incrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
   decrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string): Promise<void>;
   finalizeManifest(orgId: string, manifestId: string, userId: string): Promise<void>;
-  
+  addManifestNote(orgId: string, manifestId: string, note: Omit<ManifestNote, 'createdAt'>): Promise<void>;
+
   // Proof of Delivery
   submitProofOfDelivery(orgId: string, routeId: string, placeId: string, pod: ProofOfDelivery): Promise<void>;
   

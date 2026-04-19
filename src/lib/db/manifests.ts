@@ -1,6 +1,6 @@
-import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { Manifest, Order } from '../types';
+import { Manifest, Order, ManifestNote } from '../types';
 import { updateOrder } from './orders'; // Assuming updateOrder is now in orders.ts
 
 export const createManifest = async (manifest: Omit<Manifest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
@@ -39,6 +39,17 @@ export const updateManifest = async (orgId: string, manifestId: string, updates:
     ...updates,
     updatedAt: serverTimestamp(),
   });
+};
+
+export const addManifestNote = async (orgId: string, manifestId: string, note: Omit<ManifestNote, 'createdAt'>): Promise<void> => {
+    const docRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+    await updateDoc(docRef, {
+        notes: arrayUnion({
+            ...note,
+            createdAt: new Date().toISOString() // Use ISO string for consistency in the array
+        }),
+        updatedAt: serverTimestamp()
+    });
 };
 
 export const deleteManifest = async (orgId: string, manifestId: string): Promise<void> => {

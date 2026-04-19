@@ -84,6 +84,7 @@ export const firebaseDB: Database = {
   incrementManifestItemLoadedCount: manifestsDb.incrementManifestItemLoadedCount,
   decrementManifestItemLoadedCount: manifestsDb.decrementManifestItemLoadedCount,
   finalizeManifest: manifestsDb.finalizeManifest,
+  addManifestNote: manifestsDb.addManifestNote,
 
   // Proof of Delivery & Inspections
   submitProofOfDelivery: inspectionsDb.submitProofOfDelivery,

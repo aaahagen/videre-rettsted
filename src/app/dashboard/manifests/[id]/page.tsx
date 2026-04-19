@@ -4,16 +4,19 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Manifest, Route, Vehicle, Order } from '@/lib/types';
+import { Manifest, Route, Vehicle, Order, ManifestNote } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Search, Scan, X, Check, AlertCircle, Info, Plus, Minus } from 'lucide-react';
+import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Search, Scan, X, Check, AlertCircle, Info, Plus, Minus, MessageSquare, AlertTriangle, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 
 export default function ManifestDetailPage() {
     const { id } = useParams();
@@ -24,11 +27,15 @@ export default function ManifestDetailPage() {
     const [manifest, setManifest] = useState<Manifest | null>(null);
     const [route, setRoute] = useState<Route | null>(null);
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-    const [orders, setOrders] = useState<Order[]>([]); // All orders relevant to this manifest's route
+    const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isScanning, setIsScanning] = useState(false);
     const [manualBarcode, setManualBarcode] = useState('');
     const [isVerifying, setIsVerifying] = useState(false);
+    
+    const [noteContent, setNoteContent] = useState('');
+    const [isSubmittingNote, setIsSubmittingNote] = useState(false);
+    const [noteType, setNoteType] = useState<'note' | 'issue'>('note');
 
     const barcodeInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,14 +50,12 @@ export default function ManifestDetailPage() {
 
         const manifestId = id as string;
 
-        // Real-time listener for manifest
         const manifestRef = doc(db, 'organizations', dbUser.orgId, 'manifests', manifestId);
         const unsubscribeManifest = onSnapshot(manifestRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = { id: docSnap.id, ...docSnap.data() } as Manifest;
                 setManifest(data);
                 
-                // Fetch associated route and vehicle if not already fetched or if IDs change
                 if (!route || route.id !== data.routeId) {
                     firebaseDB.getRoute(data.routeId).then(setRoute);
                 }
@@ -62,8 +67,6 @@ export default function ManifestDetailPage() {
                     }
                 }
 
-                // Real-time listener for orders associated with this manifest's route
-                // This ensures we have the full order details including 'details.numberOfItems'
                 const ordersRef = collection(db, 'organizations', dbUser.orgId, 'orders');
                 const q = query(ordersRef, where('routeId', '==', data.routeId));
                 const unsubscribeOrders = onSnapshot(q, (snapshot) => {
@@ -111,7 +114,6 @@ export default function ManifestDetailPage() {
         }
 
         try {
-            // Use the new increment function
             await firebaseDB.incrementManifestItemLoadedCount(dbUser.orgId, manifest.id, manifestOrderItem.orderId, dbUser.id);
             toast({
                 title: "Vare lastet",
@@ -163,6 +165,34 @@ export default function ManifestDetailPage() {
         }
     };
 
+    const handleSubmitNote = async () => {
+        if (!noteContent.trim() || !manifest || !dbUser) return;
+        
+        setIsSubmittingNote(true);
+        try {
+            await firebaseDB.addManifestNote(dbUser.orgId, manifest.id, {
+                content: noteContent,
+                createdBy: dbUser.id,
+                userName: dbUser.name,
+                type: noteType
+            });
+            setNoteContent('');
+            toast({
+                title: noteType === 'issue' ? "Avvik meldt" : "Notat lagt til",
+                description: "Informasjonen er lagret på manifestet.",
+            });
+        } catch (error) {
+            console.error("Error adding note:", error);
+            toast({
+                title: "Feil",
+                description: "Kunne ikke lagre notatet.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmittingNote(false);
+        }
+    };
+
     const handleFinalize = async () => {
         if (!manifest || !dbUser) return;
         
@@ -204,13 +234,11 @@ export default function ManifestDetailPage() {
 
     if (!manifest) return null;
 
-    // Combine manifest order items with full order details
     const combinedOrderDetails = manifest.orders.map(manifestItem => {
         const fullOrder = orders.find(o => o.id === manifestItem.orderId);
         return {
             ...manifestItem,
-            details: fullOrder?.details, // Include full order details for description etc.
-            // Use totalItems from manifestItem, which is initialized with order.details?.numberOfItems or 1
+            details: fullOrder?.details,
             totalItems: manifestItem.totalItems,
             loadedItems: manifestItem.loadedItems
         };
@@ -340,6 +368,83 @@ export default function ManifestDetailPage() {
                             </div>
                         ))
                     )}
+                </div>
+
+                <div className="pt-6 space-y-4">
+                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logg & Meldinger</h2>
+                    
+                    <Card className="bg-white border shadow-sm">
+                        <CardHeader className="pb-3 border-b bg-slate-50/50">
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4" />
+                                Notater fra Lasterampe
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="max-h-[200px] overflow-y-auto p-4 space-y-3">
+                                {manifest.notes && manifest.notes.length > 0 ? (
+                                    manifest.notes.slice().reverse().map((note, idx) => (
+                                        <div key={idx} className={cn(
+                                            "p-3 rounded-lg text-sm",
+                                            note.type === 'issue' ? "bg-red-50 border border-red-100 text-red-900" : "bg-slate-100 text-slate-900"
+                                        )}>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="font-bold text-[10px] uppercase flex items-center gap-1">
+                                                    {note.type === 'issue' ? <AlertTriangle className="h-3 w-3" /> : <Info className="h-3 w-3" />}
+                                                    {note.userName}
+                                                </span>
+                                                <span className="text-[10px] opacity-50">
+                                                    {format(new Date(note.createdAt as string), 'HH:mm', { locale: nb })}
+                                                </span>
+                                            </div>
+                                            <p className="leading-relaxed">{note.content}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-center text-slate-400 py-4 text-sm italic">Ingen notater lagt til ennå.</p>
+                                )}
+                            </div>
+
+                            <div className="p-4 border-t bg-slate-50/30">
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <Button 
+                                            variant={noteType === 'note' ? 'default' : 'outline'} 
+                                            size="sm" 
+                                            className="flex-1 h-8 text-[10px] uppercase font-bold"
+                                            onClick={() => setNoteType('note')}
+                                        >
+                                            Notat
+                                        </Button>
+                                        <Button 
+                                            variant={noteType === 'issue' ? 'destructive' : 'outline'} 
+                                            size="sm" 
+                                            className="flex-1 h-8 text-[10px] uppercase font-bold"
+                                            onClick={() => setNoteType('issue')}
+                                        >
+                                            Meld Avvik
+                                        </Button>
+                                    </div>
+                                    <div className="relative">
+                                        <Textarea 
+                                            placeholder={noteType === 'issue' ? "Beskriv avviket her..." : "Skriv et notat..."} 
+                                            className="min-h-[80px] resize-none pr-12"
+                                            value={noteContent}
+                                            onChange={(e) => setNoteContent(e.target.value)}
+                                        />
+                                        <Button 
+                                            size="icon" 
+                                            className="absolute bottom-2 right-2 h-8 w-8 rounded-full"
+                                            disabled={!noteContent.trim() || isSubmittingNote}
+                                            onClick={handleSubmitNote}
+                                        >
+                                            {isSubmittingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 

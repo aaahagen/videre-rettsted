@@ -5,22 +5,25 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity, ChevronDown, ChevronUp, ExternalLink, Users } from 'lucide-react';
+import { Loader2, Clock, MapPin, Car, CheckCircle2, Circle, AlertCircle, Route as RouteIcon, Activity, ChevronDown, ChevronUp, ExternalLink, Users, AlertTriangle, MessageSquare, Truck } from 'lucide-react';
 import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
-import { type Route, type Place, type User, type Vehicle, type CompletedStopEvent } from '@/lib/types';
+import { type Route, type Place, type User, type Vehicle, type CompletedStopEvent, type Manifest } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useSearch } from '@/hooks/use-search';
+import { cn } from '@/lib/utils';
 
 export default function MonitorPage() {
   const [user, loading] = useAuthState(auth);
   const [userData, setUserData] = useState<User | null>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [manifests, setManifests] = useState<Record<string, Manifest>>({});
   const [places, setPlaces] = useState<Record<string, Place>>({});
   const [users, setUsers] = useState<Record<string, User>>({});
   const [vehicles, setVehicles] = useState<Record<string, Vehicle>>({});
@@ -35,9 +38,8 @@ export default function MonitorPage() {
   };
 
   useEffect(() => {
-    // Set context for global search
     setContext('Ruter', '/dashboard/routes/new');
-    return () => setContext('Steder', '/dashboard/new'); // Reset context on unmount
+    return () => setContext('Steder', '/dashboard/new'); 
   }, [setContext]);
 
   useEffect(() => {
@@ -73,6 +75,15 @@ export default function MonitorPage() {
       setRoutes(routesData);
     });
 
+    const manifestsRef = collection(db, 'organizations', userData.orgId, 'manifests');
+    const unsubscribeManifests = onSnapshot(manifestsRef, (snapshot) => {
+        const manifestsMap: Record<string, Manifest> = {};
+        snapshot.forEach(doc => {
+            manifestsMap[doc.id] = { id: doc.id, ...doc.data() } as Manifest;
+        });
+        setManifests(manifestsMap);
+    });
+
     const fetchStaticData = async () => {
        try {
            const [fetchedPlaces, fetchedUsers, fetchedVehicles] = await Promise.all([
@@ -103,6 +114,7 @@ export default function MonitorPage() {
 
     return () => {
       unsubscribeRoutes();
+      unsubscribeManifests();
     };
   }, [userData?.orgId]);
 
@@ -143,7 +155,6 @@ export default function MonitorPage() {
 
     totalPlacesOverall += placesCount;
     
-    // Only count completed stops that are actual places (their IDs start with 'place_')
     const currentCompletedPlaces = route.completedStops?.filter(stopId => stopId.startsWith('place_')).length || 0;
     completedPlacesOverall += currentCompletedPlaces;
 
@@ -227,6 +238,11 @@ export default function MonitorPage() {
                 ? (route.thirdPartySupplier ? `3PS: ${route.thirdPartySupplier}` : '3PS (Ekstern)') 
                 : (route.driverId ? users[route.driverId]?.name || users[route.driverId]?.email || 'Ukjent sjåfør' : 'Ikke tildelt');
              
+             // Get manifest for this route
+             const manifest = manifests[route.id] || Object.values(manifests).find(m => m.routeId === route.id);
+             const hasIssues = manifest?.notes?.some(n => n.type === 'issue');
+             const latestNote = manifest?.notes?.[manifest.notes.length - 1];
+
              return (
               <Card key={route.id} className={`overflow-hidden transition-all duration-500 ${isFinished ? "border-green-200 bg-green-50/30" : "border-slate-200 hover:shadow-md"}`}>
                 <div className={`h-2 w-full ${isFinished ? "bg-green-200" : "bg-red-200"}`} />
@@ -237,6 +253,7 @@ export default function MonitorPage() {
                       <CardTitle className="text-xl flex items-center gap-2">
                         {route.name}
                         {isFinished && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                        {hasIssues && <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />}
                       </CardTitle>
                       <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-muted-foreground">
                          <span className="flex items-center gap-1" title="Sjåfør">
@@ -265,7 +282,6 @@ export default function MonitorPage() {
                 
                 <CardContent>
                    
-                   {/* Custom Progress Bar for explicit color control */}
                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-2">
                        <div 
                            className={`h-full w-full flex-1 transition-all duration-1000 ease-in-out ${isFinished ? "bg-green-500" : "bg-red-500"}`}
@@ -273,8 +289,36 @@ export default function MonitorPage() {
                        />
                    </div>
 
-                   {isFinished && <div className="text-xs text-green-600 font-medium mb-4 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Rute ferdigstilt</div>}
-                   {!isFinished && <div className="h-6 mb-4"></div>}
+                   {/* Manifest Alerts in Monitor */}
+                   {!isFinished && manifest && (
+                       <div className="mt-4 flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Truck className={cn("h-3 w-3", manifest.status === 'verified' ? "text-green-500" : "text-blue-500")} />
+                                    <span className="text-[10px] font-bold uppercase tracking-tighter">
+                                        Status Lasterampe: {manifest.status === 'verified' ? 'Klar' : 'Laster'}
+                                    </span>
+                                </div>
+                                <span className="text-[10px] font-mono">
+                                    {manifest.orders.reduce((sum, o) => sum + o.loadedItems, 0)} / {manifest.orders.reduce((sum, o) => sum + o.totalItems, 0)} KOLli
+                                </span>
+                            </div>
+                            {latestNote && (
+                                <div className={cn(
+                                    "p-2 rounded border text-xs flex items-start gap-2",
+                                    latestNote.type === 'issue' ? "bg-red-50 border-red-100 text-red-800" : "bg-slate-50 border-slate-100 text-slate-600"
+                                )}>
+                                    {latestNote.type === 'issue' ? <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" /> : <MessageSquare className="h-3 w-3 shrink-0 mt-0.5" />}
+                                    <div className="min-w-0 flex-1">
+                                        <span className="font-bold mr-1">{latestNote.userName}:</span>
+                                        <span className="italic">"{latestNote.content}"</span>
+                                    </div>
+                                </div>
+                            )}
+                       </div>
+                   )}
+
+                   {isFinished && <div className="text-xs text-green-600 font-medium mb-4 flex items-center gap-1 mt-2"><CheckCircle2 className="h-3 w-3" /> Rute ferdigstilt</div>}
                    
                    <div className="space-y-3 mt-6">
                       <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
@@ -293,11 +337,9 @@ export default function MonitorPage() {
                              
                              if (!shouldShow) {
                                 if (isFinished) {
-                                    // If route is finished, we only hide stops between the first and last
                                     if (index === 1 && totalStops > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {totalStops - 2} fullførte stopp skjult ...</div>;
                                     return null;
                                 } else {
-                                    // Route is ongoing
                                     if (index === 1 && firstUncompletedIndex > 2) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {firstUncompletedIndex - 1} fullførte stopp skjult ...</div>;
                                     if (index === firstUncompletedIndex + 2 && index < totalStops - 1) return <div key={`ellipsis-${index}`} className="text-xs text-muted-foreground pl-2 py-1">... {totalStops - 1 - (firstUncompletedIndex + 1)} gjenstående stopp skjult ...</div>;
                                     return null;

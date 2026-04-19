@@ -6,17 +6,17 @@ import { useGeolocation } from '@/hooks/use-geolocation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, Truck, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle, MessageSquare, AlertTriangle, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { deleteField } from 'firebase/firestore';
+import { deleteField, doc, onSnapshot } from 'firebase/firestore';
 
 import { firebaseDB } from '@/lib/firebase/database';
-import { auth } from '@/lib/firebase/firebase';
+import { auth, db } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -34,9 +34,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Place, Route, CompletedStopEvent, ProofOfDelivery, Order } from '@/lib/types';
+import { Place, Route, CompletedStopEvent, ProofOfDelivery, Order, Manifest, Vehicle } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
+import { VehicleInspectionForm } from '@/components/fleet/vehicle-inspection-form';
 
 type RouteItemType = 'place' | 'start' | 'end' | 'break' | 'service';
 
@@ -74,7 +77,7 @@ export default function RouteDetailsPage() {
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
   const [organizationUsers, setOrganizationUsers] = useState<any[]>([]);
-  const [assignedVehicle, setAssignedVehicle] = useState<any>(null);
+  const [assignedVehicle, setAssignedVehicle] = useState<Vehicle | null>(null);
   const [assignedDriver, setAssignedDriver] = useState<any>(null);
   const [allVehicles, setAllVehicles] = useState<any[]>([]);
   
@@ -108,6 +111,8 @@ export default function RouteDetailsPage() {
   const [podModalOpen, setPodModalOpen] = useState(false);
   const [currentPodPlaceId, setCurrentPodPlaceId] = useState<string | null>(null);
   const [currentPodPlaceName, setCurrentPodPlaceName] = useState('');
+
+  const [manifest, setManifest] = useState<Manifest | null>(null);
 
   const router = useRouter();
   const params = useParams();
@@ -423,6 +428,14 @@ export default function RouteDetailsPage() {
             if (userDoc.role === 'admin') {
               setIsEditMode(true);
             }
+
+            const manifestUnsub = onSnapshot(doc(db, 'organizations', userDoc.orgId, 'manifests', routeId), (snap) => {
+                if (snap.exists()) {
+                    setManifest({ id: snap.id, ...snap.data() } as Manifest);
+                } else {
+                    firebaseDB.getManifestByRoute(userDoc.orgId, routeId).then(setManifest);
+                }
+            });
             
             const [routeData, placesData, usersData, allOrdersData, vehiclesData] = await Promise.all([
               firebaseDB.getRoute(routeId),
@@ -713,9 +726,6 @@ export default function RouteDetailsPage() {
         distanceString: distance === 'N/A' || distance === 'Error' ? undefined : distance,
       };
       
-      // Prevent saving an active route if it was a template that we are now "starting"
-      // Actually, if it's a template, maybe we shouldn't let them complete it.
-      // We will handle "starting a template" by copying it to a new active route instead.
       
       (updatedRoute as any).baseAddress = deleteField();
       
@@ -747,7 +757,6 @@ export default function RouteDetailsPage() {
       setIsSaving(true);
       
       try {
-          // 1. Get Location
           let coords;
           try {
             coords = await getPosition();
@@ -755,19 +764,14 @@ export default function RouteDetailsPage() {
             console.warn('Could not get location', e);
           }
           
-          // 2. Upload Photos if any
           const uploadedPhotos: any[] = [];
           if (filesToUpload.length > 0 && podData.photos) {
               for (let i = 0; i < filesToUpload.length; i++) {
                  const file = filesToUpload[i];
                  const type = podData.photos[i].type;
-                 // Dummy upload for now, ideally use firebaseStorage.uploadFile
-                 // const url = await firebaseStorage.uploadFile(userData.orgId, `pod_photos/${routeId}/${currentPodPlaceId}/${Date.now()}_${i}`, file);
-                 // uploadedPhotos.push({ url, type, uploadedAt: new Date().toISOString() });
               }
           }
           
-          // 3. Construct POD object
           const finalPod: ProofOfDelivery = {
               ...(podData as any),
               timestamp: new Date().toISOString(),
@@ -775,7 +779,6 @@ export default function RouteDetailsPage() {
               photos: uploadedPhotos.length > 0 ? uploadedPhotos : undefined,
           };
           
-          // 4. Update local state
           const newEvent: CompletedStopEvent = {
             placeId: currentPodPlaceId,
             timestamp: finalPod.timestamp,
@@ -787,7 +790,6 @@ export default function RouteDetailsPage() {
           setCompletedStopEvents(newEvents);
           setCompletedStops(prev => ({ ...prev, [itemId]: true }));
           
-          // 5. Save to DB
           if (route && userData?.role !== 'admin') {
              const currentCompletedStops = Object.entries({ ...completedStops, [itemId]: true }).filter(([_, isCompleted]) => isCompleted).map(([id]) => id);
              await firebaseDB.updateRoute(routeId, { 
@@ -970,6 +972,24 @@ export default function RouteDetailsPage() {
         </CardContent>
       </Card>
 
+      {/* Driver Tools: Vehicle Inspection - Only for non-admins (Drivers) */}
+      {!isAdmin && assignedVehicle && route?.status !== 'completed' && (
+          <div className="flex flex-col sm:flex-row gap-4">
+              <Card className="flex-1 border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2 text-primary">
+                        <ClipboardCheck className="h-4 w-4" />
+                        Bilkontroll
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap gap-3">
+                    <VehicleInspectionForm vehicle={assignedVehicle} type="pre_trip" />
+                    <VehicleInspectionForm vehicle={assignedVehicle} type="post_trip" />
+                </CardContent>
+              </Card>
+          </div>
+      )}
+
       {/* Time Settings Box - Only for Admins */}
       {isAdmin && (
         <Card className="border-slate-200 shadow-sm">
@@ -1081,10 +1101,10 @@ export default function RouteDetailsPage() {
       
 
       {/* Main Content: Places Grid */}
-      <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes) ? 'lg:grid-cols-12' : ''}`}>
+      <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && (routeNotes || (manifest?.notes && manifest.notes.length > 0))) ? 'lg:grid-cols-12' : ''}`}>
         
         {/* Left Col: Add Places & Route Notes */}
-        {(isAdmin || isEditMode) && (
+        {(isAdmin || isEditMode || (!isAdmin && !isEditMode && (routeNotes || (manifest?.notes && manifest.notes.length > 0)))) && (
             <div className="lg:col-span-5 flex flex-col gap-6">
                 
                 {/* Add Places (Only visible in edit mode or for admins) */}
@@ -1113,27 +1133,61 @@ export default function RouteDetailsPage() {
                 )}
             
                 {/* Route Notes */}
-                <Card className="border-slate-200 shadow-sm h-fit">
-                    <CardHeader className="pb-4">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Info className={`h-5 w-5 ${!isAdmin && !isEditMode ? 'text-indigo-400' : 'text-slate-400'}`} />
-                        Viktig Ruteinformasjon
-                    </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Textarea 
-                            value={routeNotes}
-                            onChange={(e) => setRouteNotes(e.target.value)}
-                            placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
-                            className="min-h-[120px]"
-                        />
-                    </CardContent>
-                </Card>
+                {(isAdmin || isEditMode || routeNotes) && (
+                    <Card className="border-slate-200 shadow-sm h-fit">
+                        <CardHeader className="pb-4">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <Info className={`h-5 w-5 ${!isAdmin && !isEditMode ? 'text-indigo-400' : 'text-slate-400'}`} />
+                            Viktig Ruteinformasjon
+                        </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {isAdmin || isEditMode ? (
+                                <Textarea 
+                                    value={routeNotes}
+                                    onChange={(e) => setRouteNotes(e.target.value)}
+                                    placeholder="Skriv inn viktig informasjon for sjåføren her. F.eks. nøkler, koder, eller spesielle hensyn..."
+                                    className="min-h-[120px]"
+                                />
+                            ) : (
+                                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{routeNotes}</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Loader Notes Alert for Driver */}
+                {!isEditMode && manifest?.notes && manifest.notes.length > 0 && (
+                    <Card className="border-red-200 shadow-sm h-fit bg-red-50/30">
+                        <CardHeader className="pb-3 border-b border-red-100">
+                            <CardTitle className="text-sm font-bold flex items-center gap-2 text-red-800">
+                                <AlertTriangle className="h-4 w-4" />
+                                Meldinger fra Lasterampe
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="max-h-[300px] overflow-y-auto p-4 space-y-3">
+                                {manifest.notes.slice().reverse().map((note, idx) => (
+                                    <div key={idx} className={cn(
+                                        "p-3 rounded-lg text-sm border shadow-sm",
+                                        note.type === 'issue' ? "bg-red-100 border-red-200 text-red-900" : "bg-white border-slate-200 text-slate-900"
+                                    )}>
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="font-bold text-[10px] uppercase">{note.userName}</span>
+                                            <span className="text-[10px] opacity-50">{format(new Date(note.createdAt as string), 'HH:mm', { locale: nb })}</span>
+                                        </div>
+                                        <p className="leading-relaxed font-medium">{note.content}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         )}
         
         {/* Right Col: Current Route */}
-        <Card className={`border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto ${(isAdmin || isEditMode || (!isAdmin && !isEditMode && routeNotes)) ? 'lg:col-span-7' : ''}`}>
+        <Card className={`border-slate-200 shadow-sm flex flex-col min-h-[600px] lg:min-h-0 lg:h-auto ${(isAdmin || isEditMode || (!isAdmin && !isEditMode && (routeNotes || (manifest?.notes && manifest.notes.length > 0)))) ? 'lg:col-span-7' : ''}`}>
           <CardHeader className="pb-4 shrink-0 border-b border-slate-100">
             <div className="flex items-center justify-between">
               <div>
@@ -1165,17 +1219,30 @@ export default function RouteDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 overflow-y-auto flex-1 flex flex-col justify-between">
-            {/* Route Notes - Integrated at the top of the list for drivers/viewers */}
-            {!isEditMode && routeNotes && (
-              <div className="bg-amber-50 border-b border-amber-100 p-4 shrink-0">
-                <div className="flex items-center gap-2 mb-2 text-amber-800">
-                  <Info className="h-4 w-4" />
-                  <span className="text-sm font-bold uppercase tracking-wider">Viktig Informasjon</span>
+            {/* Combined Status Alert (Loading Progress + Notes) */}
+            {!isEditMode && manifest && (
+                <div className={cn(
+                    "p-4 border-b transition-colors",
+                    manifest.status === 'loading' ? "bg-blue-50 border-blue-100" : "bg-emerald-50 border-emerald-100"
+                )}>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Truck className={cn("h-4 w-4", manifest.status === 'loading' ? "text-blue-600" : "text-emerald-600")} />
+                            <span className="text-xs font-bold uppercase tracking-wider">
+                                {manifest.status === 'loading' ? 'Laster bil...' : 'Klar for avgang'}
+                            </span>
+                        </div>
+                        <span className="text-xs font-mono font-bold">
+                            {manifest.orders.reduce((sum, o) => sum + o.loadedItems, 0)} / {manifest.orders.reduce((sum, o) => sum + o.totalItems, 0)} KOLli
+                        </span>
+                    </div>
+                    <div className="w-full bg-slate-200/50 rounded-full h-2">
+                        <div 
+                            className={cn("h-2 rounded-full transition-all duration-700", manifest.status === 'loading' ? "bg-blue-500" : "bg-emerald-500")}
+                            style={{ width: `${(manifest.orders.reduce((sum, o) => sum + o.loadedItems, 0) / manifest.orders.reduce((sum, o) => sum + o.totalItems, 0)) * 100}%` }}
+                        />
+                    </div>
                 </div>
-                <div className="text-sm text-amber-900 whitespace-pre-wrap font-medium">
-                  {routeNotes}
-                </div>
-              </div>
             )}
 
             {routeItems.length === 0 ? (
