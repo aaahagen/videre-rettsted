@@ -192,12 +192,13 @@ export default function PlaceDetailsPage() {
         {/* Top Back Button */}
         <div className="mb-4">
           <Button 
-            size="lg" 
+            variant="secondary"
+            size="sm" 
             asChild 
-            className="w-full sm:w-auto h-12 px-6 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
+            className="text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 shadow-none border"
           >
             <Link href={`/dashboard/places#place-${place.id}`}>
-              <ArrowLeft className="mr-2 h-5 w-5" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Tilbake til oversikt
             </Link>
           </Button>
