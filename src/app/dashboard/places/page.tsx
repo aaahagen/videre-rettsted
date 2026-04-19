@@ -61,6 +61,24 @@ export default function PlacesPage() {
     }
   }, [userData?.orgId]);
 
+  // Effect to handle scrolling to hash after data is loaded
+  useEffect(() => {
+    if (!loadingPlaces && places.length > 0) {
+      const hash = window.location.hash;
+      if (hash) {
+        // Small timeout to ensure DOM has updated with the grid
+        setTimeout(() => {
+          const element = document.querySelector(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Remove hash from URL without triggering scroll jump
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }, 100);
+      }
+    }
+  }, [loadingPlaces, places]);
+
   const displayedPlaces = useMemo(() => {
     let result = [...places];
     if (showOnlyFavorites) {
