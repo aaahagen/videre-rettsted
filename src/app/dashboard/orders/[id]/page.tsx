@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { BarcodeGenerator } from '@/components/orders/barcode-generator';
 
 export default function OrderDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -99,9 +100,12 @@ export default function OrderDetailsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Button variant="ghost" onClick={() => router.push('/dashboard/orders')} className="mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Tilbake til Ordrer
-      </Button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <Button variant="ghost" onClick={() => router.push('/dashboard/orders')} className="pl-0 hover:bg-transparent">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Tilbake til Ordrer
+        </Button>
+        <BarcodeGenerator order={order} place={place} />
+      </div>
 
       <Card className="bg-white">
         <CardHeader className="border-b">
@@ -120,6 +124,10 @@ export default function OrderDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Beskrivelse</p>
               <p className="font-medium">{order.details?.description || 'Ingen beskrivelse'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Antall kolli</p>
+              <p className="font-medium">{order.details?.numberOfItems || 1} stk</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Vekt</p>

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Barcode/QR Code Label Printing:** Implemented a professional barcode label generation system for orders. Administrators can now generate and print individual physical labels for every item/pallet in an order (e.g., 5 labels for a 5-item order). Labels include the destination name, address, scannable Code128 barcode, and item sequence (e.g., "Kollinr: 2 / 5").
 - **Place Navigation:** Updated the "Tilbake til oversikt" buttons on the detailed place view to navigate directly to the places list (`/dashboard/places`). Implemented anchor hash routing (`#place-[id]`) so the overview automatically scrolls back to the exact place card the user was previously viewing.
 - **Place PDF Printing:** Redesigned the print layout for places to accommodate all associated images. The layout is now paginated: the first page displays the written information and the primary (starred) image, while subsequent pages dynamically generate a grid to display all remaining images alongside their captions without a hard limit.
 - **Dashboard - Newest Place Card:** Added a new card to the dashboard (visible to both administrators and drivers) that displays the most recently registered place in the organization's database, providing a quick link to its details.
