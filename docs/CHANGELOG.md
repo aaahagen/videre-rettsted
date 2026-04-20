@@ -128,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **docs: update CHANGELOG for vehicle inspection feature**
 - **Manifest Page Statistics:** Fixed an issue on the main manifests overview page (`/dashboard/manifests`) where the progress bar and item count were calculated incorrectly. The page now uses the same accurate `loadedItems` and `totalItems` calculation as the individual manifest detail page, ensuring consistency.
 - **Cascade Deletion:** Fixed an issue where deleting a route would leave orphaned loading manifests. Deleting a route now automatically deletes any associated manifest from the database.
 - **Null Reference Errors:** Fixed `Invalid document reference` errors in Firestore by ensuring the vehicle ID is validated before fetching. Graceful handling was added to both Route and Manifest views for routes without assigned vehicles.
@@ -165,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **Place Opening Hours:** Implement a system to define opening hours for each delivery/pickup location. The route planning interface will then cross-reference the estimated arrival time with these hours and display a warning if a driver is scheduled to arrive when the location is closed.
 - **Admin Attendance Dashboard Card:** Add a new card to the Admin Operational Dashboard that displays daily attendance statistics, showing how many scheduled personnel have checked in, are currently present, and have checked out.
 - **Workforce Statistics "Annet" Category:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop'''s address and the driver'''s captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
