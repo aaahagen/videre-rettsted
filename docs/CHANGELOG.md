@@ -166,7 +166,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
-- **Place Opening Hours:** Implement a system to define opening hours for each delivery/pickup location. The route planning interface will then cross-reference the estimated arrival time with these hours and display a warning if a driver is scheduled to arrive when the location is closed.
+- **Place Opening Hours (Complex Implementation):** Implement a system to define opening hours for each delivery/pickup location.
+    - **Phase A (Data):** Extend the `Place` model to store a 7-day schedule (open/close times or marked closed). Add this to the "Create/Edit Place" form.
+    - **Phase B (Route Logic - High Complexity):** Upgrade the route planning interface to actively warn planners if a calculated ETA falls outside a location's opening hours.
+        - *Complexity Note:* This requires significant backend changes. The `calculateRouteDistance` Cloud Function must be rewritten to return travel times for individual "legs" between stops, not just the total route time. The frontend must then perform sequential calculations: Route Start Time + Drive Time (Leg 1) + Stop 1 Est. Duration + Drive Time (Leg 2) = ETA Stop 2.
 - **Admin Attendance Dashboard Card:** Add a new card to the Admin Operational Dashboard that displays daily attendance statistics, showing how many scheduled personnel have checked in, are currently present, and have checked out.
 - **Workforce Statistics "Annet" Category:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop'''s address and the driver'''s captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
