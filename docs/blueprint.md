@@ -1,5 +1,20 @@
 # App Blueprint: VIDERE RettSted
 
+> [!IMPORTANT]
+> **AI ASSISTANT INSTRUCTIONS**
+> **CRITICAL:** Before proposing any architectural changes, writing new features, or refactoring code for "VIDERE RettSted", you MUST read and adhere to the following project documents to understand the current state, roadmap, and design philosophy:
+> 
+> 1. **`docs/STRATEGY.md`**: This is the master roadmap. Always check which Phase we are currently in and what is planned next. Do not build features out of order unless explicitly instructed.
+> 2. **`docs/CHANGELOG.md`**: This is the absolute Ground Truth of what has *already been built*. Always check this to avoid rebuilding existing features or breaking recent updates. Whenever you complete a task, you MUST update the `[Unreleased]` -> `### Added` or `### Changed` section of this file.
+> 3. **`docs/ARCHITECTURE.md`**: Follow the established backend abstraction pattern (`src/lib/database.ts` -> `src/lib/db/*`). Never write raw Firebase queries directly in UI components. Always respect the strict Role-Based Access Control (RBAC) and GDPR compliance rules.
+> 4. **`docs/DESIGN.md`**: Adhere to the "Function-First" design philosophy. Prioritize mobile responsiveness, high contrast, native HTML inputs (like `<input type="date">` over complex libraries), and use the existing `shadcn/ui` components and Tailwind utility classes.
+> 
+> **Core Rules:**
+> - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`).
+> - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin). Drivers get simplified, mobile-first interfaces; Admins get dense, data-rich dashboards.
+> - **Action over words:** If the user asks you to implement a planned feature, use your tools to read the relevant files, write the code, and update the changelog.
+
+
 ## Project Vision
 VIDERE RettSted is a comprehensive logistics and workforce management platform designed for the modern delivery organization. It solves the "last meter" delivery problem with a rich visual database of precise delivery locations and expands on this foundation with integrated tools for managing routes, vehicles, personnel, and operational integrity.
 
