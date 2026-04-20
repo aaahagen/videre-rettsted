@@ -31,14 +31,14 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **Dedicated Loader Dashboard (Planned):** Create a stripped-down, focused dashboard view exclusively for the 'loader' role. This view will hide planning/administrative tools and immediately present active manifests and scanning interfaces to maximize warehouse efficiency.
     *   **Manifest Verification (Completed):** Logic implemented to link orders to vehicles/routes and track exactly when and by whom an item was scanned and loaded.
     *   **Manifest UI (Completed):** Built the `/dashboard/manifests` UI for loaders, including item-level barcode scanning, manual overrides for loading progress, and full verification workflows.
-    *   **Loader Notes & Issue Reporting (Planned):** Allow loaders to add notes to a manifest (e.g., "Missing one pallet, delayed by 15 mins") and flag issues. These notes will be instantly visible to administrators on the Monitor dashboard and to the assigned driver on their active route view.
+    *   **Loader Notes & Issue Reporting (Completed):** Implemented real-time communication system. Loaders can add notes and flag critical issues directly on a manifest, which are instantly pushed to the driver's route view and the admin monitor dashboard.
     *   **Exception Handling vs. Deletion (Planned):**
         *   **Loaders:** Must be able to gracefully *remove* an item from a manifest if scanned by mistake, reverting its status to pending. They cannot delete orders.
         *   **Administrators:** Need the ability to securely *delete* or cancel an order. This must trigger a cascading deletion, automatically removing the order from any associated routes and manifests to prevent system errors.
     *   *Next Steps:* Implement Barcode/QR code generation and printing from the Order details view.
-3.  **Digital Vehicle Inspections (Backend complete):**
-    *   **Inspection Models:** Database schemas created for logging pre/post-trip checks (tires, brakes, fluids) and reporting damages with photos.
-    *   *Next Steps:* Build the driver/mechanic UI form.
+3.  **Digital Vehicle Inspections (Completed):**
+    *   **Inspection Models:** Database schemas created for logging pre/post-trip checks and reporting damages with photos.
+    *   **Driver UI:** Built frontend form integrated into the route view allowing drivers to log mileage, perform safety checks, and report damages.
 
 ## Phase 4: Intelligent Automation & Order Management (In Progress)
 
