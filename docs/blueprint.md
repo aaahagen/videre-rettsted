@@ -18,32 +18,50 @@
 ## Project Vision
 VIDERE RettSted is a comprehensive logistics and workforce management platform designed for the modern delivery organization. It solves the "last meter" delivery problem with a rich visual database of precise delivery locations and expands on this foundation with integrated tools for managing routes, vehicles, personnel, and operational integrity.
 
-## User Personas
-- **Admins (Hjelpefunksjonærer)**: Tech-savvy individuals responsible for operational oversight, user management, route planning, and HR administration.
-- **Drivers (Brukere)**: The primary mobile users, with varying levels of digital literacy. The UI for them must be extremely intuitive, task-oriented, and reliable in the field.
+## User Roles & Access Control (RBAC)
+The application strictly enforces role-based access control (RBAC) at both the UI and database levels.
+
+- **Super Admin (Platform Owner):** Global visibility. Manages multi-tenancy, platform billing, and organization creation.
+- **Organization Owner (`owner`):** Highest authority within a specific organization. Has all admin rights plus access to strategic dashboards, billing, and data exports.
+- **Organization Admin (`admin`):** Full operational CRUD rights over routes, places, vehicles, and personnel within their organization. Can invite users and manage standard settings.
+- **Route Planner (`planner`):** Focused administrative access. Can create, edit, optimize, and assign routes, but lacks access to sensitive HR/payroll data or organization-level settings.
+- **Warehouse / Loader (`loader`):** Dedicated terminal access. Manages the vehicle loading process, scans manifest items, and reports loading exceptions/issues.
+- **Driver / Contractor (`driver` | `contractor`):** Field operators. Mobile-first access to view assigned routes, execute Proof of Delivery (POD), complete vehicle inspections, and log work hours.
 
 ## Core Feature Overview
 
 - **Organization Management:** Admins create and manage isolated organizations. Data is strictly separated between organizations.
-- **User & HR Management:**
-    - Admins invite users (Drivers, other Admins) via expiring links.
-    - Comprehensive driver profiles store contact information, employment details, payroll data, and private administrative notes.
-    - Digital contract and document management per employee.
+- **Workforce & HR Management:**
+    - Admins invite users via expiring links.
+    - Comprehensive driver profiles store contact information, employment details, certifications (e.g., ADR), and private administrative notes.
+    - Advanced scheduling engine handling standard hours, multi-week rotations (Turnusplan), and schedule overrides (sick/vacation).
 - **Time & Attendance:**
     - "Stamp In/Out" functionality for drivers to log work hours.
-    - Supports both **geofence-based** stamping (for depot locations) and **GPS-based** stamping (for remote/field drivers).
+    - Enforced geofence-based stamping (for depot locations).
     - Automated overtime flagging with an admin approval workflow.
 - **Place & "Last Meter" Management:**
-    - Visual database of delivery places with images, descriptions, and hashtags.
+    - Visual database of delivery places with images, descriptions, estimated delivery times, and hashtags.
     - Client-side image compression for performance.
-    - Search and filter by name, address, or hashtag.
-    - "Favorite" system for drivers.
-- **Route Management:**
+    - "Favorite" system and gamified "Explorer Status" for drivers.
+- **Route & Order Management:**
+    - Manual order intake capturing physical dimensions, weight, and special handling (ADR, Frozen).
     - Admins create multi-stop routes, assign them to drivers and vehicles, and save them as reusable templates.
-    - Route optimization using Google Maps API.
-    - **Real-time Monitoring Dashboard** for admins to track the progress of all active routes.
-- **Fleet Management:**
-    - A complete registry of company vehicles, tracking physical dimensions, capacities, and special capabilities.
+    - Intelligent constraint warnings (vehicle capacity checks, driver availability checks).
+    - Real-time **Monitor Dashboard** for admins to track progress, completion times, and loading exceptions.
+- **Terminal & Manifest Operations:**
+    - Barcode generation and physical label printing for orders.
+    - Dedicated Loader UI for scanning packages onto vehicles.
+    - Real-time loading progress tracking visible to both the Driver and the Admin.
+    - Loader exception reporting (e.g., missing packages) pushed instantly to dispatch.
+- **Execution & Proof of Delivery (POD):**
+    - Strict delivery workflows requiring explicit failure reasons or delivery method selection (e.g., "Left at door").
+    - Capture of timestamped, geocoded photo evidence directly within the app.
+    - Reverse logistics tracking (collecting empties/returns from the field).
+- **Fleet Management & Safety:**
+    - A complete registry of company vehicles, tracking physical dimensions, capacities, and attached documents (insurance).
+    - **Digital Vehicle Inspections:** Drivers perform and log Pre-trip and Post-trip safety checks, including damage reporting with photos.
+- **Internal Communication:**
+    - Real-time messaging hub with read-receipts. Admins can broadcast to all drivers, and drivers can reply directly.
 - **Navigation Integration:**
     - Deep-linking to Google Maps for turn-by-turn navigation.
 
