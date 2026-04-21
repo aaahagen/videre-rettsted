@@ -277,14 +277,14 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             if (onSuccess) onSuccess();
             else router.push('/dashboard/places');
         } else {
-            await firebaseDB.createPlace({
+            const newPlace = await firebaseDB.createPlace({
                 ...placeData,
             });
             toast({
               title: 'Sted Opprettet',
               description: `Vellykket opprettelse av "${data.name}".`,
             });
-            router.push('/dashboard/places');
+            router.push(`/dashboard/places/${newPlace.id}`);
         }
     } catch (error: any) {
         console.error(error);
