@@ -291,7 +291,7 @@ export default function PlaceDetailsPage() {
                                         <Button 
                                           variant="ghost" 
                                           size="icon" 
-                                          className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm"
+                                          className="absolute top-4 right-4 bg-black/50 hover:bg-black/80 text-white rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm border border-white/20"
                                         >
                                           <X className="h-6 w-6" />
                                         </Button>
