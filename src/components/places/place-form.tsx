@@ -29,6 +29,18 @@ import { Place, Organization } from '@/lib/types';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
@@ -59,6 +71,11 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
+
+  const [duplicatePlace, setDuplicatePlace] = useState<Place | null>(null);
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState<PlaceFormValues | null>(null);
+
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const initialMainImageIndex = place?.images && place.imageUrl 
@@ -252,13 +269,59 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
 
     setIsSubmitting(true);
+    
+    let userDocForCheck = null;
+    try {
+         userDocForCheck = await firebaseDB.getUser(authUser.uid);
+    } catch(e) {
+         console.error("Could not fetch user", e);
+    }
 
+    if (!place && userDocForCheck?.orgId && !showDuplicateAlert) {
+        try {
+            const existingPlaces = await firebaseDB.getPlaces(userDocForCheck.orgId);
+            const isDuplicate = existingPlaces.find(p => 
+                p.name.toLowerCase() === data.name.toLowerCase() || 
+                p.address.toLowerCase() === data.address.toLowerCase()
+            );
+            
+            if (isDuplicate) {
+                setDuplicatePlace(isDuplicate);
+                setPendingSubmitData(data);
+                setShowDuplicateAlert(true);
+                setIsSubmitting(false);
+                return; 
+            }
+        } catch (e) {
+            console.error("Error checking for duplicates", e);
+        }
+    }
+
+    submitConfirmed(data);
+  };
+
+
+  const continueSubmit = () => {
+    if (pendingSubmitData) {
+        setShowDuplicateAlert(false);
+        // We set showDuplicateAlert to true temporarily so that the check in onSubmit is bypassed
+        // Then we call onSubmit, then we revert it back. The state update is async so we bypass by relying on the state that triggered this.
+        // Actually the best way is to have a ref or just call the logic directly.
+        // Let's use a flag in the parameter or state, but state is async.
+        
+        // Simpler way: just run the inner save logic.
+        submitConfirmed(pendingSubmitData);
+    }
+  };
+
+  const submitConfirmed = async (data: PlaceFormValues) => {
+    setIsSubmitting(true);
     if (!place) {
         localStorage.removeItem('placeFormDraft');
     }
 
     try {
-        const userDoc = await firebaseDB.getUser(authUser.uid);
+        const userDoc = await firebaseDB.getUser(authUser!.uid);
         if (!userDoc?.orgId) {
             throw new Error('Fant ikke organisasjons-ID for brukeren.');
         }
@@ -282,7 +345,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             }
         }
 
-        // Use default image if no images uploaded
         if (finalImages.length === 0) {
             finalImages.push({
                 url: '/ingen.jpg',
@@ -295,7 +357,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             ? data.hashtags.split(',').map(tag => tag.trim().replace(/^#/, ''))
             : [];
 
-        // Ensure mainImageIndex is within bounds
         const safeMainIndex = Math.min(data.mainImageIndex, finalImages.length - 1);
         const finalMainIndex = safeMainIndex >= 0 ? safeMainIndex : 0;
 
@@ -313,7 +374,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             orgId: userDoc.orgId,
             updatedAt: new Date(),
             coordinates: data.coordinates || { lat: 0, lng: 0 },
-            authorName: userDoc.name || 'Ukjent bruker' // Store author name for display
+            authorName: userDoc.name || 'Ukjent bruker'
         };
 
         if (place) {
@@ -343,6 +404,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         });
     } finally {
         setIsSubmitting(false);
+        setPendingSubmitData(null);
     }
   };
 
@@ -359,6 +421,40 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const field3Placeholder = organization?.fieldSettings?.field3?.placeholder || "Skriv inn info her...";
 
   return (
+    
+      <>
+      <AlertDialog open={showDuplicateAlert} onOpenChange={setShowDuplicateAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Potensielt duplikat oppdaget</AlertDialogTitle>
+            <AlertDialogDescription>
+              Det ser ut til at et sted med samme navn eller adresse allerede eksisterer i deres register.
+              <br/><br/>
+              <strong>Eksisterende sted:</strong> {duplicatePlace?.name} ({duplicatePlace?.address})
+              <br/><br/>
+              Vil du fortsatt opprette dette som et nytt sted, eller vil du gå til det eksisterende stedet for å endre det?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
+            <AlertDialogCancel asChild>
+              <Link href={`/dashboard/places/${duplicatePlace?.id}`}>
+                <Button variant="outline" className="w-full sm:w-auto">
+                    Gå til eksisterende sted
+                </Button>
+              </Link>
+            </AlertDialogCancel>
+            <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => setShowDuplicateAlert(false)}>
+                  Avbryt
+                </Button>
+                <AlertDialogAction onClick={continueSubmit}>
+                  Opprett likevel
+                </AlertDialogAction>
+            </div>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -674,5 +770,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         </div>
       </form>
     </Form>
+    </>
   );
 }
