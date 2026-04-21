@@ -94,6 +94,49 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const mainImageIndex = form.watch('mainImageIndex');
 
   useEffect(() => {
+    if (!place) { // Only auto-save for new places
+      const subscription = form.watch((value, { name, type }) => {
+        // We only save text/number fields to localStorage as files/images are too large/complex
+        // Also don't save on form submit success (we clear it instead)
+        const partialData = {
+          name: value.name,
+          address: value.address,
+          description: value.description,
+          notes: value.notes,
+          field3: value.field3,
+          hashtags: value.hashtags,
+          estimatedDeliveryTime: value.estimatedDeliveryTime,
+          coordinates: value.coordinates
+        };
+        localStorage.setItem('placeFormDraft', JSON.stringify(partialData));
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [form.watch, place]);
+
+  useEffect(() => {
+    if (!place) {
+      const savedDraft = localStorage.getItem('placeFormDraft');
+      if (savedDraft) {
+        try {
+          const parsedDraft = JSON.parse(savedDraft);
+          // Only override empty fields
+          Object.keys(parsedDraft).forEach(key => {
+              const currentVal = form.getValues()[key as keyof PlaceFormValues];
+              // check if current value is empty so we don't override something already filled
+              if (parsedDraft[key] && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
+                  form.setValue(key as any, parsedDraft[key], { shouldValidate: true, shouldDirty: true });
+              }
+          });
+        } catch (e) {
+          console.error("Failed to parse draft", e);
+        }
+      }
+    }
+  }, [place, form]);
+
+
+  useEffect(() => {
     const fetchOrg = async () => {
       if (authUser?.uid) {
         const user = await firebaseDB.getUser(authUser.uid);
@@ -209,6 +252,11 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
 
     setIsSubmitting(true);
+
+    if (!place) {
+        localStorage.removeItem('placeFormDraft');
+    }
+
     try {
         const userDoc = await firebaseDB.getUser(authUser.uid);
         if (!userDoc?.orgId) {
