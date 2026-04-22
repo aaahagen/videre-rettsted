@@ -291,7 +291,7 @@ export default function PlaceDetailsPage() {
                                         <Button 
                                           variant="ghost" 
                                           size="icon" 
-                                          className="absolute top-4 right-4 bg-black/50 hover:bg-black/80 text-white rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm border border-white/20"
+                                          className="absolute top-4 right-4 bg-white/80 hover:bg-white text-black rounded-full h-10 w-10 z-50 shadow-lg backdrop-blur-sm"
                                         >
                                           <X className="h-6 w-6" />
                                         </Button>
@@ -299,7 +299,7 @@ export default function PlaceDetailsPage() {
                                     </div>
                                     {img.description && (
                                       <div className="absolute bottom-4 left-0 right-0 text-center">
-                                        <span className="bg-black/60 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+                                        <span className="bg-white/80 text-black px-4 py-2 rounded-full text-sm backdrop-blur-sm">
                                           {img.description}
                                         </span>
                                       </div>

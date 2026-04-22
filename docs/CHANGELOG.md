@@ -98,6 +98,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Changed
+- **Place Image Modal UI:** Updated the styling of the close button and the image description caption in the image zoom modal to match the zoom controls (white background with black text) for a more consistent appearance.
 - **Route Reassignment & Exception Handling:** Build robust workflows for handling operational exceptions:
     - **Driver Reassignment:** Enable administrators to quickly reassign an entire active route (and its associated vehicle manifest) to a different driver in the event of sudden illness or absence.
     - **Return-to-Depot (RTD) Workflow:** Implement a system for handling undelivered orders. When a driver marks an order as failed (e.g., "Mottaker ikke tilstede"), the system will automatically prompt the administrator to either re-queue the order as "Pending" for a future route or initiate a return-to-sender process.
@@ -190,6 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop'''s address and the driver'''s captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
 
 ### Changed
+- **Place Image Modal UI:** Updated the styling of the close button and the image description caption in the image zoom modal to match the zoom controls (white background with black text) for a more consistent appearance.
 - **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or owner review.
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
     - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
