@@ -142,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Manual Route Saving:** Replaced the unreliable auto-save functionality for the entire route structure with an explicit "Lagre Rute" (Save Route) button visible to all users. This ensures the backend route data is only updated when the user intends to save their final arrangement.
 
 ### Fixed
+- **Firestore Offline Persistence Error:** Fixed an issue where the IndexedDB transaction failed on offline persistence by configuring Firestore to use persistentSingleTabManager.
 - **docs: update CHANGELOG for vehicle inspection feature**
 - **Manifest Page Statistics:** Fixed an issue on the main manifests overview page (`/dashboard/manifests`) where the progress bar and item count were calculated incorrectly. The page now uses the same accurate `loadedItems` and `totalItems` calculation as the individual manifest detail page, ensuring consistency.
 - **Cascade Deletion:** Fixed an issue where deleting a route would leave orphaned loading manifests. Deleting a route now automatically deletes any associated manifest from the database.
