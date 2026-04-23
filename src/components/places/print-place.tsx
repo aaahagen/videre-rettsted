@@ -1,7 +1,7 @@
 'use client';
 
 import { Place, Organization } from '@/lib/types';
-import { MapPin, Clipboard, FileText, Tag, User, Info } from 'lucide-react';
+import { MapPin, Clipboard, FileText, Tag, User, Info, PhoneCall, Mail } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -20,6 +20,9 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
 
   const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
   const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
+
+  const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
+  const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Ekstra Informasjon";
 
   const formatDate = (dateValue: any) => {
     if (!dateValue) return '';
@@ -90,6 +93,34 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
                   {place.field3}
                 </p>
+              </div>
+            )}
+
+            {contactPersonsEnabled && place.contactPersons && place.contactPersons.length > 0 && (
+              <div>
+                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
+                  <Info className="mr-2 h-4 w-4" />
+                  {contactPersonsLabel}
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {place.contactPersons.map((contact, index) => (
+                      <div key={index} className="p-3 border border-gray-200 rounded-md bg-gray-50 flex flex-col gap-1">
+                          {contact.name && <div className="font-semibold text-sm">{contact.name}</div>}
+                          {contact.phone && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <PhoneCall className="w-3 h-3" />
+                                  <span>{contact.phone}</span>
+                              </div>
+                          )}
+                          {contact.email && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Mail className="w-3 h-3" />
+                                  <span>{contact.email}</span>
+                              </div>
+                          )}
+                      </div>
+                  ))}
+                </div>
               </div>
             )}
 

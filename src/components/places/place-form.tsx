@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,7 @@ const placeSchema = z.object({
   description: z.string().optional(),
   notes: z.string().optional(),
   field3: z.string().optional(),
+  contactPersons: z.array(z.object({ name: z.string().optional(), phone: z.string().optional(), email: z.string().optional() })).optional(),
   hashtags: z.string().optional(),
   estimatedDeliveryTime: z.number().optional(),
   mainImageIndex: z.number().default(0),
@@ -90,6 +91,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       description: place?.description || '',
       notes: place?.notes || '',
       field3: place?.field3 || '',
+      contactPersons: place?.contactPersons || [{ name: '', phone: '', email: '' }],
       hashtags: place?.hashtags?.join(', ') || '',
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
@@ -121,6 +123,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           description: value.description,
           notes: value.notes,
           field3: value.field3,
+          contactPersons: value.contactPersons,
           hashtags: value.hashtags,
           estimatedDeliveryTime: value.estimatedDeliveryTime,
           coordinates: value.coordinates
@@ -366,6 +369,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             description: data.description || '',
             notes: data.notes || '',
             field3: data.field3 || '',
+            contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
@@ -419,6 +423,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
   const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
   const field3Placeholder = organization?.fieldSettings?.field3?.placeholder || "Skriv inn info her...";
+
+  const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
+  const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
+  const contactPersonsPlaceholder = organization?.fieldSettings?.contactPersons?.placeholder || "Kontaktpersoner...";
 
   return (
     
@@ -597,6 +605,90 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </FormItem>
                 )}
                 />
+            )}
+
+            {contactPersonsEnabled && (
+              <div className="space-y-4">
+                <FormLabel>{contactPersonsLabel}</FormLabel>
+                {form.watch('contactPersons')?.map((_, index) => (
+                  <div key={index} className="space-y-4 p-4 border rounded-md">
+                    <div className="flex justify-between items-center">
+                        <h4 className="font-medium text-sm">Kontaktperson {index + 1}</h4>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                const current = form.getValues('contactPersons') || [];
+                                current.splice(index, 1);
+                                form.setValue('contactPersons', current);
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name={`contactPersons.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Navn</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Navn..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`contactPersons.${index}.phone`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefon</FormLabel>
+                          <FormControl>
+                            <div className="flex gap-2">
+                                <Input type="tel" placeholder="Telefon..." {...field} />
+                                {field.value && (
+                                    <Button type="button" variant="outline" asChild>
+                                        <a href={`tel:${field.value}`}>
+                                            <PhoneCall className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`contactPersons.${index}.email`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-post</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="E-post..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const current = form.getValues('contactPersons') || [];
+                    form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
+                  }}
+                >
+                  Legg til kontaktperson
+                </Button>
+              </div>
             )}
             
             <FormField

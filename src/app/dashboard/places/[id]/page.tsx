@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -184,6 +184,9 @@ export default function PlaceDetailsPage() {
 
   const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
   const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
+
+  const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
+  const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Ekstra Informasjon";
 
   return (
     <>
@@ -364,6 +367,34 @@ export default function PlaceDetailsPage() {
                       <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
                           {place.field3}
                       </p>
+                  </section>
+                )}
+
+                {contactPersonsEnabled && place.contactPersons && place.contactPersons.length > 0 && (
+                  <section className="bg-white p-5 rounded-xl shadow-sm border">
+                      <h2 className="text-xl font-semibold mb-3 flex items-center">
+                          <Info className="mr-2 h-5 w-5 text-primary" />
+                          {contactPersonsLabel}
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {place.contactPersons.map((contact, index) => (
+                            <div key={index} className="p-4 border rounded-md bg-slate-50 flex flex-col gap-2">
+                                {contact.name && <div className="font-semibold">{contact.name}</div>}
+                                {contact.phone && (
+                                    <div className="flex items-center gap-2">
+                                        <PhoneCall className="w-4 h-4 text-slate-500" />
+                                        <a href={`tel:${contact.phone}`} className="text-primary hover:underline">{contact.phone}</a>
+                                    </div>
+                                )}
+                                {contact.email && (
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4 text-slate-500" />
+                                        <a href={`mailto:${contact.email}`} className="text-primary hover:underline">{contact.email}</a>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                      </div>
                   </section>
                 )}
 

@@ -91,6 +91,7 @@ export function DataImport({ orgId }: DataImportProps) {
              description: p.description || "",
              notes: p.notes || "",
              field3: p.field3 || "",
+             contactPersons: Array.isArray(p.contactPersons) ? p.contactPersons : [],
              hashtags: Array.isArray(p.hashtags) ? p.hashtags : [],
              orgId: orgId, // Force to the CURRENT organization
              authorId: "system_import",

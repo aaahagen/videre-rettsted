@@ -124,7 +124,10 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
     notesPlaceholder: '',
     field3Enabled: false,
     field3Label: '',
-    field3Placeholder: '', 
+    field3Placeholder: '',
+    contactPersonsEnabled: false,
+    contactPersonsLabel: '',
+    contactPersonsPlaceholder: '', 
     depotAddress: '',
     depotLat: '',
     depotLng: '',
@@ -159,6 +162,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
               field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
               field3Label: org.fieldSettings?.field3?.label || '',
               field3Placeholder: org.fieldSettings?.field3?.placeholder || '', 
+              contactPersonsEnabled: org.fieldSettings?.contactPersons?.enabled ?? false,
+              contactPersonsLabel: org.fieldSettings?.contactPersons?.label || '',
+              contactPersonsPlaceholder: org.fieldSettings?.contactPersons?.placeholder || '', 
               depotAddress: org.mainDepot?.address || '',
               depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
               depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
@@ -371,7 +377,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         fieldSettings: {
           description: { enabled: orgSettings.descEnabled, label: orgSettings.descLabel, placeholder: orgSettings.descPlaceholder },
           notes: { enabled: orgSettings.notesEnabled, label: orgSettings.notesLabel, placeholder: orgSettings.notesPlaceholder },
-          field3: { enabled: orgSettings.field3Enabled, label: orgSettings.field3Label, placeholder: orgSettings.field3Placeholder }
+          field3: { enabled: orgSettings.field3Enabled, label: orgSettings.field3Label, placeholder: orgSettings.field3Placeholder },
+          contactPersons: { enabled: orgSettings.contactPersonsEnabled, label: orgSettings.contactPersonsLabel, placeholder: orgSettings.contactPersonsPlaceholder }
         }
       });
       toast({
@@ -727,6 +734,27 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             placeholder="F.eks. 1234*"
                             value={orgSettings.field3Placeholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, field3Placeholder: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Kontaktpersoner */}
+                    <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                         <Label className="text-base font-semibold">Kontaktpersoner</Label>
+                         <Switch 
+                            checked={orgSettings.contactPersonsEnabled} 
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, contactPersonsEnabled: checked }))} 
+                         />
+                      </div>
+                      <div className={`space-y-4 ${!orgSettings.contactPersonsEnabled && 'opacity-50 pointer-events-none'}`}>
+                        <div className="space-y-2">
+                          <Label htmlFor="contactPersonsLabel" className="text-xs">Etikett (Label)</Label>
+                          <Input
+                            id="contactPersonsLabel"
+                            placeholder="F.eks. Kontaktpersoner"
+                            value={orgSettings.contactPersonsLabel}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, contactPersonsLabel: e.target.value }))}
                           />
                         </div>
                       </div>
