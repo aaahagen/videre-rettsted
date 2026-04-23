@@ -36,8 +36,10 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
 
   // Group secondary images into chunks of 4 per page
   const secondaryImagePages = [];
-  for (let i = 0; i < secondaryImages.length; i += 4) {
-    secondaryImagePages.push(secondaryImages.slice(i, i + 4));
+  // Only include secondary images if they exist and are valid
+  const validSecondary = secondaryImages.filter(img => img.url && img.url !== "/ingen.jpg");
+  for (let i = 0; i < validSecondary.length; i += 4) {
+    secondaryImagePages.push(validSecondary.slice(i, i + 4));
   }
 
   return (
@@ -153,11 +155,11 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           <div className="space-y-4">
             {mainImage ? (
                 <div className="border border-gray-200 p-1 break-inside-avoid">
-                    <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                    <div className="relative w-full bg-gray-100 flex justify-center" style={{ minHeight: "200px" }}>
                         <img 
                             src={mainImage.url} 
                             alt={mainImage.description || `Hovedbilde for ${place.name}`}
-                            className="object-cover w-full h-full"
+                            className="max-w-full max-h-[300px] object-contain"
                         />
                     </div>
                     {mainImage.description && (
@@ -183,11 +185,11 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           <div className="grid grid-cols-2 gap-8">
             {pageImages.map((img, imgIndex) => (
               <div key={imgIndex} className="border border-gray-200 p-1 h-fit break-inside-avoid">
-                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                <div className="relative w-full bg-gray-100 flex justify-center" style={{ minHeight: "200px" }}>
                   <img 
                     src={img.url} 
                     alt={img.description || `Ekstra bilde ${imgIndex + 1}`}
-                    className="object-cover w-full h-full"
+                    className="max-w-full max-h-[300px] object-contain"
                   />
                 </div>
                 {img.description && (
@@ -208,7 +210,7 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           .page-break-after-always { page-break-after: always; break-after: page; }
           .break-inside-avoid { page-break-inside: avoid; break-inside: avoid; }
           /* Better image handling on iOS */
-          img { max-width: 100% !important; height: auto !important; page-break-inside: avoid; break-inside: avoid; }
+          img { max-width: 100% !important; max-height: 400px !important; object-fit: contain !important; page-break-inside: avoid; break-inside: avoid; }
           /* Hide everything else */
           nav, header, footer, .container, .sidebar, button { display: none !important; }
         }
