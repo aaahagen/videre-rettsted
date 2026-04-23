@@ -102,9 +102,10 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
                   <Info className="mr-2 h-4 w-4" />
                   {contactPersonsLabel}
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 break-inside-avoid">
                   {place.contactPersons.map((contact, index) => (
-                      <div key={index} className="p-3 border border-gray-200 rounded-md bg-gray-50 flex flex-col gap-1">
+                      <div key={index} className="break-inside-avoid">
+                      <div className="p-3 border border-gray-200 rounded-md bg-gray-50 flex flex-col gap-1">
                           {contact.name && <div className="font-semibold text-sm">{contact.name}</div>}
                           {contact.phone && (
                               <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -118,6 +119,7 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
                                   <span>{contact.email}</span>
                               </div>
                           )}
+                      </div>
                       </div>
                   ))}
                 </div>
@@ -150,7 +152,7 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           {/* Right Column: Main Image */}
           <div className="space-y-4">
             {mainImage ? (
-                <div className="border border-gray-200 p-1">
+                <div className="border border-gray-200 p-1 break-inside-avoid">
                     <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
                         <img 
                             src={mainImage.url} 
@@ -180,7 +182,7 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
           
           <div className="grid grid-cols-2 gap-8">
             {pageImages.map((img, imgIndex) => (
-              <div key={imgIndex} className="border border-gray-200 p-1 h-fit">
+              <div key={imgIndex} className="border border-gray-200 p-1 h-fit break-inside-avoid">
                 <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
                   <img 
                     src={img.url} 
@@ -200,12 +202,15 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
       {/* Page break handling via CSS class */}
       <style jsx global>{`
         @media print {
-          @page { size: A4; margin: 20mm; }
+          @page { size: A4; margin: 15mm; }
           body { visibility: hidden; }
-          .print-place-container { visibility: visible; position: absolute; left: 0; top: 0; width: 100%; }
-          .page-break-after-always { page-break-after: always; }
+          .print-place-container { visibility: visible; position: absolute; left: 0; top: 0; width: 100%; background: white; }
+          .page-break-after-always { page-break-after: always; break-after: page; }
+          .break-inside-avoid { page-break-inside: avoid; break-inside: avoid; }
+          /* Better image handling on iOS */
+          img { max-width: 100% !important; height: auto !important; page-break-inside: avoid; break-inside: avoid; }
           /* Hide everything else */
-          nav, header, footer, .container, .sidebar { display: none !important; }
+          nav, header, footer, .container, .sidebar, button { display: none !important; }
         }
       `}</style>
     </div>
