@@ -40,9 +40,9 @@ This phase focuses on building the features that ensure what is planned is what 
     *   **Inspection Models:** Database schemas created for logging pre/post-trip checks and reporting damages with photos.
     *   **Driver UI:** Built frontend form integrated into the route view allowing drivers to log mileage, perform safety checks, and report damages.
 
-## Phase 3.5: Operational Efficiency Additions
+## Phase 3.5: Operational Efficiency Additions (Completed)
 
-- **Route Key Management (Planned):** Implement a system to manage physical access keys for delivery locations.
+- **Route Key Management (Completed):** Implement a system to manage physical access keys for delivery locations.
     - **Data Model:** Add an optional `requiredKey` (string) field to the `Place` model.
     - **Place Form:** Add a text input to the "Create/Edit Place" form (`/dashboard/places/new` and `[id]`) to record the key ID/number needed for that specific location.
     - **Driver Route View:** Create a dedicated "Nødvendige Nøkler" (Required Keys) summary card at the top of the active route view (`/dashboard/routes/[id]`). This card will dynamically aggregate and display a unique list of all keys required *only* for the stops on that specific route, ensuring the driver picks up the correct keys before departure without having to manually check each stop.

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
+
+### Changed
+- **Place Details UI Refactor:** Renamed the "Stedsinfo" heading to "Logg".
+- **Place Details Layout:** Reordered the sections on the place details page so that the map and location information is displayed prominently above the keys and contact persons.
+- **Empty State Handling (Places):** The place details view and the physical print layout will now automatically hide the "Dørkode / Nøkkel" and "Kontaktpersoner" sections if no valid information has been registered.
 - **Door Code / Key Management for Places:** Added a dynamic "Dørkode / Nøkkel" field to the place form. Users can now add multiple keys or codes for a single place, categorizing them as "Nøkkel" or "Kode", and adding custom descriptions (e.g., "Hovedinngang"). Admins can toggle this feature and set default labels/placeholders in the organization settings.
 - **Door Code Overview on Favorites Page:** The Favorites page now includes a dedicated "Nøkler" overview card at the top. This card aggregates and clearly displays all keys for the user's favorited places. It specifically filters out regular codes and only shows items categorized as "Nøkkel" alongside the place name (hiding the address for clarity).
 - **Place Draft Auto-save:** Implemented a system that automatically saves the user's progress to their local device (localStorage) when creating a new place. This prevents data loss if the app is closed or refreshed before the place is successfully saved.
