@@ -358,6 +358,34 @@ export default function PlaceDetailsPage() {
                   </section>
                 )}
 
+                <section className="bg-white p-5 rounded-xl shadow-sm border">
+                  <h2 className="text-xl font-semibold mb-3 flex items-center">
+                      <Map className="mr-2 h-5 w-5 text-primary" />
+                      Lokasjon & Kart
+                  </h2>
+                  <p className="text-lg text-slate-700 mb-3 font-medium">{place.address}</p>
+                  
+                  {/* Map Preview */}
+                  <div className="rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md h-[350px]">
+                      <iframe
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          style={{ border: 0 }}
+                          src={apiKey ? embedUrl : fallbackEmbedUrl}
+                          allowFullScreen
+                          title="Google Maps"
+                      ></iframe>
+                  </div>
+
+                  <Button className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
+                    <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
+                      <Navigation className="mr-2 h-5 w-5" />
+                      Åpne i Google Maps
+                    </a>
+                  </Button>
+                </section>
+
                 {doorCodeEnabled && place.doorCode && place.doorCode.filter(dc => dc.category || dc.name || dc.value).length > 0 && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
@@ -405,34 +433,6 @@ export default function PlaceDetailsPage() {
                       </div>
                   </section>
                 )}
-
-                <section className="bg-white p-5 rounded-xl shadow-sm border">
-                  <h2 className="text-xl font-semibold mb-3 flex items-center">
-                      <Map className="mr-2 h-5 w-5 text-primary" />
-                      Lokasjon & Kart
-                  </h2>
-                  <p className="text-lg text-slate-700 mb-3 font-medium">{place.address}</p>
-                  
-                  {/* Map Preview */}
-                  <div className="rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md h-[350px]">
-                      <iframe
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          style={{ border: 0 }}
-                          src={apiKey ? embedUrl : fallbackEmbedUrl}
-                          allowFullScreen
-                          title="Google Maps"
-                      ></iframe>
-                  </div>
-
-                  <Button className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
-                    <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
-                      <Navigation className="mr-2 h-5 w-5" />
-                      Åpne i Google Maps
-                    </a>
-                  </Button>
-                </section>
 
                 <section className="bg-white p-5 rounded-xl shadow-sm border">
                   <h2 className="text-xl font-semibold mb-3 flex items-center">
