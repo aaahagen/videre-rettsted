@@ -457,7 +457,7 @@ export default function PlaceDetailsPage() {
 
           <div className="space-y-6">
             <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-              <h2 className="text-lg font-semibold border-b pb-2">Stedsinfo</h2>
+              <h2 className="text-lg font-semibold border-b pb-2">Logg</h2>
               <div className="space-y-3">
                 {dbUser?.role === 'admin' && authorName && (
                 <div className="flex items-center text-sm text-slate-600">
