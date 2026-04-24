@@ -122,9 +122,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
     notesEnabled: true,
     notesLabel: '',
     notesPlaceholder: '',
-    field3Enabled: false,
-    field3Label: '',
-    field3Placeholder: '',
+    doorCodeEnabled: false,
+    doorCodeLabel: '',
+    doorCodePlaceholder: '',
     contactPersonsEnabled: false,
     contactPersonsLabel: '',
     contactPersonsPlaceholder: '', 
@@ -159,9 +159,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
               notesEnabled: org.fieldSettings?.notes?.enabled ?? true,
               notesLabel: org.fieldSettings?.notes?.label || '',
               notesPlaceholder: org.fieldSettings?.notes?.placeholder || '',
-              field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
-              field3Label: org.fieldSettings?.field3?.label || '',
-              field3Placeholder: org.fieldSettings?.field3?.placeholder || '', 
+              doorCodeEnabled: org.fieldSettings?.doorCode?.enabled ?? false,
+              doorCodeLabel: org.fieldSettings?.doorCode?.label || '',
+              doorCodePlaceholder: org.fieldSettings?.doorCode?.placeholder || '', 
               contactPersonsEnabled: org.fieldSettings?.contactPersons?.enabled ?? false,
               contactPersonsLabel: org.fieldSettings?.contactPersons?.label || '',
               contactPersonsPlaceholder: org.fieldSettings?.contactPersons?.placeholder || '', 
@@ -377,7 +377,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         fieldSettings: {
           description: { enabled: orgSettings.descEnabled, label: orgSettings.descLabel, placeholder: orgSettings.descPlaceholder },
           notes: { enabled: orgSettings.notesEnabled, label: orgSettings.notesLabel, placeholder: orgSettings.notesPlaceholder },
-          field3: { enabled: orgSettings.field3Enabled, label: orgSettings.field3Label, placeholder: orgSettings.field3Placeholder },
+          doorCode: { enabled: orgSettings.doorCodeEnabled, label: orgSettings.doorCodeLabel, placeholder: orgSettings.doorCodePlaceholder },
           contactPersons: { enabled: orgSettings.contactPersonsEnabled, label: orgSettings.contactPersonsLabel, placeholder: orgSettings.contactPersonsPlaceholder }
         }
       });
@@ -708,32 +708,32 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                       </div>
                     </div>
 
-                    {/* Felt 3 */}
+                    {/* Dørkode */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Felt 3</Label>
+                         <Label className="text-base font-semibold">Dørkode / Nøkkel</Label>
                          <Switch 
-                            checked={orgSettings.field3Enabled} 
-                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, field3Enabled: checked }))} 
+                            checked={orgSettings.doorCodeEnabled} 
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, doorCodeEnabled: checked }))} 
                          />
                       </div>
-                      <div className={`space-y-4 ${!orgSettings.field3Enabled && 'opacity-50 pointer-events-none'}`}>
+                      <div className={`space-y-4 ${!orgSettings.doorCodeEnabled && 'opacity-50 pointer-events-none'}`}>
                         <div className="space-y-2">
-                          <Label htmlFor="field3Label" className="text-xs">Etikett (Label)</Label>
+                          <Label htmlFor="doorCodeLabel" className="text-xs">Etikett (Label)</Label>
                           <Input
-                            id="field3Label"
+                            id="doorCodeLabel"
                             placeholder="F.eks. Kode til port"
-                            value={orgSettings.field3Label}
-                            onChange={(e) => setOrgSettings(s => ({ ...s, field3Label: e.target.value }))}
+                            value={orgSettings.doorCodeLabel}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, doorCodeLabel: e.target.value }))}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="field3Placeholder" className="text-xs">Plassholder</Label>
+                          <Label htmlFor="doorCodePlaceholder" className="text-xs">Plassholder</Label>
                           <Input
-                            id="field3Placeholder"
+                            id="doorCodePlaceholder"
                             placeholder="F.eks. 1234*"
-                            value={orgSettings.field3Placeholder}
-                            onChange={(e) => setOrgSettings(s => ({ ...s, field3Placeholder: e.target.value }))}
+                            value={orgSettings.doorCodePlaceholder}
+                            onChange={(e) => setOrgSettings(s => ({ ...s, doorCodePlaceholder: e.target.value }))}
                           />
                         </div>
                       </div>

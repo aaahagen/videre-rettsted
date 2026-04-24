@@ -47,7 +47,7 @@ const placeSchema = z.object({
   address: z.string().min(5, 'Adresse er påkrevd.'),
   description: z.string().optional(),
   notes: z.string().optional(),
-  field3: z.string().optional(),
+  doorCode: z.array(z.object({ category: z.string().optional(), name: z.string().optional(), value: z.string().optional() })).optional(),
   contactPersons: z.array(z.object({ name: z.string().optional(), phone: z.string().optional(), email: z.string().optional() })).optional(),
   hashtags: z.string().optional(),
   estimatedDeliveryTime: z.number().optional(),
@@ -90,7 +90,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       address: place?.address || '',
       description: place?.description || '',
       notes: place?.notes || '',
-      field3: place?.field3 || '',
+      doorCode: Array.isArray(place?.doorCode) ? place.doorCode : [{ category: 'Nøkkel', name: '', value: '' }],
       contactPersons: place?.contactPersons || [{ name: '', phone: '', email: '' }],
       hashtags: place?.hashtags?.join(', ') || '',
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
@@ -122,7 +122,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           address: value.address,
           description: value.description,
           notes: value.notes,
-          field3: value.field3,
+          doorCode: value.doorCode,
           contactPersons: value.contactPersons,
           hashtags: value.hashtags,
           estimatedDeliveryTime: value.estimatedDeliveryTime,
@@ -368,7 +368,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             address: data.address,
             description: data.description || '',
             notes: data.notes || '',
-            field3: data.field3 || '',
+            doorCode: (data.doorCode || []).map(dc => ({ category: dc.category || '', name: dc.name || '', value: dc.value || '' })),
             contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
@@ -420,9 +420,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
   const notesPlaceholder = organization?.fieldSettings?.notes?.placeholder || "f.eks. 'Kunden er ofte ikke hjemme før kl. 16'";
 
-  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
-  const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
-  const field3Placeholder = organization?.fieldSettings?.field3?.placeholder || "Skriv inn info her...";
+  const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
+  const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Dørkode / Nøkkel";
+  const doorCodePlaceholder = organization?.fieldSettings?.doorCode?.placeholder || "F.eks. 1234";
 
   const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
   const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
@@ -587,24 +587,91 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 />
             )}
 
-            {field3Enabled && (
-                <FormField
-                control={form.control}
-                name="field3"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>{field3Label}</FormLabel>
-                    <FormControl>
-                        <Textarea
-                        placeholder={field3Placeholder}
-                        className="min-h-[120px]"
-                        {...field}
+            {doorCodeEnabled && (
+              <div className="space-y-4">
+                <FormLabel>{doorCodeLabel}</FormLabel>
+                {form.watch('doorCode')?.map((_, index) => (
+                  <div key={index} className="space-y-4 p-4 border rounded-md">
+                    <div className="flex justify-between items-center">
+                        <h4 className="font-medium text-sm">Kode/Nøkkel {index + 1}</h4>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                const current = form.getValues('doorCode') || [];
+                                current.splice(index, 1);
+                                form.setValue('doorCode', current);
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <FormField
+                        control={form.control}
+                        name={`doorCode.${index}.category`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Kategori</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Velg kategori" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="Nøkkel">Nøkkel</SelectItem>
+                                <SelectItem value="Kode">Kode</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
                         />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                        <FormField
+                        control={form.control}
+                        name={`doorCode.${index}.name`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Beskrivelse</FormLabel>
+                            <FormControl>
+                                <Input placeholder="F.eks. Hovedinngang" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name={`doorCode.${index}.value`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Verdi</FormLabel>
+                            <FormControl>
+                                <Input placeholder={doorCodePlaceholder} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    const current = form.getValues('doorCode') || [];
+                    form.setValue('doorCode', [...current, { category: 'Nøkkel', name: '', value: '' }]);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Legg til nøkkel / kode
+                </Button>
+              </div>
             )}
 
             {contactPersonsEnabled && (

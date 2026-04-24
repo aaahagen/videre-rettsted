@@ -182,8 +182,8 @@ export default function PlaceDetailsPage() {
   const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
 
-  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
-  const field3Label = organization?.fieldSettings?.field3?.label || "Ekstra Informasjon";
+  const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
+  const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Ekstra Informasjon";
 
   const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
   const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Ekstra Informasjon";
@@ -358,15 +358,23 @@ export default function PlaceDetailsPage() {
                   </section>
                 )}
 
-                {field3Enabled && place.field3 && (
+                {doorCodeEnabled && place.doorCode && place.doorCode.length > 0 && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
                           <Info className="mr-2 h-5 w-5 text-primary" />
-                          {field3Label}
+                          {doorCodeLabel}
                       </h2>
-                      <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
-                          {place.field3}
-                      </p>
+                      <div className="grid gap-2">
+                          {place.doorCode.map((dc, idx) => (
+                              <div key={idx} className="bg-white border px-3 py-2 rounded text-sm flex justify-between items-center gap-2">
+                                  <div className="flex flex-col">
+                                      <span className="text-[10px] text-muted-foreground uppercase">{dc.category}</span>
+                                      <span className="font-medium text-slate-700">{dc.name}</span>
+                                  </div>
+                                  <span className="font-mono font-bold text-primary">{dc.value}</span>
+                              </div>
+                          ))}
+                      </div>
                   </section>
                 )}
 

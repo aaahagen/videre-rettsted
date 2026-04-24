@@ -36,7 +36,7 @@ export interface Organization {
       placeholder: string;
       enabled?: boolean;
     };
-    field3?: {
+    doorCode?: {
       label: string;
       placeholder: string;
       enabled?: boolean;
@@ -62,7 +62,7 @@ export interface Place {
   address: string;
   description: string; // Used for "description"
   notes?: string;      // Used for "notes"
-  field3?: string;
+  doorCode?: { category?: string; name?: string; value?: string; }[];
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
   
