@@ -12,7 +12,9 @@
 > **Core Rules:**
 > - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`).
 > - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin). Drivers get simplified, mobile-first interfaces; Admins get dense, data-rich dashboards.
-> - **Action over words:** If the user asks you to implement a planned feature, use your tools to read the relevant files, write the code, and update the changelog.
+> - **Communication Protocol:** When asked a question or given a task, you MUST briefly explain your plan and answer the question *before* you start using tools to write code.
+> - **Cleanup Protocol:** After successfully building a feature and verifying it with a build command, you MUST delete any temporary script files (e.g., `patch.js`, `fix.js`) you created in the root directory to keep the workspace clean.
+> - **Action over words:** While you must explain your plan first, once the plan is stated, use your tools to execute it without further prompting. Update the changelog upon completion.
 
 
 ## Project Vision
