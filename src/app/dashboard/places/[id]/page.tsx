@@ -358,14 +358,14 @@ export default function PlaceDetailsPage() {
                   </section>
                 )}
 
-                {doorCodeEnabled && place.doorCode && place.doorCode.length > 0 && (
+                {doorCodeEnabled && place.doorCode && place.doorCode.filter(dc => dc.category || dc.name || dc.value).length > 0 && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
                           <Info className="mr-2 h-5 w-5 text-primary" />
                           {doorCodeLabel}
                       </h2>
                       <div className="grid gap-2">
-                          {place.doorCode.map((dc, idx) => (
+                          {place.doorCode.filter(dc => dc.category || dc.name || dc.value).map((dc, idx) => (
                               <div key={idx} className="bg-white border px-3 py-2 rounded text-sm flex justify-between items-center gap-2">
                                   <div className="flex flex-col">
                                       <span className="text-[10px] text-muted-foreground uppercase">{dc.category}</span>

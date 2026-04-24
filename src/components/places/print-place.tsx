@@ -86,14 +86,14 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
               </div>
             )}
 
-            {doorCodeEnabled && place.doorCode && place.doorCode.length > 0 && (
+            {doorCodeEnabled && place.doorCode && place.doorCode.filter(dc => dc.category || dc.name || dc.value).length > 0 && (
               <div>
                 <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
                   <Info className="mr-2 h-4 w-4" />
                   {doorCodeLabel}
                 </h2>
                 <div className="grid gap-2">
-                  {place.doorCode.map((dc, idx) => (
+                  {place.doorCode.filter(dc => dc.category || dc.name || dc.value).map((dc, idx) => (
                     <div key={idx} className="border border-gray-200 px-3 py-2 rounded text-sm flex justify-between items-center gap-2">
                         <div className="flex flex-col">
                             <span className="text-[10px] text-gray-500 uppercase">{dc.category}</span>
@@ -106,14 +106,14 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
               </div>
             )}
 
-            {contactPersonsEnabled && place.contactPersons && place.contactPersons.length > 0 && (
+            {contactPersonsEnabled && place.contactPersons && place.contactPersons.filter(c => c.name || c.phone || c.email).length > 0 && (
               <div>
                 <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
                   <Info className="mr-2 h-4 w-4" />
                   {contactPersonsLabel}
                 </h2>
                 <div className="grid grid-cols-2 gap-4 break-inside-avoid">
-                  {place.contactPersons.map((contact, index) => (
+                  {place.contactPersons.filter(c => c.name || c.phone || c.email).map((contact, index) => (
                       <div key={index} className="break-inside-avoid">
                       <div className="p-3 border border-gray-200 rounded-md bg-gray-50 flex flex-col gap-1">
                           {contact.name && <div className="font-semibold text-sm">{contact.name}</div>}
