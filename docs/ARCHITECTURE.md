@@ -15,6 +15,15 @@ To support App Store / Google Play distribution for drivers, the frontend archit
 2.  **Driver Application:** Will be decoupled into a strictly Client-Side Rendered (CSR) architecture (either a statically exported Next.js app wrapped in Capacitor.js, or rebuilt in React Native/Expo). 
     *   *Constraint:* Driver-facing features must avoid heavy reliance on Next.js server-side features (like standard API routes or Node-based Image Optimization) to ensure a smooth transition to a native mobile wrapper.
 
+
+
+## Multi-Tenancy & Commercialization Architecture
+
+To support the future commercialization strategy (Phase 7), the architecture is designed to be modular.
+*   **Feature Gating:** The `Organization` model in Firestore will contain an `activeModules` array (e.g., `['places', 'fleet']`).
+*   **UI Level:** The frontend components (like the sidebar) will check this array and conditionally render links and dashboards only if the organization has access to that specific module.
+*   **Security Level:** Firestore Security Rules will be implemented to securely restrict read/write access to collections (like `/vehicles` or `/routes`) based on the organization's `activeModules` array, ensuring data security even if the UI is bypassed.
+
 ## Backend
 
 *   **Database**: Cloud Firestore
