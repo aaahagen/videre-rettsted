@@ -6,7 +6,7 @@ import { useGeolocation } from '@/hooks/use-geolocation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Car, Truck, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle, MessageSquare, AlertTriangle, ClipboardCheck } from 'lucide-react';
+import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Key, Car, Truck, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle, MessageSquare, AlertTriangle, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +19,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { auth, db } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1099,6 +1099,46 @@ export default function RouteDetailsPage() {
         </Card>
       )}
       
+
+      
+      {/* Required Keys Card */}
+      {!isEditMode && routeItems.filter(i => i.type === 'place').some(item => { const p = allPlaces.find(pl => pl.id === item.placeId); return p?.doorCode && p.doorCode.some(dc => dc.category === 'Nøkkel'); }) && (
+          <div className="mb-6">
+              <Card className="border-amber-200 bg-amber-50 shadow-sm">
+                  <CardHeader className="pb-3 border-b border-amber-100 bg-amber-100/50">
+                      <CardTitle className="text-lg flex items-center text-amber-900">
+                          <Key className="mr-2 h-5 w-5" />
+                          Nødvendige Nøkler for Ruten
+                      </CardTitle>
+                      <CardDescription className="text-amber-700/80">
+                          Husk å ta med disse nøklene før du forlater terminalen.
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {routeItems.filter(i => i.type === 'place')
+                              .filter(item => { const p = allPlaces.find(pl => pl.id === item.placeId); return p?.doorCode && p.doorCode.some(dc => dc.category === 'Nøkkel'); })
+                              .map(item => {
+                                  const p = allPlaces.find(pl => pl.id === item.placeId);
+                                  const keys = p!.doorCode!.filter(dc => dc.category === 'Nøkkel');
+                                  return (
+                                      <div key={item.id} className="p-3 bg-white border border-amber-200 rounded-md flex flex-col gap-2 shadow-sm">
+                                          <p className="font-semibold text-sm truncate text-slate-800">{p?.name}</p>
+                                          {keys.map((key, idx) => (
+                                              <div key={idx} className="flex justify-between items-center bg-amber-50 px-2 py-1.5 rounded border border-amber-100">
+                                                  <span className="text-xs font-medium text-slate-600">{key.name || 'Nøkkel'}</span>
+                                                  <span className="font-mono text-sm font-bold text-amber-700">{key.value}</span>
+                                              </div>
+                                          ))}
+                                      </div>
+                                  );
+                              })
+                          }
+                      </div>
+                  </CardContent>
+              </Card>
+          </div>
+      )}
 
       {/* Main Content: Places Grid */}
       <div className={`grid grid-cols-1 gap-6 ${isAdmin || isEditMode || (!isAdmin && !isEditMode && (routeNotes || (manifest?.notes && manifest.notes.length > 0))) ? 'lg:grid-cols-12' : ''}`}>
