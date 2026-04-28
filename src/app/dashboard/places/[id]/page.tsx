@@ -443,7 +443,12 @@ export default function PlaceDetailsPage() {
                   </section>
                 )}
 
-                <section className="bg-white p-5 rounded-xl shadow-sm border">
+              </>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <section className="bg-white p-5 rounded-xl shadow-sm border">
                   <h2 className="text-xl font-semibold mb-3 flex items-center">
                       <Tag className="mr-2 h-5 w-5 text-primary" />
                       Hashtags
@@ -460,11 +465,7 @@ export default function PlaceDetailsPage() {
                     )}
                   </div>
                 </section>
-              </>
-            )}
-          </div>
 
-          <div className="space-y-6">
             <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
               <h2 className="text-lg font-semibold border-b pb-2">Logg</h2>
               <div className="space-y-3">
