@@ -366,14 +366,19 @@ export default function PlaceDetailsPage() {
                   <p className="text-lg text-slate-700 mb-3 font-medium">{place.address}</p>
                   
                   {/* Map Preview */}
-                  <div className="rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md h-[350px]">
+                  <div 
+                      className="relative w-full rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md" 
+                      style={{ height: '350px', transform: 'translateZ(0)' }}
+                  >
                       <iframe
                           width="100%"
                           height="100%"
                           frameBorder="0"
-                          style={{ border: 0 }}
+                          style={{ border: 0, position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                           src={apiKey ? embedUrl : fallbackEmbedUrl}
                           allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
                           title="Google Maps"
                       ></iframe>
                   </div>
