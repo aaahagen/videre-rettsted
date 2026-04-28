@@ -90,8 +90,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       address: place?.address || '',
       description: place?.description || '',
       notes: place?.notes || '',
-      doorCode: Array.isArray(place?.doorCode) ? place.doorCode : [{ category: 'Nøkkel', name: '', value: '' }],
-      contactPersons: place?.contactPersons || [{ name: '', phone: '', email: '' }],
+      doorCode: Array.isArray(place?.doorCode) ? place.doorCode : [],
+      contactPersons: place?.contactPersons || [],
       hashtags: place?.hashtags?.join(', ') || '',
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
@@ -748,11 +748,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="mt-2"
                   onClick={() => {
                     const current = form.getValues('contactPersons') || [];
                     form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
                   }}
                 >
+                  <Plus className="h-4 w-4 mr-2" />
                   Legg til kontaktperson
                 </Button>
               </div>
