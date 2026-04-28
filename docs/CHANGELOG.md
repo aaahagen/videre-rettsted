@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Place Form Layout Refactor:** Removed the side-by-side grid layout for the "Full Adresse" and "Tidsbruk for levering" fields. They now stack vertically to ensure the address input has maximum horizontal space, improving readability on desktop monitors. Explicitly wrapped the 'Add' buttons for dynamic arrays in block elements to guarantee they drop to a new line below their labels.
 - **Place Form UI Update:** The "Dørkode / Nøkkel" and "Kontaktpersoner" sections now default to being completely collapsed (empty arrays) when creating a new place, rather than showing an empty input field immediately. The "Legg til" (Add) buttons have also been styled consistently with a '+' icon and moved beneath the section labels for better visual flow.
 - **Place Details UI Refactor:** Renamed the "Stedsinfo" heading to "Logg".
 - **Place Details Layout:** Reordered the sections on the place details page so that the map and location information is displayed prominently above the keys and contact persons.

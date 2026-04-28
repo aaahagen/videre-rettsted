@@ -481,71 +481,69 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                    <FormItem className="md:col-span-1">
-                    <FormLabel>Full Adresse</FormLabel>
-                    <FormControl>
-                        <div className="relative">
-                        <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-1 top-1 h-8 w-8"
-                            onClick={handleGetLocation}
-                            title="Hent min posisjon"
-                        >
-                            <MapPin className="h-4 w-4" />
-                        </Button>
-                        </div>
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                        <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Adresse</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1 h-8 w-8"
+                        onClick={handleGetLocation}
+                        title="Hent min posisjon"
+                      >
+                        <MapPin className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                control={form.control}
-                name="estimatedDeliveryTime"
-                render={({ field }) => (
-                    <FormItem className="md:col-span-1">
-                    <FormLabel className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-slate-500" />
-                        Tidsbruk for levering
-                    </FormLabel>
-                    <FormControl>
-                        <Select 
-                            value={field.value?.toString() || "0"} 
-                            onValueChange={(val) => field.onChange(Number(val))}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Velg tid" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0">0 min (Kun kjøring)</SelectItem>
-                                <SelectItem value="5">5 min</SelectItem>
-                                <SelectItem value="10">10 min</SelectItem>
-                                <SelectItem value="15">15 min</SelectItem>
-                                <SelectItem value="20">20 min</SelectItem>
-                                <SelectItem value="25">25 min</SelectItem>
-                                <SelectItem value="30">30 min</SelectItem>
-                                <SelectItem value="45">45 min</SelectItem>
-                                <SelectItem value="60">60 min</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormControl>
-                    <FormDescription>
-                        Beregnet tid brukt på stedet (for ruteplanlegging).
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
+            <FormField
+              control={form.control}
+              name="estimatedDeliveryTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-slate-500" />
+                    Tidsbruk for levering
+                  </FormLabel>
+                  <FormControl>
+                    <Select 
+                      value={field.value?.toString() || "0"} 
+                      onValueChange={(val) => field.onChange(Number(val))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Velg tid" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0 min (Kun kjøring)</SelectItem>
+                        <SelectItem value="5">5 min</SelectItem>
+                        <SelectItem value="10">10 min</SelectItem>
+                        <SelectItem value="15">15 min</SelectItem>
+                        <SelectItem value="20">20 min</SelectItem>
+                        <SelectItem value="25">25 min</SelectItem>
+                        <SelectItem value="30">30 min</SelectItem>
+                        <SelectItem value="45">45 min</SelectItem>
+                        <SelectItem value="60">60 min</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription>
+                    Beregnet tid brukt på stedet (for ruteplanlegging).
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             {descEnabled && (
                 <FormField
@@ -658,6 +656,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </div>
                   </div>
                 ))}
+                <div>
                 <Button
                   type="button"
                   variant="outline"
@@ -671,6 +670,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   <Plus className="h-4 w-4 mr-2" />
                   Legg til nøkkel / kode
                 </Button>
+                </div>
               </div>
             )}
 
@@ -744,6 +744,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     />
                   </div>
                 ))}
+                <div>
                 <Button
                   type="button"
                   variant="outline"
@@ -757,6 +758,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   <Plus className="h-4 w-4 mr-2" />
                   Legg til kontaktperson
                 </Button>
+                </div>
               </div>
             )}
             
