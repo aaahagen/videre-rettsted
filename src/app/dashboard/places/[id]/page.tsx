@@ -367,16 +367,24 @@ export default function PlaceDetailsPage() {
                   
                   {/* Map Preview */}
                   <div className="w-full h-[350px] rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md">
-                      <iframe
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          style={{ border: 0 }}
-                          src={apiKey ? embedUrl : fallbackEmbedUrl}
-                          allowFullScreen
-                          referrerPolicy="no-referrer-when-downgrade"
-                          title="Google Maps"
-                      ></iframe>
+                      {apiKey ? (
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={embedUrl}
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Google Maps"
+                        ></iframe>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+                            <Map className="h-10 w-10 text-slate-400 mb-2" />
+                            <p className="text-slate-500 font-medium">Forhåndsvisning av kart er ikke tilgjengelig</p>
+                            <p className="text-slate-400 text-sm mt-1">Bruk knappen under for å åpne i Google Maps</p>
+                        </div>
+                      )}
                   </div>
 
                   <Button className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
