@@ -365,6 +365,31 @@ export interface ProofOfDelivery {
   notes?: string; 
 }
 
+
+export interface LineItem {
+  id: string; // Unique ID for the line item (e.g. 'keg-of-beer')
+  description: string;
+  quantity: number;
+  weightPerItem?: number; // kg
+  length?: number; // cm
+  width?: number; // cm
+  height?: number; // cm
+  type?: 'keg' | 'case' | 'box' | 'other';
+}
+
+export interface Collie {
+  id: string; // Unique tracking ID (Barcode) for this specific item (e.g. Order-123-Item-1)
+  lineItemId: string; // Reference back to the line item type
+  handlingUnitId?: string; // If it is on a pallet, which one?
+  status: 'pending' | 'loaded' | 'delivered' | 'failed';
+}
+
+export interface HandlingUnit {
+  id: string; // Parent SSCC / Pallet Barcode
+  type: 'eur-pallet' | 'half-pallet' | 'custom';
+  status: 'pending' | 'loaded' | 'delivered' | 'failed';
+}
+
 export interface Order {
   id: string;
   orgId: string;
@@ -384,6 +409,9 @@ export interface Order {
       fragile?: boolean;
     };
   };
+  lineItems?: LineItem[];
+  collies?: Collie[];
+  handlingUnits?: HandlingUnit[];
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }
@@ -407,7 +435,8 @@ export interface Manifest {
     barcode: string;
     status: 'pending' | 'loaded';
     totalItems: number; // Added: The total number of items/pallets for this order
-    loadedItems: number; // Added: Count of items/pallets scanned so far for this order
+    loadedItems: number;
+    scannedCollieIds?: string[];
     loadedAt?: string | Date | FieldValue;
     loadedBy?: string; // userId of the loader
   }[];

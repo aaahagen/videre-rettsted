@@ -63,6 +63,7 @@ export interface Database {
   deleteManifest(orgId: string, manifestId: string): Promise<void>;
   getManifestByRoute(orgId: string, routeId: string): Promise<Manifest | null>;
   incrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string, userId: string): Promise<void>;
+  processManifestScan(orgId: string, manifestId: string, scannedBarcode: string, userId: string): Promise<{ success: boolean; message: string }>;
   decrementManifestItemLoadedCount(orgId: string, manifestId: string, orderId: string): Promise<void>;
   finalizeManifest(orgId: string, manifestId: string, userId: string): Promise<void>;
   addManifestNote(orgId: string, manifestId: string, note: Omit<ManifestNote, 'createdAt'>): Promise<void>;

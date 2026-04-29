@@ -137,3 +137,103 @@ export const finalizeManifest = async (orgId: string, manifestId: string, userId
     updatedAt: serverTimestamp()
   });
 };
+
+
+export const processManifestScan = async (
+    orgId: string,
+    manifestId: string,
+    scannedBarcode: string,
+    userId: string
+): Promise<{ success: boolean; message: string }> => {
+    const manifestRef = doc(db, `organizations/${orgId}/manifests/${manifestId}`);
+    const manifestSnap = await getDoc(manifestRef);
+    if (!manifestSnap.exists()) throw new Error('Manifest not found');
+    const manifest = manifestSnap.data() as Manifest;
+
+    // 1. Is it a general order barcode?
+    let orderIndex = manifest.orders.findIndex(o => o.barcode === scannedBarcode);
+    
+    // 2. If not, we check if it's a Collie or Pallet by fetching the orders and checking their contents.
+    // For performance in a real app, this should be indexed or the manifest should store the child IDs.
+    // Given the architecture, let's search through the orders belonging to this manifest.
+    let matchedOrderId = null;
+    let itemsToAddCount = 0;
+    let idsToMarkScanned: string[] = [];
+
+    const ordersRef = collection(db, `organizations/${orgId}/orders`);
+    const routeOrdersQuery = query(ordersRef, where('routeId', '==', manifest.routeId));
+    const routeOrdersSnap = await getDocs(routeOrdersQuery);
+    
+    for (const orderDoc of routeOrdersSnap.docs) {
+        const orderData = orderDoc.data() as Order;
+        
+        // Did they scan a specific Collie?
+        const collieMatch = orderData.collies?.find(c => c.id === scannedBarcode);
+        if (collieMatch) {
+            matchedOrderId = orderData.id;
+            itemsToAddCount = 1;
+            idsToMarkScanned.push(collieMatch.id);
+            break;
+        }
+
+        // Did they scan a whole Pallet?
+        const palletMatch = orderData.handlingUnits?.find(h => h.id === scannedBarcode);
+        if (palletMatch) {
+            matchedOrderId = orderData.id;
+            // Find all collies belonging to this pallet
+            const associatedCollies = orderData.collies?.filter(c => c.handlingUnitId === palletMatch.id) || [];
+            itemsToAddCount = associatedCollies.length;
+            idsToMarkScanned = associatedCollies.map(c => c.id);
+            break;
+        }
+    }
+
+    // If we found a specific item/pallet match, update the index
+    if (matchedOrderId) {
+        orderIndex = manifest.orders.findIndex(o => o.orderId === matchedOrderId);
+    } else if (orderIndex !== -1) {
+        // They scanned the general order barcode. Just add 1.
+        itemsToAddCount = 1;
+        idsToMarkScanned.push(`GENERIC-${Date.now()}`); 
+    }
+
+    if (orderIndex === -1) {
+        return { success: false, message: `Strekkoden ${scannedBarcode} tilhører ikke denne ruten.` };
+    }
+
+    const currentItem = manifest.orders[orderIndex];
+    
+    // Check if these specific items were already scanned (prevent double scanning of pallet)
+    const alreadyScanned = currentItem.scannedCollieIds || [];
+    const newItems = idsToMarkScanned.filter(id => !alreadyScanned.includes(id));
+    
+    if (newItems.length === 0 && idsToMarkScanned.length > 0) {
+        return { success: false, message: 'Dette kolliet/pallen er allerede scannet.' };
+    }
+
+    if (currentItem.loadedItems + newItems.length > currentItem.totalItems) {
+        // If they scan generic repeatedly beyond the total
+        return { success: false, message: 'Antall lastede varer vil overstige totalen for denne ordren.' };
+    }
+
+    // Apply the updates
+    currentItem.loadedItems += newItems.length;
+    currentItem.scannedCollieIds = [...alreadyScanned, ...newItems];
+
+    if (currentItem.loadedItems >= currentItem.totalItems) {
+        currentItem.status = 'loaded';
+        currentItem.loadedAt = serverTimestamp() as any;
+        currentItem.loadedBy = userId;
+        await updateOrder(orgId, currentItem.orderId, { status: 'loaded' });
+    }
+
+    await updateDoc(manifestRef, {
+        orders: manifest.orders,
+        updatedAt: serverTimestamp()
+    });
+
+    if (itemsToAddCount > 1) {
+        return { success: true, message: `Pall scannet. ${itemsToAddCount} kolli lagt til automatisk.` };
+    }
+    return { success: true, message: 'Vare scannet og lastet.' };
+};

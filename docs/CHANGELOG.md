@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Hierarchical Barcode Generation:** When an order is created, the system now automatically generates unique barcode IDs for every individual item (Collie) and calculates the required number of Handling Units (Pallets), generating parent SSCC-style barcodes for them in the database.
+- **Smart Manifest Scanning:** Upgraded the Lasterampe (Warehouse) scanner interface. The system now intelligently distinguishes between scanning a general order, a specific item (Collie), or a parent Pallet. Scanning a Pallet automatically marks all associated Collies as loaded simultaneously, significantly speeding up terminal operations.
+- Added 'Varer & Palletering' section to the New Order form. Users can now add multiple detailed line items (e.g. Kegs, Cases) with quantities, dimensions, and weights. The system automatically calculates total items, total weight, total volume, and estimates the required EUR-pallet space.
+
 - Added 'Annet' (Other) category for personnel schedule overrides and statuses across the platform.
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 

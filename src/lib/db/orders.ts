@@ -1,15 +1,65 @@
-import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { Order } from '../types';
+import { Order, Collie, HandlingUnit } from '../types';
+import { calculateVolumetrics } from '../volumetrics';
 
 export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   const orgRef = doc(db, 'organizations', order.orgId);
   const ordersRef = collection(orgRef, 'orders');
-  const docRef = await addDoc(ordersRef, {
+  
+  // 1. Calculate how many handling units (pallets) are needed based on volumetrics
+  let handlingUnits: HandlingUnit[] = [];
+  let estimatedPalletsCount = 0;
+  
+  if (order.lineItems && order.lineItems.length > 0) {
+      const vol = calculateVolumetrics(order.lineItems);
+      estimatedPalletsCount = Math.ceil(vol.estimatedPallets); // e.g. 1.2 -> 2 pallets
+      
+      for (let i = 0; i < estimatedPalletsCount; i++) {
+          handlingUnits.push({
+              id: `${order.barcode}-P${i + 1}`,
+              type: 'eur-pallet',
+              status: 'pending'
+          });
+      }
+  }
+
+  // 2. Generate individual Collies (Items) based on line item quantities
+  let collies: Collie[] = [];
+  let itemCounter = 1;
+  
+  if (order.lineItems) {
+      for (const lineItem of order.lineItems) {
+          for (let i = 0; i < lineItem.quantity; i++) {
+              
+              // Simple round-robin assignment to pallets (Handling Units)
+              let assignedPalletId = undefined;
+              if (handlingUnits.length > 0) {
+                  const palletIndex = (itemCounter - 1) % handlingUnits.length;
+                  assignedPalletId = handlingUnits[palletIndex].id;
+              }
+
+              collies.push({
+                  id: `${order.barcode}-${itemCounter.toString().padStart(3, '0')}`,
+                  lineItemId: lineItem.id,
+                  handlingUnitId: assignedPalletId,
+                  status: 'pending'
+              });
+              itemCounter++;
+          }
+      }
+  }
+
+  // 3. Save to database
+  const orderToSave = {
     ...order,
+    collies: collies.length > 0 ? collies : order.collies,
+    handlingUnits: handlingUnits.length > 0 ? handlingUnits : order.handlingUnits,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  const docRef = await addDoc(ordersRef, orderToSave);
   return docRef.id;
 };
 

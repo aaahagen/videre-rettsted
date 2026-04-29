@@ -82,6 +82,7 @@ export const firebaseDB: Database = {
   deleteManifest: manifestsDb.deleteManifest,
   getManifestByRoute: manifestsDb.getManifestByRoute,
   incrementManifestItemLoadedCount: manifestsDb.incrementManifestItemLoadedCount,
+  processManifestScan: manifestsDb.processManifestScan,
   decrementManifestItemLoadedCount: manifestsDb.decrementManifestItemLoadedCount,
   finalizeManifest: manifestsDb.finalizeManifest,
   addManifestNote: manifestsDb.addManifestNote,

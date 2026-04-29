@@ -88,42 +88,32 @@ export default function ManifestDetailPage() {
         };
     }, [id, dbUser, route, vehicle, toast, router]);
 
-    const handleScan = async (barcode: string) => {
+        const handleScan = async (barcode: string) => {
         if (!manifest || !dbUser) return;
 
         const cleanBarcode = barcode.trim();
         if (!cleanBarcode) return;
 
-        const manifestOrderItem = manifest.orders.find(item => item.barcode === cleanBarcode);
-        
-        if (!manifestOrderItem) {
-            toast({
-                title: "Ukjent strekkode",
-                description: `Pakken med kode ${cleanBarcode} tilhører ikke denne ruten.`,
-                variant: "destructive"
-            });
-            return;
-        }
-
-        if (manifestOrderItem.loadedItems >= manifestOrderItem.totalItems) {
-            toast({
-                title: "Alle varer lastet",
-                description: `Alle ${manifestOrderItem.totalItems} varer for pakken ${cleanBarcode} er allerede registrert som lastet.`,
-            });
-            return;
-        }
-
         try {
-            await firebaseDB.incrementManifestItemLoadedCount(dbUser.orgId, manifest.id, manifestOrderItem.orderId, dbUser.id);
-            toast({
-                title: "Vare lastet",
-                description: `Registrerte en vare for ${cleanBarcode} på bilen.`, 
-            });
+            const result = await firebaseDB.processManifestScan(dbUser.orgId, manifest.id, cleanBarcode, dbUser.id);
+            if (result.success) {
+                toast({
+                    title: "Scannet Suksess",
+                    description: result.message,
+                });
+                setManualBarcode('');
+            } else {
+                toast({
+                    title: "Feil",
+                    description: result.message,
+                    variant: "destructive"
+                });
+            }
         } catch (error: any) {
-            console.error("Error incrementing item:", error);
+            console.error("Error processing scan:", error);
             toast({
-                title: "Feil",
-                description: error.message || "Kunne ikke registrere varen.",
+                title: "Feil ved scanning",
+                description: error.message || "Noe gikk galt.",
                 variant: "destructive"
             });
         }

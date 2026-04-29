@@ -1,4 +1,9 @@
-'use client';
+const fs = require('fs');
+
+const file = 'src/app/dashboard/orders/new/page.tsx';
+let content = fs.readFileSync(file, 'utf8');
+
+const completeRewrite = \`'use client';
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -111,7 +116,7 @@ export default function NewOrderPage() {
     const prefix = 'VR';
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    form.setValue('barcode', `VR-${timestamp}-${random}`);
+    form.setValue('barcode', \`\${prefix}-\${timestamp}-\${random}\`);
   };
 
   async function onSubmit(data: z.infer<typeof orderSchema>) {
@@ -138,7 +143,7 @@ export default function NewOrderPage() {
           },
         },
         lineItems: data.lineItems.map((item, index) => ({
-          id: `item-${index}-${Date.now()}`,
+          id: \`item-\${index}-\${Date.now()}\`,
           ...item
         }))
       };
@@ -146,7 +151,10 @@ export default function NewOrderPage() {
       await firebaseDB.createOrder(orderData);
       toast({
         title: 'Ordre Opprettet',
-        description: `Ordre med strekkode ${data.barcode} og ${volumetrics.totalItems} varer er nå registrert.`,
+        description: \`Ordre med strekkode \${data.barcode} og \${volumetrics.totalItems} varer er nå registrert.\`,
+        action: (
+          <Button variant="secondary" onClick={() => console.log('Print', data.barcode)}>Skriv ut</Button>
+        )
       });
       router.push('/dashboard/orders');
     } catch (error: any) {
@@ -257,7 +265,7 @@ export default function NewOrderPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-2">
                       <FormField
                         control={form.control}
-                        name={`lineItems.${index}.description` as const}
+                        name={\`lineItems.\${index}.description\`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Beskrivelse</FormLabel>
@@ -269,7 +277,7 @@ export default function NewOrderPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
-                          name={`lineItems.${index}.quantity` as const}
+                          name={\`lineItems.\${index}.quantity\`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Antall</FormLabel>
@@ -280,7 +288,7 @@ export default function NewOrderPage() {
                         />
                         <FormField
                           control={form.control}
-                          name={`lineItems.${index}.type` as const}
+                          name={\`lineItems.\${index}.type\`}
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Type</FormLabel>
@@ -302,7 +310,7 @@ export default function NewOrderPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <FormField
                         control={form.control}
-                        name={`lineItems.${index}.weightPerItem` as const}
+                        name={\`lineItems.\${index}.weightPerItem\`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Vekt per (kg)</FormLabel>
@@ -312,7 +320,7 @@ export default function NewOrderPage() {
                       />
                       <FormField
                         control={form.control}
-                        name={`lineItems.${index}.length` as const}
+                        name={\`lineItems.\${index}.length\`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Lengde (cm)</FormLabel>
@@ -322,7 +330,7 @@ export default function NewOrderPage() {
                       />
                       <FormField
                         control={form.control}
-                        name={`lineItems.${index}.width` as const}
+                        name={\`lineItems.\${index}.width\`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Bredde (cm)</FormLabel>
@@ -332,7 +340,7 @@ export default function NewOrderPage() {
                       />
                       <FormField
                         control={form.control}
-                        name={`lineItems.${index}.height` as const}
+                        name={\`lineItems.\${index}.height\`}
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Høyde (cm)</FormLabel>
@@ -417,3 +425,7 @@ export default function NewOrderPage() {
     </div>
   );
 }
+\`;
+
+fs.writeFileSync(file, completeRewrite);
+console.log('Clean rewrite complete!');
