@@ -61,7 +61,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
     const [overrideStartDateStr, setOverrideStartDateStr] = useState<string>('');
     const [overrideEndDateStr, setOverrideEndDateStr] = useState<string>('');
     const [isPeriod, setIsPeriod] = useState(false);
-    const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'custom'>('off');
+    const [overrideType, setOverrideType] = useState<'off' | 'vacation' | 'sick' | 'other' | 'custom'>('off');
     const [overrideStart, setOverrideStart] = useState('08:00');
     const [overrideEnd, setOverrideEnd] = useState('16:00');
 
@@ -622,6 +622,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                                 <SelectItem value="off">Fridag</SelectItem>
                                                 <SelectItem value="vacation">Ferie</SelectItem>
                                                 <SelectItem value="sick">Sykemelding</SelectItem>
+                                                <SelectItem value="other">Annet</SelectItem>
                                                 <SelectItem value="custom">Tilpasset tid</SelectItem>
                                             </SelectContent>
                                         </Select>
@@ -649,7 +650,7 @@ export function DriverProfileForm({ user, onSubmit, onCancel }: DriverProfileFor
                                 <div className="space-y-2 mt-4 max-h-[300px] overflow-y-auto pr-2">
                                     {Object.entries(scheduleOverrides || {}).sort(([a], [b]) => a.localeCompare(b)).map(([date, details]) => {
                                         let typeLabel = ''; let colorClass = '';
-                                        switch(details.type) { case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700'; break; case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break; case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break; case 'custom': typeLabel = `Arbeider ${details.start} - ${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break; }
+                                        switch(details.type) { case 'off': typeLabel = 'Fridag'; colorClass = 'bg-slate-100 text-slate-700'; break; case 'vacation': typeLabel = 'Ferie'; colorClass = 'bg-green-100 text-green-700 border-green-200'; break; case 'sick': typeLabel = 'Syk'; colorClass = 'bg-red-100 text-red-700 border-red-200'; break; case 'other': typeLabel = 'Annet'; colorClass = 'bg-purple-100 text-purple-700 border-purple-200'; break; case 'custom': typeLabel = `Arbeider ${details.start} - ${details.end}`; colorClass = 'bg-blue-100 text-blue-700 border-blue-200'; break; }
                                         
                                         const [year, month, day] = date.split('-');
                                         const localDate = new Date(Number(year), Number(month) - 1, Number(day));

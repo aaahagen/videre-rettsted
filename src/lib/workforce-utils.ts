@@ -11,6 +11,7 @@ export const getDriverStatus = (driver: DriverProfile, date: Date) => {
             case 'off': return { status: 'Fridag', short: 'Fri', type: 'off', color: 'bg-slate-100 text-slate-700' };
             case 'vacation': return { status: 'Ferie', short: 'Ferie', type: 'vacation', color: 'bg-green-100 text-green-800 border-green-200' };
             case 'sick': return { status: 'Syk', short: 'Syk', type: 'sick', color: 'bg-red-100 text-red-800 border-red-200' };
+            case 'other': return { status: 'Annet', short: 'Annet', type: 'other', color: 'bg-purple-100 text-purple-800 border-purple-200' };
             case 'custom': return { status: `Jobber ${override.start} - ${override.end}`, short: `${override.start}-${override.end}`, type: 'working', color: 'bg-blue-100 text-blue-800 border-blue-200', start: override.start, end: override.end };
         }
     }

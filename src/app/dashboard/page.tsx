@@ -230,6 +230,7 @@ export default function DashboardPage() {
         let vacation = 0;
         let off = 0;
         let contractors = 0;
+        let other = 0;
 
         const today = new Date();
 
@@ -243,9 +244,10 @@ export default function DashboardPage() {
             else if (statusInfo.type === 'sick') sick++;
             else if (statusInfo.type === 'vacation') vacation++;
             else if (statusInfo.type === 'off') off++;
+            else if (statusInfo.type === 'other') other++;
         });
 
-        return { working, sick, vacation, off, contractors };
+        return { working, sick, vacation, off, contractors, other };
   }, [drivers]);
   
   const overallProgress = monitorStats.totalPlaces > 0 ? (monitorStats.completedPlaces / monitorStats.totalPlaces) * 100 : 0;
@@ -436,6 +438,10 @@ export default function DashboardPage() {
                                 <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Coffee className="h-4 w-4"/> Fridag</span>
                                 <span className="font-bold text-slate-900">{workforceStats.off}</span>
                             </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-600 flex items-center gap-2"><Shield className="h-4 w-4 text-purple-500"/> Annet</span>
+                                <span className="font-bold text-slate-900">{workforceStats.other}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -475,12 +481,12 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
             </div>
 
             {/* ACTION SIDEBAR (Right - 33%) */}
             <div className="w-full lg:w-1/3 space-y-6">
                 <TimeStampCard user={userData} />
+                {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
                 {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
             </div>
         </div>

@@ -147,6 +147,7 @@ export function WorkforceTimeline({ drivers, onEditDriver }: WorkforceTimelinePr
                                                         isWork ? "bg-blue-50 border-blue-100 text-blue-700" : 
                                                         statusInfo.type === 'vacation' ? "bg-green-50 border-green-100 text-green-700" :
                                                         statusInfo.type === 'sick' ? "bg-red-50 border-red-100 text-red-700" :
+                                                        statusInfo.type === 'other' ? "bg-purple-50 border-purple-100 text-purple-700" :
                                                         "bg-slate-50/50 border-transparent text-slate-400"
                                                     )}
                                                     title={statusInfo.status}

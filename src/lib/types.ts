@@ -274,7 +274,7 @@ export interface DriverProfile extends User {
     }>;
   };
   scheduleOverrides?: Record<string, {
-    type: 'off' | 'vacation' | 'sick' | 'custom';
+    type: 'off' | 'vacation' | 'sick' | 'other' | 'custom';
     start?: string;
     end?: string;
   }>;
