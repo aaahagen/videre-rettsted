@@ -52,14 +52,14 @@ This phase leverages the data structures from previous phases to manage incoming
 
 1.  **Multi-Modal Order Intake & Management (In Progress):** 
     The system must handle orders originating from various sources, balancing external interoperability with internal efficiency.
-    *   **Manual Registration (Completed):** UI (`/dashboard/orders/new`) built for administrators to manually input order details (destinations, physical details, special requirements). *Future enhancement:* Capture precise physical dimensions (`height`, `length`, `depth`) for volumetric weight calculations.
+    *   **Manual Registration (Completed):** UI (`/dashboard/orders/new`) built for administrators to manually input order details. Includes dynamic line items and automated volumetric weight/pallet calculations.
     *   **Rapid "Scan-to-Receive" (Planned):** For acting as a middleman/hub for 3rd party carriers where API integration is unavailable. Terminal workers will use a dedicated mobile view to rapidly scan incoming 3rd party barcodes. The system will instantly generate a "shell" order, allowing the worker to quickly sort the package to a specific route or zone.
     *   **Bulk Import (Planned):** Allow administrators to upload CSV/Excel spreadsheets to generate orders en masse.
     *   **API Intake & Data Enrichment (Future Enhancement):** 
         *   **API Foundation:** The backend schema is designed to seamlessly accept orders pushed from external systems (TMS/ERP) via Electronic Data Interchange (EDI) or REST APIs.
         *   **Data Enrichment Workflow:** Orders received via API may lack specific data required for automated route planning. A manual verification step will allow administrators to review, enrich, and approve these orders.
 
-2.  **Intelligent Labeling & Item-Level Tracking (Planned):**
+2.  **Intelligent Labeling & Item-Level Tracking (Completed):**
     The system must accommodate both external and internally generated tracking standards down to the individual item (e.g., pallet) level.
     *   **Item-Level Tracking:** Evolve the `Order` model to generate and track individual barcodes for each item within a multi-item order (e.g., 5 distinct barcodes for an order of 5 pallets).
     *   **3rd Party Goods (Cross-Docking):** The system must respect and track existing 3rd party barcodes without requiring re-labeling.
