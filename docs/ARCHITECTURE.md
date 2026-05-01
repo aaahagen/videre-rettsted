@@ -2,11 +2,11 @@
 
 ## Frontend
 
-*   **Framework**: Next.js 14 (App Router)
+*   **Framework**: Next.js 15 (App Router)
 *   **Language**: TypeScript
 *   **Styling**: Tailwind CSS
 *   **UI Components**: shadcn/ui
-*   **State Management**: React Context API for user session, SWR for data fetching
+*   **State Management**: React Context API for user session, Zustand for local UI state
 *   **Deployment**: Firebase App Hosting
 
 ### Future Mobile Architecture (Phase 7)
@@ -49,7 +49,16 @@ To ensure future flexibility and ease of migration, all interactions with the ba
 
 - **`src/lib/database.ts`**: Defines a generic interface for raw data operations (CRUD).
 - **`src/lib/firebase/database.ts`**: The main aggregator for the database interface using Firebase Firestore. It delegates specific operations to domain-specific modules.
-- **`src/lib/db/*`**: Domain-specific database modules (e.g., `users.ts`, `places.ts`, `orders.ts`) implementing the actual Firestore logic, addressing the previous "God Object" architecture.
+- **`src/lib/db/*`**: Domain-specific database modules implementing the actual Firestore logic:
+    - `users.ts`: Profile management and role resolution.
+    - `places.ts`: Last-meter delivery location database.
+    - `orders.ts`: Order intake, bulk import, and status tracking.
+    - `routes.ts`: Planning, optimization, and assignment.
+    - `vehicles.ts`: Fleet registry and compliance.
+    - `manifests.ts`: Terminal loading and verification.
+    - `workLogs.ts`: Time and attendance tracking.
+    - `courses.ts`: LMS course library and user assignments.
+    - `logs.ts`: Security audit and GDPR logging.
 - **`src/lib/auth.ts`**: Defines a generic interface for authentication operations.
 - **`src/lib/firebase/auth.ts`**: The Firebase implementation of the auth interface.
 - **`src/lib/storage.ts`**: A generic interface for file storage operations.
@@ -60,80 +69,57 @@ As the application transitions from MVP to Enterprise Scale, the following archi
 
 1.  **Database Repository Pattern (Addressing the "God Object"):**
     *   *Current State:* Completed. `src/lib/firebase/database.ts` has been split into domain-specific repositories within the `src/lib/db/` directory. The main file now acts as an aggregator, fulfilling the `Database` interface.
-    *   *Resolution:* Maintain the domain-specific repository structure (`src/lib/db/orders.ts`, `src/lib/db/vehicles.ts`, etc.) for any new database entities to ensure maintainability and isolate domain logic.
+    *   *Resolution:* Maintain the domain-specific repository structure for any new database entities to ensure maintainability and isolate domain logic.
 
 2.  **React Server Components (RSC) Migration:**
-    *   *Current State:* Heavy reliance on Client Components (`'use client'`) and `useEffect` for data fetching, leading to waterfall rendering.
-    *   *Resolution:* Shift data fetching to Server Components (e.g., `OrdersPage` fetches initial data server-side). Pass this data to smaller Client Components for interactivity (e.g., a `ClientOrdersList` that handles search filtering). This drastically improves initial load times and SEO/Metadata performance.
+    *   *Current State:* Heavy reliance on Client Components (`'use client'`) and `useEffect` for data fetching.
+    *   *Resolution:* Shift data fetching to Server Components (e.g., `OrdersPage` fetches initial data server-side). 
 
 3.  **Automated Testing Suite Integration:**
-    *   *Current State:* Reliance on manual QA scripts (`docs/TESTING.md`).
-    *   *Resolution:* Implement a dual-layered testing strategy:
-        *   **Unit Testing (Vitest/Jest):** Test pure business logic (e.g., constraint calculations, volumetric weight, shift rotation logic).
-        *   **End-to-End Testing (Playwright/Cypress):** Automate the core operational loops (e.g., creating an order, assigning it to a route, simulating a loader scanning the manifest, and a driver completing the POD).
+    *   *Current State:* Jest (unit) and Playwright (E2E) infrastructure is established.
+    *   *Resolution:* Maintain and expand test coverage for all new features, specifically focusing on the loading and POD flows.
 
 ### API-First Principle for Business Intelligence (Phase 5)
 For high-level data aggregation and KPI reporting, we will adopt an API-first principle. This involves:
 - **Dedicated Cloud Functions:** All strategic data (e.g., total kilometers driven, overtime hours) will be calculated in dedicated, secure Cloud Functions.
 - **Internal & External API:** These functions will serve a dual purpose:
     1.  They will provide data directly to the in-app "Owner's Super Dashboard."
-    2.  They will be exposed via a secure, versioned API endpoint (e.g., `/api/v1/kpi/fleet_utilization`) for consumption by third-party BI tools.
-- This architecture decouples the presentation layer from the data aggregation logic, ensuring that any tool, internal or external, receives the same, accurate KPI data.
-
-## Database Schema (Firestore)
-
-### /places/{placeId}
-- name: string
-- address: string
-- location: geopoint
-- orgId: string (for data isolation)
-- notes: string
-- hashtags: array (of strings)
-- createdBy: string (Stores the author's userId)
-- updatedBy: string (Stores the last editor's userId)
-- createdAt: timestamp
-- updatedAt: timestamp
-- images: array (of objects { url, caption })
-
-*(Other schemas defined in `src/lib/types.ts`)*
+    2.  They will be exposed via a secure, versioned API endpoint for consumption by third-party BI tools.
 
 ## Security Rules (Firestore)
 
 The security model is fundamentally based on multi-tenancy and a strict role hierarchy. All queries and writes from the client **must** be validated against the user's `orgId` and their specific `role` within `firestore.rules`.
 
 ### Strict Rule Enforcement (Scaling Requirement)
-To ensure enterprise-grade security and prevent cross-tenant data leaks, `firestore.rules` must be strictly defined, rejecting the wildcard `allow read, write: if request.auth != null;` pattern used in early prototyping. 
-*   Every collection must verify `request.auth.token.orgId == resource.data.orgId` (or similar custom claim/document lookup logic).
-*   Role-based access control (RBAC) must be enforced at the database level, not just hidden in the UI.
+To ensure enterprise-grade security and prevent cross-tenant data leaks, `firestore.rules` are strictly defined. 
+*   Every collection verifies `isUserInOrg(resource.data.orgId)`.
+*   Role-based access control (RBAC) is enforced at the database level.
+*   **LMS Security:** Courses are organization-specific. Assignments are only readable by the assigned user or an admin.
 
 ### Role Hierarchy
-The application enforces granular authorization levels to support diverse operational workflows:
+The application enforces granular authorization levels:
 
 1.  **Driver / Contractor (`role: 'driver' | 'contractor'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Read access to their assigned routes and places. Write access is restricted to operational updates (e.g., status changes, marking stops complete, capturing PODs, uploading place images). Cannot access administrative tools.
+    *   **Permissions:** Read access to routes and places. Operational writes (stops, POD, inspections, course completion).
 
 2.  **Warehouse / Loader (`role: 'loader'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Dedicated access to the vehicle manifest and loading modules (Phase 3). Can scan and mark items as loaded but cannot edit routes or access HR data.
+    *   **Permissions:** Access to the manifest and loading modules. Can scan and mark items as loaded. Access to the dedicated **Loader Dashboard**.
 
 3.  **Route Planner (`role: 'planner'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Focused administrative access. Can create, edit, optimize, and assign routes. Can view places and fleet availability but lacks access to sensitive HR data (contracts, payroll) or organization-level settings.
+    *   **Permissions:** Administrative access for creating and optimizing routes. Lacks access to sensitive HR/Payroll data.
 
 4.  **Organization Admin (`role: 'admin'`)**:
     *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** Full operational CRUD rights over routes, places, vehicles, and personnel within their organization. Can invite users and manage standard settings.
+    *   **Permissions:** Full operational CRUD rights. Can manage personnel, fleet, and organization settings.
 
 5.  **Organization Owner (`role: 'owner'`)**:
-    *   **Scope:** Bound strictly to a single `orgId`.
-    *   **Permissions:** The highest authority *within* a specific organization. Inherits all `admin` rights plus exclusive access to the "Strategic Dashboard" (Phase 5), billing/subscription management, and the ability to delete the organization or export its data.
+    *   Highest authority within a specific organization. Includes all admin rights plus export and deletion capabilities.
 
-6.  **Super Admin / Platform Owner (`role: 'super_admin'`)**:
-    *   **Scope:** Global. Not bound by a specific `orgId`.
-    *   **Permissions:** Unrestricted read/write access across the entire database. Used solely for global platform management, customer support (impersonation), and system-wide billing.
+6.  **Super Admin (`role: 'super_admin'`)**:
+    *   **Scope:** Global. Used for platform management and multi-tenancy support.
 
 ### Access Control Architecture
-*   **Routing Segregation:** 
-    *   Level 1-5 users log in and are routed to `/dashboard`. The UI dynamically adapts based on their specific role (e.g., Loaders only see the manifest view, Planners don't see the Workforce tab).
-    *   Level 6 (`super_admin`) users are routed to a distinct `/super-admin` namespace.
+*   **Routing Segregation:** The UI dynamically adapts based on role (e.g., Loaders only see the manifest view, Admins see the full dashboard).

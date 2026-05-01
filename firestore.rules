@@ -65,50 +65,40 @@ service cloud.firestore {
     match /places/{placeId} {
       allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
-      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId);
-      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
     }
 
     // Routes
     match /routes/{routeId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (
+      allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && (
         isAdmin() || (request.auth.uid == resource.data.driverId)
       );
-      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
     }
 
     // Messages
     match /messages/{messageId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
-      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId);
-      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId);
+      allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId);
     }
 
     // Vehicles
-    // Logs
-    match /logs/{logId} {
-      allow read: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
-      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
-      allow update: if false;
-      allow delete: if false;
-    }
-
     match /vehicles/{vehicleId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
-      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
     }
 
     // WorkLogs
     match /workLogs/{logId} {
-      // Allow user to read if they are the driver or an admin in the same org
-      // For queries (list), Firestore evaluates the rule against the query constraints.
       allow read: if isAuthenticated() && (
-        (resource == null) || // For documents that don't exist yet in queries
+        (resource == null) || 
         (request.auth.uid == resource.data.driverId) || 
         (isAdmin() && isUserInOrg(resource.data.orgId))
       );
@@ -119,10 +109,41 @@ service cloud.firestore {
         
       allow update: if isAuthenticated() && (
         (request.auth.uid == resource.data.driverId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
+        (isAdmin() && isUserInOrg(request.resource.data.orgId))
       );
       
       allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
+    }
+
+    // LMS - Courses
+    match /courses/{courseId} {
+      allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId);
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+    }
+
+    // LMS - Course Assignments
+    match /courseAssignments/{assignmentId} {
+      allow read: if isAuthenticated() && (
+        (resource == null) ||
+        (request.auth.uid == resource.data.userId) || 
+        (isAdmin() && isUserInOrg(resource.data.orgId))
+      );
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == resource.data.userId) || 
+        (isAdmin() && isUserInOrg(resource.data.orgId))
+      );
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+    }
+
+    // Audit Logs
+    match /logs/{logId} {
+      allow read: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
