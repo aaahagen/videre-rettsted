@@ -7,7 +7,7 @@ import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield } from 'lucide-react';
-import { User, Route } from '@/lib/types';
+import { User, Route, WorkLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { doc, onSnapshot, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { useSearch } from '@/hooks/use-search';
@@ -20,7 +20,7 @@ import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { DriverProfile, Route as RouteType, Place, Order, Manifest } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
-import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight } from 'lucide-react';
+import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight, LogIn, LogOut, Users2 } from 'lucide-react';
 
 
 
@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [fleetStats, setFleetStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
   const [orderStats, setOrderStats] = useState({ total: 0, pending: 0, loaded: 0, delivered: 0, failed: 0 });
   const [manifestStats, setManifestStats] = useState({ totalManifests: 0, activeManifests: 0, totalKolli: 0, loadedKolli: 0 });
+  const [todayWorkLogs, setTodayWorkLogs] = useState<WorkLog[]>([]);
 
   const [activeRoute, setActiveRoute] = useState<Route | null>(null);
   const [activeManifest, setActiveManifest] = useState<Manifest | null>(null);
@@ -215,11 +216,24 @@ export default function DashboardPage() {
         setManifestStats({ totalManifests, activeManifests, totalKolli, loadedKolli });
       });
 
+      // Listen for today's workLogs
+      const today = new Date().toISOString().split('T')[0];
+      const qWorkLogs = query(
+        collection(db, 'workLogs'), 
+        where('orgId', '==', userData.orgId),
+        where('actualPunchIn', '>=', today)
+      );
+      const unsubWorkLogs = onSnapshot(qWorkLogs, (snapshot) => {
+        const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkLog));
+        setTodayWorkLogs(logs);
+      });
+
       return () => {
         unsubRoutes();
         unsubVehicles();
         unsubOrders();
         unsubManifests();
+        unsubWorkLogs();
       };
     }
   }, [userData?.orgId, userData?.role === 'admin']);
@@ -249,6 +263,14 @@ export default function DashboardPage() {
 
         return { working, sick, vacation, off, contractors, other };
   }, [drivers]);
+
+  const attendanceStats = useMemo(() => {
+    const present = todayWorkLogs.filter(log => !log.actualPunchOut).length;
+    const finished = todayWorkLogs.filter(log => log.actualPunchOut).length;
+    const waiting = Math.max(0, workforceStats.working - present - finished);
+    
+    return { present, finished, waiting };
+  }, [todayWorkLogs, workforceStats.working]);
   
   const overallProgress = monitorStats.totalPlaces > 0 ? (monitorStats.completedPlaces / monitorStats.totalPlaces) * 100 : 0;
   const manifestProgress = manifestStats.totalKolli > 0 ? (manifestStats.loadedKolli / manifestStats.totalKolli) * 100 : 0;
@@ -485,6 +507,54 @@ export default function DashboardPage() {
 
             {/* ACTION SIDEBAR (Right - 33%) */}
             <div className="w-full lg:w-1/3 space-y-6">
+                {/* ATTENDANCE CARD */}
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <Users2 className="h-5 w-5 text-emerald-600" />
+                            Dagens Oppmøte
+                        </h3>
+                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Status</span>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-100 text-emerald-600 rounded-md">
+                                    <LogIn className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700">Til stede nå</span>
+                            </div>
+                            <span className="text-2xl font-black text-emerald-600">{attendanceStats.present}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 text-blue-600 rounded-md">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700">Fullført vakt</span>
+                            </div>
+                            <span className="text-2xl font-black text-blue-600">{attendanceStats.finished}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-amber-50/50 rounded-lg border border-amber-100">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-100 text-amber-600 rounded-md">
+                                    <Clock className="h-4 w-4" />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700">Venter på vakt</span>
+                            </div>
+                            <span className="text-2xl font-black text-amber-600">{attendanceStats.waiting}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center text-xs text-muted-foreground font-medium">
+                        <span>Planlagt i dag:</span>
+                        <span className="font-bold text-slate-900">{workforceStats.working} personer</span>
+                    </div>
+                </div>
+
                 <TimeStampCard user={userData} />
                 {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
                 {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
