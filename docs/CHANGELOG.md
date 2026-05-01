@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Dedicated Loader Dashboard:** Created a new, focused dashboard view at `/dashboard/loader` specifically for the 'loader' role. This dashboard provides a real-time overview of active manifests, loading progress, and issue reporting alerts, maximizing warehouse efficiency.
 - **Hierarchical Barcode Generation:** When an order is created, the system now automatically generates unique barcode IDs for every individual item (Collie) and calculates the required number of Handling Units (Pallets), generating parent SSCC-style barcodes for them in the database.
 - **Smart Manifest Scanning:** Upgraded the Lasterampe (Warehouse) scanner interface. The system now intelligently distinguishes between scanning a general order, a specific item (Collie), or a parent Pallet. Scanning a Pallet automatically marks all associated Collies as loaded simultaneously, significantly speeding up terminal operations.
 - Added 'Varer & Palletering' section to the New Order form. Users can now add multiple detailed line items (e.g. Kegs, Cases) with quantities, dimensions, and weights. The system automatically calculates total items, total weight, total volume, and estimates the required EUR-pallet space.
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Cascading Order Deletion:** Implemented a robust cascading deletion system for orders. Deleting an order now automatically removes it from associated manifests and cleans up the corresponding route (removing stops if no other orders on that route require that destination) using atomic database transactions.
 - **AI Assistant Protocol:** Updated `docs/blueprint.md` to prioritize the `write_file` tool for all code modifications, reducing reliance on temporary scripts. Added explicit requirements for verification with `npm run build` or `npm run typecheck` before pushing changes.
 - **Vehicle Database Operations:** Improved Firestore compatibility by adding a `cleanObject` utility to `createVehicle` and `updateVehicle` in `src/lib/db/vehicles.ts`. This utility automatically removes `undefined` values from data objects before they are sent to Firestore, preventing potential write errors.
 - Moved the AnalyticsDashboard (places and users stats) to the right sidebar under the "start vakt" component in the Admin Dashboard layout.

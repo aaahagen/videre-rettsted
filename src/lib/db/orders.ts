@@ -1,6 +1,6 @@
-import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, writeBatch, arrayRemove, limit } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { Order, Collie, HandlingUnit } from '../types';
+import { Order, Collie, HandlingUnit, Manifest, Route } from '../types';
 import { calculateVolumetrics } from '../volumetrics';
 
 export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
@@ -94,7 +94,73 @@ export const updateOrder = async (orgId: string, orderId: string, updates: Parti
   await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
 };
 
+/**
+ * Deletes an order and handles cascading updates for routes and manifests.
+ */
 export const deleteOrder = async (orgId: string, orderId: string): Promise<void> => {
-    const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
-    await deleteDoc(docRef);
+  const batch = writeBatch(db);
+  const orderRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
+  
+  try {
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) return;
+    
+    const orderData = orderSnap.data() as Order;
+    const { routeId, placeId } = orderData;
+
+    // 1. Remove order from any associated Route
+    if (routeId) {
+      const routeRef = doc(db, 'routes', routeId);
+      const routeSnap = await getDoc(routeRef);
+      
+      if (routeSnap.exists()) {
+        const routeData = routeSnap.data() as Route;
+        
+        // Check if other orders on the same route point to the same place
+        const otherOrdersInRouteQ = query(
+          collection(db, `organizations/${orgId}/orders`),
+          where('routeId', '==', routeId),
+          where('__name__', '!=', orderId)
+        );
+        const otherOrdersSnap = await getDocs(otherOrdersInRouteQ);
+        const placeStillNeeded = otherOrdersSnap.docs.some(d => (d.data() as Order).placeId === placeId);
+
+        // If no other order on this route needs this place, remove the place from the route
+        if (!placeStillNeeded) {
+          batch.update(routeRef, {
+            places: arrayRemove(placeId),
+            completedStops: arrayRemove(placeId)
+          });
+        }
+      }
+
+      // 2. Remove order from any associated Manifest
+      const manifestQ = query(
+        collection(db, `organizations/${orgId}/manifests`),
+        where('routeId', '==', routeId),
+        limit(1)
+      );
+      const manifestSnap = await getDocs(manifestQ);
+      
+      if (!manifestSnap.empty) {
+        const manifestDoc = manifestSnap.docs[0];
+        const manifestData = manifestDoc.data() as Manifest;
+        const updatedOrders = manifestData.orders.filter(o => o.orderId !== orderId);
+        
+        batch.update(manifestDoc.ref, {
+          orders: updatedOrders,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+
+    // 3. Delete the order document itself
+    batch.delete(orderRef);
+
+    // Commit all changes
+    await batch.commit();
+  } catch (error) {
+    console.error("Error in cascading order deletion:", error);
+    throw error;
+  }
 };
