@@ -470,3 +470,35 @@ export interface VehicleInspection {
   notes?: string;
 }
 export interface VehicleDamageReport { id: string; orgId: string; vehicleId: string; reportedBy: string; reportedByName: string; description: string; images: string[]; status: 'reported' | 'in_progress' | 'fixed'; createdAt: FieldValue | Date; resolvedAt?: FieldValue | Date; resolvedBy?: string; }
+
+// --- PHASE 2: LMS (Learning Management System) MODELS ---
+
+export interface Course {
+  id: string;
+  orgId: string;
+  title: string;
+  description: string;
+  category: 'safety' | 'adr' | 'equipment' | 'company_policy' | 'other';
+  content: {
+    type: 'pdf' | 'video' | 'link' | 'text';
+    url?: string;
+    body?: string;
+  }[];
+  requiredRoles?: ('admin' | 'driver' | 'contractor' | 'loader' | 'planner')[];
+  estimatedMinutes?: number;
+  isPublished: boolean;
+  createdAt: FieldValue | Date;
+  updatedAt: FieldValue | Date;
+}
+
+export interface CourseAssignment {
+  id: string;
+  orgId: string;
+  courseId: string;
+  userId: string;
+  status: 'assigned' | 'in_progress' | 'completed' | 'expired';
+  progress?: number; // 0-100
+  assignedAt: FieldValue | Date;
+  completedAt?: FieldValue | Date;
+  expiresAt?: FieldValue | Date; // For certifications that need renewal
+}

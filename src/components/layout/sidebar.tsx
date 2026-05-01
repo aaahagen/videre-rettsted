@@ -20,7 +20,8 @@ import {
   Scale, MapPin,
   ChevronDown,
   MessageSquare,
-  Package
+  Package,
+  GraduationCap
 } from 'lucide-react';
 import {
   Sidebar,
@@ -70,6 +71,7 @@ const navGroups = [
       { href: '/dashboard', icon: Home, label: 'Oversikt' },
       { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', adminOnly: true },
       { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
+      { href: '/dashboard/learning', icon: GraduationCap, label: 'Læringsportal' },
     ]
   },
   {
