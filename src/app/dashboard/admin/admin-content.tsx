@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -48,9 +48,11 @@ import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
 import { DataImport } from '@/components/admin/data-import';
+import { OrderImport } from '@/components/admin/order-import';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { useAuth } from '@/components/auth-provider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -830,42 +832,55 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             <CardTitle className="flex items-center gap-2"><DatabaseIcon className="h-5 w-5" /> Datahåndtering</CardTitle>
             <CardDescription>Importer eller eksporter data fra din organisasjon</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                
-                {organization && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
-                            <div>
-                                <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                                    <Download className="h-4 w-4" /> Eksport (Backup)
-                                </h4>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    Last ned en komplett kopi av dine steder, ruter og kjøretøy som en JSON-fil. 
-                                    Du kan bruke denne filen som en sikkerhetskopi.
-                                </p>
-                            </div>
-                            <DataExport orgId={organization.id} />
-                        </div>
+            <CardContent>
+                <Tabs defaultValue="places" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="places" className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" /> Leveringssteder
+                    </TabsTrigger>
+                    <TabsTrigger value="orders" className="flex items-center gap-2">
+                      <Package className="h-4 w-4" /> Ordrer (Bulk Import)
+                    </TabsTrigger>
+                  </TabsList>
 
-                        <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
-                            <div>
-                                <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                                    <Upload className="h-4 w-4" /> Import (Gjenopprett)
-                                </h4>
-                                <p className="text-sm text-slate-500 mt-1">
-                                    Last opp en tidligere eksportert JSON-fil for å gjenopprette data. 
-                                    <span className="font-bold text-amber-600 block mt-1">Advarsel: Dette vil overskrive eksisterende data.</span>
-                                </p>
+                  <TabsContent value="places" className="space-y-6">
+                    {organization && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
+                                <div>
+                                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                                        <Download className="h-4 w-4" /> Eksport (Backup)
+                                    </h4>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Last ned en komplett kopi av dine steder, ruter og kjøretøy som en JSON-fil.
+                                    </p>
+                                </div>
+                                <DataExport orgId={organization.id} />
                             </div>
-                            <DataImport orgId={organization.id} />
-                        </div>
-                    </div>
-                )}
 
-                <div className="pt-6 border-t">
+                            <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
+                                <div>
+                                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                                        <Upload className="h-4 w-4" /> Import (Gjenopprett)
+                                    </h4>
+                                    <p className="text-sm text-slate-500 mt-1">
+                                        Last opp en JSON-fil for å gjenopprette steder. <span className="text-amber-600 font-bold">Lagrer nye steder, sletter ingenting.</span>
+                                    </p>
+                                </div>
+                                <DataImport orgId={organization.id} />
+                            </div>
+                        </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="orders">
+                    {organization && <OrderImport orgId={organization.id} />}
+                  </TabsContent>
+                </Tabs>
+
+                <div className="pt-6 border-t mt-8">
                     {organization && <DeleteOrganization orgId={organization.id} />}
                 </div>
-
             </CardContent>
         </Card>
 
