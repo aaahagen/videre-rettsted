@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const openingHoursSchema = z.object({
   isOpen: z.boolean(),
@@ -98,6 +103,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isHoursOpen, setIsHoursOpen] = useState(false);
 
   const [duplicatePlace, setDuplicatePlace] = useState<Place | null>(null);
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
@@ -295,6 +301,17 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         });
       }
     );
+  };
+
+  const copyMondayToAll = () => {
+      const monday = form.getValues('weeklySchedule.monday');
+      if (!monday) return;
+      
+      DAYS.slice(1).forEach(day => {
+          form.setValue(`weeklySchedule.${day.key}`, { ...monday }, { shouldDirty: true, shouldValidate: true });
+      });
+      
+      toast({ title: "Kopiert", description: "Mandagens tider er kopiert til alle andre dager." });
   };
 
   const onSubmit = async (data: PlaceFormValues) => {
@@ -541,17 +558,43 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 />
             </div>
 
-            {/* OPENING HOURS SECTION */}
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                <div className="flex items-center justify-between border-b pb-2">
-                    <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-indigo-500" />
-                        Åpningstider
-                    </h3>
-                    <Badge variant="outline" className="bg-slate-50 text-[10px] font-bold">Logistikk-kontroll</Badge>
+            {/* OPENING HOURS SECTION - COLLAPSIBLE */}
+            <Collapsible
+              open={isHoursOpen}
+              onOpenChange={setIsHoursOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-6 bg-slate-50/50 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-indigo-500" />
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800 leading-tight">Åpningstider</h3>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Logistikk-kontroll</p>
+                  </div>
                 </div>
-                
-                <div className="space-y-3">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-9 p-0">
+                    {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span className="sr-only">Toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              
+              <CollapsibleContent>
+                <div className="p-6 space-y-6">
+                  <div className="flex justify-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={copyMondayToAll}
+                      className="text-[10px] font-black uppercase tracking-tight h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    >
+                      <Copy className="h-3 w-3 mr-1.5" /> Bruk mandag på alle dager
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
                     {DAYS.map(({ key, label }) => (
                         <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100 hover:bg-white transition-colors">
                             <div className="flex items-center gap-4">
@@ -603,11 +646,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             </div>
                         </div>
                     ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground italic">
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">
                     * Disse tidene brukes til å varsle planleggere dersom en rute forventes å ankomme utenfor åpningstid.
-                </p>
-            </div>
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Leveringsdetaljer</h3>
