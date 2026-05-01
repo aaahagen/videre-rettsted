@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -38,6 +38,17 @@ import { nb } from 'date-fns/locale';
 import { PlaceForm } from '@/components/places/place-form';
 import { PrintPlace } from '@/components/places/print-place';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { cn } from '@/lib/utils';
+
+const DAYS = [
+    { key: 'monday', label: 'Mandag' },
+    { key: 'tuesday', label: 'Tirsdag' },
+    { key: 'wednesday', label: 'Onsdag' },
+    { key: 'thursday', label: 'Torsdag' },
+    { key: 'friday', label: 'Fredag' },
+    { key: 'saturday', label: 'Lørdag' },
+    { key: 'sunday', label: 'Søndag' },
+] as const;
 
 export default function PlaceDetailsPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -332,6 +343,36 @@ export default function PlaceDetailsPage() {
                       </div>
                     )}
                   </div>
+                </section>
+
+                {/* OPENING HOURS DISPLAY */}
+                <section className="bg-white p-5 rounded-xl shadow-sm border">
+                    <h2 className="text-xl font-semibold mb-4 flex items-center">
+                        <Calendar className="mr-2 h-5 w-5 text-indigo-500" />
+                        Åpningstider
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        {DAYS.map(({ key, label }) => {
+                            const dayHours = place.weeklySchedule?.[key];
+                            const isOpen = dayHours?.isOpen;
+                            
+                            return (
+                                <div key={key} className={cn(
+                                    "p-3 rounded-lg border flex flex-col items-center text-center",
+                                    isOpen ? "bg-indigo-50/30 border-indigo-100" : "bg-slate-50 border-slate-100 opacity-50"
+                                )}>
+                                    <span className="text-[10px] font-black uppercase text-slate-400 mb-1">{label}</span>
+                                    {isOpen ? (
+                                        <div className="font-bold text-slate-800 text-sm">
+                                            {dayHours.open} - {dayHours.close}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Stengt</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </section>
 
                 {descEnabled && (place.description || !place.notes) && (

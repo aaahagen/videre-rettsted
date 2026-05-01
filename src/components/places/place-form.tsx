@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 
+const openingHoursSchema = z.object({
+  isOpen: z.boolean(),
+  open: z.string().optional(),
+  close: z.string().optional(),
+});
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
@@ -51,6 +58,15 @@ const placeSchema = z.object({
   contactPersons: z.array(z.object({ name: z.string().optional(), phone: z.string().optional(), email: z.string().optional() })).optional(),
   hashtags: z.string().optional(),
   estimatedDeliveryTime: z.number().optional(),
+  weeklySchedule: z.object({
+    monday: openingHoursSchema,
+    tuesday: openingHoursSchema,
+    wednesday: openingHoursSchema,
+    thursday: openingHoursSchema,
+    friday: openingHoursSchema,
+    saturday: openingHoursSchema,
+    sunday: openingHoursSchema,
+  }).optional(),
   mainImageIndex: z.number().default(0),
   images: z.array(z.object({
     file: z.any().optional(),
@@ -65,6 +81,16 @@ const placeSchema = z.object({
 });
 
 type PlaceFormValues = z.infer<typeof placeSchema>;
+
+const DAYS = [
+    { key: 'monday', label: 'Mandag' },
+    { key: 'tuesday', label: 'Tirsdag' },
+    { key: 'wednesday', label: 'Onsdag' },
+    { key: 'thursday', label: 'Torsdag' },
+    { key: 'friday', label: 'Fredag' },
+    { key: 'saturday', label: 'Lørdag' },
+    { key: 'sunday', label: 'Søndag' },
+] as const;
 
 export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () => void }) {
   const router = useRouter();
@@ -83,6 +109,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     ? place.images.findIndex(img => img.url === place.imageUrl)
     : 0;
 
+  const defaultSchedule = {
+      isOpen: true,
+      open: '08:00',
+      close: '16:00'
+  };
+
   const form = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     defaultValues: {
@@ -94,8 +126,16 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       contactPersons: place?.contactPersons || [],
       hashtags: place?.hashtags?.join(', ') || '',
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
+      weeklySchedule: place?.weeklySchedule || {
+          monday: defaultSchedule,
+          tuesday: defaultSchedule,
+          wednesday: defaultSchedule,
+          thursday: defaultSchedule,
+          friday: defaultSchedule,
+          saturday: { ...defaultSchedule, isOpen: false },
+          sunday: { ...defaultSchedule, isOpen: false },
+      },
       mainImageIndex: initialMainImageIndex >= 0 ? initialMainImageIndex : 0,
-      // Filter out the placeholder image so the user starts with an empty list if only placeholder exists
       images: place?.images?.filter(img => img.url !== '/ingen.jpg').map(img => ({
         url: img.url,
         description: img.description || '',
@@ -113,10 +153,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const mainImageIndex = form.watch('mainImageIndex');
 
   useEffect(() => {
-    if (!place) { // Only auto-save for new places
+    if (!place) {
       const subscription = form.watch((value, { name, type }) => {
-        // We only save text/number fields to localStorage as files/images are too large/complex
-        // Also don't save on form submit success (we clear it instead)
         const partialData = {
           name: value.name,
           address: value.address,
@@ -126,7 +164,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           contactPersons: value.contactPersons,
           hashtags: value.hashtags,
           estimatedDeliveryTime: value.estimatedDeliveryTime,
-          coordinates: value.coordinates
+          coordinates: value.coordinates,
+          weeklySchedule: value.weeklySchedule
         };
         localStorage.setItem('placeFormDraft', JSON.stringify(partialData));
       });
@@ -140,10 +179,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       if (savedDraft) {
         try {
           const parsedDraft = JSON.parse(savedDraft);
-          // Only override empty fields
           Object.keys(parsedDraft).forEach(key => {
               const currentVal = form.getValues()[key as keyof PlaceFormValues];
-              // check if current value is empty so we don't override something already filled
               if (parsedDraft[key] && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
                   form.setValue(key as any, parsedDraft[key], { shouldValidate: true, shouldDirty: true });
               }
@@ -221,7 +258,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         });
     });
 
-    // Reset input
     e.target.value = '';
   };
 
@@ -307,12 +343,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const continueSubmit = () => {
     if (pendingSubmitData) {
         setShowDuplicateAlert(false);
-        // We set showDuplicateAlert to true temporarily so that the check in onSubmit is bypassed
-        // Then we call onSubmit, then we revert it back. The state update is async so we bypass by relying on the state that triggered this.
-        // Actually the best way is to have a ref or just call the logic directly.
-        // Let's use a flag in the parameter or state, but state is async.
-        
-        // Simpler way: just run the inner save logic.
         submitConfirmed(pendingSubmitData);
     }
   };
@@ -372,6 +402,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
+            weeklySchedule: data.weeklySchedule,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
@@ -467,317 +498,400 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="space-y-6 md:col-span-2">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stedsnavn</FormLabel>
-                  <FormControl>
-                    <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-                        <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Adresse</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1 h-8 w-8"
-                        onClick={handleGetLocation}
-                        title="Hent min posisjon"
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="estimatedDeliveryTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-slate-500" />
-                    Tidsbruk for levering
-                  </FormLabel>
-                  <FormControl>
-                    <Select 
-                      value={field.value?.toString() || "0"} 
-                      onValueChange={(val) => field.onChange(Number(val))}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Velg tid" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">0 min (Kun kjøring)</SelectItem>
-                        <SelectItem value="5">5 min</SelectItem>
-                        <SelectItem value="10">10 min</SelectItem>
-                        <SelectItem value="15">15 min</SelectItem>
-                        <SelectItem value="20">20 min</SelectItem>
-                        <SelectItem value="25">25 min</SelectItem>
-                        <SelectItem value="30">30 min</SelectItem>
-                        <SelectItem value="45">45 min</SelectItem>
-                        <SelectItem value="60">60 min</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormDescription>
-                    Beregnet tid brukt på stedet (for ruteplanlegging).
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {descEnabled && (
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Grunnleggende informasjon</h3>
                 <FormField
                 control={form.control}
-                name="description"
+                name="name"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>{descLabel}</FormLabel>
+                    <FormLabel>Stedsnavn</FormLabel>
                     <FormControl>
-                        <Textarea
-                        placeholder={descPlaceholder}
-                        className="min-h-[120px]"
-                        {...field}
-                        />
+                        <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
                 />
-            )}
-            
-            {notesEnabled && (
+                
                 <FormField
                 control={form.control}
-                name="notes"
+                name="address"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>{notesLabel}</FormLabel>
+                    <FormLabel>Full Adresse</FormLabel>
                     <FormControl>
-                        <Textarea
-                        placeholder={notesPlaceholder}
-                        className="min-h-[120px]"
-                        {...field}
-                        />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            )}
-
-            {doorCodeEnabled && (
-              <div className="space-y-4">
-                <FormLabel>{doorCodeLabel}</FormLabel>
-                {form.watch('doorCode')?.map((_, index) => (
-                  <div key={index} className="space-y-4 p-4 border rounded-md">
-                    <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-sm">Kode/Nøkkel {index + 1}</h4>
+                        <div className="relative">
+                        <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
                         <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                                const current = form.getValues('doorCode') || [];
-                                current.splice(index, 1);
-                                form.setValue('doorCode', current);
-                            }}
+                            size="icon"
+                            className="absolute right-1 top-1 h-8 w-8"
+                            onClick={handleGetLocation}
+                            title="Hent min posisjon"
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <MapPin className="h-4 w-4" />
                         </Button>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <FormField
-                        control={form.control}
-                        name={`doorCode.${index}.category`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Kategori</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Velg kategori" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                <SelectItem value="Nøkkel">Nøkkel</SelectItem>
-                                <SelectItem value="Kode">Kode</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name={`doorCode.${index}.name`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Beskrivelse</FormLabel>
-                            <FormControl>
-                                <Input placeholder="F.eks. Hovedinngang" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name={`doorCode.${index}.value`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Verdi</FormLabel>
-                            <FormControl>
-                                <Input placeholder={doorCodePlaceholder} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
-                  </div>
-                ))}
-                <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => {
-                    const current = form.getValues('doorCode') || [];
-                    form.setValue('doorCode', [...current, { category: 'Nøkkel', name: '', value: '' }]);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Legg til nøkkel / kode
-                </Button>
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+
+            {/* OPENING HOURS SECTION */}
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <div className="flex items-center justify-between border-b pb-2">
+                    <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-indigo-500" />
+                        Åpningstider
+                    </h3>
+                    <Badge variant="outline" className="bg-slate-50 text-[10px] font-bold">Logistikk-kontroll</Badge>
                 </div>
-              </div>
-            )}
-
-            {contactPersonsEnabled && (
-              <div className="space-y-4">
-                <FormLabel>{contactPersonsLabel}</FormLabel>
-                {form.watch('contactPersons')?.map((_, index) => (
-                  <div key={index} className="space-y-4 p-4 border rounded-md">
-                    <div className="flex justify-between items-center">
-                        <h4 className="font-medium text-sm">Kontaktperson {index + 1}</h4>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                                const current = form.getValues('contactPersons') || [];
-                                current.splice(index, 1);
-                                form.setValue('contactPersons', current);
-                            }}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name={`contactPersons.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Navn</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Navn..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`contactPersons.${index}.phone`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefon</FormLabel>
-                          <FormControl>
-                            <div className="flex gap-2">
-                                <Input type="tel" placeholder="Telefon..." {...field} />
-                                {field.value && (
-                                    <Button type="button" variant="outline" asChild>
-                                        <a href={`tel:${field.value}`}>
-                                            <PhoneCall className="h-4 w-4" />
-                                        </a>
-                                    </Button>
-                                )}
+                
+                <div className="space-y-3">
+                    {DAYS.map(({ key, label }) => (
+                        <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100 hover:bg-white transition-colors">
+                            <div className="flex items-center gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name={`weeklySchedule.${key}.isOpen`}
+                                    render={({ field }) => (
+                                        <FormControl>
+                                            <Switch 
+                                                checked={field.value} 
+                                                onCheckedChange={field.onChange} 
+                                            />
+                                        </FormControl>
+                                    )}
+                                />
+                                <span className={cn(
+                                    "font-bold text-sm w-20",
+                                    form.watch(`weeklySchedule.${key}.isOpen`) ? "text-slate-900" : "text-slate-400"
+                                )}>{label}</span>
                             </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`contactPersons.${index}.email`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>E-post</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="E-post..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ))}
-                <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => {
-                    const current = form.getValues('contactPersons') || [];
-                    form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Legg til kontaktperson
-                </Button>
+
+                            <div className={cn(
+                                "flex items-center gap-2",
+                                !form.watch(`weeklySchedule.${key}.isOpen`) && "opacity-30 pointer-events-none"
+                            )}>
+                                <FormField
+                                    control={form.control}
+                                    name={`weeklySchedule.${key}.open`}
+                                    render={({ field }) => (
+                                        <Input 
+                                            type="time" 
+                                            {...field} 
+                                            className="w-32 h-9 text-xs font-bold" 
+                                        />
+                                    )}
+                                />
+                                <span className="text-slate-400 font-bold">-</span>
+                                <FormField
+                                    control={form.control}
+                                    name={`weeklySchedule.${key}.close`}
+                                    render={({ field }) => (
+                                        <Input 
+                                            type="time" 
+                                            {...field} 
+                                            className="w-32 h-9 text-xs font-bold" 
+                                        />
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    ))}
                 </div>
-              </div>
-            )}
+                <p className="text-[10px] text-muted-foreground italic">
+                    * Disse tidene brukes til å varsle planleggere dersom en rute forventes å ankomme utenfor åpningstid.
+                </p>
+            </div>
+
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Leveringsdetaljer</h3>
+                <FormField
+                control={form.control}
+                name="estimatedDeliveryTime"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-slate-500" />
+                        Tidsbruk for levering
+                    </FormLabel>
+                    <FormControl>
+                        <Select 
+                        value={field.value?.toString() || "0"} 
+                        onValueChange={(val) => field.onChange(Number(val))}
+                        >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Velg tid" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">0 min (Kun kjøring)</SelectItem>
+                            <SelectItem value="5">5 min</SelectItem>
+                            <SelectItem value="10">10 min</SelectItem>
+                            <SelectItem value="15">15 min</SelectItem>
+                            <SelectItem value="20">20 min</SelectItem>
+                            <SelectItem value="25">25 min</SelectItem>
+                            <SelectItem value="30">30 min</SelectItem>
+                            <SelectItem value="45">45 min</SelectItem>
+                            <SelectItem value="60">60 min</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </FormControl>
+                    <FormDescription>
+                        Beregnet tid brukt på stedet (for ruteplanlegging).
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                
+                {descEnabled && (
+                    <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{descLabel}</FormLabel>
+                        <FormControl>
+                            <Textarea
+                            placeholder={descPlaceholder}
+                            className="min-h-[120px]"
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                )}
+                
+                {notesEnabled && (
+                    <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{notesLabel}</FormLabel>
+                        <FormControl>
+                            <Textarea
+                            placeholder={notesPlaceholder}
+                            className="min-h-[120px]"
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                )}
+            </div>
+
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Tilgang & Kontakt</h3>
+                {doorCodeEnabled && (
+                <div className="space-y-4">
+                    <FormLabel>{doorCodeLabel}</FormLabel>
+                    {form.watch('doorCode')?.map((_, index) => (
+                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kode/Nøkkel {index + 1}</h4>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    const current = form.getValues('doorCode') || [];
+                                    current.splice(index, 1);
+                                    form.setValue('doorCode', current);
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.category`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase">Kategori</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger className="bg-white">
+                                        <SelectValue placeholder="Velg kategori" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="Nøkkel">Nøkkel</SelectItem>
+                                    <SelectItem value="Kode">Kode</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase">Beskrivelse</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="F.eks. Hovedinngang" {...field} className="bg-white" />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.value`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase">Verdi</FormLabel>
+                                <FormControl>
+                                    <Input placeholder={doorCodePlaceholder} {...field} className="bg-white" />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                    </div>
+                    ))}
+                    <div>
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                    onClick={() => {
+                        const current = form.getValues('doorCode') || [];
+                        form.setValue('doorCode', [...current, { category: 'Nøkkel', name: '', value: '' }]);
+                    }}
+                    >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Legg til nøkkel / kode
+                    </Button>
+                    </div>
+                </div>
+                )}
+
+                {contactPersonsEnabled && (
+                <div className="space-y-4">
+                    <FormLabel>{contactPersonsLabel}</FormLabel>
+                    {form.watch('contactPersons')?.map((_, index) => (
+                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kontaktperson {index + 1}</h4>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    const current = form.getValues('contactPersons') || [];
+                                    current.splice(index, 1);
+                                    form.setValue('contactPersons', current);
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name={`contactPersons.${index}.name`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel className="text-[10px] font-black uppercase">Navn</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Navn..." {...field} className="bg-white" />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`contactPersons.${index}.phone`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel className="text-[10px] font-black uppercase">Telefon</FormLabel>
+                                    <FormControl>
+                                        <div className="flex gap-2">
+                                            <Input type="tel" placeholder="Telefon..." {...field} className="bg-white" />
+                                            {field.value && (
+                                                <Button type="button" variant="outline" asChild className="bg-white">
+                                                    <a href={`tel:${field.value}`}>
+                                                        <PhoneCall className="h-4 w-4" />
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name={`contactPersons.${index}.email`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel className="text-[10px] font-black uppercase">E-post</FormLabel>
+                                <FormControl>
+                                    <Input type="email" placeholder="E-post..." {...field} className="bg-white" />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    ))}
+                    <div>
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                    onClick={() => {
+                        const current = form.getValues('contactPersons') || [];
+                        form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
+                    }}
+                    >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Legg til kontaktperson
+                    </Button>
+                    </div>
+                </div>
+                )}
+            </div>
             
-            <FormField
-              control={form.control}
-              name="hashtags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Hashtags</FormLabel>
-                  <FormControl>
-                    <Input placeholder="lager, prioritert, etter-arbeidstid" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Kommadelt liste med tagger for enkel filtrering.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <FormField
+                control={form.control}
+                name="hashtags"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Hashtags</FormLabel>
+                    <FormControl>
+                        <Input placeholder="lager, prioritert, etter-arbeidstid" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                        Kommadelt liste med tagger for enkel filtrering.
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
           </div>
 
           <div className="md:col-span-1 space-y-6">

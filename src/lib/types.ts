@@ -56,6 +56,12 @@ export interface Organization {
   };
 }
 
+export interface OpeningHours {
+    isOpen: boolean;
+    open?: string;  // Format: "HH:mm"
+    close?: string; // Format: "HH:mm"
+}
+
 export interface Place {
   id: string;
   name: string;
@@ -65,6 +71,17 @@ export interface Place {
   doorCode?: { category?: string; name?: string; value?: string; }[];
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
+  
+  // Opening Hours
+  weeklySchedule?: {
+    monday: OpeningHours;
+    tuesday: OpeningHours;
+    wednesday: OpeningHours;
+    thursday: OpeningHours;
+    friday: OpeningHours;
+    saturday: OpeningHours;
+    sunday: OpeningHours;
+  };
   
   // Delivery stats
   estimatedDeliveryTime?: number; // estimated time to complete delivery at this place in minutes

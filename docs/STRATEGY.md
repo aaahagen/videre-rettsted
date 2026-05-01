@@ -37,10 +37,13 @@ This phase leverages the data structures from previous phases to manage incoming
     *   **Bulk CSV Import (Completed):** Tool for importing high-volume order data with auto-mapping.
     *   **API Intake (Planned):** Secure REST endpoint for external TMS/ERP ingestion.
 
-2.  **Constraint-Based Routing Engine (Next Step):** 
-    Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities (e.g., has refrigeration, capacity for 5 pallets).
-    *   *Implementation:* Integrate Google OR-Tools for constraint-based automatic route generation.
-    *   *Crucial Constraint:* Automation must be an *opt-in enhancement*, supporting manual overrides at all times.
+2.  **Constraint-Based Routing Engine (In Progress):** 
+    Develop the logic to match order requirements (e.g., 3 pallets, frozen) against vehicle capabilities and time constraints.
+    *   **Place Opening Hours (Critical Constraint):** 
+        *   **Phase A (Data):** Extend the `Place` model to store a 7-day schedule (open/close times or marked closed). (Planned)
+        *   **Phase B (Route Logic):** Upgrade route planning to warn planners if a calculated ETA falls outside a location's opening hours. (Planned)
+    *   **Implementation:** Integrate Google OR-Tools for constraint-based automatic route generation.
+    *   **Crucial Constraint:** Automation must be an *opt-in enhancement*, supporting manual overrides at all times.
 
 ## Phase 5: Business Intelligence & Data Exposure (Planned)
 
