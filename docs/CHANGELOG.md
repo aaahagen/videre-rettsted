@@ -220,3 +220,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Each order will act as the foundational unit for both manual and automated route assignment.
     - **Tier 3: Constraint-Based Automatic Generation:** An intelligent backend system will automatically generate optimized daily routes. This system will perform constraint-based matching, assigning orders not only based on location but also by matching the goods''' requirements to defined vehicle capabilities from the Fleet Management module. It will flag any jobs that cannot be assigned due to a lack of compatible vehicles.
     - **Tier 4: Manual Override & Ad-Hoc Routing:** Despite automation, the real world is unpredictable. Planners must always retain the ability to manually override automated assignments, drag-and-drop orders between vehicles mid-route, and create completely custom, ad-hoc routes from scratch without relying on the automated engine.
+
+### Fixed
+- Fixed an issue in `FleetPage` where pressing "Registrer kjøretøy" did nothing because `orgId` was missing in `VehicleForm`.
+
+### Added
+- **Fleet Management & Compliance:**
+  - Added new fields to the `Vehicle` model to track `euControl`, `nextService`, and `tachographCalibration` deadlines.
+  - Form inputs added to `VehicleForm` for registering these deadlines.
+  - Implemented a completely new `VehicleDamageReport` entity to track reported damages and their resolution status independently.
+  - Created a `VehicleDetailsModal` on the Fleet dashboard, accessed by clicking any vehicle card. This modal displays:
+    - An overview of damages with ability to change status (reported, in progress, fixed).
+    - Compliance dashboard showing the status of the vehicle's deadlines.
+    - A 14-day chronological "Usage Log" showing which drivers have been utilizing the vehicle.
+    - A "Generate PDF" feature allowing simple printing of the vehicle's status and damage report.
+  - Linked driver vehicle inspections (Pre/Post-trip) directly to the damage reporting system: if a driver reports a damage during an inspection, it automatically creates a new `VehicleDamageReport` visible to admins.

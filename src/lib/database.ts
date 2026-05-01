@@ -29,7 +29,7 @@ export interface Database {
   createVehicle(vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle>;
   getVehicle(id: string): Promise<Vehicle | null>;
   getVehicles(orgId: string): Promise<Vehicle[]>;
-  updateVehicle(id: string, updates: Partial<Vehicle>): Promise<Vehicle>;
+  updateVehicle(id: string, updates: Partial<Vehicle>): Promise<void>;
   deleteVehicle(id: string): Promise<void>;
 
 

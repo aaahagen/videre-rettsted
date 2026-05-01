@@ -469,3 +469,4 @@ export interface VehicleInspection {
   }[];
   notes?: string;
 }
+export interface VehicleDamageReport { id: string; orgId: string; vehicleId: string; reportedBy: string; reportedByName: string; description: string; images: string[]; status: 'reported' | 'in_progress' | 'fixed'; createdAt: FieldValue | Date; resolvedAt?: FieldValue | Date; resolvedBy?: string; }
