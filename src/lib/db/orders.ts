@@ -63,6 +63,57 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updat
   return docRef.id;
 };
 
+/**
+ * Rapidly ingests a 3rd party package. Creates a shell order or updates existing.
+ */
+export const ingestThirdPartyPackage = async (data: {
+  orgId: string;
+  barcode: string;
+  routeId?: string;
+  placeId?: string;
+  senderName?: string;
+  recipientName?: string;
+}): Promise<{ orderId: string, isNew: boolean }> => {
+  const ordersRef = collection(db, `organizations/${data.orgId}/orders`);
+  
+  // Check if order with this barcode already exists
+  const q = query(ordersRef, where('barcode', '==', data.barcode), limit(1));
+  const snap = await getDocs(q);
+  
+  if (!snap.empty) {
+    const existingOrder = snap.docs[0];
+    const updateData: any = {
+      updatedAt: serverTimestamp()
+    };
+    if (data.routeId) updateData.routeId = data.routeId;
+    if (data.placeId) updateData.placeId = data.placeId;
+    
+    await updateDoc(existingOrder.ref, updateData);
+    return { orderId: existingOrder.id, isNew: false };
+  }
+
+  // Create shell order
+  const newOrder: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
+    orgId: data.orgId,
+    barcode: data.barcode,
+    placeId: data.placeId || 'pending_hub',
+    status: 'pending',
+    details: {
+      description: `Inngående 3. part: ${data.barcode}${data.senderName ? ` fra ${data.senderName}` : ''}`,
+      numberOfItems: 1
+    },
+    routeId: data.routeId || undefined,
+    collies: [{
+      id: data.barcode,
+      lineItemId: '3ps-shell',
+      status: 'pending'
+    }]
+  };
+
+  const id = await createOrder(newOrder);
+  return { orderId: id, isNew: true };
+};
+
 export const getOrder = async (orgId: string, orderId: string): Promise<Order | null> => {
   const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
   const docSnap = await getDoc(docRef);

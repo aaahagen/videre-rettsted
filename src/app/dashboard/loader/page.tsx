@@ -16,7 +16,9 @@ import {
   AlertCircle,
   ArrowRight,
   Search,
-  LayoutDashboard
+  LayoutDashboard,
+  QrCode,
+  Scan
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,7 +106,7 @@ export default function LoaderDashboardPage() {
 
   return (
     <div className="space-y-8 p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
             <LayoutDashboard className="h-8 w-8 text-indigo-600" />
@@ -113,14 +115,22 @@ export default function LoaderDashboardPage() {
           <p className="text-slate-500 font-medium">Oversikt over dagens lastinger og manifester.</p>
         </div>
         
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Søk rute eller bil..." 
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button asChild className="bg-indigo-600 hover:bg-indigo-700 font-bold flex-1 md:flex-none">
+            <Link href="/dashboard/loader/scan-to-receive">
+              <Scan className="mr-2 h-4 w-4" />
+              Inngående Mottak
+            </Link>
+          </Button>
+          <div className="relative flex-1 md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Søk rute eller bil..." 
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
