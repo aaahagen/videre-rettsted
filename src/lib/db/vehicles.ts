@@ -39,11 +39,30 @@ export async function getVehicle(id: string): Promise<Vehicle | null> {
 
 export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> {
   try {
+    // Clean data: remove id if present and convert undefined values to null or omit them
+    const { id, createdAt, updatedAt, ...rest } = data as any;
+    
+    // Recursive cleaner to remove undefined values for Firestore compatibility
+    const cleanObject = (obj: any): any => {
+      const newObj: any = {};
+      Object.keys(obj).forEach(key => {
+        if (obj[key] === undefined) return;
+        if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
+          newObj[key] = cleanObject(obj[key]);
+        } else {
+          newObj[key] = obj[key];
+        }
+      });
+      return newObj;
+    };
+
+    const finalData = cleanObject(rest);
+
     const docRef = await addDoc(collection(db, 'vehicles'), {
-      ...data,
+      ...finalData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      currentStatuses: data.currentStatuses || ['ready'],
+      currentStatuses: finalData.currentStatuses || ['ready'],
     });
     return { id: docRef.id, ...data, createdAt: new Date(), updatedAt: new Date() } as Vehicle;
   } catch (error) {
@@ -55,8 +74,24 @@ export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'up
 export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise<void> {
   try {
     const docRef = doc(db, 'vehicles', id);
+    
+    const cleanObject = (obj: any): any => {
+      const newObj: any = {};
+      Object.keys(obj).forEach(key => {
+        if (obj[key] === undefined) return;
+        if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
+          newObj[key] = cleanObject(obj[key]);
+        } else {
+          newObj[key] = obj[key];
+        }
+      });
+      return newObj;
+    };
+
+    const finalData = cleanObject(data);
+
     await updateDoc(docRef, {
-      ...data,
+      ...finalData,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
@@ -78,7 +113,6 @@ export async function deleteVehicle(id: string): Promise<void> {
 export async function addVehicleStatus(id: string, status: string): Promise<void> {
     try {
         const docRef = doc(db, 'vehicles', id);
-        // If adding a status, remove 'ready' if it's there
         if (status !== 'ready') {
              await updateDoc(docRef, {
                 currentStatuses: arrayRemove('ready')
@@ -102,7 +136,6 @@ export async function removeVehicleStatus(id: string, status: string): Promise<v
             updatedAt: serverTimestamp(),
         });
         
-        // Check if array is empty after removal, if so, set to ready
         const updatedDoc = await getDoc(docRef);
         if (updatedDoc.exists() && (!updatedDoc.data().currentStatuses || updatedDoc.data().currentStatuses.length === 0)) {
             await updateDoc(docRef, {
@@ -144,7 +177,6 @@ export async function reportVehicleDamage(data: Omit<VehicleDamageReport, 'id' |
       status: 'reported'
     });
     
-    // Auto-update vehicle status to observation
     const vehicleRef = doc(db, 'vehicles', data.vehicleId);
     await updateDoc(vehicleRef, {
         currentStatuses: arrayUnion('observation')
@@ -184,7 +216,6 @@ export async function getVehicleUsageLog(vehicleId: string, days: number = 7): P
         );
         const querySnapshot = await getDocs(q);
         
-        // Map to get user IDs
         const usage = querySnapshot.docs.map(doc => {
             const data = doc.data();
             return {
@@ -195,7 +226,6 @@ export async function getVehicleUsageLog(vehicleId: string, days: number = 7): P
             };
         });
 
-        // Sort locally
         return usage.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
         console.error("Error getting vehicle usage:", error);
