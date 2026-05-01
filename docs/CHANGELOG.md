@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Expanded Workforce Analytics:** Added a new "Annet" (Other) category box to the Workforce statistics dashboard. Administrators can now track personnel with specialized status overrides separately from standard Working/Sick/Vacation metrics.
 - **Learning Management System (LMS) Foundation:** Launched a comprehensive training module.
     - **Læringsportal:** A dedicated hub for users to view assigned training and certifications.
     - **Course Player:** A focused, step-by-step interface for consuming educational content including text, videos, and PDFs.
@@ -277,8 +278,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Place Opening Hours (Complex Implementation):** Implement a system to define opening hours for each delivery/pickup location.
     - **Phase A (Data):** Extend the `Place` model to store a 7-day schedule (open/close times or marked closed). Add this to the "Create/Edit Place" form.
     - **Phase B (Route Logic - High Complexity):** Upgrade the route planning interface to actively warn planners if a calculated ETA falls outside a location's opening hours.
-        - *Complexity Note:* This requires significant backend changes. The `calculateRouteDistance` Cloud Function must be rewritten to return travel times for individual "legs" between stops, not just the total route time. The frontend must then perform sequential calculations: Route Start Time + Drive Time (Leg 1) + Stop 1 Est. Duration + Drive Time (Leg 2) = ETA Stop 2.
-- **Expanded Personnel Statistics:** Expand the Workforce Statistics Dashboard (which currently shows Working, Sick, Vacation, Off, and Contractors) to include a sixth category box for "Annet" (Other) to capture personnel with statuses that do not fit the main five.
+        - *Complexity Note:** This requires significant backend changes. The `calculateRouteDistance` Cloud Function must be rewritten to return travel times for individual "legs" between stops, not just the total route time. The frontend must then perform sequential calculations: Route Start Time + Drive Time (Leg 1) + Stop 1 Est. Duration + Drive Time (Leg 2) = ETA Stop 2.
 - **Geofence-based Delivery Alerts:** Automatically calculate the distance between the planned stop'''s address and the driver'''s captured GPS location. If the distance exceeds a configurable threshold, an alert will be generated and displayed in real-time on the admin dashboard to flag potential delivery errors.
 
 ### Changed

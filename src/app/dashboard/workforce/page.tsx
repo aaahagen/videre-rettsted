@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download } from 'lucide-react';
+import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download, Shield } from 'lucide-react';
 import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -183,6 +183,7 @@ const stats = useMemo(() => {
         let vacation = 0;
         let off = 0;
         let contractors = 0;
+        let other = 0;
 
         drivers.forEach(driver => {
             if (driver.role === 'contractor' || driver.employmentType === 'external') {
@@ -194,9 +195,10 @@ const stats = useMemo(() => {
             else if (statusInfo.type === 'sick') sick++;
             else if (statusInfo.type === 'vacation') vacation++;
             else if (statusInfo.type === 'off') off++;
+            else if (statusInfo.type === 'other') other++;
         });
 
-        return { working, sick, vacation, off, contractors, total: drivers.length };
+        return { working, sick, vacation, off, contractors, other, total: drivers.length };
     }, [drivers, searchDate]);
 
     if (isLoading && drivers.length === 0) {
@@ -269,7 +271,7 @@ const stats = useMemo(() => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2 sm:gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2 sm:gap-4">
                     <Card className="bg-blue-50 border-blue-100 shadow-sm">
                         <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
                             <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mb-1 sm:mb-2" />
@@ -296,6 +298,13 @@ const stats = useMemo(() => {
                             <Coffee className="h-5 w-5 sm:h-6 sm:w-6 text-slate-500 mb-1 sm:mb-2" />
                             <p className="text-lg sm:text-2xl font-bold text-slate-700">{stats.off}</p>
                             <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter sm:tracking-wider">Fridag</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-purple-50 border-purple-100 shadow-sm">
+                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
+                            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 mb-1 sm:mb-2" />
+                            <p className="text-lg sm:text-2xl font-bold text-purple-900">{stats.other}</p>
+                            <p className="text-[9px] sm:text-xs font-medium text-purple-700 uppercase tracking-tighter sm:tracking-wider">Annet</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-amber-50 border-amber-100 shadow-sm">
@@ -364,7 +373,7 @@ const stats = useMemo(() => {
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
                                             )}
-                                            <div className={`h-1.5 w-full ${statusInfo.type === 'working' ? 'bg-blue-500' : statusInfo.type === 'sick' ? 'bg-red-500' : statusInfo.type === 'vacation' ? 'bg-green-500' : 'bg-slate-300'}`} />
+                                            <div className={`h-1.5 w-full ${statusInfo.type === 'working' ? 'bg-blue-500' : statusInfo.type === 'sick' ? 'bg-red-500' : statusInfo.type === 'vacation' ? 'bg-green-500' : statusInfo.type === 'other' ? 'bg-purple-500' : 'bg-slate-300'}`} />
                                             
                                             <CardHeader className="pb-3 flex flex-row items-start gap-4">
                                                 <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-100 flex items-center justify-center">
@@ -458,6 +467,7 @@ const stats = useMemo(() => {
                                                                                 case 'off': typeLabel = 'Fridag'; break; 
                                                                                 case 'vacation': typeLabel = 'Ferie'; break; 
                                                                                 case 'sick': typeLabel = 'Sykemelding'; break; 
+                                                                                case 'other': typeLabel = 'Annet'; break; 
                                                                                 case 'custom': typeLabel = `${details.start}-${details.end}`; break; 
                                                                             }
                                                                             const [year, month, day] = dateStr.split('-');
