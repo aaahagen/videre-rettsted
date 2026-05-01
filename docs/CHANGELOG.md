@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **AI Assistant Protocol:** Updated `docs/blueprint.md` to prioritize the `write_file` tool for all code modifications, reducing reliance on temporary scripts. Added explicit requirements for verification with `npm run build` or `npm run typecheck` before pushing changes.
 - **Vehicle Database Operations:** Improved Firestore compatibility by adding a `cleanObject` utility to `createVehicle` and `updateVehicle` in `src/lib/db/vehicles.ts`. This utility automatically removes `undefined` values from data objects before they are sent to Firestore, preventing potential write errors.
 - Moved the AnalyticsDashboard (places and users stats) to the right sidebar under the "start vakt" component in the Admin Dashboard layout.
 - **Place Details UI Update:** Moved the "Hashtags" section from the bottom of the main content column to the top of the right-hand sidebar, positioning it directly above the "Logg" card for better visual balance on desktop screens.

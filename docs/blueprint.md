@@ -10,10 +10,12 @@
 > 4. **`docs/DESIGN.md`**: Adhere to the "Function-First" design philosophy. Prioritize mobile responsiveness, high contrast, native HTML inputs (like `<input type="date">` over complex libraries), and use the existing `shadcn/ui` components and Tailwind utility classes.
 > 
 > **Core Rules:**
+> - **Primary Tooling:** Use the `write_file` tool for all code modifications. Avoid creating temporary Python or Bash scripts for patching or refactoring unless the task is a complex data migration that cannot be achieved via direct file updates.
+> - **Verification:** After modifying code, ALWAYS run `npm run build` or `npm run typecheck` to verify that the changes haven't introduced regressions.
 > - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`).
 > - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin). Drivers get simplified, mobile-first interfaces; Admins get dense, data-rich dashboards.
 > - **Communication Protocol:** When asked a question or given a task, you MUST briefly explain your plan and answer the question *before* you start using tools to write code.
-> - **Cleanup Protocol:** After successfully building a feature and verifying it with a build command, you MUST delete any temporary script files (e.g., `patch.js`, `fix.js`) you created in the root directory to keep the workspace clean.
+> - **Cleanup Protocol:** If you must create temporary script files, they MUST be deleted immediately after a successful build and verification.
 > - **Action over words:** While you must explain your plan first, once the plan is stated, use your tools to execute it without further prompting. Update the changelog upon completion.
 
 
