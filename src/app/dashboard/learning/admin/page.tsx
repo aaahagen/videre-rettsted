@@ -276,13 +276,14 @@ export default function LearningAdminPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Er du sikker på at du vil slette dette kurset permanent?")) return;
+    if (!confirm("Er du sikker på at du vil slette dette kurset permanent?") || !dbUser?.orgId) return;
     try {
-      await deleteCourse(id);
+      await deleteCourse(id, dbUser.orgId);
       setCourses(courses.filter(c => c.id !== id));
       toast({ title: "Kurs slettet" });
     } catch (e) {
-      toast({ title: "Feil ved sletting", variant: "destructive" });
+      console.error("Delete error:", e);
+      toast({ title: "Feil ved sletting", description: "Sjekk at du har rettigheter til å slette dette kurset.", variant: "destructive" });
     }
   };
 

@@ -42,16 +42,21 @@ export const updateCourse = async (id: string, updates: Partial<Course>): Promis
 /**
  * Deletes a course and all associated assignments (Cascading Deletion)
  */
-export const deleteCourse = async (courseId: string): Promise<void> => {
+export const deleteCourse = async (courseId: string, orgId: string): Promise<void> => {
   const batch = writeBatch(db);
   
   // 1. Reference the course
   const courseRef = doc(db, 'courses', courseId);
   batch.delete(courseRef);
 
-  // 2. Find all assignments for this course
+  // 2. Find all assignments for this course in this organization
+  // We MUST include orgId in the query so Firestore rules can validate the request
   const assignmentsRef = collection(db, 'courseAssignments');
-  const q = query(assignmentsRef, where('courseId', '==', courseId));
+  const q = query(
+    assignmentsRef, 
+    where('orgId', '==', orgId),
+    where('courseId', '==', courseId)
+  );
   const assignmentSnap = await getDocs(q);
   
   // 3. Add assignment deletions to batch
