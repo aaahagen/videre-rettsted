@@ -106,46 +106,56 @@ export default function LearningPortalPage() {
         </Card>
       )}
 
-      {/* STATS OVERVIEW */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-              <Clock className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aktive Kurs</p>
-              <p className="text-2xl font-black text-slate-900">{activeAssignments.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-              <CheckCircle2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fullført</p>
-              <p className="text-2xl font-black text-slate-900">{completedAssignments.length}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* STATS OVERVIEW SECTION */}
+      <div className="space-y-4">
+        <div className="border-b border-slate-100 pb-2">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-indigo-500" />
+            Min Status
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">Oversikt over din egen fremdrift og gjennomføring.</p>
+        </div>
 
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-              <BarChart3 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sertifiseringer</p>
-              <p className="text-2xl font-black text-slate-900">{completedAssignments.filter(a => {
-                const c = courses.find(course => course.id === a.courseId);
-                return c?.isCertification;
-              }).length}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="bg-white border-slate-200">
+            <CardContent className="p-4 flex items-center gap-4">
+                <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                <Clock className="h-6 w-6" />
+                </div>
+                <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aktive Kurs</p>
+                <p className="text-2xl font-black text-slate-900">{activeAssignments.length}</p>
+                </div>
+            </CardContent>
+            </Card>
+            
+            <Card className="bg-white border-slate-200">
+            <CardContent className="p-4 flex items-center gap-4">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                <CheckCircle2 className="h-6 w-6" />
+                </div>
+                <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fullført</p>
+                <p className="text-2xl font-black text-slate-900">{completedAssignments.length}</p>
+                </div>
+            </CardContent>
+            </Card>
+
+            <Card className="bg-white border-slate-200">
+            <CardContent className="p-4 flex items-center gap-4">
+                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sertifiseringer</p>
+                <p className="text-2xl font-black text-slate-900">{completedAssignments.filter(a => {
+                    const c = courses.find(course => course.id === a.courseId);
+                    return c?.isCertification;
+                }).length}</p>
+                </div>
+            </CardContent>
+            </Card>
+        </div>
       </div>
 
       {/* ASSIGNED COURSES */}
