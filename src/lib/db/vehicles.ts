@@ -2,6 +2,30 @@ import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, 
 import { db } from '../firebase/firebase';
 import { Vehicle, VehicleDamageReport } from '../types';
 
+/**
+ * Utility to clean objects for Firestore by removing undefined values
+ * and recursively cleaning nested objects and arrays.
+ */
+const cleanForFirestore = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj
+      .map(v => (v && typeof v === 'object' && !(v instanceof Date)) ? cleanForFirestore(v) : v)
+      .filter(v => v !== undefined);
+  }
+  
+  if (obj && typeof obj === 'object' && !(obj instanceof Date)) {
+    const newObj: any = {};
+    Object.keys(obj).forEach(key => {
+      const val = obj[key];
+      if (val === undefined) return;
+      newObj[key] = cleanForFirestore(val);
+    });
+    return newObj;
+  }
+  
+  return obj;
+};
+
 export async function getVehicles(orgId: string): Promise<Vehicle[]> {
   try {
     const q = query(collection(db, 'vehicles'), where('orgId', '==', orgId));
@@ -39,24 +63,9 @@ export async function getVehicle(id: string): Promise<Vehicle | null> {
 
 export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> {
   try {
-    // Clean data: remove id if present and convert undefined values to null or omit them
+    // Clean data: remove system fields if present and convert undefined values
     const { id, createdAt, updatedAt, ...rest } = data as any;
-    
-    // Recursive cleaner to remove undefined values for Firestore compatibility
-    const cleanObject = (obj: any): any => {
-      const newObj: any = {};
-      Object.keys(obj).forEach(key => {
-        if (obj[key] === undefined) return;
-        if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
-          newObj[key] = cleanObject(obj[key]);
-        } else {
-          newObj[key] = obj[key];
-        }
-      });
-      return newObj;
-    };
-
-    const finalData = cleanObject(rest);
+    const finalData = cleanForFirestore(rest);
 
     const docRef = await addDoc(collection(db, 'vehicles'), {
       ...finalData,
@@ -75,20 +84,9 @@ export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise
   try {
     const docRef = doc(db, 'vehicles', id);
     
-    const cleanObject = (obj: any): any => {
-      const newObj: any = {};
-      Object.keys(obj).forEach(key => {
-        if (obj[key] === undefined) return;
-        if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key]) && !(obj[key] instanceof Date)) {
-          newObj[key] = cleanObject(obj[key]);
-        } else {
-          newObj[key] = obj[key];
-        }
-      });
-      return newObj;
-    };
-
-    const finalData = cleanObject(data);
+    // Remove ID and timestamps from the update payload
+    const { id: _, createdAt, updatedAt, ...rest } = data as any;
+    const finalData = cleanForFirestore(rest);
 
     await updateDoc(docRef, {
       ...finalData,
