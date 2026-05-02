@@ -145,9 +145,9 @@ export class ConstraintEngine {
     /**
      * Checks if the ETA falls within the delivery window for a specific day.
      */
-    checkDeliveryWindow(place: Place, dayOfWeek: keyof Place['weeklySchedule'], etaMinutes: number): string[] {
+    checkDeliveryWindow(place: Place, dayOfWeek: string, etaMinutes: number): string[] {
         const warnings: string[] = [];
-        const schedule = place.weeklySchedule?.[dayOfWeek];
+        const schedule = (place.weeklySchedule as any)?.[dayOfWeek];
 
         if (!schedule) return warnings; // No schedule defined, assume open
 
@@ -177,7 +177,6 @@ export class ConstraintEngine {
      */
     checkEnvironmentalZones(vehicle: Vehicle, place: Place): string[] {
         const warnings: string[] = [];
-        const isGreenVehicle = vehicle.fuelType === 'electric' || vehicle.fuelType === 'gas';
         const isDiesel = vehicle.fuelType === 'diesel';
 
         if (place.isZeroEmissionZone && isDiesel) {
@@ -231,7 +230,7 @@ export class ConstraintEngine {
         placesMap: Map<string, Place>, // PlaceID -> Place
         depotCoords: { lat: number, lng: number },
         startTimeStr: string = "08:00",
-        dayOfWeek: keyof Place['weeklySchedule'] = 'monday'
+        dayOfWeek: string = 'monday'
     ): RouteSuggestion[] {
         
         let remainingOrders = [...unassignedOrders];
@@ -328,7 +327,7 @@ export class ConstraintEngine {
                     suggestion.warnings.push(...windowWarnings);
 
                     currentTime += (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!);
-                    currentCoords = place.coordinates;
+                    if (place.coordinates) currentCoords = place.coordinates;
                     remainingOrders.splice(bestOrderIndex, 1);
                 } else {
                     findingOrders = false;

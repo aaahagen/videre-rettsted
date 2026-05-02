@@ -135,6 +135,17 @@ export interface CompletedStopEvent {
     pod?: ProofOfDelivery;
 }
 
+export interface RouteSuggestion {
+    vehicleId: string;
+    driverId?: string;
+    orders: Order[];
+    places: Place[];
+    estimatedDuration: number; // minutes
+    estimatedDistance: number; // km
+    warnings: string[]; 
+    errors: string[];   
+}
+
 export interface Route {
   id: string;
   name: string;

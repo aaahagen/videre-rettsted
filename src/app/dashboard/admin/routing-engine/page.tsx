@@ -113,7 +113,7 @@ export default function RoutingEnginePage() {
 
             // 2. Update all orders with the routeId
             await Promise.all(suggestion.orders.map(order => 
-                firebaseDB.updateOrder(order.id, { routeId: newRoute.id })
+                firebaseDB.updateOrder(dbUser.orgId!, order.id, { routeId: newRoute.id })
             ));
 
             // 3. Create Manifest
@@ -355,5 +355,4 @@ export default function RoutingEnginePage() {
     );
 }
 
-// Added Building2 for city center icon
 import { Building2 } from 'lucide-react';

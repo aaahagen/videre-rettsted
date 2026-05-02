@@ -21,7 +21,8 @@ import {
   ChevronDown,
   MessageSquare,
   Package,
-  GraduationCap
+  GraduationCap,
+  Sparkles
 } from 'lucide-react';
 import {
   Sidebar,
@@ -78,6 +79,7 @@ const navGroups = [
     label: 'Logistikk',
     items: [
       { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
+      { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true },
       { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true },
       { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
       { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
