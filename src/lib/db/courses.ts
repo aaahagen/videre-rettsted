@@ -91,6 +91,16 @@ export const getUserAssignments = async (userId: string): Promise<CourseAssignme
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseAssignment));
 };
 
+export const getOrganizationAssignments = async (orgId: string): Promise<CourseAssignment[]> => {
+  const q = query(
+    collection(db, 'courseAssignments'),
+    where('orgId', '==', orgId),
+    orderBy('assignedAt', 'desc')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseAssignment));
+};
+
 export const updateAssignmentStatus = async (id: string, status: CourseAssignment['status'], progress?: number): Promise<void> => {
   const updates: any = { status };
   if (progress !== undefined) updates.progress = progress;

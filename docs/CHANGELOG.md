@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Employee Progress Tracking (LMS):** Implemented a new "Ansattstatus" (Employee Status) view in the Learning Admin panel.
+    - Administrators can now monitor the real-time progress of every employee across all assigned courses.
+    - Added a tabbed interface to the Admin view to switch between Course Library management and Employee Status tracking.
+    - Integrated deep-linking support to jump directly to specific admin tabs from the main portal.
 - **Enhanced Learning Portal Admin UI:** Redesigned the main learning dashboard to clearly differentiate between personal progress and administrative tasks.
     - Added a dedicated "Administrasjon" card for admins/owners, providing direct access to the course library and employee progress tracking.
     - Improved page structure with clear headings and descriptions for tilled assignments and completed courses.
@@ -154,6 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Fixed
+- **LMS Admin Navigation:** Fixed an issue where "Se Status per Ansatt" and "Administrer Kursbibliotek" both linked to the same view. Added a tabbed interface to the Admin view with deep-linking support.
 - **Firestore Place Deletion Permission Bug:** Fixed an issue where administrators encountered a permission error when trying to delete a place. The Firestore security rule for deleting places was incorrectly referencing `request.resource.data.orgId` (which is null during a delete operation) instead of the existing `resource.data.orgId`.
 - **Missing Firestore Index:** Added a composite index for `workLogs` (`orgId` ASC, `actualPunchIn` ASC) to resolve a `failed-precondition` error when fetching today's work logs on the dashboard.
 - **iOS Map Rendering Fix (Reverted):** Reverted experimental CSS 3D transforms and removed the `loading="lazy"` attribute from the Google Maps iframe on the place details page. The lazy loading attribute was causing the iframe to fail to initialize on certain iOS WebKit versions.
@@ -205,7 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Place Image Modal UI:** Updated the styling of the close button and the image description caption in the image zoom modal to match the zoom controls (white background with black text) for a more consistent appearance.
-- **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or review.
+- **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or owner review.
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
     - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
     - **Tier 2: Order-Based Planning & Multi-Channel Intake:** An "Order" module will be introduced to manage incoming jobs. To ensure redundancy and flexibility, this module will support a dual-intake strategy:

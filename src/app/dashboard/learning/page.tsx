@@ -91,13 +91,13 @@ export default function LearningPortalPage() {
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3 pt-2">
             <Button asChild className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-sm">
-              <Link href="/dashboard/learning/admin">
+              <Link href="/dashboard/learning/admin?tab=library">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Administrer Kursbibliotek
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 font-bold">
-               <Link href="/dashboard/learning/admin">
+               <Link href="/dashboard/learning/admin?tab=status">
                 <Users className="mr-2 h-4 w-4" />
                 Se Status per Ansatt
               </Link>

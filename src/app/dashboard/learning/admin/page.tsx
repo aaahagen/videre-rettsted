@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useAuth } from '@/components/auth-provider';
-import { getCourses, createCourse, updateCourse, deleteCourse, assignCourseToUser } from '@/lib/db/courses';
+import { getCourses, createCourse, updateCourse, deleteCourse, assignCourseToUser, getOrganizationAssignments } from '@/lib/db/courses';
 import { firebaseDB } from '@/lib/firebase/database';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { Course, User, CourseAssignment } from '@/lib/types';
@@ -30,7 +30,10 @@ import {
   Check,
   Smartphone,
   ShieldCheck,
-  CalendarDays
+  CalendarDays,
+  Clock,
+  LayoutGrid,
+  BarChart3
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -55,16 +58,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SplashScreen } from '@/components/ui/splash-screen';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Link from 'next/link';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { cn } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
 
-export default function LearningAdminPage() {
+function LearningAdminContent() {
   const { dbUser } = useAuth();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'library';
+  
   const [courses, setCourses] = useState<Course[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [allAssignments, setAllAssignments] = useState<CourseAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -104,12 +113,14 @@ export default function LearningAdminPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [orgCourses, orgUsers] = await Promise.all([
+      const [orgCourses, orgUsers, orgAssignments] = await Promise.all([
         getCourses(dbUser!.orgId),
-        firebaseDB.getUsers(dbUser!.orgId)
+        firebaseDB.getUsers(dbUser!.orgId),
+        getOrganizationAssignments(dbUser!.orgId)
       ]);
       setCourses(orgCourses);
       setAllUsers(orgUsers);
+      setAllAssignments(orgAssignments);
     } catch (error) {
       console.error(error);
     } finally {
@@ -238,6 +249,8 @@ export default function LearningAdminPage() {
       });
       
       setAlreadyAssignedIds(prev => new Set([...Array.from(prev), userId]));
+      // Update local assignments list too
+      loadData();
       toast({ title: "Tildelt", description: "Kurset er tildelt brukeren." });
     } catch (e) {
       console.error(e);
@@ -277,6 +290,7 @@ export default function LearningAdminPage() {
         });
         
       await Promise.all(promises);
+      loadData();
       toast({ title: "Tildeling fullført", description: `Kurset er tildelt ${assignedCount} nye brukere.` });
     } catch (e) {
       console.error("Assign to all error:", e);
@@ -543,6 +557,164 @@ export default function LearningAdminPage() {
         </Dialog>
       </div>
 
+      <Tabs defaultValue={initialTab} className="w-full space-y-6">
+        <TabsList className="bg-slate-100 p-1 h-12 w-full max-w-md">
+            <TabsTrigger value="library" className="flex-1 font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-600">
+                <LayoutGrid className="mr-2 h-4 w-4" /> Kursbibliotek
+            </TabsTrigger>
+            <TabsTrigger value="status" className="flex-1 font-bold data-[state=active]:bg-white data-[state=active]:text-indigo-600">
+                <BarChart3 className="mr-2 h-4 w-4" /> Ansattstatus
+            </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="library" className="space-y-6">
+            {/* COURSE LIST */}
+            <div className="grid grid-cols-1 gap-4">
+                {courses.length === 0 ? (
+                <div className="bg-white border-2 border-dashed rounded-2xl p-20 text-center">
+                    <GraduationCap className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <h3 className="font-bold text-slate-400 uppercase tracking-widest text-sm">Biblioteket er tomt</h3>
+                    <p className="text-slate-400 mt-2">Opprett ditt første kurs for å komme i gang.</p>
+                </div>
+                ) : (
+                courses.map(course => (
+                    <Card key={course.id} className="overflow-hidden border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
+                    <div className="flex flex-col md:flex-row">
+                        <div className="flex-1 p-6 space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className="uppercase font-bold text-[10px] tracking-tighter flex items-center gap-1.5">
+                                {course.category === 'tools' ? <Smartphone className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+                                {getCategoryLabel(course.category)}
+                            </Badge>
+                            {course.isCertification && (
+                                <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px] font-bold flex items-center gap-1">
+                                    <ShieldCheck className="h-3 w-3" /> SERTIFISERING
+                                </Badge>
+                            )}
+                            {course.isPublished ? (
+                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] font-bold">PUBLISERT</Badge>
+                            ) : (
+                            <Badge variant="outline" className="text-[10px] font-bold text-slate-400">UTKAST</Badge>
+                            )}
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900">{course.title}</h3>
+                        <p className="text-sm text-slate-500 line-clamp-1 font-medium">{course.description}</p>
+                        
+                        <div className="flex items-center gap-4 pt-2">
+                            <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-tight">
+                                <FileText className="h-3 w-3" /> {course.content.length} Moduler
+                            </span>
+                            {course.isCertification && (
+                                <span className="flex items-center gap-1.5 text-[10px] font-black text-indigo-400 uppercase tracking-tight">
+                                    <CalendarDays className="h-3 w-3" /> Gyldig {course.validityMonths} mnd
+                                </span>
+                            )}
+                        </div>
+                        </div>
+                        
+                        <div className="md:w-80 bg-slate-50/50 border-l border-slate-100 p-6 flex flex-col justify-center gap-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                                variant="outline" 
+                                className="text-indigo-700 border-indigo-200 bg-white hover:bg-indigo-50 font-bold text-[10px] h-9 shadow-sm"
+                                onClick={() => handleOpenAssignDialog(course)}
+                            >
+                                <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Enkeltperson
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                className="text-indigo-700 border-indigo-200 bg-white hover:bg-indigo-50 font-bold text-[10px] h-9 shadow-sm"
+                                onClick={() => handleAssignToAll(course.id)}
+                                disabled={isSubmitting}
+                            >
+                                <Users className="mr-1.5 h-3.5 w-3.5" /> Alle ansatte
+                            </Button>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1 h-9 bg-white shadow-sm font-bold text-xs" onClick={() => handleEdit(course)}>
+                            <Settings2 className="h-3.5 w-3.5 mr-1.5 text-slate-600" /> Rediger
+                            </Button>
+                            <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 h-9 hover:bg-red-50 hover:text-red-600 border-red-100 bg-white shadow-sm font-bold text-xs"
+                            onClick={() => handleDelete(course.id)}
+                            >
+                            <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Slett
+                            </Button>
+                        </div>
+                        </div>
+                    </div>
+                    </Card>
+                ))
+                )}
+            </div>
+        </TabsContent>
+
+        <TabsContent value="status" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allUsers.map(user => {
+                    const userAssignments = allAssignments.filter(a => a.userId === user.id);
+                    const completed = userAssignments.filter(a => a.status === 'completed').length;
+                    const total = userAssignments.length;
+                    const progress = total > 0 ? (completed / total) * 100 : 0;
+
+                    return (
+                        <Card key={user.id} className="border-slate-200 hover:border-indigo-200 transition-colors">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-sm">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <CardTitle className="text-sm font-black truncate">{user.name}</CardTitle>
+                                        <CardDescription className="text-[10px] truncate">{user.email}</CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex justify-between text-[10px] font-black uppercase text-slate-400">
+                                    <span>Total Fremdrift</span>
+                                    <span>{completed} / {total} fullført</span>
+                                </div>
+                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-indigo-500 transition-all" 
+                                        style={{ width: `${progress}%` }}
+                                    />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    {userAssignments.slice(0, 3).map(a => {
+                                        const c = courses.find(course => course.id === a.courseId);
+                                        return (
+                                            <div key={a.id} className="flex items-center justify-between text-[10px] font-medium p-2 bg-slate-50 rounded-lg">
+                                                <span className="truncate mr-2">{c?.title || 'Ukjent kurs'}</span>
+                                                {a.status === 'completed' ? (
+                                                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 h-4 text-[8px] font-black">LØST</Badge>
+                                                ) : a.status === 'in_progress' ? (
+                                                    <Badge className="bg-amber-50 text-amber-700 border-amber-100 h-4 text-[8px] font-black">PÅGÅR</Badge>
+                                                ) : (
+                                                    <Badge className="bg-slate-100 text-slate-500 border-slate-200 h-4 text-[8px] font-black">TILDELT</Badge>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    {total > 3 && (
+                                        <p className="text-[9px] text-slate-400 text-center font-bold">+{total - 3} flere kurs...</p>
+                                    )}
+                                    {total === 0 && (
+                                        <p className="text-[10px] text-slate-400 italic text-center py-2">Ingen tildelte kurs enda.</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
+        </TabsContent>
+      </Tabs>
+
       {/* INDIVIDUAL ASSIGNMENT DIALOG */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
           <DialogContent className="max-w-md p-0 overflow-hidden rounded-2xl">
@@ -607,88 +779,14 @@ export default function LearningAdminPage() {
               </DialogFooter>
           </DialogContent>
       </Dialog>
-
-      {/* COURSE LIST */}
-      <div className="grid grid-cols-1 gap-4">
-        {courses.length === 0 ? (
-          <div className="bg-white border-2 border-dashed rounded-2xl p-20 text-center">
-            <GraduationCap className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-            <h3 className="font-bold text-slate-400 uppercase tracking-widest text-sm">Biblioteket er tomt</h3>
-            <p className="text-slate-400 mt-2">Opprett ditt første kurs for å komme i gang.</p>
-          </div>
-        ) : (
-          courses.map(course => (
-            <Card key={course.id} className="overflow-hidden border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
-              <div className="flex flex-col md:flex-row">
-                <div className="flex-1 p-6 space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary" className="uppercase font-bold text-[10px] tracking-tighter flex items-center gap-1.5">
-                        {course.category === 'tools' ? <Smartphone className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
-                        {getCategoryLabel(course.category)}
-                    </Badge>
-                    {course.isCertification && (
-                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px] font-bold flex items-center gap-1">
-                            <ShieldCheck className="h-3 w-3" /> SERTIFISERING
-                        </Badge>
-                    )}
-                    {course.isPublished ? (
-                      <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] font-bold">PUBLISERT</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] font-bold text-slate-400">UTKAST</Badge>
-                    )}
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900">{course.title}</h3>
-                  <p className="text-sm text-slate-500 line-clamp-1 font-medium">{course.description}</p>
-                  
-                  <div className="flex items-center gap-4 pt-2">
-                     <span className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-tight">
-                        <FileText className="h-3 w-3" /> {course.content.length} Moduler
-                     </span>
-                     {course.isCertification && (
-                         <span className="flex items-center gap-1.5 text-[10px] font-black text-indigo-400 uppercase tracking-tight">
-                             <CalendarDays className="h-3 w-3" /> Gyldig {course.validityMonths} mnd
-                         </span>
-                     )}
-                  </div>
-                </div>
-                
-                <div className="md:w-80 bg-slate-50/50 border-l border-slate-100 p-6 flex flex-col justify-center gap-2">
-                  <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="text-indigo-700 border-indigo-200 bg-white hover:bg-indigo-50 font-bold text-[10px] h-9 shadow-sm"
-                        onClick={() => handleOpenAssignDialog(course)}
-                      >
-                        <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Enkeltperson
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="text-indigo-700 border-indigo-200 bg-white hover:bg-indigo-50 font-bold text-[10px] h-9 shadow-sm"
-                        onClick={() => handleAssignToAll(course.id)}
-                        disabled={isSubmitting}
-                      >
-                        <Users className="mr-1.5 h-3.5 w-3.5" /> Alle ansatte
-                      </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 h-9 bg-white shadow-sm font-bold text-xs" onClick={() => handleEdit(course)}>
-                      <Settings2 className="h-3.5 w-3.5 mr-1.5 text-slate-600" /> Rediger
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1 h-9 hover:bg-red-50 hover:text-red-600 border-red-100 bg-white shadow-sm font-bold text-xs"
-                      onClick={() => handleDelete(course.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Slett
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
     </div>
   );
+}
+
+export default function LearningAdminPage() {
+    return (
+        <Suspense fallback={<SplashScreen />}>
+            <LearningAdminContent />
+        </Suspense>
+    );
 }
