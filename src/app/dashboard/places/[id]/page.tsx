@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -27,6 +27,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +65,7 @@ export default function PlaceDetailsPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isHoursOpen, setIsHoursOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { id } = params;
@@ -345,36 +351,6 @@ export default function PlaceDetailsPage() {
                   </div>
                 </section>
 
-                {/* OPENING HOURS DISPLAY */}
-                <section className="bg-white p-5 rounded-xl shadow-sm border">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                        <Calendar className="mr-2 h-5 w-5 text-indigo-500" />
-                        Åpningstider
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                        {DAYS.map(({ key, label }) => {
-                            const dayHours = place.weeklySchedule?.[key];
-                            const isOpen = dayHours?.isOpen;
-                            
-                            return (
-                                <div key={key} className={cn(
-                                    "p-3 rounded-lg border flex flex-col items-center text-center",
-                                    isOpen ? "bg-indigo-50/30 border-indigo-100" : "bg-slate-50 border-slate-100 opacity-50"
-                                )}>
-                                    <span className="text-[10px] font-black uppercase text-slate-400 mb-1">{label}</span>
-                                    {isOpen ? (
-                                        <div className="font-bold text-slate-800 text-sm">
-                                            {dayHours.open} - {dayHours.close}
-                                        </div>
-                                    ) : (
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Stengt</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-
                 {descEnabled && (place.description || !place.notes) && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                     <h2 className="text-xl font-semibold mb-3 flex items-center">
@@ -506,6 +482,43 @@ export default function PlaceDetailsPage() {
                     )}
                   </div>
                 </section>
+
+            {/* OPENING HOURS COLLAPSIBLE */}
+            <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <Collapsible open={isHoursOpen} onOpenChange={setIsHoursOpen}>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
+                            <div className="flex items-center">
+                                <Clock className="mr-2 h-5 w-5 text-indigo-500" />
+                                <h2 className="text-lg font-semibold">Åpningstider</h2>
+                            </div>
+                            {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="px-5 pb-5 space-y-2 border-t pt-4">
+                        {DAYS.map(({ key, label }) => {
+                            const dayHours = place.weeklySchedule?.[key];
+                            const isOpen = dayHours?.isOpen;
+                            
+                            return (
+                                <div key={key} className={cn(
+                                    "flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0",
+                                    !isOpen && "opacity-40"
+                                )}>
+                                    <span className="text-sm font-medium text-slate-600">{label}</span>
+                                    {isOpen ? (
+                                        <span className="text-sm font-bold text-slate-800">
+                                            {dayHours.open} - {dayHours.close}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs font-bold text-slate-400 uppercase">Stengt</span>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </CollapsibleContent>
+                </Collapsible>
+            </section>
 
             <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
               <h2 className="text-lg font-semibold border-b pb-2">Logg</h2>
