@@ -449,7 +449,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {images.map((img, index) => (
                             <div key={index} className={cn(
-                                "relative aspect-video rounded-lg overflow-hidden border-2",
+                                "relative aspect-[4/3] rounded-lg overflow-hidden border-2",
                                 img.isMain ? "border-primary" : "border-slate-100"
                             )}>
                                 <Image src={img.preview || img.url} alt={`Bilde ${index + 1}`} fill className="object-cover" />
@@ -469,7 +469,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                         {images.length < 8 && (
                             <div className="flex flex-col gap-2">
                                 <input type="file" accept="image/*" multiple className="sr-only" ref={fileInputRef} onChange={handleAddImages} />
-                                <Button type="button" variant="outline" className="aspect-video flex flex-col items-center justify-center gap-2" onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}>
+                                <Button type="button" variant="outline" className="aspect-[4/3] flex flex-col items-center justify-center gap-2 min-h-[120px]" onClick={(e) => { e.preventDefault(); fileInputRef.current?.click(); }}>
                                   <UploadCloud className="h-6 w-6" />
                                   <span className="text-[10px] font-bold uppercase">Legg til bilde</span>
                                 </Button>
