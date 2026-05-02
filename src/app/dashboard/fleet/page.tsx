@@ -103,10 +103,16 @@ export default function FleetPage() {
         if (!dbUser?.orgId) return;
 
         try {
-            if (editingVehicle) {
-                await firebaseDB.updateVehicle(editingVehicle.id, data);
-                toast({ title: "Lagret", description: "Kjøretøyet ble oppdatert." });
+            // VehicleForm handles the initial creation if it's new to secure an ID for uploads.
+            // We update the document here with the complete data (including image/doc URLs).
+            if (data.id) {
+                await firebaseDB.updateVehicle(data.id, data);
+                toast({ 
+                    title: "Lagret", 
+                    description: editingVehicle ? "Kjøretøyet ble oppdatert." : "Nytt kjøretøy ble lagt til." 
+                });
             } else {
+                // Fallback for safety
                 await firebaseDB.createVehicle({ ...data, orgId: dbUser.orgId } as any);
                 toast({ title: "Lagret", description: "Nytt kjøretøy ble lagt til." });
             }
@@ -380,7 +386,8 @@ export default function FleetPage() {
                         </DialogHeader>
                         <div className="py-4">
                           <VehicleForm 
-                              initialData={editingVehicle} 
+                              initialData={editingVehicle}
+                              orgId={dbUser?.orgId || ''}
                               onSubmit={handleSubmit} 
                               onCancel={handleCloseForm} 
                           />

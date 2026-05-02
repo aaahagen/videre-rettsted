@@ -18,11 +18,12 @@ import { cn } from '@/lib/utils';
 
 interface VehicleFormProps {
     initialData?: Vehicle | null;
+    orgId: string;
     onSubmit: (data: Partial<Vehicle>) => Promise<void>;
     onCancel: () => void;
 }
 
-export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProps) {
+export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const docFileInputRef = useRef<HTMLInputElement>(null);
@@ -163,17 +164,14 @@ export function VehicleForm({ initialData, onSubmit, onCancel }: VehicleFormProp
         setIsUploading(true);
         try {
             let currentVehicleId = initialData?.id;
-            let finalFormData = { ...formData };
+            let finalFormData = { ...formData, orgId };
 
             // If creating a new vehicle, create it first to get an ID
-            if (!currentVehicleId && finalFormData.orgId) {
+            if (!currentVehicleId) {
                 const newVehicle = await firebaseDB.createVehicle(finalFormData as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>);
                 currentVehicleId = newVehicle.id;
                 finalFormData = { ...finalFormData, id: newVehicle.id };
-            } else if (!currentVehicleId && !finalFormData.orgId) {
-                throw new Error("Organization ID is missing for new vehicle creation.");
             }
-
 
             const finalImages = [];
             for (const img of images) {
