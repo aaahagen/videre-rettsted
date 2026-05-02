@@ -66,7 +66,7 @@ service cloud.firestore {
       allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
       allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
-      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
     // Routes
@@ -76,7 +76,7 @@ service cloud.firestore {
       allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && (
         isAdmin() || (request.auth.uid == resource.data.driverId)
       );
-      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
     // Messages
@@ -84,7 +84,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
       allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
-      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId);
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId);
     }
 
     // Vehicles
@@ -92,7 +92,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
       allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
     // WorkLogs
@@ -120,7 +120,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId);
       allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
       allow update: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
-      allow delete: if isAuthenticated() && isUserInOrg(request.resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
     // LMS - Course Assignments

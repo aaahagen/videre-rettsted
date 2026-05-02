@@ -568,7 +568,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-indigo-500" />
                   <div>
-                    <h3 className="text-lg font-black text-slate-800 leading-tight">Åpningstider</h3>
+                    <h3 className="text-lg font-black text-slate-800 leading-tight">Leveringsvindu</h3>
                     <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Logistikk-kontroll</p>
                   </div>
                 </div>

@@ -490,7 +490,7 @@ export default function PlaceDetailsPage() {
                         <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
                             <div className="flex items-center">
                                 <Clock className="mr-2 h-5 w-5 text-indigo-500" />
-                                <h2 className="text-lg font-semibold">Åpningstider</h2>
+                                <h2 className="text-lg font-semibold">Leveringsvindu</h2>
                             </div>
                             {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                         </Button>
