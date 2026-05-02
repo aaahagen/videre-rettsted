@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,12 @@ const placeSchema = z.object({
   contactPersons: z.array(z.object({ name: z.string().optional(), phone: z.string().optional(), email: z.string().optional() })).optional(),
   hashtags: z.string().optional(),
   estimatedDeliveryTime: z.number().optional(),
+  isZeroEmissionZone: z.boolean().default(false),
+  isCityCenter: z.boolean().default(false),
+  maxVehicleHeight: z.number().optional(),
+  maxVehicleWidth: z.number().optional(),
+  maxVehicleLength: z.number().optional(),
+  maxVehicleWeight: z.number().optional(),
   weeklySchedule: z.object({
     monday: openingHoursSchema,
     tuesday: openingHoursSchema,
@@ -132,6 +138,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       contactPersons: place?.contactPersons || [],
       hashtags: place?.hashtags?.join(', ') || '',
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
+      isZeroEmissionZone: place?.isZeroEmissionZone || false,
+      isCityCenter: place?.isCityCenter || false,
+      maxVehicleHeight: place?.maxVehicleHeight,
+      maxVehicleWidth: place?.maxVehicleWidth,
+      maxVehicleLength: place?.maxVehicleLength,
+      maxVehicleWeight: place?.maxVehicleWeight,
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -170,6 +182,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           contactPersons: value.contactPersons,
           hashtags: value.hashtags,
           estimatedDeliveryTime: value.estimatedDeliveryTime,
+          isZeroEmissionZone: value.isZeroEmissionZone,
+          isCityCenter: value.isCityCenter,
+          maxVehicleHeight: value.maxVehicleHeight,
+          maxVehicleWidth: value.maxVehicleWidth,
+          maxVehicleLength: value.maxVehicleLength,
+          maxVehicleWeight: value.maxVehicleWeight,
           coordinates: value.coordinates,
           weeklySchedule: value.weeklySchedule
         };
@@ -187,7 +205,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           const parsedDraft = JSON.parse(savedDraft);
           Object.keys(parsedDraft).forEach(key => {
               const currentVal = form.getValues()[key as keyof PlaceFormValues];
-              if (parsedDraft[key] && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
+              if (parsedDraft[key] !== undefined && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
                   form.setValue(key as any, parsedDraft[key], { shouldValidate: true, shouldDirty: true });
               }
           });
@@ -419,6 +437,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
+            isZeroEmissionZone: data.isZeroEmissionZone,
+            isCityCenter: data.isCityCenter,
+            maxVehicleHeight: data.maxVehicleHeight,
+            maxVehicleWidth: data.maxVehicleWidth,
+            maxVehicleLength: data.maxVehicleLength,
+            maxVehicleWeight: data.maxVehicleWeight,
             weeklySchedule: data.weeklySchedule,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
@@ -556,6 +580,113 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </FormItem>
                 )}
                 />
+
+                {/* ENVIRONMENTAL ZONES */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                    <FormField
+                        control={form.control}
+                        name="isZeroEmissionZone"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-green-50/30 border-green-100">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-sm font-bold flex items-center gap-2">
+                                        <Leaf className="h-4 w-4 text-green-600" />
+                                        Nullutslippssone
+                                    </FormLabel>
+                                    <FormDescription className="text-[10px]">Krever El/Gass kjøretøy.</FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="isCityCenter"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-blue-50/30 border-blue-100">
+                                <div className="space-y-0.5">
+                                    <FormLabel className="text-sm font-bold flex items-center gap-2">
+                                        <Building2 className="h-4 w-4 text-blue-600" />
+                                        Sentrumskjerne
+                                    </FormLabel>
+                                    <FormDescription className="text-[10px]">Høye bomavgifter for Diesel.</FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+
+            {/* VEHICLE LIMITATIONS AT PLACE */}
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <h3 className="text-lg font-black text-slate-800 border-b pb-2 flex items-center gap-2">
+                    <Ruler className="h-5 w-5 text-slate-500" />
+                    Kjøretøybegrensninger på stedet
+                </h3>
+                <p className="text-xs text-muted-foreground">Angi begrensninger for kjøretøy som skal levere her (f.eks. pga lave broer, smale porter eller vektbegrensning på vei).</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleHeight"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Høyde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 3.20" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleWidth"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Bredde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 2.50" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleLength"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Lengde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 12.00" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleWeight"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase tracking-tight flex items-center gap-1.5">
+                            <Weight className="h-3 w-3" />
+                            Maks Totalvekt (kg)
+                        </FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="F.eks. 7500" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
             </div>
 
             {/* OPENING HOURS SECTION - COLLAPSIBLE */}

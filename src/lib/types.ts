@@ -72,6 +72,16 @@ export interface Place {
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
   
+  // Zone constraints
+  isZeroEmissionZone?: boolean; // If true, prefers/requires electric/gas
+  isCityCenter?: boolean; // High toll area
+
+  // Physical limitations for vehicles at this location
+  maxVehicleHeight?: number; // meters
+  maxVehicleWidth?: number;  // meters
+  maxVehicleLength?: number; // meters
+  maxVehicleWeight?: number; // kg (total weight of vehicle)
+
   // Opening Hours
   weeklySchedule?: {
     monday: OpeningHours;
@@ -142,6 +152,7 @@ export interface Route {
   isThirdParty?: boolean;
   thirdPartySupplier?: string; // Name of the 3PS company
   vehicleId?: string;
+  trailerId?: string; // Added for Modular Combinations
   distance?: number; // in kilometers
   distanceString?: string; // e.g. "10.5 km"
   duration?: string; // e.g., "1 t 23 min"
@@ -191,8 +202,10 @@ export interface Vehicle {
   orgId: string;
   name: string; // e.g., "Scania R500", "Van 1"
   registrationNumber: string;
-  type: 'truck' | 'van' | 'car' | 'trailer';
+  type: 'truck' | 'van' | 'car' | 'trailer' | 'tractor'; // Expanded
+  config?: 'rigid' | 'tractor' | 'drawbar' | 'semi' | 'box_swap' | 'fixed_box'; // Added config
   fuelType?: 'diesel' | 'electric' | 'gas' | 'hybrid';
+  maxRange?: number; // km (for electric/gas)
   dimensions?: {
     length?: number; // meters
     height?: number; // meters
@@ -208,7 +221,8 @@ export interface Vehicle {
     refrigeration: boolean;
     tailLift: boolean;
     adr: boolean; // Hazardous materials
-    trailerCoupling: boolean; // Can drag a trailer
+    trailerCoupling: boolean; // Can drag a trailer (VBG/Drawbar)
+    fifthWheel?: boolean; // Can drag a semi-trailer
     flatbed?: boolean; // Flakbil
     notes?: string;
     customFields?: { name: string; value: string }[];
@@ -308,7 +322,6 @@ export interface DriverProfile extends User {
   adminNotes?: string;
   seniorityDate?: string; // ISO date string
   contracts?: Contract[];
-  workLogs?: WorkLog[];
 
   // Personal Identification
   dateOfBirth?: string; // ISO date string
