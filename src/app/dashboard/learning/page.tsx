@@ -17,7 +17,10 @@ import {
   ExternalLink,
   PlayCircle,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  ShieldCheck,
+  PlusCircle,
+  Users
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { SplashScreen } from '@/components/ui/splash-screen';
@@ -67,15 +70,41 @@ export default function LearningPortalPage() {
             <GraduationCap className="h-8 w-8 text-indigo-600" />
             Læringsportal
           </h1>
-          <p className="text-slate-500 font-medium">Fullfør dine tildelte kurs og sertifiseringer.</p>
+          <p className="text-slate-500 font-medium">Få oversikt over din kompetanse og tildelte kurs.</p>
         </div>
-        
-        {dbUser?.role === 'admin' && (
-          <Button asChild variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
-            <Link href="/dashboard/learning/admin">Administrer Kursbibliotek</Link>
-          </Button>
-        )}
       </div>
+
+      {/* ADMIN QUICK ACTIONS */}
+      {dbUser?.role === 'admin' && (
+        <Card className="border-indigo-200 bg-indigo-50/50 shadow-sm overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4 opacity-10 hidden sm:block">
+            <ShieldCheck className="h-24 w-24 text-indigo-600" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-indigo-900 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" />
+              Administrasjon
+            </CardTitle>
+            <CardDescription className="text-indigo-700 font-medium">
+              Som administrator kan du opprette kurs, tildele dem til ansatte og overvåke organisasjonens fremdrift.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3 pt-2">
+            <Button asChild className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-sm">
+              <Link href="/dashboard/learning/admin">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Administrer Kursbibliotek
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 font-bold">
+               <Link href="/dashboard/learning/admin">
+                <Users className="mr-2 h-4 w-4" />
+                Se Status per Ansatt
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* STATS OVERVIEW */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -110,7 +139,10 @@ export default function LearningPortalPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sertifiseringer</p>
-              <p className="text-2xl font-black text-slate-900">0</p>
+              <p className="text-2xl font-black text-slate-900">{completedAssignments.filter(a => {
+                const c = courses.find(course => course.id === a.courseId);
+                return c?.isCertification;
+              }).length}</p>
             </div>
           </CardContent>
         </Card>
@@ -118,10 +150,13 @@ export default function LearningPortalPage() {
 
       {/* ASSIGNED COURSES */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-indigo-500" />
-          Dine Tildelinger
-        </h2>
+        <div className="border-b border-slate-100 pb-2">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-indigo-500" />
+            Mine Tildelinger
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">Kurs som er tildelt deg for gjennomføring.</p>
+        </div>
 
         {activeAssignments.length === 0 ? (
           <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
@@ -139,9 +174,14 @@ export default function LearningPortalPage() {
                 <Card key={assignment.id} className="group overflow-hidden border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all">
                   <CardHeader className="bg-slate-50/50 border-b pb-4">
                     <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline" className="bg-white capitalize font-bold text-[10px]">
-                        {course.category}
-                      </Badge>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <Badge variant="outline" className="bg-white capitalize font-bold text-[10px]">
+                            {course.category}
+                        </Badge>
+                        {course.isCertification && (
+                            <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">SERTIFISERING</Badge>
+                        )}
+                      </div>
                       {assignment.status === 'in_progress' ? (
                         <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 font-black text-[10px]">PÅGÅR</Badge>
                       ) : (
@@ -192,10 +232,10 @@ export default function LearningPortalPage() {
 
       {/* COMPLETED COURSES */}
       {completedAssignments.length > 0 && (
-        <div className="space-y-4 pt-8 border-t">
+        <div className="space-y-4 pt-8 border-t border-slate-100">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 opacity-60">
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            Fullførte Kurs
+            Fullførte Kurs & Sertifiseringer
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedAssignments.map(assignment => {
@@ -206,7 +246,12 @@ export default function LearningPortalPage() {
                 <Card key={assignment.id} className="opacity-75 grayscale hover:opacity-100 hover:grayscale-0 transition-all border-slate-200">
                    <CardHeader className="pb-3">
                     <div className="flex justify-between items-center mb-1">
-                        <Badge variant="outline" className="text-[10px]">{course.category}</Badge>
+                        <div className="flex gap-1">
+                            <Badge variant="outline" className="text-[10px]">{course.category}</Badge>
+                            {course.isCertification && (
+                                <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px]">SERTIFISERING</Badge>
+                            )}
+                        </div>
                         <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 font-bold text-[10px]">FULLFØRT</Badge>
                     </div>
                     <CardTitle className="text-base font-bold">{course.title}</CardTitle>

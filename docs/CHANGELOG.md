@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enhanced Learning Portal Admin UI:** Redesigned the main learning dashboard to clearly differentiate between personal progress and administrative tasks.
+    - Added a dedicated "Administrasjon" card for admins/owners, providing direct access to the course library and employee progress tracking.
+    - Improved page structure with clear headings and descriptions for tilled assignments and completed courses.
+    - Added high-visibility "SERTIFISERING" badges to highlight certification-track courses across the UI.
 - **Intelligent Fleet & Physical Constraints:** Upgraded the `ConstraintEngine` and `VehicleForm` to reflect complex logistical realities.
     - **Modular Combinations:** Support for registering standalone Trailers and Tractor units. Planners can now build routes using specific truck+trailer combinations.
     - **Environmental Zone Awareness:** Places can now be tagged as "Nullutslippssone" (Zero-Emission) or "Sentrumskjerne" (City Center). The routing engine automatically avoids assigning diesel vehicles to zero-emission zones and warns about high tolls in city centers.
@@ -201,7 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Place Image Modal UI:** Updated the styling of the close button and the image description caption in the image zoom modal to match the zoom controls (white background with black text) for a more consistent appearance.
-- **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or owner review.
+- **Workforce Management:** Implement a restriction preventing Administrators from approving their own work logs, requiring peer or review.
 - **Advanced Route Management Strategy:** A new tiered approach for route planning will be implemented to enhance efficiency and automation.
     - **Tier 1: Route Archiving & Templates:** Finished routes will be archived for historical analysis. Planners will be able to save any route as a "Template" to quickly recreate recurring or similar routes.
     - **Tier 2: Order-Based Planning & Multi-Channel Intake:** An "Order" module will be introduced to manage incoming jobs. To ensure redundancy and flexibility, this module will support a dual-intake strategy:
