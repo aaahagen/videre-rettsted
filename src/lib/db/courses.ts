@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, limit } from 'firebase/firestore';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, limit, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Course, CourseAssignment } from '../types';
 
@@ -39,8 +39,28 @@ export const updateCourse = async (id: string, updates: Partial<Course>): Promis
   await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
 };
 
-export const deleteCourse = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, 'courses', id));
+/**
+ * Deletes a course and all associated assignments (Cascading Deletion)
+ */
+export const deleteCourse = async (courseId: string): Promise<void> => {
+  const batch = writeBatch(db);
+  
+  // 1. Reference the course
+  const courseRef = doc(db, 'courses', courseId);
+  batch.delete(courseRef);
+
+  // 2. Find all assignments for this course
+  const assignmentsRef = collection(db, 'courseAssignments');
+  const q = query(assignmentsRef, where('courseId', '==', courseId));
+  const assignmentSnap = await getDocs(q);
+  
+  // 3. Add assignment deletions to batch
+  assignmentSnap.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+
+  // 4. Commit atomic operation
+  await batch.commit();
 };
 
 /**
@@ -69,7 +89,24 @@ export const getUserAssignments = async (userId: string): Promise<CourseAssignme
 export const updateAssignmentStatus = async (id: string, status: CourseAssignment['status'], progress?: number): Promise<void> => {
   const updates: any = { status };
   if (progress !== undefined) updates.progress = progress;
-  if (status === 'completed') updates.completedAt = serverTimestamp();
+  if (status === 'completed') {
+      updates.completedAt = serverTimestamp();
+      
+      // Handle Certification expiry if applicable
+      const assignmentSnap = await getDoc(doc(db, 'courseAssignments', id));
+      if (assignmentSnap.exists()) {
+          const data = assignmentSnap.data();
+          const courseSnap = await getDoc(doc(db, 'courses', data.courseId));
+          if (courseSnap.exists()) {
+              const course = courseSnap.data() as Course;
+              if (course.isCertification && course.validityMonths) {
+                  const expiryDate = new Date();
+                  expiryDate.setMonth(expiryDate.getMonth() + course.validityMonths);
+                  updates.expiresAt = expiryDate;
+              }
+          }
+      }
+  }
   
   await updateDoc(doc(db, 'courseAssignments', id), updates);
 };

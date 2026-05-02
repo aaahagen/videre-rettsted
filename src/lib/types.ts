@@ -519,12 +519,14 @@ export interface Course {
   orgId: string;
   title: string;
   description: string;
-  category: 'safety' | 'adr' | 'equipment' | 'company_policy' | 'other';
+  category: 'safety' | 'tools' | 'equipment' | 'company_policy' | 'other';
   content: {
     type: 'pdf' | 'video' | 'link' | 'text';
     url?: string;
     body?: string;
   }[];
+  isCertification?: boolean; // New field
+  validityMonths?: number;   // New field
   requiredRoles?: ('admin' | 'driver' | 'contractor' | 'loader' | 'planner')[];
   estimatedMinutes?: number;
   isPublished: boolean;
