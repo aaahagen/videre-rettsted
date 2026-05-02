@@ -7,7 +7,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText } from 'lucide-react';
+import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText, Weight, Box } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { VehicleForm } from '@/components/fleet/vehicle-form';
@@ -158,6 +158,17 @@ export default function FleetPage() {
         (v.registrationNumber?.toLowerCase().includes(safeQuery) || false)
     );
 
+    const getVehicleTypeLabel = (type: string) => {
+        switch(type) {
+            case 'truck': return 'Lastebil';
+            case 'van': return 'Varebil';
+            case 'tractor': return 'Trekkvogn';
+            case 'trailer': return 'Henger';
+            case 'car': return 'Liten bil';
+            default: return 'Personbil';
+        }
+    };
+
     return (
         <TooltipProvider>
             <div className="mx-auto w-full max-w-7xl px-4 py-8 space-y-6">
@@ -302,11 +313,11 @@ export default function FleetPage() {
                                 </CardHeader>
                                 <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                                            <Truck className="h-4 w-4" />
-                                            <span>{v.type === 'truck' ? 'Lastebil' : v.type === 'van' ? 'Varebil' : v.type === 'trailer' ? 'Henger' : 'Personbil'}</span>
-
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 font-medium">
+                                            <Truck className="h-4 w-4 text-indigo-500" />
+                                            <span>{getVehicleTypeLabel(v.type)}</span>
                                         </div>
+
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {v.capabilities?.tailLift && <Badge variant="secondary">Lift</Badge>}
                                             {v.capabilities?.refrigeration && <Badge variant="secondary">Kjøl/Frys</Badge>}
@@ -314,11 +325,26 @@ export default function FleetPage() {
                                             {v.capabilities?.adr && <Badge variant="destructive" className="bg-amber-100 text-amber-800 border-amber-200">ADR</Badge>}
                                             {v.capabilities?.flatbed && <Badge variant="outline" className="bg-slate-100 border-slate-300">Flak/Åpen</Badge>}
                                         </div>
-                                        {(v.dimensions?.height || v.dimensions?.width || v.dimensions?.length) && (
-                                            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
-                                                {v.dimensions.height && <span title="Høyde">H: {v.dimensions.height}m</span>}
-                                                {v.dimensions.width && <span title="Bredde">B: {v.dimensions.width}m</span>}
-                                                {v.dimensions.length && <span title="Lengde">L: {v.dimensions.length}m</span>}
+
+                                        {(v.dimensions?.height || v.dimensions?.width || v.dimensions?.length || v.capacity?.weight || v.capacity?.volume) && (
+                                            <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+                                                {v.capacity?.weight && (
+                                                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                                                        <Weight className="h-3 w-3 text-slate-400" />
+                                                        <span className="font-bold text-slate-700">{v.capacity.weight} kg</span>
+                                                    </div>
+                                                )}
+                                                {v.capacity?.volume && (
+                                                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                                                        <Box className="h-3 w-3 text-slate-400" />
+                                                        <span className="font-bold text-slate-700">{v.capacity.volume} m³</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex gap-2 items-center text-slate-400 font-medium">
+                                                    {v.dimensions?.height && <span title="Høyde">H: {v.dimensions.height}m</span>}
+                                                    {v.dimensions?.width && <span title="Bredde">B: {v.dimensions.width}m</span>}
+                                                    {v.dimensions?.length && <span title="Lengde">L: {v.dimensions.length}m</span>}
+                                                </div>
                                             </div>
                                         )}
                                         
