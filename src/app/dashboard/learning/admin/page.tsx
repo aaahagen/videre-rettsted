@@ -206,12 +206,17 @@ export default function LearningAdminPage() {
   };
 
   const handleOpenAssignDialog = async (course: Course) => {
+      if (!dbUser?.orgId) return;
       setSelectedCourse(course);
       setIsAssignDialogOpen(true);
       
       try {
           const assignmentsRef = collection(db, 'courseAssignments');
-          const q = query(assignmentsRef, where('courseId', '==', course.id));
+          const q = query(
+            assignmentsRef, 
+            where('orgId', '==', dbUser.orgId),
+            where('courseId', '==', course.id)
+          );
           const snap = await getDocs(q);
           const assignedIds = new Set(snap.docs.map(d => d.data().userId));
           setAlreadyAssignedIds(assignedIds);
@@ -243,13 +248,19 @@ export default function LearningAdminPage() {
   };
 
   const handleAssignToAll = async (courseId: string) => {
+    if (!dbUser?.orgId) return;
     if (!confirm("Vil du tildele dette kurset til ALLE brukere i organisasjonen? Dette vil kun legge til nye tildelinger.")) return;
     
     setIsSubmitting(true);
     let assignedCount = 0;
     try {
+      // 1. Get existing assignments for this course to avoid duplicates
       const assignmentsRef = collection(db, 'courseAssignments');
-      const q = query(assignmentsRef, where('courseId', '==', courseId));
+      const q = query(
+        assignmentsRef, 
+        where('orgId', '==', dbUser.orgId),
+        where('courseId', '==', courseId)
+      );
       const existingSnap = await getDocs(q);
       const assignedUserIds = new Set(existingSnap.docs.map(d => d.data().userId));
 
@@ -268,7 +279,7 @@ export default function LearningAdminPage() {
       await Promise.all(promises);
       toast({ title: "Tildeling fullført", description: `Kurset er tildelt ${assignedCount} nye brukere.` });
     } catch (e) {
-      console.error(e);
+      console.error("Assign to all error:", e);
       toast({ title: "Feil", description: "Kunne ikke tildele kurs.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
