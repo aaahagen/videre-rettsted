@@ -237,10 +237,19 @@ export class ConstraintEngine {
         const suggestions: RouteSuggestion[] = [];
         const startTimeMinutes = timeToMinutes(startTimeStr);
 
+        // Sort drivers to prioritize regular employees (internal) over external contractors
+        const sortedDrivers = [...availableDrivers].sort((a, b) => {
+            const typeA = a.employmentType || 'internal';
+            const typeB = b.employmentType || 'internal';
+            if (typeA === 'internal' && typeB === 'external') return -1;
+            if (typeA === 'external' && typeB === 'internal') return 1;
+            return 0;
+        });
+
         // Assign one vehicle and one driver at a time
         for (let i = 0; i < availableVehicles.length; i++) {
             const vehicle = availableVehicles[i];
-            const driver = availableDrivers[i] || null; 
+            const driver = sortedDrivers[i] || null; 
             
             if (remainingOrders.length === 0) break;
 
