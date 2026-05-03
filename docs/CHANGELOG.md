@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Dashboard UI Refresh (Admin & Driver):** Implemented a major visual overhaul of the main dashboard to improve cognitive focus and logical grouping.
+    - **Layered Contrast:** Set a deeper background color (`bg-slate-100/50`) for the Admin view to make white operational cards "pop" and reduce eye strain.
+    - **Semantic Logic Striping:** Added 4px vertical color borders to major cards (e.g., Primary Blue for Routes, Indigo for Terminal, Emerald for Attendance).
+    - **Glance-First Headers:** Standardized card headers with small, high-contrast uppercase category labels and clear icons for faster visual scanning.
+    - **Responsive Bento Layout:** Optimized the "Bento Box" grid with increased whitespace (`gap-8`) between logical sections.
 - **Place Form & Details Redesign:** Completely overhauled the Place creation/editing form and the Place Details page.
     - **Simplified Form Layout:** Transitioned to a clean two-column layout on desktop.
     - **Driver-Centric UI:** Wrapped "Leveringsvindu" (Delivery Window) and "Begrensninger" (Vehicle Constraints) in collapsible cards to reduce visual clutter for drivers.
