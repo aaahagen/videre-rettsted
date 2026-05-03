@@ -43,11 +43,13 @@ The engine validates every potential stop against five categories of constraints
 *   **Pallets:** Tracks floor space usage based on EUR-pallet estimates.
 
 ### C. Physical Constraints (Hard)
-*   **Dimensions:** Cross-references vehicle `height`, `width`, and `length` against site-specific limits stored in the `Place` profile.
+*   **Dimensions:** Cross-references vehicle `height`, `width`, and `length` against site-specific limits stored in the `Place` profile. 
+    *   **Open Access Policy:** If no physical constraints are registered for a place, the engine assumes **no limitations**, meaning any vehicle and load in the fleet can safely access the site.
 *   **Site Weight:** Prevents heavy vehicles from being assigned to sites with bridge or pavement weight limits.
 
 ### D. Temporal Constraints (Soft)
 *   **Delivery Windows:** Calculates ETA per stop and warns if the delivery falls outside the location's `weeklySchedule`.
+    *   **24/7 Availability:** If no `weeklySchedule` (Leveringsvindu) is registered for a place, the engine assumes **delivery is possible at all times**. There are no time restrictions for visits to this location.
 *   **Driver Shift:** Warns if the route duration exceeds the driver's standard working hours.
 *   **Legal Limits:** Triggers hard warnings if the driving time exceeds EU 561/2006 baseline regulations (e.g., 9 hours).
 

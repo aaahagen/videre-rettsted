@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Route Planning Strategy Documentation:** Updated `docs/routeplanning.md` to explicitly state the "Open Access" and "24/7 Availability" policies for locations without registered physical or temporal constraints.
 - **Place Form & Details Delivery Window Logic:** Overhauled how opening hours are managed.
     - The detailed "Leveringsvindu" inputs are now hidden behind a toggle switch.
     - If the user has not explicitly registered any time changes (toggle is OFF), the delivery window is deactivated and not shown in the form.
