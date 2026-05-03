@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -987,7 +987,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Høyde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
+                            <Input 
+                                type="number" 
+                                step="0.01" 
+                                {...field} 
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                value={field.value ?? ''} 
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1000,7 +1006,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Bredde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
+                            <Input 
+                                type="number" 
+                                step="0.01" 
+                                {...field} 
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                value={field.value ?? ''} 
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1013,7 +1025,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Lengde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
+                            <Input 
+                                type="number" 
+                                step="0.01" 
+                                {...field} 
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                value={field.value ?? ''} 
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1029,7 +1047,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             Maks Vekt (kg)
                         </FormLabel>
                         <FormControl>
-                            <Input type="number" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
+                            <Input 
+                                type="number" 
+                                {...field} 
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                value={field.value ?? ''} 
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>

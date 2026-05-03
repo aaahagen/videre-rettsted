@@ -247,7 +247,7 @@ export class ConstraintEngine {
         dayOfWeek: string = 'monday'
     ): RouteSuggestion[] {
         
-        console.log(`Starting generation with ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles, ${availableDrivers.length} drivers.`);
+        console.log(`[Engine] Starting generation with ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles, ${availableDrivers.length} drivers.`);
 
         // 1. Initial Data Validation: Skip orders with invalid coordinates
         const validOrders: Order[] = [];
@@ -258,7 +258,7 @@ export class ConstraintEngine {
             if (place && isValidCoordinate(place.coordinates)) {
                 validOrders.push(order);
             } else {
-                console.log(`Skipping order ${order.barcode} - Invalid coordinates for place ${place?.name}`);
+                console.log(`[Engine] Skipping order ${order.barcode} - Invalid coordinates for place ${place?.name || order.placeId}`);
                 invalidOrderCount.push(order.barcode);
             }
         }
@@ -277,11 +277,11 @@ export class ConstraintEngine {
 
         const maxRoutes = Math.min(availableVehicles.length, sortedDrivers.length);
         if (maxRoutes === 0) {
-            console.log("Abort: No vehicles or drivers available.");
+            console.log("[Engine] Abort: No combinations of ready vehicles or drivers available.");
             return [];
         }
         if (remainingOrders.length === 0) {
-            console.log("Abort: No valid orders with coordinates found.");
+            console.log("[Engine] Abort: No valid orders with coordinates found.");
             return [];
         }
 
@@ -301,8 +301,17 @@ export class ConstraintEngine {
         const isBalanced = this.options.assignmentStrategy === 'balanced';
         let currentRouteIdx = 0;
         let stalledRoutes = new Set<number>();
+        
+        // Loop safety to prevent infinite loops if logic is flawed
+        let safetyCounter = 0;
+        const MAX_ITERATIONS = remainingOrders.length * maxRoutes * 2;
 
         while (remainingOrders.length > 0 && stalledRoutes.size < maxRoutes) {
+            safetyCounter++;
+            if (safetyCounter > MAX_ITERATIONS) {
+                console.error("[Engine] Force aborted loop - reached max iterations. Possible logic error.");
+                break;
+            }
             
             if (isBalanced && stalledRoutes.has(currentRouteIdx)) {
                 currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
@@ -311,7 +320,6 @@ export class ConstraintEngine {
 
             const suggestion = suggestions[currentRouteIdx];
             const vehicle = availableVehicles[currentRouteIdx];
-            const driver = sortedDrivers[currentRouteIdx];
             
             const lastPlaceId = suggestion.places[suggestion.places.length - 1]?.id;
             const currentCoords = lastPlaceId ? placesMap.get(lastPlaceId)?.coordinates || depotCoords : depotCoords;
@@ -319,34 +327,41 @@ export class ConstraintEngine {
             let bestOrderIndex = -1;
             let shortestDistance = Infinity;
 
+            console.log(`[Engine] Trying to assign ${remainingOrders.length} orders to Vehicle ${vehicle.name}...`);
+
             for (let j = 0; j < remainingOrders.length; j++) {
                 const candidateOrder = remainingOrders[j];
                 const place = placesMap.get(candidateOrder.placeId);
                 if (!place || !place.coordinates) continue;
 
-                // Constraint Checks with Debugging
+                // Constraint Checks with Verbose Debugging
                 const capErrors = this.checkCapabilities(vehicle, candidateOrder);
                 if (capErrors.length > 0) {
+                    console.log(`   -> Skipping ${candidateOrder.barcode}: Capability mismatch (${capErrors[0]})`);
                     continue; 
                 }
 
                 const capacityWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
                 if (capacityWarnings.some(w => w.includes("HARD_LIMIT"))) {
+                    console.log(`   -> Skipping ${candidateOrder.barcode}: Capacity Hard Limit Reached`);
                     continue; 
                 }
 
                 const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng);
                 if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) {
+                    console.log(`   -> Skipping ${candidateOrder.barcode}: Vehicle max range exceeded`);
                     continue;
                 }
 
                 const envWarnings = this.checkEnvironmentalZones(vehicle, place);
                 if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) {
+                    console.log(`   -> Skipping ${candidateOrder.barcode}: Environmental Zone Violation`);
                     continue;
                 }
 
                 const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
                 if (physicalErrors.length > 0) {
+                    console.log(`   -> Skipping ${candidateOrder.barcode}: Physical Constraints Violation (${physicalErrors[0]})`);
                     continue;
                 }
 
@@ -359,6 +374,8 @@ export class ConstraintEngine {
             if (bestOrderIndex !== -1) {
                 const selectedOrder = remainingOrders[bestOrderIndex];
                 const place = placesMap.get(selectedOrder.placeId)!;
+                
+                console.log(`[Engine] Assigned ${selectedOrder.barcode} to Vehicle ${vehicle.name}. Distance: ${shortestDistance.toFixed(2)}km`);
                 
                 suggestion.orders.push(selectedOrder);
                 if (!suggestion.places.some(p => p.id === place.id)) {
@@ -375,11 +392,15 @@ export class ConstraintEngine {
                 suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
                 
                 remainingOrders.splice(bestOrderIndex, 1);
+                
+                // If an order was assigned, reset stalled route state for THIS route, but we don't clear the set completely
+                stalledRoutes.delete(currentRouteIdx);
 
                 if (isBalanced) {
                     currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 }
             } else {
+                console.log(`[Engine] Route for Vehicle ${vehicle.name} is stalled. No more valid orders fit.`);
                 stalledRoutes.add(currentRouteIdx);
                 if (!isBalanced) {
                     currentRouteIdx++;
@@ -390,7 +411,7 @@ export class ConstraintEngine {
             }
         }
 
-        console.log(`Generation finished. Remaining orders: ${remainingOrders.length}. Suggestions created: ${suggestions.filter(s => s.orders.length > 0).length}`);
+        console.log(`[Engine] Generation finished. Remaining unassigned orders: ${remainingOrders.length}. Suggestions created: ${suggestions.filter(s => s.orders.length > 0).length}`);
 
         return suggestions.filter(s => s.orders.length > 0).map(s => {
             const driver = sortedDrivers.find(d => d.id === s.driverId)!;
