@@ -624,7 +624,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <Button 
                                 type="button" 
                                 variant="outline" 
-                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 sm:min-w-[100px] w-full sm:w-auto"
+                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 sm:min-w-[100px] w-full sm:w-auto h-10"
                                 onClick={handleGeocode}
                                 disabled={isGeocoding}
                             >
@@ -681,102 +681,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     />
                 </div>
             </div>
-
-            {/* OPENING HOURS SECTION - COLLAPSIBLE */}
-            <Collapsible
-              open={isHoursOpen}
-              onOpenChange={setIsHoursOpen}
-              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
-            >
-              <div className="flex items-center justify-between p-6 bg-slate-50/50 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-indigo-500" />
-                  <div>
-                    <h3 className="text-lg font-black text-slate-800 leading-tight">Leveringsvindu</h3>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Logistikk-kontroll</p>
-                  </div>
-                </div>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-9 p-0">
-                    {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    <span className="sr-only">Toggle</span>
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              
-              <CollapsibleContent>
-                <div className="p-6 space-y-6">
-                  <div className="flex justify-end">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={copyMondayToAll}
-                      className="text-[10px] font-black uppercase tracking-tight h-8 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                    >
-                      <Copy className="h-3 w-3 mr-1.5" /> Bruk mandag på alle dager
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {DAYS.map(({ key, label }) => (
-                        <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 rounded-lg bg-slate-50 border border-slate-100 hover:bg-white transition-colors">
-                            <div className="flex items-center gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name={`weeklySchedule.${key}.isOpen`}
-                                    render={({ field }) => (
-                                        <FormControl>
-                                            <Switch 
-                                                checked={field.value} 
-                                                onCheckedChange={field.onChange} 
-                                            />
-                                        </FormControl>
-                                    )}
-                                />
-                                <span className={cn(
-                                    "font-bold text-sm w-20",
-                                    form.watch(`weeklySchedule.${key}.isOpen`) ? "text-slate-900" : "text-slate-400"
-                                )}>{label}</span>
-                            </div>
-
-                            <div className={cn(
-                                "flex items-center gap-2",
-                                !form.watch(`weeklySchedule.${key}.isOpen`) && "opacity-30 pointer-events-none"
-                            )}>
-                                <FormField
-                                    control={form.control}
-                                    name={`weeklySchedule.${key}.open`}
-                                    render={({ field }) => (
-                                        <Input 
-                                            type="time" 
-                                            {...field} 
-                                            className="w-32 h-9 text-xs font-bold" 
-                                        />
-                                    )}
-                                />
-                                <span className="text-slate-400 font-bold">-</span>
-                                <FormField
-                                    control={form.control}
-                                    name={`weeklySchedule.${key}.close`}
-                                    render={({ field }) => (
-                                        <Input 
-                                            type="time" 
-                                            {...field} 
-                                            className="w-32 h-9 text-xs font-bold" 
-                                        />
-                                    )}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground italic">
-                    * Disse tidene brukes til å varsle planleggere dersom en rute forventes å ankomme utenfor åpningstid.
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
 
             <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Leveringsdetaljer</h3>
@@ -1066,6 +970,88 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 )}
                 />
             </div>
+
+            {/* OPENING HOURS SECTION - COLLAPSIBLE SIDEBAR VERSION */}
+            <Collapsible
+              open={isHoursOpen}
+              onOpenChange={setIsHoursOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
+                    <div className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5 text-indigo-500" />
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight">Leveringsvindu</h3>
+                    </div>
+                    {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="px-6 pb-6 space-y-6 border-t pt-4">
+                <div className="flex justify-end">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={copyMondayToAll}
+                    className="text-[10px] font-black uppercase tracking-tight h-7 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  >
+                    <Copy className="h-3 w-3 mr-1.5" /> Kopier mandag
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  {DAYS.map(({ key, label }) => (
+                      <div key={key} className="flex flex-col gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                          <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs text-slate-700">{label}</span>
+                              <FormField
+                                  control={form.control}
+                                  name={`weeklySchedule.${key}.isOpen`}
+                                  render={({ field }) => (
+                                      <FormControl>
+                                          <Switch 
+                                              checked={field.value} 
+                                              onCheckedChange={field.onChange} 
+                                              className="scale-75"
+                                          />
+                                      </FormControl>
+                                  )}
+                              />
+                          </div>
+
+                          {form.watch(`weeklySchedule.${key}.isOpen`) && (
+                              <div className="flex items-center gap-1 animate-in fade-in zoom-in-95 duration-200">
+                                  <FormField
+                                      control={form.control}
+                                      name={`weeklySchedule.${key}.open`}
+                                      render={({ field }) => (
+                                          <Input 
+                                              type="time" 
+                                              {...field} 
+                                              className="h-7 text-[10px] font-bold px-1" 
+                                          />
+                                      )}
+                                  />
+                                  <span className="text-slate-400 font-bold">-</span>
+                                  <FormField
+                                      control={form.control}
+                                      name={`weeklySchedule.${key}.close`}
+                                      render={({ field }) => (
+                                          <Input 
+                                              type="time" 
+                                              {...field} 
+                                              className="h-7 text-[10px] font-bold px-1" 
+                                          />
+                                      )}
+                                  />
+                              </div>
+                          )}
+                      </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* VEHICLE LIMITATIONS AT PLACE - COLLAPSIBLE SIDEBAR VERSION */}
             <Collapsible
