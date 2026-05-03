@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Date-Aware Route Planning:** Fixed a bug where the routing engine ignored the user-selected date during suggestion generation.
+    - The engine now correctly calculates the day of the week based on the selected date.
+    - Delivery window warnings (ETAs vs. opening hours) are now validated against the specific day the route is planned for.
+    - Auto-generated route names now correctly reflect the chosen delivery date.
 - **Route Planning Strategy Documentation:** Updated `docs/routeplanning.md` to explicitly state the "Open Access" and "24/7 Availability" policies for locations without registered physical or temporal constraints.
 - **Place Form & Details Delivery Window Logic:** Overhauled how opening hours are managed.
     - The detailed "Leveringsvindu" inputs are now hidden behind a toggle switch.
@@ -190,6 +194,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Fixed
+- **Date-Aware Route Planning:** Fixed a bug where the routing engine ignored the user-selected date during suggestion generation.
+    - The engine now correctly calculates the day of the week based on the selected date.
+    - Delivery window warnings (ETAs vs. opening hours) are now validated against the specific day the route is planned for.
+    - Auto-generated route names now correctly reflect the chosen delivery date.
 - **Firestore Sentinel/FieldValue Handling:** Fixed a critical bug in `cleanObject` utility that was breaking Firestore operations like `deleteField()` and `serverTimestamp()` by incorrectly recursing into them. 
 - **Optimistic Update UI Crashes:** Fixed a "Objects are not valid as a React child" error in the Messages page by ensuring `formatTime` safely handles Firestore FieldValue sentinels during background sync.
 - **Place Form Numeric Validation:** Fixed a validation error ("Expected number, received nan") in the Place Form by implementing a robust `numericConstraintSchema` with `z.preprocess`. This handles empty strings and regional decimal formats (commas) correctly, ensuring that constraints like "MAKS BREDDE" can be updated without failure.

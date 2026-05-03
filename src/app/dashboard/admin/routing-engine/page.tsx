@@ -51,6 +51,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export default function RoutingEnginePage() {
     const { dbUser } = useAuth();
@@ -117,6 +118,9 @@ export default function RoutingEnginePage() {
                 const placesMap = new Map(places.map(p => [p.id, p]));
                 const depotCoords = { lat: 59.9139, lng: 10.7522 }; // Oslo Default
                 
+                // Calculate day of week for the delivery window constraints
+                const dayOfWeek = format(new Date(selectedDate), 'eeee').toLowerCase();
+
                 const results = engine.generateBasicSuggestion(
                     vehicles,
                     drivers,
@@ -124,13 +128,13 @@ export default function RoutingEnginePage() {
                     placesMap,
                     depotCoords,
                     "08:00",
-                    'monday' 
+                    dayOfWeek
                 );
 
                 setSuggestions(results);
                 toast({ 
                     title: strategy === 'balanced' ? "Jevn fordeling generert" : "Effektive ruter generert", 
-                    description: `Planla ${results.reduce((sum, s) => sum + s.orders.length, 0)} ordre på ${results.length} ruter.` 
+                    description: `Planla ${results.reduce((sum, s) => sum + s.orders.length, 0)} ordre på ${results.length} ruter for ${format(new Date(selectedDate), 'PP')}.` 
                 });
             } catch (err) {
                 console.error(err);
@@ -208,7 +212,7 @@ export default function RoutingEnginePage() {
         
         try {
             setCalculating(true);
-            const routeName = `Auto: ${suggestion.places[0]?.name || 'Rute'} - ${new Date().toLocaleDateString('nb-NO')}`;
+            const routeName = `Auto: ${suggestion.places[0]?.name || 'Rute'} - ${new Date(selectedDate).toLocaleDateString('nb-NO')}`;
             
             const newRoute = await firebaseDB.createRoute({
                 name: routeName,
