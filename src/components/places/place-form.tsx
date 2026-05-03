@@ -112,6 +112,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
+  const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
 
   const [duplicatePlace, setDuplicatePlace] = useState<Place | null>(null);
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
@@ -681,73 +682,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
             </div>
 
-            {/* VEHICLE LIMITATIONS AT PLACE */}
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                <h3 className="text-lg font-black text-slate-800 border-b pb-2 flex items-center gap-2">
-                    <Ruler className="h-5 w-5 text-slate-500" />
-                    Kjøretøybegrensninger på stedet
-                </h3>
-                <p className="text-xs text-muted-foreground">Angi begrensninger for kjøretøy som skal levere her (f.eks. pga lave broer, smale porter eller vektbegrensning på vei).</p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <FormField
-                    control={form.control}
-                    name="maxVehicleHeight"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Høyde (m)</FormLabel>
-                        <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 3.20" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="maxVehicleWidth"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Bredde (m)</FormLabel>
-                        <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 2.50" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="maxVehicleLength"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-xs font-bold uppercase tracking-tight">Maks Lengde (m)</FormLabel>
-                        <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 12.00" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="maxVehicleWeight"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-xs font-bold uppercase tracking-tight flex items-center gap-1.5">
-                            <Weight className="h-3 w-3" />
-                            Maks Totalvekt (kg)
-                        </FormLabel>
-                        <FormControl>
-                            <Input type="number" placeholder="F.eks. 7500" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-            </div>
-
             {/* OPENING HOURS SECTION - COLLAPSIBLE */}
             <Collapsible
               open={isHoursOpen}
@@ -1108,28 +1042,110 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
                 )}
             </div>
-            
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
+          </div>
+
+          <div className="md:col-span-1 space-y-6">
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
                 <FormField
                 control={form.control}
                 name="hashtags"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Hashtags</FormLabel>
+                    <FormLabel className="font-bold flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-slate-500" />
+                        Hashtags
+                    </FormLabel>
                     <FormControl>
-                        <Input placeholder="lager, prioritert, etter-arbeidstid" {...field} />
+                        <Input placeholder="lager, prioritert" {...field} />
                     </FormControl>
-                    <FormDescription>
-                        Kommadelt liste med tagger for enkel filtrering.
+                    <FormDescription className="text-[10px]">
+                        Kommadelt liste med tagger.
                     </FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}
                 />
             </div>
-          </div>
 
-          <div className="md:col-span-1 space-y-6">
+            {/* VEHICLE LIMITATIONS AT PLACE - COLLAPSIBLE SIDEBAR VERSION */}
+            <Collapsible
+              open={isConstraintsOpen}
+              onOpenChange={setIsConstraintsOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
+                    <div className="flex items-center gap-3">
+                        <Ruler className="h-5 w-5 text-slate-500" />
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight">Begrensninger</h3>
+                    </div>
+                    {isConstraintsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="px-6 pb-6 space-y-4 border-t pt-4">
+                <p className="text-[10px] text-muted-foreground font-medium">Angi fysiske begrensninger for ruteplanlegging.</p>
+                
+                <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleHeight"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase">Maks Høyde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 3.20" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleWidth"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase">Maks Bredde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 2.50" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleLength"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase">Maks Lengde (m)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="F.eks. 12.00" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="maxVehicleWeight"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase flex items-center gap-1.5">
+                            <Weight className="h-3 w-3" />
+                            Maks Totalvekt (kg)
+                        </FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="F.eks. 7500" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <div className="space-y-4">
               <FormLabel>Bilder (Maks 8)</FormLabel>
               <FormDescription className="text-xs">
@@ -1285,3 +1301,5 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     </>
   );
 }
+
+import { Tag } from 'lucide-react';
