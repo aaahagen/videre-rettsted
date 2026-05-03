@@ -467,41 +467,43 @@ export default function PlaceDetailsPage() {
                   </section>
 
                   {/* OPENING HOURS COLLAPSIBLE */}
-                  <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                      <Collapsible open={isHoursOpen} onOpenChange={setIsHoursOpen}>
-                          <CollapsibleTrigger asChild>
-                              <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
-                                  <div className="flex items-center">
-                                      <Clock className="mr-2 h-5 w-5 text-indigo-500" />
-                                      <h2 className="text-lg font-semibold">Leveringsvindu</h2>
-                                  </div>
-                                  {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
-                              </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="px-5 pb-5 space-y-2 border-t pt-4">
-                              {DAYS.map(({ key, label }) => {
-                                  const dayHours = place.weeklySchedule?.[key];
-                                  const isOpen = dayHours?.isOpen;
-                                  
-                                  return (
-                                      <div key={key} className={cn(
-                                          "flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0",
-                                          !isOpen && "opacity-40"
-                                      )}>
-                                          <span className="text-sm font-medium text-slate-600">{label}</span>
-                                          {isOpen ? (
-                                              <span className="text-sm font-bold text-slate-800">
-                                                  {dayHours.open} - {dayHours.close}
-                                              </span>
-                                          ) : (
-                                              <span className="text-xs font-bold text-slate-400 uppercase">Stengt</span>
-                                          )}
-                                      </div>
-                                  );
-                              })}
-                          </CollapsibleContent>
-                      </Collapsible>
-                  </section>
+                  {place.weeklySchedule && (
+                    <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <Collapsible open={isHoursOpen} onOpenChange={setIsHoursOpen}>
+                            <CollapsibleTrigger asChild>
+                                <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
+                                    <div className="flex items-center">
+                                        <Clock className="mr-2 h-5 w-5 text-indigo-500" />
+                                        <h2 className="text-lg font-semibold">Leveringsvindu</h2>
+                                    </div>
+                                    {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
+                                </Button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="px-5 pb-5 space-y-2 border-t pt-4">
+                                {DAYS.map(({ key, label }) => {
+                                    const dayHours = place.weeklySchedule?.[key];
+                                    const isOpen = dayHours?.isOpen;
+                                    
+                                    return (
+                                        <div key={key} className={cn(
+                                            "flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0",
+                                            !isOpen && "opacity-40"
+                                        )}>
+                                            <span className="text-sm font-medium text-slate-600">{label}</span>
+                                            {isOpen ? (
+                                                <span className="text-sm font-bold text-slate-800">
+                                                    {dayHours.open} - {dayHours.close}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs font-bold text-slate-400 uppercase">Stengt</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </section>
+                  )}
 
                   {/* CONSTRAINTS COLLAPSIBLE */}
                   {(place.maxVehicleHeight || place.maxVehicleWidth || place.maxVehicleLength || place.maxVehicleWeight) && (

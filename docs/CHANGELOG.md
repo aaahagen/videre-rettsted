@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Place Delivery Window Toggle:** Added a new "Begrens tid" (Limit time) toggle to the "Leveringsvindu" section in the Place Form.
+    - This allows users to explicitly decide if a location has delivery time restrictions.
+    - If toggled off, the location is treated as having no limitations, and the driver can visit at any time.
+    - For new places, this defaults to OFF, simplifying the creation process.
 - **Fail-Safe Geocoding:** Implemented a multi-provider geocoding system for the Place Form.
     - Added Google Maps Geocoding as primary provider.
     - Added OpenStreetMap (Nominatim) as an automatic fallback if the Google API is restricted, unbilled, or fails to find a result.
@@ -65,6 +69,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Place Form & Details Delivery Window Logic:** Overhauled how opening hours are managed.
+    - The detailed "Leveringsvindu" inputs are now hidden behind a toggle switch.
+    - If the user has not explicitly registered any time changes (toggle is OFF), the delivery window is deactivated and not shown in the form.
+    - **UI Optimization:** The "Leveringsvindu" card is now completely hidden on the Place Details page if no time restrictions are active, reducing visual noise for drivers.
+    - When deactivated, any existing schedule data is automatically cleaned from the database record.
 - **Dashboard UI Refresh (Admin & Driver):** Implemented a major visual overhaul of the main dashboard to improve cognitive focus and logical grouping.
     - **Layered Contrast:** Set a deeper background color (`bg-slate-100/50`) for the Admin view to make white operational cards "pop" and reduce eye strain.
     - **Semantic Logic Striping:** Added 4px vertical color borders to major cards (e.g., Primary Blue for Routes, Indigo for Terminal, Emerald for Attendance).
@@ -258,6 +267,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created a `VehicleDetailsModal` on the Fleet dashboard, accessed by clicking any vehicle card. This modal displays:
     - An overview of damages with ability to change status (reported, in progress, fixed).
     - Compliance dashboard showing the status of the vehicle's deadlines.
-    - A 14-day chronological "Usage Log" showing which drivers have been utilizing the vehicle.
+    - a 14-day chronological "Usage Log" showing which drivers have been utilizing the vehicle.
     - A "Generate PDF" feature allowing simple printing of the vehicle's status and damage report.
   - Linked driver vehicle inspections (Pre/Post-trip) directly to the damage reporting system: if a driver reports a damage during an inspection, it automatically creates a new `VehicleDamageReport` visible to admins.

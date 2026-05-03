@@ -78,6 +78,7 @@ const placeSchema = z.object({
   maxVehicleWidth: numericConstraintSchema,
   maxVehicleLength: numericConstraintSchema,
   maxVehicleWeight: numericConstraintSchema,
+  hasDeliveryWindow: z.boolean().default(false),
   weeklySchedule: z.object({
     monday: openingHoursSchema,
     tuesday: openingHoursSchema,
@@ -162,6 +163,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       maxVehicleWidth: safeNumberValue(place?.maxVehicleWidth),
       maxVehicleLength: safeNumberValue(place?.maxVehicleLength),
       maxVehicleWeight: safeNumberValue(place?.maxVehicleWeight),
+      hasDeliveryWindow: !!place?.weeklySchedule,
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -190,6 +192,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const currentAddress = form.watch('address');
   const currentCoords = form.watch('coordinates');
   const hasValidCoords = currentCoords && (currentCoords.lat !== 0 || currentCoords.lng !== 0);
+  const hasDeliveryWindow = form.watch('hasDeliveryWindow');
 
   useEffect(() => {
     if (!place) {
@@ -210,7 +213,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           maxVehicleLength: value.maxVehicleLength,
           maxVehicleWeight: value.maxVehicleWeight,
           coordinates: value.coordinates,
-          weeklySchedule: value.weeklySchedule
+          weeklySchedule: value.weeklySchedule,
+          hasDeliveryWindow: value.hasDeliveryWindow
         };
         localStorage.setItem('placeFormDraft', JSON.stringify(partialData));
       });
@@ -496,7 +500,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             maxVehicleWidth: typeof data.maxVehicleWidth !== 'number' ? deleteField() : data.maxVehicleWidth,
             maxVehicleLength: typeof data.maxVehicleLength !== 'number' ? deleteField() : data.maxVehicleLength,
             maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? deleteField() : data.maxVehicleWeight,
-            weeklySchedule: data.weeklySchedule,
+            weeklySchedule: data.hasDeliveryWindow ? data.weeklySchedule : deleteField(),
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
@@ -894,88 +898,111 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             </Button>
 
             {/* LEVERINGSVINDU COLLAPSIBLE CARD */}
-            <Collapsible
-              open={isHoursOpen}
-              onOpenChange={setIsHoursOpen}
-              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
-            >
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-indigo-500" />
                         <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Leveringsvindu</h3>
                     </div>
-                    {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </CollapsibleTrigger>
-              
-              <CollapsibleContent className="px-6 pb-6 space-y-6 border-t pt-4">
-                <div className="flex justify-end">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={copyMondayToAll}
-                    className="text-[10px] font-black uppercase tracking-tight h-7"
-                  >
-                    <Copy className="h-3 w-3 mr-1.5" /> Kopier mandag
-                  </Button>
+                    <FormField
+                        control={form.control}
+                        name="hasDeliveryWindow"
+                        render={({ field }) => (
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                                <FormLabel className="text-[10px] font-bold text-slate-500 uppercase">Begrens tid</FormLabel>
+                                <FormControl>
+                                    <Switch 
+                                        checked={field.value} 
+                                        onCheckedChange={field.onChange} 
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
                 </div>
 
-                <div className="space-y-2">
-                  {DAYS.map(({ key, label }) => (
-                      <div key={key} className="flex flex-col gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-                          <div className="flex items-center justify-between">
-                              <span className="font-bold text-xs text-slate-700">{label}</span>
-                              <FormField
-                                  control={form.control}
-                                  name={`weeklySchedule.${key}.isOpen`}
-                                  render={({ field }) => (
-                                      <FormControl>
-                                          <Switch 
-                                              checked={field.value} 
-                                              onCheckedChange={field.onChange} 
-                                              className="scale-75"
-                                          />
-                                      </FormControl>
-                                  )}
-                              />
-                          </div>
+                {hasDeliveryWindow && (
+                    <Collapsible
+                        open={isHoursOpen}
+                        onOpenChange={setIsHoursOpen}
+                        className="w-full"
+                    >
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full flex items-center justify-between p-4 h-auto hover:bg-slate-50 text-slate-500">
+                                <span className="text-xs font-bold">{isHoursOpen ? 'Skjul tider' : 'Vis tider'}</span>
+                                {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent className="px-6 pb-6 space-y-6 border-t pt-4">
+                            <div className="flex justify-end">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={copyMondayToAll}
+                                    className="text-[10px] font-black uppercase tracking-tight h-7"
+                                >
+                                    <Copy className="h-3 w-3 mr-1.5" /> Kopier mandag
+                                </Button>
+                            </div>
 
-                          {form.watch(`weeklySchedule.${key}.isOpen`) && (
-                              <div className="flex items-center gap-1">
-                                  <FormField
-                                      control={form.control}
-                                      name={`weeklySchedule.${key}.open`}
-                                      render={({ field }) => (
-                                          <Input 
-                                              type="time" 
-                                              {...field} 
-                                              className="h-7 text-[10px] font-bold px-1" 
-                                              value={field.value ?? ''}
-                                          />
-                                      )}
-                                  />
-                                  <span className="text-slate-400 font-bold">-</span>
-                                  <FormField
-                                      control={form.control}
-                                      name={`weeklySchedule.${key}.close`}
-                                      render={({ field }) => (
-                                          <Input 
-                                              type="time" 
-                                              {...field} 
-                                              className="h-7 text-[10px] font-bold px-1" 
-                                              value={field.value ?? ''}
-                                          />
-                                      )}
-                                  />
-                              </div>
-                          )}
-                      </div>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                            <div className="space-y-2">
+                                {DAYS.map(({ key, label }) => (
+                                    <div key={key} className="flex flex-col gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-xs text-slate-700">{label}</span>
+                                            <FormField
+                                                control={form.control}
+                                                name={`weeklySchedule.${key}.isOpen`}
+                                                render={({ field }) => (
+                                                    <FormControl>
+                                                        <Switch 
+                                                            checked={field.value} 
+                                                            onCheckedChange={field.onChange} 
+                                                            className="scale-75"
+                                                        />
+                                                    </FormControl>
+                                                )}
+                                            />
+                                        </div>
+
+                                        {form.watch(`weeklySchedule.${key}.isOpen`) && (
+                                            <div className="flex items-center gap-1">
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`weeklySchedule.${key}.open`}
+                                                    render={({ field }) => (
+                                                        <Input 
+                                                            type="time" 
+                                                            {...field} 
+                                                            className="h-7 text-[10px] font-bold px-1" 
+                                                            value={field.value ?? ''}
+                                                        />
+                                                    )}
+                                                />
+                                                <span className="text-slate-400 font-bold">-</span>
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`weeklySchedule.${key}.close`}
+                                                    render={({ field }) => (
+                                                        <Input 
+                                                            type="time" 
+                                                            {...field} 
+                                                            className="h-7 text-[10px] font-bold px-1" 
+                                                            value={field.value ?? ''}
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                )}
+            </div>
 
             {/* BEGRENSNINGER COLLAPSIBLE CARD */}
             <Collapsible
