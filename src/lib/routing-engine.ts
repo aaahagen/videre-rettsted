@@ -272,11 +272,9 @@ export class ConstraintEngine {
             return 0;
         });
 
-        // Determine how many active routes we can potentially create
         const maxRoutes = Math.min(availableVehicles.length, sortedDrivers.length);
         if (maxRoutes === 0 || remainingOrders.length === 0) return [];
 
-        // Initialize suggestions for all available driver/vehicle pairs
         for (let i = 0; i < maxRoutes; i++) {
             suggestions.push({
                 vehicleId: availableVehicles[i].id,
@@ -290,25 +288,24 @@ export class ConstraintEngine {
             });
         }
 
-        // Global warning about skipped orders
-        if (invalidOrderCount.length > 0) {
-            suggestions.forEach(s => {
-                s.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre ble hoppet over pga. manglende eller feil koordinater (0,0). Sjekk adresseoppslag for disse.`);
-            });
-        }
-
         const isBalanced = this.options.assignmentStrategy === 'balanced';
         let currentRouteIdx = 0;
+        let stalledRoutes = new Set<number>();
 
-        while (remainingOrders.length > 0) {
+        while (remainingOrders.length > 0 && stalledRoutes.size < maxRoutes) {
+            
+            // In balanced mode, skip drivers that can't take any more orders
+            if (isBalanced && stalledRoutes.has(currentRouteIdx)) {
+                currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
+                continue;
+            }
+
             const suggestion = suggestions[currentRouteIdx];
             const vehicle = availableVehicles[currentRouteIdx];
             const driver = sortedDrivers[currentRouteIdx];
             
-            // For greedy clustering, we need to know the current location of THIS specific route
             const lastPlaceId = suggestion.places[suggestion.places.length - 1]?.id;
             const currentCoords = lastPlaceId ? placesMap.get(lastPlaceId)?.coordinates || depotCoords : depotCoords;
-            const currentTime = startTimeMinutes + suggestion.estimatedDuration;
 
             let bestOrderIndex = -1;
             let shortestDistance = Infinity;
@@ -318,25 +315,14 @@ export class ConstraintEngine {
                 const place = placesMap.get(candidateOrder.placeId);
                 if (!place || !place.coordinates) continue;
 
-                // 1. Check Hard Capabilities (ADR, Refrigeration)
-                const capErrors = this.checkCapabilities(vehicle, candidateOrder);
-                if (capErrors.length > 0) continue; 
+                // Constraint Checks
+                if (this.checkCapabilities(vehicle, candidateOrder).length > 0) continue; 
+                if (this.checkCapacity(vehicle, suggestion.orders, candidateOrder).some(w => w.includes("HARD_LIMIT"))) continue; 
 
-                // 2. Check Capacity Limits
-                const capWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
-                if (capWarnings.some(w => w.includes("HARD_LIMIT"))) continue; 
-
-                // 3. Check Range (If Electric/Gas)
                 const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng);
                 if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) continue;
-
-                // 4. Check Environmental Zones (Hard Prohibitions)
-                const envWarnings = this.checkEnvironmentalZones(vehicle, place);
-                if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
-
-                // 5. Check Physical Limitations at site (Height, Width, Weight)
-                const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
-                if (physicalErrors.length > 0) continue;
+                if (this.checkEnvironmentalZones(vehicle, place).some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
+                if (this.checkPhysicalConstraints(vehicle, place).length > 0) continue;
 
                 if (distToNext < shortestDistance) {
                     shortestDistance = distToNext;
@@ -353,52 +339,40 @@ export class ConstraintEngine {
                     suggestion.places.push(place);
                 }
                 
-                // Add warnings
-                const capWarnings = this.checkCapacity(vehicle, suggestion.orders.slice(0,-1), selectedOrder);
-                suggestion.warnings.push(...capWarnings.filter(w => !w.includes("HARD_LIMIT")));
+                suggestion.warnings.push(...this.checkCapacity(vehicle, suggestion.orders.slice(0,-1), selectedOrder).filter(w => !w.includes("HARD_LIMIT")));
                 suggestion.warnings.push(...this.checkEnvironmentalZones(vehicle, place));
 
-                // Update metrics
                 suggestion.estimatedDistance += shortestDistance;
                 const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
                 suggestion.estimatedDuration += travelTimeMins + (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!);
                 
-                // Check windows
                 suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
                 
                 remainingOrders.splice(bestOrderIndex, 1);
 
-                // If balanced, move to the next driver. If fill_first, stay on this one until full.
                 if (isBalanced) {
                     currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 }
             } else {
-                // If this driver can't take any more orders, and we are in fill_first, move to the next driver.
-                // If we are in balanced, and THIS driver can't take anything but others might, we need to skip him.
+                // This route is stalled
+                stalledRoutes.add(currentRouteIdx);
                 if (!isBalanced) {
                     currentRouteIdx++;
-                    if (currentRouteIdx >= maxRoutes) break; // All filled up
+                    if (currentRouteIdx >= maxRoutes) break;
                 } else {
-                    // In balanced, if one driver is stuck, we might need a "failed drivers" list to avoid infinite loop
-                    // For simplicity: just move to next and if we loop through all drivers with no success, break.
-                    let foundAny = false;
-                    for (let k = 1; k < maxRoutes; k++) {
-                        const nextIdx = (currentRouteIdx + k) % maxRoutes;
-                        // Try if next driver can take something... this is getting complex.
-                    }
-                    // Simple fallback: if bestOrderIndex is -1 for the current driver in balanced mode, 
-                    // and we've tried all drivers, we must stop.
-                    break; 
+                    currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 }
             }
         }
 
-        // Final cleanup and driver shift validation
         return suggestions.filter(s => s.orders.length > 0).map(s => {
             const driver = sortedDrivers.find(d => d.id === s.driverId)!;
             const shiftWarnings = this.checkDriverShift(driver, startTimeStr, s.estimatedDuration);
             s.errors.push(...shiftWarnings.filter(w => w.includes("HARD_LIMIT")));
             s.warnings.push(...shiftWarnings.filter(w => !w.includes("HARD_LIMIT")));
+            if (invalidOrderCount.length > 0) {
+                s.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre hoppet over pga manglende koordinater.`);
+            }
             s.warnings = [...new Set(s.warnings)];
             return s;
         });
