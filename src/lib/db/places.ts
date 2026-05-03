@@ -1,19 +1,20 @@
 import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase/firebase';
 import { Place } from '../types';
-import { logEvent } from '../db/logs'; // Updated import path for logEvent
+import { logEvent } from '../db/logs'; 
 import { ref, getStorage, deleteObject } from 'firebase/storage';
+import { cleanObject } from '../utils';
 
 export const createPlace = async (place: Omit<Place, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Place> => {
   const user = auth.currentUser;
   if (!user) throw new Error("User must be logged in to create a place");
 
-  const docRef = await addDoc(collection(db, 'places'), {
+  const docRef = await addDoc(collection(db, 'places'), cleanObject({
     ...place,
     createdBy: user.uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  }));
 
   // Log event
   const orgId = place.orgId || place.organizationId;
@@ -52,11 +53,13 @@ export const updatePlace = async (id: string, updates: Partial<Place>): Promise<
   const user = auth.currentUser;
   if (!user) throw new Error("User must be logged in to update a place");
   const docRef = doc(db, 'places', id);
-  await updateDoc(docRef, {
+  
+  await updateDoc(docRef, cleanObject({
     ...updates,
     updatedBy: user.uid,
     updatedAt: serverTimestamp(),
-  });
+  }));
+
   const updated = await getDoc(docRef);
   const data = updated.data()!;
   return {

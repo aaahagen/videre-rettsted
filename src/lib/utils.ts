@@ -5,6 +5,30 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Utility to clean objects for Firestore by removing undefined values
+ * and recursively cleaning nested objects and arrays.
+ */
+export const cleanObject = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj
+      .map(v => (v && typeof v === 'object' && !(v instanceof Date)) ? cleanObject(v) : v)
+      .filter(v => v !== undefined);
+  }
+  
+  if (obj && typeof obj === 'object' && !(obj instanceof Date)) {
+    const newObj: any = {};
+    Object.keys(obj).forEach(key => {
+      const val = obj[key];
+      if (val === undefined) return;
+      newObj[key] = cleanObject(val);
+    });
+    return newObj;
+  }
+  
+  return obj;
+};
+
 export const compressImage = (file: File, maxWidth: number = 1024, maxHeight: number = 800): Promise<File> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();

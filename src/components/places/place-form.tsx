@@ -630,7 +630,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 disabled={isGeocoding}
                             >
                                 {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
-                                Søk
+                                Hent koordinater fra adresse
                             </Button>
                         </div>
                     </FormControl>
@@ -671,6 +671,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                         <Leaf className="h-4 w-4 text-green-600 shrink-0" />
                                         <span>Nullutslippssone</span>
                                     </FormLabel>
+                                    <FormDescription className="text-[10px]">Krever El/Gass kjøretøy.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -688,6 +689,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                         <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
                                         <span>Sentrumskjerne</span>
                                     </FormLabel>
+                                    <FormDescription className="text-[10px]">Høye bomavgifter for Diesel.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
