@@ -25,6 +25,17 @@ export function timeToMinutes(timeStr: string): number {
   return hours * 60 + minutes;
 }
 
+/**
+ * Validates if coordinates are present and realistic (not 0,0)
+ */
+function isValidCoordinate(coords?: { lat: number, lng: number }): boolean {
+    if (!coords) return false;
+    if (coords.lat === 0 && coords.lng === 0) return false;
+    if (Math.abs(coords.lat) < 0.0001 && Math.abs(coords.lng) < 0.0001) return false;
+    if (coords.lat < -90 || coords.lat > 90 || coords.lng < -180 || coords.lng > 180) return false;
+    return true;
+}
+
 export interface RouteSuggestion {
     vehicleId: string;
     driverId?: string;
@@ -233,7 +244,20 @@ export class ConstraintEngine {
         dayOfWeek: string = 'monday'
     ): RouteSuggestion[] {
         
-        let remainingOrders = [...unassignedOrders];
+        // 1. Initial Data Validation: Skip orders with invalid coordinates
+        const validOrders: Order[] = [];
+        const invalidOrderCount: string[] = [];
+
+        for (const order of unassignedOrders) {
+            const place = placesMap.get(order.placeId);
+            if (place && isValidCoordinate(place.coordinates)) {
+                validOrders.push(order);
+            } else {
+                invalidOrderCount.push(order.barcode);
+            }
+        }
+
+        let remainingOrders = [...validOrders];
         const suggestions: RouteSuggestion[] = [];
         const startTimeMinutes = timeToMinutes(startTimeStr);
 
@@ -263,6 +287,11 @@ export class ConstraintEngine {
                 warnings: [],
                 errors: []
             };
+
+            // Global warning about skipped orders
+            if (invalidOrderCount.length > 0) {
+                suggestion.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre ble hoppet over pga. manglende eller feil koordinater (0,0). Sjekk adresseoppslag for disse.`);
+            }
 
             let currentCoords = depotCoords;
             let currentTime = startTimeMinutes;
