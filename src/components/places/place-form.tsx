@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Place, Organization } from '@/lib/types';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { cn } from '@/lib/utils';
+import { geocodeAddress } from '@/lib/geocoding';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import {
@@ -39,7 +40,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/dialog";
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -108,6 +109,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const { toast } = useToast();
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
 
@@ -169,6 +171,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   });
 
   const mainImageIndex = form.watch('mainImageIndex');
+  const currentAddress = form.watch('address');
+  const currentCoords = form.watch('coordinates');
+  const hasValidCoords = currentCoords && (currentCoords.lat !== 0 || currentCoords.lng !== 0);
 
   useEffect(() => {
     if (!place) {
@@ -321,6 +326,29 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     );
   };
 
+  const handleGeocode = async () => {
+    if (!currentAddress || currentAddress.length < 5) {
+      toast({ title: "Mangler adresse", description: "Vennligst skriv inn en gyldig adresse først.", variant: "destructive" });
+      return;
+    }
+
+    setIsGeocoding(true);
+    try {
+      const coords = await geocodeAddress(currentAddress);
+      if (coords) {
+        form.setValue('coordinates', coords, { shouldDirty: true, shouldValidate: true });
+        toast({ title: "Adresse funnet", description: `Koordinater satt til ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
+      } else {
+        toast({ title: "Fant ikke adressen", description: "Kunne ikke finne koordinater for denne adressen. Sjekk skrivemåten.", variant: "destructive" });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Feil ved søk", description: "Noe gikk galt under adresseoppslag.", variant: "destructive" });
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const copyMondayToAll = () => {
       const monday = form.getValues('weeklySchedule.monday');
       if (!monday) return;
@@ -343,6 +371,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
 
     setIsSubmitting(true);
+
+    // AUTO-GEOCODE if coordinates are missing and address is present
+    if ((!data.coordinates || (data.coordinates.lat === 0 && data.coordinates.lng === 0)) && data.address) {
+        const coords = await geocodeAddress(data.address);
+        if (coords) {
+            data.coordinates = coords;
+            form.setValue('coordinates', coords);
+        }
+    }
     
     let userDocForCheck = null;
     try {
@@ -560,22 +597,44 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 name="address"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Full Adresse</FormLabel>
+                    <div className="flex justify-between items-center mb-1">
+                        <FormLabel>Full Adresse</FormLabel>
+                        {hasValidCoords && (
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100 flex items-center gap-1 text-[10px] font-bold">
+                                <CheckCircle2 className="h-3 w-3" /> KOORDINATER LAGRET
+                            </Badge>
+                        )}
+                    </div>
                     <FormControl>
-                        <div className="relative">
-                        <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-1 top-1 h-8 w-8"
-                            onClick={handleGetLocation}
-                            title="Hent min posisjon"
-                        >
-                            <MapPin className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-1 top-1 h-8 w-8 text-slate-400 hover:text-primary"
+                                    onClick={handleGetLocation}
+                                    title="Hent min posisjon via GPS"
+                                >
+                                    <MapPin className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 min-w-[80px]"
+                                onClick={handleGeocode}
+                                disabled={isGeocoding}
+                            >
+                                {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                                Søk
+                            </Button>
                         </div>
                     </FormControl>
+                    <FormDescription className="text-[10px]">
+                        Skriv inn adressen og trykk "Søk" for å finne koordinater automatisk.
+                    </FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}
