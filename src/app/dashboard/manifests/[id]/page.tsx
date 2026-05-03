@@ -186,7 +186,7 @@ export default function ManifestDetailPage() {
     const handleFinalize = async () => {
         if (!manifest || !dbUser) return;
         
-        const allItemsLoaded = manifest.orders.every(item => item.loadedItems === item.totalItems);
+        const allItemsLoaded = manifest.orders.every(item => (item.loadedItems || 0) === (item.totalItems || 0));
 
         if (!allItemsLoaded) {
             if (!confirm(`Ikke alle varer er registrert som lastet. Er du sikker på at du vil fullføre lasteplanen?`)) {
@@ -229,15 +229,17 @@ export default function ManifestDetailPage() {
         return {
             ...manifestItem,
             details: fullOrder?.details,
-            totalItems: manifestItem.totalItems,
-            loadedItems: manifestItem.loadedItems
+            totalItems: manifestItem.totalItems || 0,
+            loadedItems: manifestItem.loadedItems || 0
         };
     });
 
-    const overallLoadedCount = combinedOrderDetails.reduce((sum, item) => sum + item.loadedItems, 0);
-    const overallTotalCount = combinedOrderDetails.reduce((sum, item) => sum + item.totalItems, 0);
+    const overallLoadedCount = combinedOrderDetails.reduce((sum, item) => sum + (item.loadedItems || 0), 0);
+    const overallTotalCount = combinedOrderDetails.reduce((sum, item) => sum + (item.totalItems || 0), 0);
     const overallProgress = overallTotalCount > 0 ? (overallLoadedCount / overallTotalCount) * 100 : 0;
-    const isFullyLoaded = overallLoadedCount === overallTotalCount;
+    const isFullyLoaded = overallLoadedCount === overallTotalCount && overallTotalCount > 0;
+
+    const safeProgress = isNaN(overallProgress) ? 0 : overallProgress;
 
     return (
         <div className="p-4 sm:p-6 space-y-6 max-w-3xl mx-auto w-full pb-24">
@@ -259,7 +261,7 @@ export default function ManifestDetailPage() {
                     <div className="flex justify-between items-end mb-4">
                         <div className="space-y-1">
                             <span className="text-sm opacity-80 uppercase tracking-wider font-bold">Lastefremdrift</span>
-                            <div className="text-4xl font-black">{Math.round(overallProgress)}%</div>
+                            <div className="text-4xl font-black">{Math.round(safeProgress)}%</div>
                         </div>
                         <div className="text-right">
                             <span className="text-sm opacity-80 uppercase tracking-wider font-bold font-mono">
@@ -270,7 +272,7 @@ export default function ManifestDetailPage() {
                     <div className="w-full bg-white/20 rounded-full h-3">
                         <div 
                             className="bg-white h-3 rounded-full transition-all duration-700" 
-                            style={{ width: `${overallProgress}%` }}
+                            style={{ width: `${safeProgress}%` }}
                         />
                     </div>
                 </CardContent>
@@ -315,7 +317,7 @@ export default function ManifestDetailPage() {
                                 key={item.orderId}
                                 className={cn(
                                     "flex items-center justify-between p-4 rounded-xl border-2 transition-all",
-                                    item.loadedItems === item.totalItems
+                                    item.loadedItems === item.totalItems && item.totalItems > 0
                                         ? "bg-green-50 border-green-200 text-green-900" 
                                         : "bg-white border-slate-100 shadow-sm"
                                 )}
@@ -323,15 +325,15 @@ export default function ManifestDetailPage() {
                                 <div className="flex items-start gap-4 flex-1">
                                     <div className={cn(
                                         "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                                        item.loadedItems === item.totalItems ? "bg-green-200" : "bg-slate-100"
+                                        item.loadedItems === item.totalItems && item.totalItems > 0 ? "bg-green-200" : "bg-slate-100"
                                     )}>
-                                        {item.loadedItems === item.totalItems ? <Check className="h-5 w-5" /> : <Package className="h-5 w-5 text-slate-400" />}
+                                        {item.loadedItems === item.totalItems && item.totalItems > 0 ? <Check className="h-5 w-5" /> : <Package className="h-5 w-5 text-slate-400" />}
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-mono font-bold text-sm tracking-tighter">{item.barcode}</div>
                                         <div className="text-sm text-slate-500 line-clamp-1">{item.details?.description || 'Ingen beskrivelse'}</div>
                                         <div className="text-[10px] uppercase font-bold opacity-60 mt-1">
-                                            Status: {item.loadedItems === item.totalItems ? 'Lastet' : `Laster (${item.loadedItems}/${item.totalItems})`}
+                                            Status: {item.loadedItems === item.totalItems && item.totalItems > 0 ? 'Lastet' : `Laster (${item.loadedItems}/${item.totalItems})`}
                                         </div>
                                     </div>
                                 </div>
@@ -384,7 +386,7 @@ export default function ManifestDetailPage() {
                                                     {note.userName}
                                                 </span>
                                                 <span className="text-[10px] opacity-50">
-                                                    {format(new Date(note.createdAt as string), 'HH:mm', { locale: nb })}
+                                                    {note.createdAt ? format(new Date(note.createdAt as string), 'HH:mm', { locale: nb }) : '--:--'}
                                                 </span>
                                             </div>
                                             <p className="leading-relaxed">{note.content}</p>

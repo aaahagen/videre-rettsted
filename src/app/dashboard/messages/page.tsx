@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Loader2, Send, MessageSquare, Check, CheckCheck, Users, Trash2, Info } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSearch } from '@/hooks/use-search';
@@ -175,7 +175,12 @@ export default function MessagesPage() {
 
   const formatTime = (timestamp: any) => {
     if (!timestamp) return '';
+    // Handle Firestore FieldValue sentinel during optimistic updates
+    if (typeof timestamp === 'object' && timestamp._methodName) {
+        return 'Sender...';
+    }
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    if (!isValid(date)) return '...';
     return format(date, 'HH:mm - dd.MM.yy');
   };
 

@@ -48,12 +48,20 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { deleteField } from 'firebase/firestore';
 
 const openingHoursSchema = z.object({
   isOpen: z.boolean(),
   open: z.string().optional(),
   close: z.string().optional(),
 });
+
+// Robust schema for numeric constraint fields
+const numericConstraintSchema = z.preprocess((val) => {
+  if (val === '' || val === null || val === undefined) return undefined;
+  const num = typeof val === 'string' ? parseFloat(val.replace(',', '.')) : Number(val);
+  return isNaN(num) ? undefined : num;
+}, z.number().optional());
 
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
@@ -66,10 +74,10 @@ const placeSchema = z.object({
   estimatedDeliveryTime: z.number().optional(),
   isZeroEmissionZone: z.boolean().default(false),
   isCityCenter: z.boolean().default(false),
-  maxVehicleHeight: z.coerce.number().optional().or(z.literal('')),
-  maxVehicleWidth: z.coerce.number().optional().or(z.literal('')),
-  maxVehicleLength: z.coerce.number().optional().or(z.literal('')),
-  maxVehicleWeight: z.coerce.number().optional().or(z.literal('')),
+  maxVehicleHeight: numericConstraintSchema,
+  maxVehicleWidth: numericConstraintSchema,
+  maxVehicleLength: numericConstraintSchema,
+  maxVehicleWeight: numericConstraintSchema,
   weeklySchedule: z.object({
     monday: openingHoursSchema,
     tuesday: openingHoursSchema,
@@ -130,6 +138,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       close: '16:00'
   };
 
+  const safeNumberValue = (val: any) => {
+    if (val === undefined || val === null || (typeof val === 'number' && isNaN(val))) {
+      return '';
+    }
+    return val;
+  };
+
   const form = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
     defaultValues: {
@@ -143,10 +158,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       isZeroEmissionZone: place?.isZeroEmissionZone || false,
       isCityCenter: place?.isCityCenter || false,
-      maxVehicleHeight: place?.maxVehicleHeight ?? '',
-      maxVehicleWidth: place?.maxVehicleWidth ?? '',
-      maxVehicleLength: place?.maxVehicleLength ?? '',
-      maxVehicleWeight: place?.maxVehicleWeight ?? '',
+      maxVehicleHeight: safeNumberValue(place?.maxVehicleHeight),
+      maxVehicleWidth: safeNumberValue(place?.maxVehicleWidth),
+      maxVehicleLength: safeNumberValue(place?.maxVehicleLength),
+      maxVehicleWeight: safeNumberValue(place?.maxVehicleWeight),
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -178,7 +193,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
   useEffect(() => {
     if (!place) {
-      const subscription = form.watch((value, { name, type }) => {
+      const subscription = form.watch((value) => {
         const partialData = {
           name: value.name,
           address: value.address,
@@ -477,10 +492,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             isZeroEmissionZone: data.isZeroEmissionZone,
             isCityCenter: data.isCityCenter,
-            maxVehicleHeight: data.maxVehicleHeight === '' ? undefined : data.maxVehicleHeight,
-            maxVehicleWidth: data.maxVehicleWidth === '' ? undefined : data.maxVehicleWidth,
-            maxVehicleLength: data.maxVehicleLength === '' ? undefined : data.maxVehicleLength,
-            maxVehicleWeight: data.maxVehicleWeight === '' ? undefined : data.maxVehicleWeight,
+            maxVehicleHeight: typeof data.maxVehicleHeight !== 'number' ? deleteField() : data.maxVehicleHeight,
+            maxVehicleWidth: typeof data.maxVehicleWidth !== 'number' ? deleteField() : data.maxVehicleWidth,
+            maxVehicleLength: typeof data.maxVehicleLength !== 'number' ? deleteField() : data.maxVehicleLength,
+            maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? deleteField() : data.maxVehicleWeight,
             weeklySchedule: data.weeklySchedule,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
@@ -492,7 +507,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         };
 
         if (place) {
-            await firebaseDB.updatePlace(place.id, placeData);
+            await firebaseDB.updatePlace(place.id, placeData as any);
             toast({
               title: 'Sted Oppdatert',
               description: `Vellykket oppdatering av "${data.name}".`,
@@ -502,7 +517,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         } else {
             const newPlace = await firebaseDB.createPlace({
                 ...placeData,
-            });
+            } as any);
             toast({
               title: 'Sted Opprettet',
               description: `Vellykket opprettelse av "${data.name}".`,
@@ -991,7 +1006,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number"
                                 step="0.01"
                                 {...field} 
-                                value={field.value ?? ''}
+                                value={safeNumberValue(field.value)}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1009,7 +1024,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number"
                                 step="0.01"
                                 {...field} 
-                                value={field.value ?? ''}
+                                value={safeNumberValue(field.value)}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1027,7 +1042,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number"
                                 step="0.01"
                                 {...field} 
-                                value={field.value ?? ''}
+                                value={safeNumberValue(field.value)}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1047,7 +1062,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <Input 
                                 type="number"
                                 {...field} 
-                                value={field.value ?? ''}
+                                value={safeNumberValue(field.value)}
                             />
                         </FormControl>
                         <FormMessage />

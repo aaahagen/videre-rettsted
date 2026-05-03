@@ -208,10 +208,12 @@ export default function DashboardPage() {
           const manifest = docSnap.data() as Manifest;
           if (manifest.status === 'loading' || manifest.status === 'pending') activeManifests++;
 
-          manifest.orders.forEach(item => {
-            totalKolli += item.totalItems || 0;
-            loadedKolli += item.loadedItems || 0;
-          });
+          if (manifest.orders && Array.isArray(manifest.orders)) {
+            manifest.orders.forEach(item => {
+              totalKolli += (item.totalItems || 0);
+              loadedKolli += (item.loadedItems || 0);
+            });
+          }
         });
 
         setManifestStats({ totalManifests, activeManifests, totalKolli, loadedKolli });
@@ -278,13 +280,15 @@ export default function DashboardPage() {
 
   let driverLoadedKolli = 0;
   let driverTotalKolli = 0;
-  if (activeManifest) {
+  if (activeManifest && activeManifest.orders) {
       activeManifest.orders.forEach(item => {
-          driverTotalKolli += item.totalItems || 0;
-          driverLoadedKolli += item.loadedItems || 0;
+          driverTotalKolli += (item.totalItems || 0);
+          driverLoadedKolli += (item.loadedItems || 0);
       });
   }
   const driverManifestProgress = driverTotalKolli > 0 ? (driverLoadedKolli / driverTotalKolli) * 100 : 0;
+
+  const safeProgress = (val: number) => isNaN(val) ? 0 : val;
 
   if (loadingAuth || (loadingRoute && !userData)) {
     return <SplashScreen />;
@@ -347,7 +351,7 @@ export default function DashboardPage() {
                             <div className="flex justify-between items-end">
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gjennomføringsgrad</span>
-                                    <div className="text-2xl font-black text-slate-800">{Math.round(overallProgress)}%</div>
+                                    <div className="text-2xl font-black text-slate-800">{Math.round(safeProgress(overallProgress))}%</div>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
@@ -356,7 +360,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
-                                <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${overallProgress}%` }} />
+                                <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${safeProgress(overallProgress)}%` }} />
                             </div>
                         </div>
                     </div>
@@ -382,7 +386,7 @@ export default function DashboardPage() {
                             <div className="flex justify-between items-end mb-4">
                                 <div className="space-y-1">
                                     <span className="text-[10px] text-indigo-400 uppercase font-black tracking-widest">Lastefremdrift</span>
-                                    <div className="text-4xl font-black text-indigo-600">{Math.round(manifestProgress)}%</div>
+                                    <div className="text-4xl font-black text-indigo-600">{Math.round(safeProgress(manifestProgress))}%</div>
                                 </div>
                                 <div className="text-right">
                                     <span className="text-xs font-mono font-bold text-indigo-500 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm">
@@ -394,7 +398,7 @@ export default function DashboardPage() {
                             <div className="h-2 w-full bg-indigo-100/50 rounded-full overflow-hidden border border-indigo-200/20 mb-10">
                                 <div 
                                     className="h-full bg-indigo-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(99,102,241,0.4)]" 
-                                    style={{ width: `${manifestProgress}%` }} 
+                                    style={{ width: `${safeProgress(manifestProgress)}%` }} 
                                 />
                             </div>
                         </div>
@@ -649,7 +653,7 @@ export default function DashboardPage() {
                                         <span className="text-xs font-black text-slate-700 font-mono bg-white px-2 py-0.5 rounded border">{driverLoadedKolli} / {driverTotalKolli}</span>
                                     </div>
                                     <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden mb-3">
-                                        <div className="h-full bg-indigo-500 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: `${driverManifestProgress}%` }} />
+                                        <div className="h-full bg-indigo-500 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: `${safeProgress(driverManifestProgress)}%` }} />
                                     </div>
                                     <div className="flex justify-center">
                                         {activeManifest.status === 'verified' ? (

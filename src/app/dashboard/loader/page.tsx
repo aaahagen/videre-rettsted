@@ -150,10 +150,11 @@ export default function LoaderDashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredManifests.map((manifest) => {
-            const totalKolli = manifest.orders.reduce((acc, curr) => acc + (curr.totalItems || 0), 0);
-            const loadedKolli = manifest.orders.reduce((acc, curr) => acc + (curr.loadedItems || 0), 0);
+            const totalKolli = manifest.orders?.reduce((acc, curr) => acc + (curr.totalItems || 0), 0) || 0;
+            const loadedKolli = manifest.orders?.reduce((acc, curr) => acc + (curr.loadedItems || 0), 0) || 0;
             const progress = totalKolli > 0 ? (loadedKolli / totalKolli) * 100 : 0;
             const hasIssues = manifest.notes?.some(n => n.type === 'issue');
+            const safeProgressVal = isNaN(progress) ? 0 : progress;
 
             return (
               <Link 
@@ -189,7 +190,7 @@ export default function LoaderDashboardPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-black uppercase tracking-tighter">
                       <span className="text-slate-500">Progress</span>
-                      <span className={progress === 100 ? 'text-green-600' : 'text-slate-700'}>
+                      <span className={safeProgressVal === 100 ? 'text-green-600' : 'text-slate-700'}>
                         {loadedKolli} / {totalKolli} KOLli
                       </span>
                     </div>
@@ -197,9 +198,9 @@ export default function LoaderDashboardPage() {
                       <div 
                         className={`h-full transition-all duration-500 ${
                           manifest.status === 'verified' ? 'bg-green-500' : 
-                          progress > 0 ? 'bg-indigo-500' : 'bg-slate-300'
+                          safeProgressVal > 0 ? 'bg-indigo-500' : 'bg-slate-300'
                         }`}
-                        style={{ width: `${progress}%` }}
+                        style={{ width: `${safeProgressVal}%` }}
                       />
                     </div>
                   </div>

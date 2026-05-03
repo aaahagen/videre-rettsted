@@ -8,6 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Utility to clean objects for Firestore by removing undefined values
  * and recursively cleaning nested objects and arrays.
+ * 
+ * IMPORTANT: It ignores Firestore sentinels (FieldValues) to avoid breaking 
+ * operations like deleteField(), serverTimestamp(), etc.
  */
 export const cleanObject = (obj: any): any => {
   if (Array.isArray(obj)) {
@@ -17,6 +20,11 @@ export const cleanObject = (obj: any): any => {
   }
   
   if (obj && typeof obj === 'object' && !(obj instanceof Date)) {
+    // Check if it's a Firestore FieldValue sentinel (hacky but effective for client SDK)
+    if (obj._methodName || (obj.constructor && obj.constructor.name === 'FieldValue')) {
+        return obj;
+    }
+
     const newObj: any = {};
     Object.keys(obj).forEach(key => {
       const val = obj[key];

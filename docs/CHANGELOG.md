@@ -138,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Locking:** Once a route is marked as completed, it becomes locked for the driver. Drivers cannot check/uncheck stops or edit the route anymore. Administrators retain full editing rights for corrections.
 - **Real-time Messaging System:** Added a dedicated communication hub (`/dashboard/messages`) allowing administrators to broadcast messages to all drivers or all administrators. Drivers can send direct messages back to the administrative team.
 - **Message Read Receipts & Unread Badges:** Implemented a real-time read receipt system. Senders can see when their messages have been read (single vs double checkmarks). A dynamic unread badge also appears in the sidebar for any user with new messages.
-- **Advanced Admin Read Receipts:** Upgraded the messaging system for administrators sending broadcasts. Hovering over the read status icon now reveals a detailed "Hover Card" that explicitly lists the names of users who have read the message ("Lest av") and those who have not yet read it ("Venter på"), accurately filtered by the target audience (e.g., all drivers).
+- **Advanced Admin Read Receipts:** Upgraded the messaging system for administrators sending broadcasts. Hovering over the read status icon now reveals a delete detailed "Hover Card" that explicitly lists the names of users who have read the message ("Lest av") and those who have not yet read it ("Venter på"), accurately filtered by the target audience (e.g., all drivers).
 - **Message Deletion:** Added the ability for delete messages. Administrators can delete any message, while standard users can delete their own sent messages. Features a confirmation dialog.
 - **Order Deletion:** Added the ability for administrators to delete orders from the orders list view, complete with a safeguard confirmation dialog.
 - **Proof of Delivery Foundation (Location & Timestamps):** When a driver completes a stop, the application now requests the device'''s location. A timestamp and the GPS coordinates are securely saved to the database.
@@ -180,6 +180,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Fixed
+- **Firestore Sentinel/FieldValue Handling:** Fixed a critical bug in `cleanObject` utility that was breaking Firestore operations like `deleteField()` and `serverTimestamp()` by incorrectly recursing into them. 
+- **Optimistic Update UI Crashes:** Fixed a "Objects are not valid as a React child" error in the Messages page by ensuring `formatTime` safely handles Firestore FieldValue sentinels during background sync.
+- **Place Form Numeric Validation:** Fixed a validation error ("Expected number, received nan") in the Place Form by implementing a robust `numericConstraintSchema` with `z.preprocess`. This handles empty strings and regional decimal formats (commas) correctly, ensuring that constraints like "MAKS BREDDE" can be updated without failure.
+- **NaN Attribute Warnings:** Fixed a React warning ("Received NaN for the %s attribute") by implementing safe number value handling for all numeric inputs and progress bar calculations across the application (Place Form, Vehicle Form, and Dashboards).
 - **Routing Engine Loop Reliability:** Fixed a critical bug in the assignment loop that caused the engine to stop prematurely. Added a `stalledRoutes` tracking mechanism to ensure every available driver is utilized if they can accommodate remaining orders.
 - **LMS Admin Navigation:** Fixed an issue where "Se Status per Ansatt" and "Administrer Kursbibliotek" both linked to the same view. Added a tabbed interface to the Admin view with deep-linking support.
 - **Firestore Place Deletion Permission Bug:** Fixed an issue where administrators encountered a permission error when trying to delete a place. The Firestore security rule for deleting places was incorrectly referencing `request.resource.data.orgId` (which is null during a delete operation) instead of the existing `resource.data.orgId`.
@@ -219,7 +223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **Removed Middleware and Session Management**: Deleted `middleware.ts`, `src/lib/session.ts`, and the `/api/session` route as part of the move to client-side authentication handling.
-- **Removed Redundant Admin Panel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
+- **Removed Redundant AdminPanel Card**: Removed the generic "Adminpanel" introduction card to streamline the dashboard layout.
 - **Removed Redundant Quick Actions Card**: Removed the "Snarveier" card from the operational dashboard sidebar.
 
 ## [Future]

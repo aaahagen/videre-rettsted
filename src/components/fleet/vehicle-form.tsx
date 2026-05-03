@@ -15,6 +15,7 @@ import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { firebaseDB } from '@/lib/firebase/database';
 import { cn } from '@/lib/utils';
+import { deleteField } from 'firebase/firestore';
 
 interface VehicleFormProps {
     initialData?: Vehicle | null;
@@ -164,11 +165,31 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
         setIsUploading(true);
         try {
             let currentVehicleId = initialData?.id;
-            let finalFormData = { ...formData, orgId };
+            
+            // Explicitly handle clearing capacity and dimensions
+            const cleanedCapacity = {
+                weight: typeof formData.capacity?.weight !== 'number' ? deleteField() : formData.capacity.weight,
+                volume: typeof formData.capacity?.volume !== 'number' ? deleteField() : formData.capacity.volume,
+                pallets: typeof formData.capacity?.pallets !== 'number' ? deleteField() : formData.capacity.pallets,
+                notes: formData.capacity?.notes || deleteField()
+            };
+
+            const cleanedDimensions = {
+                height: typeof formData.dimensions?.height !== 'number' ? deleteField() : formData.dimensions.height,
+                width: typeof formData.dimensions?.width !== 'number' ? deleteField() : formData.dimensions.width,
+                length: typeof formData.dimensions?.length !== 'number' ? deleteField() : formData.dimensions.length
+            };
+
+            let finalFormData = { 
+                ...formData, 
+                orgId,
+                capacity: cleanedCapacity,
+                dimensions: cleanedDimensions
+            };
 
             // If creating a new vehicle, create it first to get an ID
             if (!currentVehicleId) {
-                const newVehicle = await firebaseDB.createVehicle(finalFormData as Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>);
+                const newVehicle = await firebaseDB.createVehicle(finalFormData as any);
                 currentVehicleId = newVehicle.id;
                 finalFormData = { ...finalFormData, id: newVehicle.id };
             }
@@ -201,7 +222,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 }
             }
 
-            await onSubmit({ ...finalFormData, images: finalImages, documents: finalDocuments });
+            await onSubmit({ ...finalFormData, images: finalImages, documents: finalDocuments } as any);
         } catch (error) {
             console.error("Error submitting vehicle form:", error);
             throw error;
@@ -227,6 +248,13 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
 
     const isTrailer = formData.type === 'trailer';
     const isTractor = formData.type === 'tractor';
+
+    const safeNumberValue = (val: any) => {
+        if (val === undefined || val === null || (typeof val === 'number' && isNaN(val))) {
+            return '';
+        }
+        return val;
+    };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -323,30 +351,30 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Maks Nyttelast (kg)</Label>
-                            <Input type="number" value={formData.capacity?.weight || ''} onChange={e => handleNestedChange('capacity', 'weight', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" value={safeNumberValue(formData.capacity?.weight)} onChange={e => handleNestedChange('capacity', 'weight', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Maks Volum (m³)</Label>
-                            <Input type="number" step="0.1" value={formData.capacity?.volume || ''} onChange={e => handleNestedChange('capacity', 'volume', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" step="0.1" value={safeNumberValue(formData.capacity?.volume)} onChange={e => handleNestedChange('capacity', 'volume', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Pallplasser</Label>
-                            <Input type="number" value={formData.capacity?.pallets || ''} onChange={e => handleNestedChange('capacity', 'pallets', e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" value={safeNumberValue(formData.capacity?.pallets)} onChange={e => handleNestedChange('capacity', 'pallets', e.target.value ? Number(e.target.value) : undefined)} />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Utvendig Høyde (m)</Label>
-                            <Input type="number" step="0.01" placeholder="F.eks. 3.45" value={formData.dimensions?.height || ''} onChange={e => handleNestedChange('dimensions', 'height', parseFloat(e.target.value) || undefined)} />
+                            <Input type="number" step="0.01" placeholder="F.eks. 3.45" value={safeNumberValue(formData.dimensions?.height)} onChange={e => handleNestedChange('dimensions', 'height', parseFloat(e.target.value) || undefined)} />
                         </div>
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Bredde (m)</Label>
-                            <Input type="number" step="0.01" placeholder="F.eks. 2.55" value={formData.dimensions?.width || ''} onChange={e => handleNestedChange('dimensions', 'width', parseFloat(e.target.value) || undefined)} />
+                            <Input type="number" step="0.01" placeholder="F.eks. 2.55" value={safeNumberValue(formData.dimensions?.width)} onChange={e => handleNestedChange('dimensions', 'width', parseFloat(e.target.value) || undefined)} />
                         </div>
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Total Lengde (m)</Label>
-                            <Input type="number" step="0.01" placeholder="F.eks. 18.75" value={formData.dimensions?.length || ''} onChange={e => handleNestedChange('dimensions', 'length', parseFloat(e.target.value) || undefined)} />
+                            <Input type="number" step="0.01" placeholder="F.eks. 18.75" value={safeNumberValue(formData.dimensions?.length)} onChange={e => handleNestedChange('dimensions', 'length', parseFloat(e.target.value) || undefined)} />
                         </div>
                     </div>
                 </CardContent>
