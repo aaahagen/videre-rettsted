@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Complete Dashboard Statistics:** Expanded the Admin Dashboard stats to include all categories.
+    - **Personnel:** Now displays "Fri" (Off) and "Annet" (Other) categories in addition to Working/Sick/Vacation.
+    - **Fleet:** Now explicitly displays "Parkert" (Parked) vehicles.
 - **Place Delivery Window Toggle:** Added a new "Begrens tid" (Limit time) toggle to the "Leveringsvindu" section in the Place Form.
     - This allows users to explicitly decide if a location has delivery time restrictions.
     - If toggled off, the location is treated as having no limitations, and the driver can visit at any time.

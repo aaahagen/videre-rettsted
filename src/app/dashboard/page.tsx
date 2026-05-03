@@ -21,7 +21,7 @@ import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { DriverProfile, Route as RouteType, Place, Order, Manifest } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
-import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight, LogIn, LogOut, Users2 } from 'lucide-react';
+import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight, LogIn, LogOut, Users2, HelpCircle } from 'lucide-react';
 
 
 
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                                 Vaktplan <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                        <div className="space-y-4 flex-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100 shadow-sm transition-transform hover:scale-[1.02] cursor-default">
                                 <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
                                     <div className="p-1.5 bg-blue-50 text-blue-500 rounded-md"><UserCheck className="h-4 w-4"/></div>
@@ -500,6 +500,20 @@ export default function DashboardPage() {
                                 </span>
                                 <span className="text-lg font-black text-emerald-600">{workforceStats.vacation}</span>
                             </div>
+                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100 shadow-sm transition-transform hover:scale-[1.02] cursor-default">
+                                <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
+                                    <div className="p-1.5 bg-slate-50 text-slate-500 rounded-md"><Coffee className="h-4 w-4"/></div>
+                                    Fri
+                                </span>
+                                <span className="text-lg font-black text-slate-600">{workforceStats.off}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100 shadow-sm transition-transform hover:scale-[1.02] cursor-default">
+                                <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
+                                    <div className="p-1.5 bg-slate-100 text-slate-500 rounded-md"><HelpCircle className="h-4 w-4"/></div>
+                                    Annet
+                                </span>
+                                <span className="text-lg font-black text-slate-600">{workforceStats.other}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -516,7 +530,7 @@ export default function DashboardPage() {
                                 Kjøretøy <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                        <div className="space-y-4 flex-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
                                     <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" /> 
@@ -544,6 +558,13 @@ export default function DashboardPage() {
                                     Verksted
                                 </span>
                                 <span className="text-lg font-black text-slate-900">{fleetStats.workshop}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm sm:col-span-2">
+                                <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
+                                    <div className="w-3 h-3 rounded-full bg-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.4)]" /> 
+                                    Parkert
+                                </span>
+                                <span className="text-lg font-black text-slate-900">{fleetStats.parked}</span>
                             </div>
                         </div>
                     </div>
