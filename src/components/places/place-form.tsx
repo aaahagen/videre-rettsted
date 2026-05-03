@@ -143,10 +143,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       isZeroEmissionZone: place?.isZeroEmissionZone || false,
       isCityCenter: place?.isCityCenter || false,
-      maxVehicleHeight: place?.maxVehicleHeight,
-      maxVehicleWidth: place?.maxVehicleWidth,
-      maxVehicleLength: place?.maxVehicleLength,
-      maxVehicleWeight: place?.maxVehicleWeight,
+      maxVehicleHeight: place?.maxVehicleHeight || undefined,
+      maxVehicleWidth: place?.maxVehicleWidth || undefined,
+      maxVehicleLength: place?.maxVehicleLength || undefined,
+      maxVehicleWeight: place?.maxVehicleWeight || undefined,
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -575,8 +575,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="space-y-6 md:col-span-2">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          {/* LEFT COLUMN */}
+          <div className="space-y-6">
             <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Grunnleggende informasjon</h3>
                 <FormField
@@ -586,7 +587,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     <FormItem>
                     <FormLabel>Stedsnavn</FormLabel>
                     <FormControl>
-                        <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} />
+                        <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -609,7 +610,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     <FormControl>
                         <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
-                                <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
+                                <Input placeholder="Storgata 1, 0101 Oslo" {...field} value={field.value ?? ''} />
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -633,8 +634,25 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             </Button>
                         </div>
                     </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+
+                <FormField
+                control={form.control}
+                name="hashtags"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="font-bold flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-slate-500" />
+                        Hashtags
+                    </FormLabel>
+                    <FormControl>
+                        <Input placeholder="lager, prioritert" {...field} value={field.value ?? ''} />
+                    </FormControl>
                     <FormDescription className="text-[10px]">
-                        Skriv inn adressen og trykk "Søk" for å finne koordinater automatisk.
+                        Kommadelt liste med tagger.
                     </FormDescription>
                     <FormMessage />
                     </FormItem>
@@ -653,7 +671,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                         <Leaf className="h-4 w-4 text-green-600 shrink-0" />
                                         <span>Nullutslippssone</span>
                                     </FormLabel>
-                                    <FormDescription className="text-[10px]">Krever El/Gass kjøretøy.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -671,7 +688,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                         <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
                                         <span>Sentrumskjerne</span>
                                     </FormLabel>
-                                    <FormDescription className="text-[10px]">Høye bomavgifter for Diesel.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -714,9 +730,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         </SelectContent>
                         </Select>
                     </FormControl>
-                    <FormDescription>
-                        Beregnet tid brukt på stedet (for ruteplanlegging).
-                    </FormDescription>
                     <FormMessage />
                     </FormItem>
                 )}
@@ -734,6 +747,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={descPlaceholder}
                             className="min-h-[120px]"
                             {...field}
+                            value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
@@ -754,6 +768,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={notesPlaceholder}
                             className="min-h-[120px]"
                             {...field}
+                            value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
@@ -762,216 +777,106 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     />
                 )}
             </div>
-
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Tilgang & Kontakt</h3>
-                {doorCodeEnabled && (
-                <div className="space-y-4">
-                    <FormLabel>{doorCodeLabel}</FormLabel>
-                    {form.watch('doorCode')?.map((_, index) => (
-                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
-                        <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kode/Nøkkel {index + 1}</h4>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    const current = form.getValues('doorCode') || [];
-                                    current.splice(index, 1);
-                                    form.setValue('doorCode', current);
-                                }}
-                                className="text-red-500 hover:text-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <FormField
-                            control={form.control}
-                            name={`doorCode.${index}.category`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase">Kategori</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger className="bg-white">
-                                        <SelectValue placeholder="Velg kategori" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="Nøkkel">Nøkkel</SelectItem>
-                                    <SelectItem value="Kode">Kode</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name={`doorCode.${index}.name`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase">Beskrivelse</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="F.eks. Hovedinngang" {...field} className="bg-white" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                            <FormField
-                            control={form.control}
-                            name={`doorCode.${index}.value`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase">Verdi</FormLabel>
-                                <FormControl>
-                                    <Input placeholder={doorCodePlaceholder} {...field} className="bg-white" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        </div>
-                    </div>
-                    ))}
-                    <div>
-                    <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                    onClick={() => {
-                        const current = form.getValues('doorCode') || [];
-                        form.setValue('doorCode', [...current, { category: 'Nøkkel', name: '', value: '' }]);
-                    }}
-                    >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Legg til nøkkel / kode
-                    </Button>
-                    </div>
-                </div>
-                )}
-
-                {contactPersonsEnabled && (
-                <div className="space-y-4">
-                    <FormLabel>{contactPersonsLabel}</FormLabel>
-                    {form.watch('contactPersons')?.map((_, index) => (
-                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
-                        <div className="flex justify-between items-center">
-                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kontaktperson {index + 1}</h4>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    const current = form.getValues('contactPersons') || [];
-                                    current.splice(index, 1);
-                                    form.setValue('contactPersons', current);
-                                }}
-                                className="text-red-500 hover:text-red-700"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                                control={form.control}
-                                name={`contactPersons.${index}.name`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase">Navn</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Navn..." {...field} className="bg-white" />
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name={`contactPersons.${index}.phone`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase">Telefon</FormLabel>
-                                    <FormControl>
-                                        <div className="flex gap-2">
-                                            <Input type="tel" placeholder="Telefon..." {...field} className="bg-white" />
-                                            {field.value && (
-                                                <Button type="button" variant="outline" asChild className="bg-white">
-                                                    <a href={`tel:${field.value}`}>
-                                                        <PhoneCall className="h-4 w-4" />
-                                                    </a>
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <FormField
-                            control={form.control}
-                            name={`contactPersons.${index}.email`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase">E-post</FormLabel>
-                                <FormControl>
-                                    <Input type="email" placeholder="E-post..." {...field} className="bg-white" />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    ))}
-                    <div>
-                    <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                    onClick={() => {
-                        const current = form.getValues('contactPersons') || [];
-                        form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
-                    }}
-                    >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Legg til kontaktperson
-                    </Button>
-                    </div>
-                </div>
-                )}
-            </div>
           </div>
 
-          <div className="md:col-span-1 space-y-6">
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
-                <FormField
-                control={form.control}
-                name="hashtags"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel className="font-bold flex items-center gap-2">
-                        <Tag className="h-4 w-4 text-slate-500" />
-                        Hashtags
-                    </FormLabel>
-                    <FormControl>
-                        <Input placeholder="lager, prioritert" {...field} />
-                    </FormControl>
-                    <FormDescription className="text-[10px]">
-                        Kommadelt liste med tagger.
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <FormLabel>Bilder (Maks 8)</FormLabel>
+              <div className="grid grid-cols-2 gap-4">
+                {fields.map((field, index) => (
+                  <div key={field.id} className={cn(
+                      "space-y-2 p-2 border rounded-lg bg-slate-50 relative transition-all",
+                      mainImageIndex === index && "ring-2 ring-primary bg-primary/5 border-primary/20"
+                  )}>
+                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                      <Button 
+                          type="button" 
+                          variant={mainImageIndex === index ? "default" : "outline"}
+                          size="icon" 
+                          className={cn(
+                              "h-6 w-6 rounded-full",
+                              mainImageIndex === index ? "bg-primary text-white" : "bg-white/80 text-slate-400 hover:text-primary"
+                          )}
+                          onClick={() => form.setValue('mainImageIndex', index)}
+                      >
+                          <Star className={cn("h-3 w-3", mainImageIndex === index && "fill-current")} />
+                      </Button>
+                      <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 bg-white/80 rounded-full"
+                          onClick={() => {
+                              remove(index);
+                              if (mainImageIndex === index) form.setValue('mainImageIndex', 0);
+                              else if (mainImageIndex > index) form.setValue('mainImageIndex', mainImageIndex - 1);
+                          }}
+                      >
+                          <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    <div className="relative aspect-video rounded-md overflow-hidden bg-slate-200">
+                      {field.preview ? (
+                        <Image
+                          src={field.preview}
+                          alt={`Bilde ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                          <UploadCloud className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Input
+                      placeholder="Beskrivelse..."
+                      {...form.register(`images.${index}.description` as const)}
+                      className="text-[10px] h-6 text-center"
+                    />
+                  </div>
+                ))}
+                
+                {fields.length < 8 && (
+                  <div className="relative aspect-video">
+                      <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full h-full border-dashed border-2 flex flex-col gap-1"
+                      >
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-[10px]">Legg til</span>
+                      </Button>
+                      <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="absolute inset-0 opacity-0 cursor-pointer h-full"
+                          onChange={handleAddImages}
+                      />
+                  </div>
                 )}
-                />
+              </div>
             </div>
 
-            {/* OPENING HOURS SECTION - COLLAPSIBLE SIDEBAR VERSION */}
+            <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  cameraInputRef.current?.click();
+                }}
+                disabled={fields.length >= 8}
+            >
+              <Camera className="mr-2 h-4 w-4" />
+              Bruk Kamera
+            </Button>
+
+            {/* LEVERINGSVINDU COLLAPSIBLE CARD */}
             <Collapsible
               open={isHoursOpen}
               onOpenChange={setIsHoursOpen}
@@ -981,7 +886,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
                     <div className="flex items-center gap-3">
                         <Calendar className="h-5 w-5 text-indigo-500" />
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight">Leveringsvindu</h3>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Leveringsvindu</h3>
                     </div>
                     {isHoursOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
@@ -994,7 +899,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     variant="outline" 
                     size="sm" 
                     onClick={copyMondayToAll}
-                    className="text-[10px] font-black uppercase tracking-tight h-7 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    className="text-[10px] font-black uppercase tracking-tight h-7"
                   >
                     <Copy className="h-3 w-3 mr-1.5" /> Kopier mandag
                   </Button>
@@ -1021,7 +926,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                           </div>
 
                           {form.watch(`weeklySchedule.${key}.isOpen`) && (
-                              <div className="flex items-center gap-1 animate-in fade-in zoom-in-95 duration-200">
+                              <div className="flex items-center gap-1">
                                   <FormField
                                       control={form.control}
                                       name={`weeklySchedule.${key}.open`}
@@ -1030,6 +935,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                               type="time" 
                                               {...field} 
                                               className="h-7 text-[10px] font-bold px-1" 
+                                              value={field.value ?? ''}
                                           />
                                       )}
                                   />
@@ -1042,6 +948,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                               type="time" 
                                               {...field} 
                                               className="h-7 text-[10px] font-bold px-1" 
+                                              value={field.value ?? ''}
                                           />
                                       )}
                                   />
@@ -1053,7 +960,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               </CollapsibleContent>
             </Collapsible>
 
-            {/* VEHICLE LIMITATIONS AT PLACE - COLLAPSIBLE SIDEBAR VERSION */}
+            {/* BEGRENSNINGER COLLAPSIBLE CARD */}
             <Collapsible
               open={isConstraintsOpen}
               onOpenChange={setIsConstraintsOpen}
@@ -1063,16 +970,14 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
                     <div className="flex items-center gap-3">
                         <Ruler className="h-5 w-5 text-slate-500" />
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight">Begrensninger</h3>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Begrensninger</h3>
                     </div>
                     {isConstraintsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
               </CollapsibleTrigger>
               
               <CollapsibleContent className="px-6 pb-6 space-y-4 border-t pt-4">
-                <p className="text-[10px] text-muted-foreground font-medium">Angi fysiske begrensninger for ruteplanlegging.</p>
-                
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <FormField
                     control={form.control}
                     name="maxVehicleHeight"
@@ -1080,7 +985,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Høyde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 3.20" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1093,7 +998,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Bredde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 2.50" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1106,7 +1011,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase">Maks Lengde (m)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" placeholder="F.eks. 12.00" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1119,10 +1024,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase flex items-center gap-1.5">
                             <Weight className="h-3 w-3" />
-                            Maks Totalvekt (kg)
+                            Maks Vekt (kg)
                         </FormLabel>
                         <FormControl>
-                            <Input type="number" placeholder="F.eks. 7500" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} />
+                            <Input type="number" {...field} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : undefined)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -1132,104 +1037,165 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               </CollapsibleContent>
             </Collapsible>
 
-            <div className="space-y-4">
-              <FormLabel>Bilder (Maks 8)</FormLabel>
-              <FormDescription className="text-xs">
-                Klikk på stjerne-ikonet for å velge hovedbilde til dashbordet.
-              </FormDescription>
-              {fields.map((field, index) => (
-                <div key={field.id} className={cn(
-                    "space-y-2 p-4 border rounded-lg bg-slate-50 relative transition-all",
-                    mainImageIndex === index && "ring-2 ring-primary bg-primary/5 border-primary/20"
-                )}>
-                  <div className="absolute top-2 right-2 flex gap-1 z-10">
-                    <Button 
-                        type="button" 
-                        variant={mainImageIndex === index ? "default" : "outline"}
-                        size="icon" 
-                        className={cn(
-                            "h-8 w-8 rounded-full",
-                            mainImageIndex === index ? "bg-primary text-white" : "bg-white/80 text-slate-400 hover:text-primary"
-                        )}
-                        onClick={() => form.setValue('mainImageIndex', index)}
-                        title="Sett som hovedbilde"
+            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Tilgang & Kontakt</h3>
+                {doorCodeEnabled && (
+                <div className="space-y-4">
+                    <FormLabel>{doorCodeLabel}</FormLabel>
+                    {form.watch('doorCode')?.map((_, index) => (
+                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kode/Nøkkel {index + 1}</h4>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    const current = form.getValues('doorCode') || [];
+                                    current.splice(index, 1);
+                                    form.setValue('doorCode', current);
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="grid gap-2">
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.category`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <Select onValueChange={field.onChange} value={field.value ?? 'Nøkkel'}>
+                                    <FormControl>
+                                    <SelectTrigger className="bg-white h-8 text-xs">
+                                        <SelectValue placeholder="Kategori" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="Nøkkel">Nøkkel</SelectItem>
+                                    <SelectItem value="Kode">Kode</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input placeholder="Beskrivelse" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                </FormControl>
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                            control={form.control}
+                            name={`doorCode.${index}.value`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormControl>
+                                    <Input placeholder="Verdi" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                </FormControl>
+                                </FormItem>
+                            )}
+                            />
+                        </div>
+                    </div>
+                    ))}
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => {
+                        const current = form.getValues('doorCode') || [];
+                        form.setValue('doorCode', [...current, { category: 'Nøkkel', name: '', value: '' }]);
+                    }}
                     >
-                        <Star className={cn("h-4 w-4", mainImageIndex === index && "fill-current")} />
+                    <Plus className="h-3 w-3 mr-2" />
+                    Legg til kode
                     </Button>
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 bg-white/80 rounded-full"
-                        onClick={() => {
-                            remove(index);
-                            if (mainImageIndex === index) form.setValue('mainImageIndex', 0);
-                            else if (mainImageIndex > index) form.setValue('mainImageIndex', mainImageIndex - 1);
-                        }}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="relative aspect-video rounded-md overflow-hidden bg-slate-200 cursor-pointer group">
-                    {field.preview ? (
-                      <Image
-                        src={field.preview}
-                        alt={`Bilde ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                        <UploadCloud className="h-8 w-8 mb-2" />
-                        <span className="text-xs">Velg bilde</span>
-                      </div>
-                    )}
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      className="absolute inset-0 opacity-0 cursor-pointer h-full"
-                      onChange={(e) => handleImageChange(index, e)}
-                    />
-                  </div>
-                  
-                  <Input
-                    placeholder="Kort beskrivelse av bilde..."
-                    {...form.register(`images.${index}.description` as const)}
-                    className="text-xs h-8 text-center"
-                  />
-                  {mainImageIndex === index && (
-                      <p className="text-[10px] text-center font-bold text-primary uppercase tracking-wider">Hovedbilde</p>
-                  )}
                 </div>
-              ))}
-              
-              {fields.length < 8 && (
-                <div className="relative">
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full h-24 border-dashed border-2 flex flex-col gap-2"
+                )}
+
+                {contactPersonsEnabled && (
+                <div className="space-y-4">
+                    <FormLabel>{contactPersonsLabel}</FormLabel>
+                    {form.watch('contactPersons')?.map((_, index) => (
+                    <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Kontakt {index + 1}</h4>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    const current = form.getValues('contactPersons') || [];
+                                    current.splice(index, 1);
+                                    form.setValue('contactPersons', current);
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="grid gap-2">
+                            <FormField
+                                control={form.control}
+                                name={`contactPersons.${index}.name`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <Input placeholder="Navn" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                    </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`contactPersons.${index}.phone`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <Input type="tel" placeholder="Telefon" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                    </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`contactPersons.${index}.email`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <Input type="email" placeholder="E-post" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                    </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                    ))}
+                    <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => {
+                        const current = form.getValues('contactPersons') || [];
+                        form.setValue('contactPersons', [...current, { name: '', phone: '', email: '' }]);
+                    }}
                     >
-                        <Plus className="h-6 w-6 text-muted-foreground" />
-                        <span className="text-sm">Legg til bilde</span>
+                    <Plus className="h-3 w-3 mr-2" />
+                    Legg til kontakt
                     </Button>
-                    <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="absolute inset-0 opacity-0 cursor-pointer h-full"
-                        onChange={handleAddImages}
-                    />
                 </div>
-              )}
-              {form.formState.errors.images && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.images.message}
-                </p>
-              )}
+                )}
             </div>
-            
+
             <input
               type="file"
               accept="image/*"
@@ -1238,20 +1204,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               ref={cameraInputRef}
               onChange={handleAddImages}
             />
-            
-            <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={(e) => {
-                  e.preventDefault();
-                  cameraInputRef.current?.click();
-                }}
-                disabled={fields.length >= 8}
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              Bruk Kamera
-            </Button>
           </div>
         </div>
 

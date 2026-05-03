@@ -10,7 +10,9 @@ export async function geocodeAddress(address: string): Promise<{ lat: number, ln
         return null;
     }
 
-    // 1. Try Google Maps Geocoding API
+    // 1. Try Google Maps Geocoding API (Direct Fetch)
+    // NOTE: Direct fetch might fail if the API key has Referrer restrictions.
+    // In that case, it falls back to OSM.
     if (apiKey) {
         try {
             const response = await fetch(
@@ -28,33 +30,35 @@ export async function geocodeAddress(address: string): Promise<{ lat: number, ln
                 };
             }
             
-            // Log specific Google Errors to help debug API activation issues
             if (data.status === 'REQUEST_DENIED') {
-                console.error("Geocoding (Google) Denied: Ensure Geocoding API is enabled and API Key restrictions (Referrer/IP) allow this request.", data.error_message || '');
+                // Suppress error in console to avoid clutter if fallback is intended
+                console.warn("Geocoding (Google) Denied: Likely due to API Key Referrer restrictions. Falling back to OpenStreetMap...");
             } else if (data.status === 'OVER_QUERY_LIMIT') {
-                console.error("Geocoding (Google) Limit Exceeded: Check billing and quotas in Google Cloud Console.");
-            } else {
-                console.warn(`Geocoding (Google) status: ${data.status}`, data.error_message || '');
+                console.warn("Geocoding (Google) Limit Exceeded. Falling back to OpenStreetMap...");
+            } else if (data.status !== 'ZERO_RESULTS') {
+                console.warn(`Geocoding (Google) status: ${data.status}. Falling back to OpenStreetMap...`);
             }
         } catch (error) {
-            console.error("Geocoding (Google) Network Error:", error);
+            console.warn("Geocoding (Google) Network Error. Falling back to OpenStreetMap...");
         }
     }
 
     // 2. Fallback to OpenStreetMap (Nominatim)
-    // Note: This remains as a safety net if Google API fails or is restricted
     try {
-        console.log("Geocoding: Trying OpenStreetMap fallback...");
         const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
             {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'VIDERE-RettSted-App'
+                    'User-Agent': 'VIDERE-RettSted-App (contact@videre.no)'
                 }
             }
         );
         
+        if (!response.ok) {
+            throw new Error(`OSM Geocoding failed with status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data && data.length > 0) {

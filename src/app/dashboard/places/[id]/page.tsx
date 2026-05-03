@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -37,7 +37,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Place, Organization, UserProfile } from '@/lib/types'; // Assuming UserProfile exists or similar
+import { Place, Organization, UserProfile } from '@/lib/types';
 import { format, isValid } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { PlaceForm } from '@/components/places/place-form';
@@ -66,6 +66,7 @@ export default function PlaceDetailsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
+  const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { id } = params;
@@ -155,7 +156,6 @@ export default function PlaceDetailsPage() {
     
     let date: Date;
     
-    // Handle Firestore Timestamp
     if (dateValue?.seconds) {
       date = new Date(dateValue.seconds * 1000);
     } else {
@@ -190,9 +190,6 @@ export default function PlaceDetailsPage() {
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(place.address)}`;
   
-  const fallbackEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(place.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-
-  // Get labels from organization settings or default
   const descEnabled = organization?.fieldSettings?.description?.enabled ?? true;
   const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
 
@@ -200,16 +197,15 @@ export default function PlaceDetailsPage() {
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
 
   const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
-  const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Ekstra Informasjon";
+  const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Dørkoder / Tilgang";
 
   const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
-  const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Ekstra Informasjon";
+  const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
 
   return (
     <>
       <div className="container mx-auto px-4 py-8 max-w-5xl print:hidden">
         
-        {/* Top Back Button */}
         <div className="mb-4">
           <Button 
             variant="secondary"
@@ -242,7 +238,6 @@ export default function PlaceDetailsPage() {
                 <section className="space-y-4">
                   <h1 className="text-3xl font-bold tracking-tight text-slate-900">{place.name}</h1>
                   
-                  {/* Image Carousel */}
                   <div className="relative group">
                     {place.images && place.images.length > 0 ? (
                       <Carousel className="w-full">
@@ -269,43 +264,25 @@ export default function PlaceDetailsPage() {
                                     </div>
                                   </DialogTrigger>
                                   <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center" aria-describedby={undefined}>
-                                    <DialogTitle className="sr-only">
-                                      Bildevisning for {place.name} - Bilde {index + 1}
-                                    </DialogTitle>
                                     <div className="relative w-full h-[90vh] flex items-center justify-center">
                                       <TransformWrapper
                                         initialScale={1}
                                         minScale={1}
                                         maxScale={8}
                                         centerOnInit={true}
-                                        wheel={{ step: 0.1 }}
                                       >
-                                        {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
-                                          <>
-                                            <div className="absolute top-4 left-4 z-50 flex gap-2">
-                                              <Button variant="secondary" size="icon" onClick={() => zoomIn()} className="rounded-full shadow-lg h-10 w-10 bg-white/80 hover:bg-white backdrop-blur-sm">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zoom-in h-5 w-5"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-                                              </Button>
-                                              <Button variant="secondary" size="icon" onClick={() => zoomOut()} className="rounded-full shadow-lg h-10 w-10 bg-white/80 hover:bg-white backdrop-blur-sm">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zoom-out h-5 w-5"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-                                              </Button>
-                                              <Button variant="secondary" size="icon" onClick={() => resetTransform()} className="rounded-full shadow-lg h-10 w-10 bg-white/80 hover:bg-white backdrop-blur-sm" title="Tilbakestill zoom">
-                                                 <Maximize2 className="h-4 w-4" />
-                                              </Button>
-                                            </div>
-                                            <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
-                                              <div className="relative w-full h-full max-w-[90vw] max-h-[90vh]">
-                                                <Image
-                                                  src={img.url}
-                                                  alt={img.description || `Bilde ${index + 1}`}
-                                                  fill
-                                                  className="object-contain cursor-grab active:cursor-grabbing"
-                                                  priority
-                                                />
-                                              </div>
-                                            </TransformComponent>
-                                          </>
-                                        )}
+                                        <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                                          <div className="relative w-full h-full max-w-[90vw] max-h-[90vh]">
+                                            <Image
+                                              src={img.url}
+                                              alt={img.description || `Bilde ${index + 1}`}
+                                              fill
+                                              className="object-contain"
+                                              priority
+                                              sizes="90vw"
+                                            />
+                                          </div>
+                                        </TransformComponent>
                                       </TransformWrapper>
                                       <DialogClose asChild>
                                         <Button 
@@ -317,13 +294,6 @@ export default function PlaceDetailsPage() {
                                         </Button>
                                       </DialogClose>
                                     </div>
-                                    {img.description && (
-                                      <div className="absolute bottom-4 left-0 right-0 text-center">
-                                        <span className="bg-white/80 text-black px-4 py-2 rounded-full text-sm backdrop-blur-sm">
-                                          {img.description}
-                                        </span>
-                                      </div>
-                                    )}
                                   </DialogContent>
                                 </Dialog>
                                 {img.description && (
@@ -351,14 +321,14 @@ export default function PlaceDetailsPage() {
                   </div>
                 </section>
 
-                {descEnabled && (place.description || !place.notes) && (
+                {descEnabled && place.description && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                     <h2 className="text-xl font-semibold mb-3 flex items-center">
                         <Clipboard className="mr-2 h-5 w-5 text-primary" />
                         {descLabel}
                     </h2>
                     <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
-                      {place.description || 'Ingen innhold tilgjengelig.'}
+                      {place.description}
                     </p>
                   </section>
                 )}
@@ -382,7 +352,6 @@ export default function PlaceDetailsPage() {
                   </h2>
                   <p className="text-lg text-slate-700 mb-3 font-medium">{place.address}</p>
                   
-                  {/* Map Preview */}
                   <div className="w-full h-[350px] rounded-xl overflow-hidden border bg-slate-100 mb-6 shadow-md">
                       {apiKey ? (
                         <iframe
@@ -399,7 +368,6 @@ export default function PlaceDetailsPage() {
                         <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
                             <Map className="h-10 w-10 text-slate-400 mb-2" />
                             <p className="text-slate-500 font-medium">Forhåndsvisning av kart er ikke tilgjengelig</p>
-                            <p className="text-slate-400 text-sm mt-1">Bruk knappen under for å åpne i Google Maps</p>
                         </div>
                       )}
                   </div>
@@ -435,7 +403,7 @@ export default function PlaceDetailsPage() {
                 {contactPersonsEnabled && place.contactPersons && place.contactPersons.filter(c => c.name || c.phone || c.email).length > 0 && (
                   <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
-                          <Info className="mr-2 h-5 w-5 text-primary" />
+                          <UserIcon className="mr-2 h-5 w-5 text-primary" />
                           {contactPersonsLabel}
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -465,94 +433,133 @@ export default function PlaceDetailsPage() {
           </div>
 
           <div className="space-y-6">
-            <section className="bg-white p-5 rounded-xl shadow-sm border">
-                  <h2 className="text-xl font-semibold mb-3 flex items-center">
-                      <Tag className="mr-2 h-5 w-5 text-primary" />
-                      Hashtags
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {place.hashtags && place.hashtags.length > 0 ? (
-                      place.hashtags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-sm px-3 py-1">
-                          #{tag}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-slate-500 italic">Ingen hashtags lagt til.</span>
+            {!isEditing && (
+              <>
+                <section className="bg-white p-5 rounded-xl shadow-sm border">
+                      <h2 className="text-xl font-semibold mb-3 flex items-center">
+                          <Tag className="mr-2 h-5 w-5 text-primary" />
+                          Hashtags
+                      </h2>
+                      <div className="flex flex-wrap gap-2">
+                        {place.hashtags && place.hashtags.length > 0 ? (
+                          place.hashtags.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-sm px-3 py-1">
+                              #{tag}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-slate-500 italic">Ingen hashtags lagt til.</span>
+                        )}
+                      </div>
+                    </section>
+
+                {/* OPENING HOURS COLLAPSIBLE */}
+                <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                    <Collapsible open={isHoursOpen} onOpenChange={setIsHoursOpen}>
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
+                                <div className="flex items-center">
+                                    <Clock className="mr-2 h-5 w-5 text-indigo-500" />
+                                    <h2 className="text-lg font-semibold">Leveringsvindu</h2>
+                                </div>
+                                {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="px-5 pb-5 space-y-2 border-t pt-4">
+                            {DAYS.map(({ key, label }) => {
+                                const dayHours = place.weeklySchedule?.[key];
+                                const isOpen = dayHours?.isOpen;
+                                
+                                return (
+                                    <div key={key} className={cn(
+                                        "flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0",
+                                        !isOpen && "opacity-40"
+                                    )}>
+                                        <span className="text-sm font-medium text-slate-600">{label}</span>
+                                        {isOpen ? (
+                                            <span className="text-sm font-bold text-slate-800">
+                                                {dayHours.open} - {dayHours.close}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs font-bold text-slate-400 uppercase">Stengt</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </CollapsibleContent>
+                    </Collapsible>
+                </section>
+
+                {/* CONSTRAINTS COLLAPSIBLE (NEW) */}
+                {(place.maxVehicleHeight || place.maxVehicleWidth || place.maxVehicleLength || place.maxVehicleWeight) && (
+                  <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                      <Collapsible open={isConstraintsOpen} onOpenChange={setIsConstraintsOpen}>
+                          <CollapsibleTrigger asChild>
+                              <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
+                                  <div className="flex items-center">
+                                      <Ruler className="mr-2 h-5 w-5 text-slate-500" />
+                                      <h2 className="text-lg font-semibold">Begrensninger</h2>
+                                  </div>
+                                  {isConstraintsOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
+                          </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-5 pb-5 space-y-3 border-t pt-4">
+                              {place.maxVehicleHeight && (
+                                  <div className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-600">Maks Høyde</span>
+                                      <span className="font-bold">{place.maxVehicleHeight} m</span>
+                                  </div>
+                              )}
+                              {place.maxVehicleWidth && (
+                                  <div className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-600">Maks Bredde</span>
+                                      <span className="font-bold">{place.maxVehicleWidth} m</span>
+                                  </div>
+                              )}
+                              {place.maxVehicleLength && (
+                                  <div className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-600">Maks Lengde</span>
+                                      <span className="font-bold">{place.maxVehicleLength} m</span>
+                                  </div>
+                              )}
+                              {place.maxVehicleWeight && (
+                                  <div className="flex justify-between items-center text-sm">
+                                      <span className="text-slate-600">Maks Vekt</span>
+                                      <span className="font-bold flex items-center gap-1">
+                                        <Weight className="h-3 w-3" />
+                                        {place.maxVehicleWeight} kg
+                                      </span>
+                                  </div>
+                              )}
+                          </CollapsibleContent>
+                      </Collapsible>
+                  </section>
+                )}
+
+                <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
+                  <h2 className="text-lg font-semibold border-b pb-2">Logg</h2>
+                  <div className="space-y-3">
+                    {dbUser?.role === 'admin' && authorName && (
+                    <div className="flex items-center text-sm text-slate-600">
+                      <UserIcon className="mr-3 h-4 w-4 text-primary" />
+                      <span>Lagt til av: <span className="font-medium text-slate-900">{authorName}</span></span>
+                    </div>
+                    )}
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Calendar className="mr-3 h-4 w-4 text-primary" />
+                      <span>Opprettet: <span className="font-medium text-slate-900">{formatDate(place.createdAt)}</span></span>
+                    </div>
+                    {place.updatedAt && (
+                      <div className="flex items-center text-sm text-slate-600">
+                        <Calendar className="mr-3 h-4 w-4 text-primary" />
+                        <span>Sist oppdatert: <span className="font-medium text-slate-900">{formatDate(place.updatedAt)}</span></span>
+                      </div>
                     )}
                   </div>
                 </section>
-
-            {/* OPENING HOURS COLLAPSIBLE */}
-            <section className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <Collapsible open={isHoursOpen} onOpenChange={setIsHoursOpen}>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" className="w-full flex items-center justify-between p-5 h-auto hover:bg-slate-50">
-                            <div className="flex items-center">
-                                <Clock className="mr-2 h-5 w-5 text-indigo-500" />
-                                <h2 className="text-lg font-semibold">Leveringsvindu</h2>
-                            </div>
-                            {isHoursOpen ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
-                        </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="px-5 pb-5 space-y-2 border-t pt-4">
-                        {DAYS.map(({ key, label }) => {
-                            const dayHours = place.weeklySchedule?.[key];
-                            const isOpen = dayHours?.isOpen;
-                            
-                            return (
-                                <div key={key} className={cn(
-                                    "flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0",
-                                    !isOpen && "opacity-40"
-                                )}>
-                                    <span className="text-sm font-medium text-slate-600">{label}</span>
-                                    {isOpen ? (
-                                        <span className="text-sm font-bold text-slate-800">
-                                            {dayHours.open} - {dayHours.close}
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs font-bold text-slate-400 uppercase">Stengt</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </CollapsibleContent>
-                </Collapsible>
-            </section>
-
-            <section className="bg-white p-5 rounded-xl shadow-sm border space-y-4">
-              <h2 className="text-lg font-semibold border-b pb-2">Logg</h2>
-              <div className="space-y-3">
-                {dbUser?.role === 'admin' && authorName && (
-                <div className="flex items-center text-sm text-slate-600">
-                  <UserIcon className="mr-3 h-4 w-4 text-primary" />
-                  <span>Lagt til av: <span className="font-medium text-slate-900">{authorName || 'Laster...'}</span></span>
-                </div>
-                )}
-                <div className="flex items-center text-sm text-slate-600">
-                  <Calendar className="mr-3 h-4 w-4 text-primary" />
-                  <span>Opprettet: <span className="font-medium text-slate-900">{formatDate(place.createdAt)}</span></span>
-                </div>
-                {place.updatedAt && (
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Calendar className="mr-3 h-4 w-4 text-primary" />
-                    <span>Sist oppdatert: <span className="font-medium text-slate-900">{formatDate(place.updatedAt)}</span></span>
-                  </div>
-                )}
-              </div>
-            </section>
+              </>
+            )}
             
-            <section className="bg-slate-100 p-4 rounded-xl border text-center shadow-inner">
-              <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Bildeoversikt</p>
-              <div className="flex justify-center gap-1">
-                 {[...Array(8)].map((_, i) => (
-                   <div key={i} className={`h-1.5 w-6 rounded-full ${i < (place.images?.length || 0) ? 'bg-primary' : 'bg-slate-300'}`} />
-                 ))}
-              </div>
-              <p className="text-sm mt-2 font-medium text-slate-600">{place.images?.length || 0} av 8 bilder brukt</p>
-            </section>
-
-            {/* Action Buttons in Sidebar for Desktop, Bottom for Mobile */}
             <div className="flex flex-col gap-3">
               <Button 
                 variant="outline" 
@@ -572,15 +579,17 @@ export default function PlaceDetailsPage() {
                   </>
                 )}
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={handlePrint}
-                className="w-full h-12 text-lg font-semibold"
-              >
-                <Printer className="mr-2 h-5 w-5" />
-                Skriv ut PDF
-              </Button>
+              {!isEditing && (
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handlePrint}
+                  className="w-full h-12 text-lg font-semibold"
+                >
+                  <Printer className="mr-2 h-5 w-5" />
+                  Skriv ut PDF
+                </Button>
+              )}
               <Button 
                 size="lg" 
                 asChild 
@@ -592,7 +601,7 @@ export default function PlaceDetailsPage() {
                 </Link>
               </Button>
 
-              {userProfile?.role === 'admin' && (
+              {userProfile?.role === 'admin' && !isEditing && (
                 <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
@@ -623,14 +632,6 @@ export default function PlaceDetailsPage() {
                         onChange={(e) => setDeleteConfirmation(e.target.value)}
                         placeholder="Skriv setningen her..."
                         className="border-destructive/30 focus-visible:ring-destructive"
-                        onPaste={(e) => {
-                            e.preventDefault();
-                            toast({
-                                title: "Ingen klipp og lim",
-                                description: "Du må skrive setningen manuelt.",
-                                variant: "destructive"
-                            });
-                        }}
                       />
                     </div>
                     <DialogFooter>

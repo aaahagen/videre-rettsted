@@ -64,6 +64,16 @@ To ensure future flexibility and ease of migration, all interactions with the ba
 - **`src/lib/storage.ts`**: A generic interface for file storage operations.
 - **`src/lib/firebase/storage.ts`**: The Firebase Storage implementation.
 
+## External API & Integrations
+
+### Multi-Provider Geocoding Strategy
+To provide high reliability for address-to-coordinate translation, the application uses a fail-safe geocoding utility in `src/lib/geocoding.ts`.
+
+*   **Primary Provider:** Google Maps Geocoding API (Direct Fetch).
+*   **Fallback Provider:** OpenStreetMap (Nominatim).
+*   **Logic:** If the Google Maps request is denied (common due to API Key Referrer restrictions in the browser) or fails due to quota limits, the system silently falls back to OpenStreetMap.
+*   **Security Note:** Standard API keys restricted by "Web Referrer" cannot be used with the direct Google Geocoding HTTP endpoint. To use Google as the *exclusive* source in the browser, the application would need to utilize the Google Maps JavaScript SDK's `Geocoder` service. The current dual-provider approach is preferred as it avoids vendor lock-in and provides a zero-cost fallback.
+
 ### Technical Debt Mitigation Strategy (Scaling Plan)
 As the application transitions from MVP to Enterprise Scale, the following architectural refactoring is planned/ongoing:
 

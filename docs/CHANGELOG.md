@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **Place Form & Details Redesign:** Completely overhauled the Place creation/editing form and the Place Details page.
+    - **Simplified Form Layout:** Transitioned to a clean two-column layout on desktop.
+    - **Driver-Centric UI:** Wrapped "Leveringsvindu" (Delivery Window) and "Begrensninger" (Vehicle Constraints) in collapsible cards to reduce visual clutter for drivers.
+    - **Smart Display:** The Place Details page now only displays fields that contain data, ensuring a clean and focused interface.
+    - **Collapsible Detail Cards:** "Leveringsvindu" and "Begrensninger" are now collapsible on the details page as well.
 - **Terminology Update:** Renamed "Åpningstider" (Opening hours) to "Leveringsvindu" (Delivery window) across the application to better reflect the specific nature of the application as a delivery and logistics platform.
 - **Sidebar Navigation:** Integrated the new "Læringsportal" (LMS) into the main navigation sidebar for all users.
 - **Admin Management Console UI:** Redesigned the "Datahåndtering" (Data Management) section in the Admin Panel to use a tabbed interface, providing a cleaner separation between Place backups and Bulk Order imports.
