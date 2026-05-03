@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { firebaseDB } from '../../../../lib/firebase/database';
-import { auth } from '../../../../lib/firebase/firebase';
+import { auth, db } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
@@ -44,6 +44,7 @@ import { PlaceForm } from '@/components/places/place-form';
 import { PrintPlace } from '@/components/places/print-place';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { cn } from '@/lib/utils';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const DAYS = [
     { key: 'monday', label: 'Mandag' },
@@ -204,7 +205,10 @@ export default function PlaceDetailsPage() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 max-w-5xl print:hidden">
+      <div className={cn(
+          "container mx-auto px-4 py-8 print:hidden",
+          isEditing ? "max-w-7xl" : "max-w-5xl"
+      )}>
         
         <div className="mb-4">
           <Button 
@@ -223,11 +227,16 @@ export default function PlaceDetailsPage() {
         <div className="flex flex-col gap-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* MAIN CONTENT COLUMN */}
-              <div className="space-y-6">
+              <div className={cn(
+                  "space-y-6",
+                  isEditing && "lg:col-span-2"
+              )}>
                 {isEditing ? (
                   <section className="bg-white p-6 rounded-xl shadow-sm border">
-                      <div className="flex items-center gap-3 mb-6">
-                        <Edit3 className="h-6 w-6 text-primary" />
+                      <div className="flex items-center gap-3 mb-6 border-b pb-4">
+                        <div className="p-2 bg-primary/5 text-primary rounded-lg">
+                            <Edit3 className="h-6 w-6" />
+                        </div>
                         <h1 className="text-2xl font-bold">Rediger Leveringssted</h1>
                       </div>
                       <PlaceForm 
@@ -607,7 +616,7 @@ export default function PlaceDetailsPage() {
                   className="h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-md px-8"
                 >
                   <Link href={`/dashboard/places#place-${place.id}`}>
-                    <ArrowLeft className="mr-2 h-5 w-5" />
+                    <ArrowLeft className="mr-2 h-4 w-4" />
                     Tilbake til oversikt
                   </Link>
                 </Button>
