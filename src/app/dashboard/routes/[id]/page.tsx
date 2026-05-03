@@ -5,7 +5,38 @@ import { useGeolocation } from '@/hooks/use-geolocation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Loader2, Trash2, GripVertical, Wand2, Save, Route as RouteIcon, MapPin, ChevronLeft, Clock, Key, Car, Truck, ExternalLink, CheckCircle2, Circle, Coffee, Wrench, Home, Flag, Info, FileText, Edit2, X, Check, AlertCircle, MessageSquare, AlertTriangle, ClipboardCheck } from 'lucide-react';
+import { 
+    Loader2, 
+    Trash2, 
+    GripVertical, 
+    Wand2, 
+    Save, 
+    Route as RouteIcon, 
+    MapPin, 
+    ChevronLeft, 
+    Clock, 
+    Key, 
+    Car, 
+    Truck, 
+    ExternalLink, 
+    CheckCircle2, 
+    Circle, 
+    Coffee, 
+    Wrench, 
+    Home, 
+    Flag, 
+    Info, 
+    FileText, 
+    Edit2, 
+    X, 
+    Check, 
+    AlertCircle, 
+    MessageSquare, 
+    AlertTriangle, 
+    ClipboardCheck,
+    Copy,
+    FilePlus
+} from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -102,6 +133,7 @@ export default function RouteDetailsPage() {
   const [completedStopEvents, setCompletedStopEvents] = useState<Record<string, CompletedStopEvent>>({});
   const { getPosition } = useGeolocation();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isOptimizing, setIsOptimizing] = useState(false);
   
@@ -477,6 +509,34 @@ export default function RouteDetailsPage() {
     } finally { setIsSaving(false); }
   };
 
+  const handleSaveAsTemplate = async () => {
+    if (!route) return;
+    setIsSavingTemplate(true);
+    try {
+        const placeIds = routeItems.filter(i => i.type === 'place').map(i => i.placeId!);
+        
+        await firebaseDB.createRoute({
+            name: `${route.name} (Mal)`,
+            orgId: route.orgId,
+            places: placeIds,
+            startAddress,
+            endAddress,
+            notes: routeNotes,
+            prepTimeStart,
+            prepTimeEnd,
+            breakTime,
+            fuelServiceTime,
+            status: 'template'
+        });
+        toast({ title: 'Mal lagret', description: 'Ruten er nå tilgjengelig som mal.' });
+    } catch (err) {
+        console.error(err);
+        toast({ title: 'Feil', description: 'Kunne ikke lagre mal.', variant: 'destructive' });
+    } finally {
+        setIsSavingTemplate(false);
+    }
+  };
+
   const handleFinishRoute = async () => {
     if (finishConfirmationText.toLowerCase() !== 'ferdig') return;
     if (!route) return;
@@ -650,7 +710,36 @@ export default function RouteDetailsPage() {
       )}
 
       {(isAdmin || isEditMode) && (
-          <Card className="border-slate-200 shadow-sm bg-slate-50/50"><CardContent className="p-6 flex flex-col sm:flex-row gap-4">{placesCount > 2 && (<Button variant="outline" className="flex-1 shadow-sm font-semibold h-12 bg-white" onClick={handleOptimizeRoute} disabled={isOptimizing || isSaving || isCalculating}>{isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />} Optimer</Button>)}<Button className="flex-1 shadow-sm font-bold h-12 text-md" onClick={handleSave} disabled={isSaving || isCalculating}>{isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />} Lagre Endringer</Button></CardContent></Card>
+          <Card className="border-slate-200 shadow-sm bg-slate-50/50"><CardContent className="p-6 flex flex-col sm:flex-row gap-4">
+              <Button 
+                  variant="outline" 
+                  className="flex-1 shadow-sm font-semibold h-12 bg-white" 
+                  onClick={handleSaveAsTemplate} 
+                  disabled={isSavingTemplate || isSaving || isCalculating}
+              >
+                  {isSavingTemplate ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FilePlus className="mr-2 h-5 w-5 text-indigo-500" />} 
+                  Lagre som Mal
+              </Button>
+              {placesCount > 2 && (
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 shadow-sm font-semibold h-12 bg-white" 
+                    onClick={handleOptimizeRoute} 
+                    disabled={isOptimizing || isSaving || isCalculating}
+                  >
+                    {isOptimizing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-2 h-5 w-5 text-indigo-500" />} 
+                    Optimer
+                  </Button>
+              )}
+              <Button 
+                className="flex-1 shadow-sm font-bold h-12 text-md bg-indigo-600 hover:bg-indigo-700" 
+                onClick={handleSave} 
+                disabled={isSaving || isCalculating}
+              >
+                {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />} 
+                Lagre Endringer
+              </Button>
+          </CardContent></Card>
       )}
 
       <AlertDialog open={isFinishDialogOpen} onOpenChange={setIsFinishDialogOpen}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Er du helt ferdig?</AlertDialogTitle><AlertDialogDescription>Skriv <span className="font-bold text-slate-900">"Ferdig"</span> for å bekrefte.</AlertDialogDescription></AlertDialogHeader><div className="py-4"><Input value={finishConfirmationText} onChange={(e) => setFinishConfirmationText(e.target.value)} placeholder='Skriv "Ferdig" her...' className="bg-slate-50 border-slate-200" /></div><AlertDialogFooter><AlertDialogCancel onClick={() => setFinishConfirmationText('')}>Avbryt</AlertDialogCancel><AlertDialogAction onClick={handleFinishRoute} disabled={finishConfirmationText.toLowerCase() !== 'ferdig' || isSaving} className="bg-green-600 hover:bg-green-700">Fullfør og arkiver</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>

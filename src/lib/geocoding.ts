@@ -28,14 +28,21 @@ export async function geocodeAddress(address: string): Promise<{ lat: number, ln
                 };
             }
             
-            console.warn(`Geocoding (Google) failed: ${data.status}`, data.error_message || '');
+            // Log specific Google Errors to help debug API activation issues
+            if (data.status === 'REQUEST_DENIED') {
+                console.error("Geocoding (Google) Denied: Ensure Geocoding API is enabled and API Key restrictions (Referrer/IP) allow this request.", data.error_message || '');
+            } else if (data.status === 'OVER_QUERY_LIMIT') {
+                console.error("Geocoding (Google) Limit Exceeded: Check billing and quotas in Google Cloud Console.");
+            } else {
+                console.warn(`Geocoding (Google) status: ${data.status}`, data.error_message || '');
+            }
         } catch (error) {
             console.error("Geocoding (Google) Network Error:", error);
         }
     }
 
     // 2. Fallback to OpenStreetMap (Nominatim)
-    // Note: Nominatim usage policy requires a User-Agent and limited requests.
+    // Note: This remains as a safety net if Google API fails or is restricted
     try {
         console.log("Geocoding: Trying OpenStreetMap fallback...");
         const response = await fetch(
