@@ -66,10 +66,10 @@ const placeSchema = z.object({
   estimatedDeliveryTime: z.number().optional(),
   isZeroEmissionZone: z.boolean().default(false),
   isCityCenter: z.boolean().default(false),
-  maxVehicleHeight: z.number().optional(),
-  maxVehicleWidth: z.number().optional(),
-  maxVehicleLength: z.number().optional(),
-  maxVehicleWeight: z.number().optional(),
+  maxVehicleHeight: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
+  maxVehicleWidth: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
+  maxVehicleLength: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
+  maxVehicleWeight: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
   weeklySchedule: z.object({
     monday: openingHoursSchema,
     tuesday: openingHoursSchema,
@@ -143,10 +143,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       isZeroEmissionZone: place?.isZeroEmissionZone || false,
       isCityCenter: place?.isCityCenter || false,
-      maxVehicleHeight: place?.maxVehicleHeight,
-      maxVehicleWidth: place?.maxVehicleWidth,
-      maxVehicleLength: place?.maxVehicleLength,
-      maxVehicleWeight: place?.maxVehicleWeight,
+      maxVehicleHeight: place?.maxVehicleHeight as any,
+      maxVehicleWidth: place?.maxVehicleWidth as any,
+      maxVehicleLength: place?.maxVehicleLength as any,
+      maxVehicleWeight: place?.maxVehicleWeight as any,
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -477,6 +477,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             isZeroEmissionZone: data.isZeroEmissionZone,
             isCityCenter: data.isCityCenter,
+            // Clean up max fields before saving
             maxVehicleHeight: data.maxVehicleHeight,
             maxVehicleWidth: data.maxVehicleWidth,
             maxVehicleLength: data.maxVehicleLength,
@@ -988,13 +989,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Høyde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="number" 
-                                step="0.01" 
+                                type="text"
+                                inputMode="decimal"
                                 {...field} 
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    field.onChange(val === '' ? undefined : parseFloat(val));
-                                }} 
+                                onChange={e => field.onChange(e.target.value)} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1010,13 +1008,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Bredde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="number" 
-                                step="0.01" 
+                                type="text"
+                                inputMode="decimal"
                                 {...field} 
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    field.onChange(val === '' ? undefined : parseFloat(val));
-                                }} 
+                                onChange={e => field.onChange(e.target.value)} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1032,13 +1027,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Lengde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="number" 
-                                step="0.01" 
+                                type="text"
+                                inputMode="decimal"
                                 {...field} 
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    field.onChange(val === '' ? undefined : parseFloat(val));
-                                }} 
+                                onChange={e => field.onChange(e.target.value)} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1057,12 +1049,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         </FormLabel>
                         <FormControl>
                             <Input 
-                                type="number" 
+                                type="text"
+                                inputMode="numeric"
                                 {...field} 
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    field.onChange(val === '' ? undefined : parseInt(val, 10));
-                                }} 
+                                onChange={e => field.onChange(e.target.value)} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
