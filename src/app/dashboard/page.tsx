@@ -301,7 +301,7 @@ export default function DashboardPage() {
   return (
     <div className={cn(
         "min-h-screen p-4 sm:p-6 lg:p-8 w-full",
-        isAdmin ? "bg-slate-50" : "bg-background"
+        isAdmin ? "bg-slate-100/50" : "bg-background"
     )}>
       
       {isAdmin ? (
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                                 Vaktplan <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                        <div className="space-y-4 flex-1">
                             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100 shadow-sm transition-transform hover:scale-[1.02] cursor-default">
                                 <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
                                     <div className="p-1.5 bg-blue-50 text-blue-500 rounded-md"><UserCheck className="h-4 w-4"/></div>
@@ -530,7 +530,7 @@ export default function DashboardPage() {
                                 Kjøretøy <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                        <div className="space-y-4 flex-1">
                             <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
                                     <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" /> 
@@ -559,7 +559,7 @@ export default function DashboardPage() {
                                 </span>
                                 <span className="text-lg font-black text-slate-900">{fleetStats.workshop}</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm sm:col-span-2">
+                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <span className="text-sm font-bold text-slate-600 flex items-center gap-4">
                                     <div className="w-3 h-3 rounded-full bg-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.4)]" /> 
                                     Parkert
@@ -604,7 +604,7 @@ export default function DashboardPage() {
                                 </div>
                                 <span className="text-sm font-black text-slate-700">Ferdig</span>
                             </div>
-                            <span className="text-3xl font-black text-blue-600">{attendanceStats.finished}</span>
+                            <span className="text-3xl font-black text-emerald-600">{attendanceStats.finished}</span>
                         </div>
 
                         <div className="flex items-center justify-between p-5 bg-white border border-amber-100 rounded-xl shadow-sm transition-transform hover:scale-[1.02]">
