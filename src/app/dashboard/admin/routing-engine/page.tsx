@@ -8,7 +8,32 @@ import { ConstraintEngine } from '@/lib/routing-engine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Truck, User, MapPin, AlertTriangle, CheckCircle2, Clock, Calendar, ArrowRight, Package, Leaf, Battery } from 'lucide-react';
+import { 
+    Loader2, 
+    Sparkles, 
+    Truck, 
+    User, 
+    MapPin, 
+    AlertTriangle, 
+    CheckCircle2, 
+    Clock, 
+    Calendar, 
+    ArrowRight, 
+    Package, 
+    Leaf, 
+    Battery, 
+    Trash2, 
+    X,
+    Building2,
+    RefreshCw
+} from 'lucide-react';
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -63,13 +88,10 @@ export default function RoutingEnginePage() {
 
         setCalculating(true);
         
-        // Use a small timeout to let the UI show the loader
         setTimeout(() => {
             try {
                 const engine = new ConstraintEngine();
                 const placesMap = new Map(places.map(p => [p.id, p]));
-                
-                // Assuming a default depot for now (can be organization mainDepot later)
                 const depotCoords = { lat: 59.9139, lng: 10.7522 }; // Oslo Default
                 
                 const results = engine.generateBasicSuggestion(
@@ -79,7 +101,7 @@ export default function RoutingEnginePage() {
                     placesMap,
                     depotCoords,
                     "08:00",
-                    'monday' // Simplified for first iteration
+                    'monday' 
                 );
 
                 setSuggestions(results);
@@ -91,6 +113,47 @@ export default function RoutingEnginePage() {
                 setCalculating(false);
             }
         }, 500);
+    };
+
+    const updateSuggestion = (idx: number, updates: Partial<RouteSuggestion>) => {
+        setSuggestions(prev => {
+            const next = [...prev];
+            next[idx] = { ...next[idx], ...updates };
+            return next;
+        });
+    };
+
+    const removeOrderFromSuggestion = (suggestionIdx: number, orderId: string) => {
+        const suggestion = suggestions[suggestionIdx];
+        const removedOrder = suggestion.orders.find(o => o.id === orderId);
+        if (!removedOrder) return;
+
+        // 1. Update the suggestion
+        const remainingOrders = suggestion.orders.filter(o => o.id !== orderId);
+        const remainingPlaces = suggestion.places.filter(p => 
+            remainingOrders.some(ro => ro.placeId === p.id)
+        );
+
+        // 2. Add the order back to the main unassigned pool
+        setOrders(prev => [...prev, removedOrder]);
+
+        if (remainingOrders.length === 0) {
+            // Remove whole suggestion if empty
+            setSuggestions(prev => prev.filter((_, i) => i !== suggestionIdx));
+        } else {
+            updateSuggestion(suggestionIdx, {
+                orders: remainingOrders,
+                places: remainingPlaces,
+                // Recalculate metrics could happen here (optional for MVP)
+            });
+        }
+    };
+
+    const handleRemoveSuggestion = (idx: number) => {
+        const suggestion = suggestions[idx];
+        // Add all orders back to the pool
+        setOrders(prev => [...prev, ...suggestion.orders]);
+        setSuggestions(prev => prev.filter((_, i) => i !== idx));
     };
 
     const handleApplyRoute = async (suggestion: RouteSuggestion) => {
@@ -132,9 +195,6 @@ export default function RoutingEnginePage() {
             });
 
             toast({ title: "Rute opprettet", description: "Ruten og manifestet er lagret i databasen." });
-            
-            // Remove the suggested orders from the local state
-            setOrders(prev => prev.filter(o => !suggestion.orders.some(so => so.id === o.id)));
             setSuggestions(prev => prev.filter(s => s !== suggestion));
 
         } catch (err) {
@@ -174,8 +234,8 @@ export default function RoutingEnginePage() {
                         />
                     </div>
                     <Button onClick={handleGenerate} disabled={calculating || orders.length === 0} size="lg" className="shadow-lg font-bold gap-2">
-                        {calculating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
-                        Generer Forslag
+                        {calculating ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+                        {suggestions.length > 0 ? 'Beregn på nytt' : 'Generer Forslag'}
                     </Button>
                 </div>
             </div>
@@ -229,27 +289,63 @@ export default function RoutingEnginePage() {
                         const isGreen = vehicle?.fuelType === 'electric' || vehicle?.fuelType === 'gas';
                         
                         return (
-                            <Card key={idx} className="overflow-hidden border-2 hover:border-primary/50 transition-all shadow-md flex flex-col">
+                            <Card key={idx} className="overflow-hidden border-2 hover:border-primary/50 transition-all shadow-md flex flex-col relative group">
+                                
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    onClick={() => handleRemoveSuggestion(idx)}
+                                    title="Slett forslag"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+
                                 <CardHeader className="bg-slate-50 border-b pb-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <div className="p-2 bg-white border rounded shadow-sm">
-                                                    <Truck className={cn("h-5 w-5", isGreen ? "text-green-600" : "text-slate-700")} />
-                                                </div>
-                                                <CardTitle className="text-xl font-bold">{vehicle?.name} ({vehicle?.registrationNumber})</CardTitle>
-                                                {isGreen && <Leaf className="h-4 w-4 text-green-500 fill-current" />}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-                                                <User className="h-3 w-3" />
-                                                Sjåfør: {driver?.name || 'Ikke tildelt'}
-                                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase text-slate-400">Kjøretøy</Label>
+                                            <Select 
+                                                value={s.vehicleId} 
+                                                onValueChange={(val) => updateSuggestion(idx, { vehicleId: val })}
+                                            >
+                                                <SelectTrigger className="bg-white font-bold h-10">
+                                                    <div className="flex items-center gap-2">
+                                                        <Truck className={cn("h-4 w-4", isGreen ? "text-green-600" : "text-slate-500")} />
+                                                        <SelectValue />
+                                                    </div>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {vehicles.map(v => (
+                                                        <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <Badge variant="outline" className="bg-white font-black px-3 py-1">
-                                            FORSLAG #{idx + 1}
-                                        </Badge>
+
+                                        <div className="space-y-3">
+                                            <Label className="text-[10px] font-black uppercase text-slate-400">Sjåfør</Label>
+                                            <Select 
+                                                value={s.driverId || 'none'} 
+                                                onValueChange={(val) => updateSuggestion(idx, { driverId: val === 'none' ? undefined : val })}
+                                            >
+                                                <SelectTrigger className="bg-white font-bold h-10">
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-slate-500" />
+                                                        <SelectValue placeholder="Velg sjåfør" />
+                                                    </div>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">Ingen sjåfør</SelectItem>
+                                                    {drivers.map(d => (
+                                                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 </CardHeader>
+                                
                                 <CardContent className="p-6 flex-1 space-y-6">
                                     {/* Route Metrics */}
                                     <div className="grid grid-cols-3 gap-4">
@@ -258,11 +354,6 @@ export default function RoutingEnginePage() {
                                                 <MapPin className="h-3 w-3" /> Distanse
                                             </div>
                                             <p className="text-lg font-black">{s.estimatedDistance.toFixed(1)} km</p>
-                                            {vehicle?.maxRange && (
-                                                <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                    <Battery className="h-2 w-2" /> Rekkevidde: {vehicle.maxRange}km
-                                                </div>
-                                            )}
                                         </div>
                                         <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                                             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase mb-1">
@@ -280,62 +371,71 @@ export default function RoutingEnginePage() {
                                         </div>
                                     </div>
 
-                                    {/* Warnings Section - The "Cyborg" Part */}
+                                    {/* Warnings Section */}
                                     {s.warnings.length > 0 && (
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                <AlertTriangle className="h-3 w-3 text-amber-500" />
-                                                Systemmerknader ({s.warnings.length})
+                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
+                                            <p className="text-[10px] font-black text-amber-700 uppercase flex items-center gap-1.5">
+                                                <AlertTriangle className="h-3 w-3" /> Systemmerknader
                                             </p>
-                                            <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 space-y-2">
-                                                {s.warnings.map((w, wIdx) => {
-                                                    const isEnvironmental = w.includes("Environmental") || w.includes("ENVIRONMENTAL");
-                                                    return (
-                                                        <div key={wIdx} className={cn(
-                                                            "text-xs flex gap-2 font-medium",
-                                                            isEnvironmental ? "text-emerald-800" : "text-amber-800"
-                                                        )}>
-                                                            {isEnvironmental ? <Leaf className="h-3 w-3 mt-0.5 shrink-0" /> : <div className="h-1 w-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />}
-                                                            {w}
-                                                        </div>
-                                                    );
-                                                })}
+                                            <div className="space-y-1">
+                                                {s.warnings.map((w, wIdx) => (
+                                                    <div key={wIdx} className="text-[10px] flex gap-2 font-bold text-amber-800">
+                                                        <div className="h-1 w-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                                        {w}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Stops Timeline */}
-                                    <div className="space-y-3">
-                                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Rekkefølge</p>
-                                         <div className="space-y-2">
-                                             {s.places.map((p, pIdx) => (
-                                                 <div key={pIdx} className="flex items-center gap-3">
-                                                     <div className="flex flex-col items-center shrink-0">
-                                                         <div className="w-6 h-6 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center">
+                                    {/* Stops Timeline with Removal */}
+                                    <div className="space-y-4">
+                                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Rekkefølge og justering</p>
+                                         <div className="space-y-3">
+                                             {s.places.map((p, pIdx) => {
+                                                 const placeOrders = s.orders.filter(o => o.placeId === p.id);
+                                                 return (
+                                                     <div key={pIdx} className="flex items-start gap-3 p-3 rounded-xl border bg-white hover:bg-slate-50 group/item transition-colors">
+                                                         <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
                                                              {pIdx + 1}
                                                          </div>
-                                                         {pIdx < s.places.length - 1 && <div className="w-0.5 h-4 bg-slate-200" />}
-                                                     </div>
-                                                     <div className="flex-1 min-w-0">
-                                                         <div className="flex items-center gap-2">
-                                                            <p className="text-sm font-bold truncate text-slate-800">{p.name}</p>
-                                                            {p.isZeroEmissionZone && <Leaf className="h-3 w-3 text-green-600" />}
-                                                            {p.isCityCenter && <Building2 className="h-3 w-3 text-blue-600" />}
+                                                         <div className="flex-1 min-w-0">
+                                                             <div className="flex items-center gap-2">
+                                                                <p className="text-sm font-bold truncate text-slate-800">{p.name}</p>
+                                                                {p.isZeroEmissionZone && <Leaf className="h-3 w-3 text-green-600" />}
+                                                                {p.isCityCenter && <Building2 className="h-3 w-3 text-blue-600" />}
+                                                             </div>
+                                                             <p className="text-[10px] text-slate-500 truncate mb-2">{p.address}</p>
+                                                             
+                                                             <div className="flex flex-wrap gap-1.5">
+                                                                {placeOrders.map(o => (
+                                                                    <Badge key={o.id} variant="secondary" className="h-6 text-[9px] font-bold pr-1">
+                                                                        {o.barcode}
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="icon" 
+                                                                            className="h-4 w-4 ml-1 hover:text-red-500"
+                                                                            onClick={() => removeOrderFromSuggestion(idx, o.id)}
+                                                                        >
+                                                                            <X className="h-2 w-2" />
+                                                                        </Button>
+                                                                    </Badge>
+                                                                ))}
+                                                             </div>
                                                          </div>
-                                                         <p className="text-[10px] text-slate-500 truncate">{p.address}</p>
                                                      </div>
-                                                 </div>
-                                             ))}
+                                                 );
+                                             })}
                                          </div>
                                     </div>
 
                                     <Button 
                                         onClick={() => handleApplyRoute(s)} 
-                                        className="w-full h-12 text-lg font-bold gap-2"
-                                        variant="secondary"
+                                        className="w-full h-12 text-lg font-bold gap-2 shadow-lg shadow-indigo-100"
+                                        variant="default"
                                     >
                                         <CheckCircle2 className="h-5 w-5" />
-                                        Godkjenn & Opprett Rute
+                                        Opprett Rute
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -355,4 +455,4 @@ export default function RoutingEnginePage() {
     );
 }
 
-import { Building2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
