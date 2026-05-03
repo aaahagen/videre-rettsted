@@ -5,20 +5,31 @@ This document outlines the logic, prioritization, and constraints used by the VI
 ## Core Philosophy: "Cyborg Planning"
 The engine is designed as an **opt-in enhancement**, not a replacement for human expertise. It follows a "Soft Warning" approach where it highlights potential issues (overtime, tight delivery windows, environmental zone costs) rather than blocking the planner, allowing for manual overrides based on real-world knowledge.
 
-## 1. Prioritization Logic
+## 1. Prioritization & Distribution Logic
 
 ### Personnel Prioritization
 When assigning drivers to generated routes, the engine uses the following priority order:
 1.  **Internal Employees:** Users with `employmentType: 'internal'` (or no type specified) are prioritized.
 2.  **External Contractors:** Users with `employmentType: 'external'` are assigned only after all internal drivers have been utilized.
 
+### Assignment Strategies
+Administrators can choose between two primary clustering strategies:
+*   **Fill First (Efficiency):** The engine fills one vehicle to its maximum physical or temporal capacity before starting the next route. This minimizes the number of active drivers needed.
+*   **Balanced (Workload Fairness):** The engine iterates through all available drivers, assigning one cluster of orders to each driver in rotation. This ensures a fair distribution of work across the team.
+
 ### Geographic Clustering
 The engine uses a **Greedy Nearest Neighbor** heuristic:
 1.  Starts at the Organization's main depot.
 2.  Identifies the closest unassigned order that fits the current vehicle's capabilities.
-3.  Iteratively adds the next closest stop until the vehicle is full or no more compatible orders exist.
+3.  Iteratively adds the next closest stop until the strategy limit (capacity or rotation) is reached.
 
-## 2. Constraint Validation
+## 2. Supportive & Internal Tasks
+Beyond customer deliveries, the system supports **Internal Tasks** (e.g., Workshop trips, equipment relocation).
+*   Planners can manually create these tasks from the Routing Dashboard.
+*   Internal tasks are registered as active routes assigned to a specific driver and vehicle.
+*   This ensures that the driver's time is accounted for in workforce statistics and prevents the engine from over-assigning delivery orders to someone already performing a support task.
+
+## 3. Constraint Validation
 
 The engine validates every potential stop against five categories of constraints:
 
@@ -43,13 +54,6 @@ The engine validates every potential stop against five categories of constraints
 ### E. Environmental Constraints (Informational)
 *   **Zero-Emission Zones:** Prevents diesel vehicles from being assigned to "Nullutslippssoner".
 *   **City Centers:** Flags extra toll costs when using diesel vehicles in designated center zones.
-
-## 3. Calculation Methodology
-
-### Distance & Time
-*   **Geographic Distance:** Uses the Haversine formula for initial clustering.
-*   **Estimated Duration:** Calculated using a base average speed (default 40 km/h) + service duration per stop (stored in `Place.estimatedDeliveryTime` or defaulting to 15 mins).
-*   **Range Monitoring:** For electric/gas vehicles, the engine ensures the total estimated route distance does not exceed the vehicle's `maxRange`.
 
 ## 4. Manual Control Guarantee
 Regardless of the engine's suggestions, the system architecture guarantees:

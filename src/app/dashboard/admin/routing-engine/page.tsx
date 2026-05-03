@@ -25,7 +25,10 @@ import {
     Trash2, 
     X,
     Building2,
-    RefreshCw
+    RefreshCw,
+    Scale,
+    Wrench,
+    PlusCircle
 } from 'lucide-react';
 import { 
     Select, 
@@ -34,6 +37,17 @@ import {
     SelectTrigger, 
     SelectValue 
 } from '@/components/ui/select';
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogTrigger,
+    DialogFooter,
+    DialogDescription
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -53,6 +67,16 @@ export default function RoutingEnginePage() {
     
     const [suggestions, setSuggestions] = useState<RouteSuggestion[]>([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [strategy, setStrategy] = useState<'fill_first' | 'balanced'>('fill_first');
+
+    // Internal Task Dialog State
+    const [isInternalTaskOpen, setIsInternalTaskOpen] = useState(false);
+    const [internalTaskData, setInternalTaskData] = useState({
+        name: 'Verksted / Service',
+        vehicleId: '',
+        driverId: '',
+        notes: ''
+    });
 
     useEffect(() => {
         async function loadData() {
@@ -65,9 +89,8 @@ export default function RoutingEnginePage() {
                     firebaseDB.getPlaces(dbUser.orgId)
                 ]);
 
-                // Only unassigned orders
                 setOrders(allOrders.filter(o => !o.routeId && o.status === 'pending'));
-                setVehicles(allVehicles.filter(v => v.currentStatuses.includes('ready')));
+                setVehicles(allVehicles.filter(v => v.currentStatuses.includes('ready') || v.currentStatuses.includes('parked')));
                 setDrivers(allUsers.filter(u => (u.role === 'driver' || u.role === 'contractor') && u.status !== 'paused') as DriverProfile[]);
                 setPlaces(allPlaces);
             } catch (err) {
@@ -90,7 +113,7 @@ export default function RoutingEnginePage() {
         
         setTimeout(() => {
             try {
-                const engine = new ConstraintEngine();
+                const engine = new ConstraintEngine({ assignmentStrategy: strategy });
                 const placesMap = new Map(places.map(p => [p.id, p]));
                 const depotCoords = { lat: 59.9139, lng: 10.7522 }; // Oslo Default
                 
@@ -105,7 +128,10 @@ export default function RoutingEnginePage() {
                 );
 
                 setSuggestions(results);
-                toast({ title: "Forslag generert", description: `Planla ${results.reduce((sum, s) => sum + s.orders.length, 0)} ordre på ${results.length} ruter.` });
+                toast({ 
+                    title: strategy === 'balanced' ? "Jevn fordeling generert" : "Effektive ruter generert", 
+                    description: `Planla ${results.reduce((sum, s) => sum + s.orders.length, 0)} ordre på ${results.length} ruter.` 
+                });
             } catch (err) {
                 console.error(err);
                 toast({ title: "Feil ved beregning", description: "Noe gikk galt under ruteoptimaliseringen.", variant: "destructive" });
@@ -113,6 +139,32 @@ export default function RoutingEnginePage() {
                 setCalculating(false);
             }
         }, 500);
+    };
+
+    const handleCreateInternalTask = async () => {
+        if (!dbUser?.orgId || !internalTaskData.vehicleId || !internalTaskData.driverId) return;
+
+        try {
+            setCalculating(true);
+            await firebaseDB.createRoute({
+                name: `INTERN: ${internalTaskData.name}`,
+                orgId: dbUser.orgId,
+                places: [],
+                vehicleId: internalTaskData.vehicleId,
+                driverId: internalTaskData.driverId,
+                date: selectedDate,
+                status: 'active',
+                notes: internalTaskData.notes
+            });
+
+            toast({ title: "Oppgave opprettet", description: "Den interne oppgaven er lagret som en aktiv rute." });
+            setIsInternalTaskOpen(false);
+        } catch (err) {
+            console.error(err);
+            toast({ title: "Kunne ikke lagre", variant: "destructive" });
+        } finally {
+            setCalculating(false);
+        }
     };
 
     const updateSuggestion = (idx: number, updates: Partial<RouteSuggestion>) => {
@@ -128,30 +180,25 @@ export default function RoutingEnginePage() {
         const removedOrder = suggestion.orders.find(o => o.id === orderId);
         if (!removedOrder) return;
 
-        // 1. Update the suggestion
         const remainingOrders = suggestion.orders.filter(o => o.id !== orderId);
         const remainingPlaces = suggestion.places.filter(p => 
             remainingOrders.some(ro => ro.placeId === p.id)
         );
 
-        // 2. Add the order back to the main unassigned pool
         setOrders(prev => [...prev, removedOrder]);
 
         if (remainingOrders.length === 0) {
-            // Remove whole suggestion if empty
             setSuggestions(prev => prev.filter((_, i) => i !== suggestionIdx));
         } else {
             updateSuggestion(suggestionIdx, {
                 orders: remainingOrders,
                 places: remainingPlaces,
-                // Recalculate metrics could happen here (optional for MVP)
             });
         }
     };
 
     const handleRemoveSuggestion = (idx: number) => {
         const suggestion = suggestions[idx];
-        // Add all orders back to the pool
         setOrders(prev => [...prev, ...suggestion.orders]);
         setSuggestions(prev => prev.filter((_, i) => i !== idx));
     };
@@ -163,7 +210,6 @@ export default function RoutingEnginePage() {
             setCalculating(true);
             const routeName = `Auto: ${suggestion.places[0]?.name || 'Rute'} - ${new Date().toLocaleDateString('nb-NO')}`;
             
-            // 1. Create the Route
             const newRoute = await firebaseDB.createRoute({
                 name: routeName,
                 orgId: dbUser.orgId,
@@ -174,12 +220,10 @@ export default function RoutingEnginePage() {
                 status: 'active'
             });
 
-            // 2. Update all orders with the routeId
             await Promise.all(suggestion.orders.map(order => 
                 firebaseDB.updateOrder(dbUser.orgId!, order.id, { routeId: newRoute.id })
             ));
 
-            // 3. Create Manifest
             await firebaseDB.createManifest({
                 orgId: dbUser.orgId,
                 routeId: newRoute.id,
@@ -221,20 +265,90 @@ export default function RoutingEnginePage() {
                         <Sparkles className="h-8 w-8 text-amber-500" />
                         Smart Ruteplanlegger
                     </h1>
-                    <p className="text-slate-500 font-medium">Automatisk clustering av ordre basert på kapasitet, tid og geografi.</p>
+                    <p className="text-slate-500 font-medium">Planlegg logistikk og fordel arbeidsmengden effektivt.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="bg-white border rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Strategy Switcher */}
+                    <div className="bg-white border rounded-lg p-1 flex items-center gap-1 shadow-sm">
+                        <Button 
+                            variant={strategy === 'fill_first' ? 'default' : 'ghost'} 
+                            size="sm" 
+                            className="h-8 text-[10px] font-black uppercase"
+                            onClick={() => setStrategy('fill_first')}
+                        >
+                            <Package className="h-3 w-3 mr-1" /> Fyll opp
+                        </Button>
+                        <Button 
+                            variant={strategy === 'balanced' ? 'default' : 'ghost'} 
+                            size="sm" 
+                            className="h-8 text-[10px] font-black uppercase"
+                            onClick={() => setStrategy('balanced')}
+                        >
+                            <Scale className="h-3 w-3 mr-1" /> Fordel jevnt
+                        </Button>
+                    </div>
+
+                    <div className="bg-white border rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
                         <Calendar className="h-4 w-4 text-primary" />
                         <input 
                             type="date" 
                             value={selectedDate} 
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="bg-transparent font-bold text-sm outline-none"
+                            className="bg-transparent font-bold text-xs outline-none"
                         />
                     </div>
+
+                    <Dialog open={isInternalTaskOpen} onOpenChange={setIsInternalTaskOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="font-bold border-indigo-200 text-indigo-700">
+                                <Wrench className="h-4 w-4 mr-2" /> Intern Oppgave
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Ny Intern Oppgave</DialogTitle>
+                                <DialogDescription>Lag en rute for støtteoppgaver som verksted, henting eller flytting av utstyr.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <Label>Type Oppgave</Label>
+                                    <Input value={internalTaskData.name} onChange={e => setInternalTaskData({...internalTaskData, name: e.target.value})} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Kjøretøy</Label>
+                                        <Select onValueChange={v => setInternalTaskData({...internalTaskData, vehicleId: v})}>
+                                            <SelectTrigger><SelectValue placeholder="Velg..." /></SelectTrigger>
+                                            <SelectContent>
+                                                {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Sjåfør</Label>
+                                        <Select onValueChange={v => setInternalTaskData({...internalTaskData, driverId: v})}>
+                                            <SelectTrigger><SelectValue placeholder="Velg..." /></SelectTrigger>
+                                            <SelectContent>
+                                                {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Notater / Instruksjoner</Label>
+                                    <Input placeholder="F.eks. Levere bil hos Volvo Furuset kl 09:00" value={internalTaskData.notes} onChange={e => setInternalTaskData({...internalTaskData, notes: e.target.value})} />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsInternalTaskOpen(false)}>Avbryt</Button>
+                                <Button onClick={handleCreateInternalTask} disabled={!internalTaskData.driverId || !internalTaskData.vehicleId}>Opprett Oppgave</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
                     <Button onClick={handleGenerate} disabled={calculating || orders.length === 0} size="lg" className="shadow-lg font-bold gap-2">
-                        {calculating ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+                        {calculating ? <Loader2 className="h-5 w-5 animate-spin" /> : <PlusCircle className="h-5 w-5" />}
                         {suggestions.length > 0 ? 'Beregn på nytt' : 'Generer Forslag'}
                     </Button>
                 </div>
@@ -454,5 +568,3 @@ export default function RoutingEnginePage() {
         </div>
     );
 }
-
-import { Label } from '@/components/ui/label';

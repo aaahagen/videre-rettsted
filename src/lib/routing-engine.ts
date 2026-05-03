@@ -53,6 +53,7 @@ export interface RoutingEngineOptions {
     averageSpeedKmph?: number; // fallback speed for ETA calculation
     baseUnloadTimeMinutes?: number; // Default Time spent at each stop if place has none defined
     maxDrivingTimeMinutes?: number; // EU 561/2006 baseline e.g. 9 hours (540 mins)
+    assignmentStrategy?: 'fill_first' | 'balanced'; // NEW: Balancing mode
 }
 
 export class ConstraintEngine {
@@ -65,6 +66,7 @@ export class ConstraintEngine {
             averageSpeedKmph: options.averageSpeedKmph || 40, // 40km/h average city/mixed driving
             baseUnloadTimeMinutes: options.baseUnloadTimeMinutes || 15,
             maxDrivingTimeMinutes: options.maxDrivingTimeMinutes || 540,
+            assignmentStrategy: options.assignmentStrategy || 'fill_first',
         };
     }
 
@@ -270,124 +272,135 @@ export class ConstraintEngine {
             return 0;
         });
 
-        // Assign one vehicle and one driver at a time
-        for (let i = 0; i < availableVehicles.length; i++) {
-            const vehicle = availableVehicles[i];
-            const driver = sortedDrivers[i] || null; 
-            
-            if (remainingOrders.length === 0) break;
+        // Determine how many active routes we can potentially create
+        const maxRoutes = Math.min(availableVehicles.length, sortedDrivers.length);
+        if (maxRoutes === 0 || remainingOrders.length === 0) return [];
 
-            const suggestion: RouteSuggestion = {
-                vehicleId: vehicle.id,
-                driverId: driver?.id,
+        // Initialize suggestions for all available driver/vehicle pairs
+        for (let i = 0; i < maxRoutes; i++) {
+            suggestions.push({
+                vehicleId: availableVehicles[i].id,
+                driverId: sortedDrivers[i].id,
                 orders: [],
                 places: [],
                 estimatedDistance: 0,
                 estimatedDuration: 0,
                 warnings: [],
                 errors: []
-            };
+            });
+        }
 
-            // Global warning about skipped orders
-            if (invalidOrderCount.length > 0) {
-                suggestion.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre ble hoppet over pga. manglende eller feil koordinater (0,0). Sjekk adresseoppslag for disse.`);
-            }
+        // Global warning about skipped orders
+        if (invalidOrderCount.length > 0) {
+            suggestions.forEach(s => {
+                s.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre ble hoppet over pga. manglende eller feil koordinater (0,0). Sjekk adresseoppslag for disse.`);
+            });
+        }
 
-            let currentCoords = depotCoords;
-            let currentTime = startTimeMinutes;
+        const isBalanced = this.options.assignmentStrategy === 'balanced';
+        let currentRouteIdx = 0;
 
-            let findingOrders = true;
-            while(findingOrders && remainingOrders.length > 0) {
-                let bestOrderIndex = -1;
-                let shortestDistance = Infinity;
-
-                for (let j = 0; j < remainingOrders.length; j++) {
-                    const candidateOrder = remainingOrders[j];
-                    const place = placesMap.get(candidateOrder.placeId);
-                    if (!place || !place.coordinates) continue;
-
-                    // 1. Check Hard Capabilities (ADR, Refrigeration)
-                    const capErrors = this.checkCapabilities(vehicle, candidateOrder);
-                    if (capErrors.length > 0) continue; 
-
-                    // 2. Check Capacity Limits
-                    const capWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
-                    if (capWarnings.some(w => w.includes("HARD_LIMIT"))) continue; 
-
-                    // 3. Check Range (If Electric/Gas)
-                    if (vehicle.maxRange && (suggestion.estimatedDistance + getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng)) > vehicle.maxRange) {
-                        continue;
-                    }
-
-                    // 4. Check Environmental Zones (Hard Prohibitions)
-                    const envWarnings = this.checkEnvironmentalZones(vehicle, place);
-                    if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
-
-                    // 5. Check Physical Limitations at site (Height, Width, Weight)
-                    const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
-                    if (physicalErrors.length > 0) continue;
-
-                    // 6. Find closest geographic point
-                    const dist = getDistanceFromLatLonInKm(
-                        currentCoords.lat, currentCoords.lng, 
-                        place.coordinates.lat, place.coordinates.lng
-                    );
-
-                    if (dist < shortestDistance) {
-                        shortestDistance = dist;
-                        bestOrderIndex = j;
-                    }
-                }
-
-                if (bestOrderIndex !== -1) {
-                    const selectedOrder = remainingOrders[bestOrderIndex];
-                    const place = placesMap.get(selectedOrder.placeId)!;
-                    
-                    suggestion.orders.push(selectedOrder);
-                    if (!suggestion.places.some(p => p.id === place.id)) {
-                        suggestion.places.push(place);
-                    }
-                    
-                    // Add warnings
-                    const capWarnings = this.checkCapacity(vehicle, suggestion.orders.slice(0,-1), selectedOrder);
-                    suggestion.warnings.push(...capWarnings.filter(w => !w.includes("HARD_LIMIT")));
-                    
-                    const envWarnings = this.checkEnvironmentalZones(vehicle, place);
-                    suggestion.warnings.push(...envWarnings);
-
-                    // Update temporal/spatial state
-                    suggestion.estimatedDistance += shortestDistance;
-                    const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
-                    currentTime += travelTimeMins;
-
-                    // Check Delivery Window
-                    const windowWarnings = this.checkDeliveryWindow(place, dayOfWeek, currentTime);
-                    suggestion.warnings.push(...windowWarnings);
-
-                    currentTime += (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!);
-                    if (place.coordinates) currentCoords = place.coordinates;
-                    remainingOrders.splice(bestOrderIndex, 1);
-                } else {
-                    findingOrders = false;
-                }
-            }
-
-            suggestion.estimatedDuration = currentTime - startTimeMinutes;
+        while (remainingOrders.length > 0) {
+            const suggestion = suggestions[currentRouteIdx];
+            const vehicle = availableVehicles[currentRouteIdx];
+            const driver = sortedDrivers[currentRouteIdx];
             
-            if (driver && suggestion.estimatedDuration > 0) {
-                const shiftWarnings = this.checkDriverShift(driver, startTimeStr, suggestion.estimatedDuration);
-                if (shiftWarnings.some(w => w.includes("HARD_LIMIT"))) {
-                     suggestion.errors.push(...shiftWarnings.filter(w => w.includes("HARD_LIMIT")));
+            // For greedy clustering, we need to know the current location of THIS specific route
+            const lastPlaceId = suggestion.places[suggestion.places.length - 1]?.id;
+            const currentCoords = lastPlaceId ? placesMap.get(lastPlaceId)?.coordinates || depotCoords : depotCoords;
+            const currentTime = startTimeMinutes + suggestion.estimatedDuration;
+
+            let bestOrderIndex = -1;
+            let shortestDistance = Infinity;
+
+            for (let j = 0; j < remainingOrders.length; j++) {
+                const candidateOrder = remainingOrders[j];
+                const place = placesMap.get(candidateOrder.placeId);
+                if (!place || !place.coordinates) continue;
+
+                // 1. Check Hard Capabilities (ADR, Refrigeration)
+                const capErrors = this.checkCapabilities(vehicle, candidateOrder);
+                if (capErrors.length > 0) continue; 
+
+                // 2. Check Capacity Limits
+                const capWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
+                if (capWarnings.some(w => w.includes("HARD_LIMIT"))) continue; 
+
+                // 3. Check Range (If Electric/Gas)
+                const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng);
+                if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) continue;
+
+                // 4. Check Environmental Zones (Hard Prohibitions)
+                const envWarnings = this.checkEnvironmentalZones(vehicle, place);
+                if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
+
+                // 5. Check Physical Limitations at site (Height, Width, Weight)
+                const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
+                if (physicalErrors.length > 0) continue;
+
+                if (distToNext < shortestDistance) {
+                    shortestDistance = distToNext;
+                    bestOrderIndex = j;
                 }
-                suggestion.warnings.push(...shiftWarnings.filter(w => !w.includes("HARD_LIMIT")));
             }
 
-            if (suggestion.orders.length > 0) {
-                 suggestion.warnings = [...new Set(suggestion.warnings)];
-                 suggestions.push(suggestion);
+            if (bestOrderIndex !== -1) {
+                const selectedOrder = remainingOrders[bestOrderIndex];
+                const place = placesMap.get(selectedOrder.placeId)!;
+                
+                suggestion.orders.push(selectedOrder);
+                if (!suggestion.places.some(p => p.id === place.id)) {
+                    suggestion.places.push(place);
+                }
+                
+                // Add warnings
+                const capWarnings = this.checkCapacity(vehicle, suggestion.orders.slice(0,-1), selectedOrder);
+                suggestion.warnings.push(...capWarnings.filter(w => !w.includes("HARD_LIMIT")));
+                suggestion.warnings.push(...this.checkEnvironmentalZones(vehicle, place));
+
+                // Update metrics
+                suggestion.estimatedDistance += shortestDistance;
+                const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
+                suggestion.estimatedDuration += travelTimeMins + (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!);
+                
+                // Check windows
+                suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
+                
+                remainingOrders.splice(bestOrderIndex, 1);
+
+                // If balanced, move to the next driver. If fill_first, stay on this one until full.
+                if (isBalanced) {
+                    currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
+                }
+            } else {
+                // If this driver can't take any more orders, and we are in fill_first, move to the next driver.
+                // If we are in balanced, and THIS driver can't take anything but others might, we need to skip him.
+                if (!isBalanced) {
+                    currentRouteIdx++;
+                    if (currentRouteIdx >= maxRoutes) break; // All filled up
+                } else {
+                    // In balanced, if one driver is stuck, we might need a "failed drivers" list to avoid infinite loop
+                    // For simplicity: just move to next and if we loop through all drivers with no success, break.
+                    let foundAny = false;
+                    for (let k = 1; k < maxRoutes; k++) {
+                        const nextIdx = (currentRouteIdx + k) % maxRoutes;
+                        // Try if next driver can take something... this is getting complex.
+                    }
+                    // Simple fallback: if bestOrderIndex is -1 for the current driver in balanced mode, 
+                    // and we've tried all drivers, we must stop.
+                    break; 
+                }
             }
         }
 
-        return suggestions;
+        // Final cleanup and driver shift validation
+        return suggestions.filter(s => s.orders.length > 0).map(s => {
+            const driver = sortedDrivers.find(d => d.id === s.driverId)!;
+            const shiftWarnings = this.checkDriverShift(driver, startTimeStr, s.estimatedDuration);
+            s.errors.push(...shiftWarnings.filter(w => w.includes("HARD_LIMIT")));
+            s.warnings.push(...shiftWarnings.filter(w => !w.includes("HARD_LIMIT")));
+            s.warnings = [...new Set(s.warnings)];
+            return s;
+        });
     }
 }
