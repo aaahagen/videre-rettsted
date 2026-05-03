@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -143,10 +143,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       isZeroEmissionZone: place?.isZeroEmissionZone || false,
       isCityCenter: place?.isCityCenter || false,
-      maxVehicleHeight: place?.maxVehicleHeight || undefined,
-      maxVehicleWidth: place?.maxVehicleWidth || undefined,
-      maxVehicleLength: place?.maxVehicleLength || undefined,
-      maxVehicleWeight: place?.maxVehicleWeight || undefined,
+      maxVehicleHeight: place?.maxVehicleHeight,
+      maxVehicleWidth: place?.maxVehicleWidth,
+      maxVehicleLength: place?.maxVehicleLength,
+      maxVehicleWeight: place?.maxVehicleWeight,
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -629,7 +629,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 onClick={handleGeocode}
                                 disabled={isGeocoding}
                             >
-                                {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                                {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4 mr-2" />}
                                 Hent koordinater fra adresse
                             </Button>
                         </div>
@@ -991,7 +991,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number" 
                                 step="0.01" 
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    field.onChange(val === '' ? undefined : parseFloat(val));
+                                }} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1010,7 +1013,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number" 
                                 step="0.01" 
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    field.onChange(val === '' ? undefined : parseFloat(val));
+                                }} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1029,7 +1035,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 type="number" 
                                 step="0.01" 
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    field.onChange(val === '' ? undefined : parseFloat(val));
+                                }} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
@@ -1050,7 +1059,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <Input 
                                 type="number" 
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    field.onChange(val === '' ? undefined : parseInt(val, 10));
+                                }} 
                                 value={field.value ?? ''} 
                             />
                         </FormControl>
