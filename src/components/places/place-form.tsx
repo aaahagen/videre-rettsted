@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2 } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -607,7 +607,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         )}
                     </div>
                     <FormControl>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
                                 <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
                                 <Button
@@ -624,7 +624,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <Button 
                                 type="button" 
                                 variant="outline" 
-                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 min-w-[80px]"
+                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 sm:min-w-[100px] w-full sm:w-auto"
                                 onClick={handleGeocode}
                                 disabled={isGeocoding}
                             >
@@ -642,20 +642,20 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 />
 
                 {/* ENVIRONMENTAL ZONES */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                     <FormField
                         control={form.control}
                         name="isZeroEmissionZone"
                         render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-green-50/30 border-green-100">
-                                <div className="space-y-0.5">
+                            <FormItem className="flex items-center justify-between p-3 border rounded-xl bg-green-50/30 border-green-100 min-h-[70px]">
+                                <div className="space-y-0.5 min-w-0 flex-1 pr-2">
                                     <FormLabel className="text-sm font-bold flex items-center gap-2">
-                                        <Leaf className="h-4 w-4 text-green-600" />
-                                        Nullutslippssone
+                                        <Leaf className="h-4 w-4 text-green-600 shrink-0" />
+                                        <span>Nullutslippssone</span>
                                     </FormLabel>
                                     <FormDescription className="text-[10px]">Krever El/Gass kjøretøy.</FormDescription>
                                 </div>
-                                <FormControl>
+                                <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
                                 </FormControl>
                             </FormItem>
@@ -665,15 +665,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         control={form.control}
                         name="isCityCenter"
                         render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-blue-50/30 border-blue-100">
-                                <div className="space-y-0.5">
+                            <FormItem className="flex items-center justify-between p-3 border rounded-xl bg-blue-50/30 border-blue-100 min-h-[70px]">
+                                <div className="space-y-0.5 min-w-0 flex-1 pr-2">
                                     <FormLabel className="text-sm font-bold flex items-center gap-2">
-                                        <Building2 className="h-4 w-4 text-blue-600" />
-                                        Sentrumskjerne
+                                        <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+                                        <span>Sentrumskjerne</span>
                                     </FormLabel>
                                     <FormDescription className="text-[10px]">Høye bomavgifter for Diesel.</FormDescription>
                                 </div>
-                                <FormControl>
+                                <FormControl className="shrink-0">
                                     <Switch checked={field.value} onCheckedChange={field.onChange} />
                                 </FormControl>
                             </FormItem>
@@ -1301,5 +1301,3 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     </>
   );
 }
-
-import { Tag } from 'lucide-react';
