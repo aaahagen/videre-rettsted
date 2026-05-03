@@ -145,11 +145,12 @@ export class ConstraintEngine {
         if (place.maxVehicleLength && dim?.length && dim.length > place.maxVehicleLength) {
             errors.push(`PHYSICAL_ERROR: Vehicle is too long (${dim.length}m) for ${place.name} (Max: ${place.maxVehicleLength}m).`);
         }
-        // Assuming maxVehicleWeight refers to the vehicle's actual total weight (empty + load)
-        // For now comparing against max potential weight (tare + capacity) for safety
-        const estimatedTotalWeight = (vehicle.capacity.weight || 0) + 15000; // Simplified tare weight guess for now
-        if (place.maxVehicleWeight && estimatedTotalWeight > place.maxVehicleWeight) {
-             errors.push(`PHYSICAL_ERROR: Vehicle potential weight (${estimatedTotalWeight}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
+        
+        if (place.maxVehicleWeight && vehicle.capacity?.weight) {
+            const estimatedTotalWeight = (vehicle.capacity.weight || 0) + 15000; 
+            if (estimatedTotalWeight > place.maxVehicleWeight) {
+                 errors.push(`PHYSICAL_ERROR: Vehicle potential weight (${estimatedTotalWeight}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
+            }
         }
 
         return errors;
@@ -246,6 +247,8 @@ export class ConstraintEngine {
         dayOfWeek: string = 'monday'
     ): RouteSuggestion[] {
         
+        console.log(`Starting generation with ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles, ${availableDrivers.length} drivers.`);
+
         // 1. Initial Data Validation: Skip orders with invalid coordinates
         const validOrders: Order[] = [];
         const invalidOrderCount: string[] = [];
@@ -255,6 +258,7 @@ export class ConstraintEngine {
             if (place && isValidCoordinate(place.coordinates)) {
                 validOrders.push(order);
             } else {
+                console.log(`Skipping order ${order.barcode} - Invalid coordinates for place ${place?.name}`);
                 invalidOrderCount.push(order.barcode);
             }
         }
@@ -263,7 +267,6 @@ export class ConstraintEngine {
         const suggestions: RouteSuggestion[] = [];
         const startTimeMinutes = timeToMinutes(startTimeStr);
 
-        // Sort drivers to prioritize regular employees (internal) over external contractors
         const sortedDrivers = [...availableDrivers].sort((a, b) => {
             const typeA = a.employmentType || 'internal';
             const typeB = b.employmentType || 'internal';
@@ -273,7 +276,14 @@ export class ConstraintEngine {
         });
 
         const maxRoutes = Math.min(availableVehicles.length, sortedDrivers.length);
-        if (maxRoutes === 0 || remainingOrders.length === 0) return [];
+        if (maxRoutes === 0) {
+            console.log("Abort: No vehicles or drivers available.");
+            return [];
+        }
+        if (remainingOrders.length === 0) {
+            console.log("Abort: No valid orders with coordinates found.");
+            return [];
+        }
 
         for (let i = 0; i < maxRoutes; i++) {
             suggestions.push({
@@ -294,7 +304,6 @@ export class ConstraintEngine {
 
         while (remainingOrders.length > 0 && stalledRoutes.size < maxRoutes) {
             
-            // In balanced mode, skip drivers that can't take any more orders
             if (isBalanced && stalledRoutes.has(currentRouteIdx)) {
                 currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 continue;
@@ -315,14 +324,31 @@ export class ConstraintEngine {
                 const place = placesMap.get(candidateOrder.placeId);
                 if (!place || !place.coordinates) continue;
 
-                // Constraint Checks
-                if (this.checkCapabilities(vehicle, candidateOrder).length > 0) continue; 
-                if (this.checkCapacity(vehicle, suggestion.orders, candidateOrder).some(w => w.includes("HARD_LIMIT"))) continue; 
+                // Constraint Checks with Debugging
+                const capErrors = this.checkCapabilities(vehicle, candidateOrder);
+                if (capErrors.length > 0) {
+                    continue; 
+                }
+
+                const capacityWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
+                if (capacityWarnings.some(w => w.includes("HARD_LIMIT"))) {
+                    continue; 
+                }
 
                 const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng);
-                if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) continue;
-                if (this.checkEnvironmentalZones(vehicle, place).some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
-                if (this.checkPhysicalConstraints(vehicle, place).length > 0) continue;
+                if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) {
+                    continue;
+                }
+
+                const envWarnings = this.checkEnvironmentalZones(vehicle, place);
+                if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) {
+                    continue;
+                }
+
+                const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
+                if (physicalErrors.length > 0) {
+                    continue;
+                }
 
                 if (distToNext < shortestDistance) {
                     shortestDistance = distToNext;
@@ -354,7 +380,6 @@ export class ConstraintEngine {
                     currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 }
             } else {
-                // This route is stalled
                 stalledRoutes.add(currentRouteIdx);
                 if (!isBalanced) {
                     currentRouteIdx++;
@@ -364,6 +389,8 @@ export class ConstraintEngine {
                 }
             }
         }
+
+        console.log(`Generation finished. Remaining orders: ${remainingOrders.length}. Suggestions created: ${suggestions.filter(s => s.orders.length > 0).length}`);
 
         return suggestions.filter(s => s.orders.length > 0).map(s => {
             const driver = sortedDrivers.find(d => d.id === s.driverId)!;
