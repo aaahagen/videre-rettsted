@@ -66,10 +66,10 @@ const placeSchema = z.object({
   estimatedDeliveryTime: z.number().optional(),
   isZeroEmissionZone: z.boolean().default(false),
   isCityCenter: z.boolean().default(false),
-  maxVehicleHeight: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
-  maxVehicleWidth: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
-  maxVehicleLength: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
-  maxVehicleWeight: z.union([z.number(), z.string()]).optional().transform(val => val === '' ? undefined : Number(val)),
+  maxVehicleHeight: z.coerce.number().optional().or(z.literal('')),
+  maxVehicleWidth: z.coerce.number().optional().or(z.literal('')),
+  maxVehicleLength: z.coerce.number().optional().or(z.literal('')),
+  maxVehicleWeight: z.coerce.number().optional().or(z.literal('')),
   weeklySchedule: z.object({
     monday: openingHoursSchema,
     tuesday: openingHoursSchema,
@@ -143,10 +143,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       estimatedDeliveryTime: place?.estimatedDeliveryTime || 0,
       isZeroEmissionZone: place?.isZeroEmissionZone || false,
       isCityCenter: place?.isCityCenter || false,
-      maxVehicleHeight: place?.maxVehicleHeight as any,
-      maxVehicleWidth: place?.maxVehicleWidth as any,
-      maxVehicleLength: place?.maxVehicleLength as any,
-      maxVehicleWeight: place?.maxVehicleWeight as any,
+      maxVehicleHeight: place?.maxVehicleHeight ?? '',
+      maxVehicleWidth: place?.maxVehicleWidth ?? '',
+      maxVehicleLength: place?.maxVehicleLength ?? '',
+      maxVehicleWeight: place?.maxVehicleWeight ?? '',
       weeklySchedule: place?.weeklySchedule || {
           monday: defaultSchedule,
           tuesday: defaultSchedule,
@@ -477,11 +477,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             isZeroEmissionZone: data.isZeroEmissionZone,
             isCityCenter: data.isCityCenter,
-            // Clean up max fields before saving
-            maxVehicleHeight: data.maxVehicleHeight,
-            maxVehicleWidth: data.maxVehicleWidth,
-            maxVehicleLength: data.maxVehicleLength,
-            maxVehicleWeight: data.maxVehicleWeight,
+            maxVehicleHeight: data.maxVehicleHeight === '' ? undefined : data.maxVehicleHeight,
+            maxVehicleWidth: data.maxVehicleWidth === '' ? undefined : data.maxVehicleWidth,
+            maxVehicleLength: data.maxVehicleLength === '' ? undefined : data.maxVehicleLength,
+            maxVehicleWeight: data.maxVehicleWeight === '' ? undefined : data.maxVehicleWeight,
             weeklySchedule: data.weeklySchedule,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
@@ -989,11 +988,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Høyde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="text"
-                                inputMode="decimal"
+                                type="number"
+                                step="0.01"
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value)} 
-                                value={field.value ?? ''} 
+                                value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1008,11 +1006,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Bredde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="text"
-                                inputMode="decimal"
+                                type="number"
+                                step="0.01"
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value)} 
-                                value={field.value ?? ''} 
+                                value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1027,11 +1024,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <FormLabel className="text-[10px] font-black uppercase">Maks Lengde (m)</FormLabel>
                         <FormControl>
                             <Input 
-                                type="text"
-                                inputMode="decimal"
+                                type="number"
+                                step="0.01"
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value)} 
-                                value={field.value ?? ''} 
+                                value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
@@ -1049,11 +1045,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         </FormLabel>
                         <FormControl>
                             <Input 
-                                type="text"
-                                inputMode="numeric"
+                                type="number"
                                 {...field} 
-                                onChange={e => field.onChange(e.target.value)} 
-                                value={field.value ?? ''} 
+                                value={field.value ?? ''}
                             />
                         </FormControl>
                         <FormMessage />
