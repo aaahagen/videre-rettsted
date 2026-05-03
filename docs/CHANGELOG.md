@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Fail-Safe Geocoding:** Implemented a multi-provider geocoding system for the Place Form.
+    - Added Google Maps Geocoding as primary provider.
+    - Added OpenStreetMap (Nominatim) as an automatic fallback if the Google API is restricted, unbilled, or fails to find a result.
+    - Added a manual "Søk" (Search) button next to the address field to verify coordinates instantly.
+    - Added a "KOORDINATER LAGRET" badge for visual confirmation of geographic data.
+- **Route Workload Balancing:** Upgraded the `ConstraintEngine` and Routing Dashboard to support workload distribution.
+    - **Balanced Strategy:** Added a new "Fordel jevnt" toggle that distributes unassigned orders across all available drivers instead of filling one vehicle to capacity.
+    - **Assignment Controls:** Added the ability to manually change the assigned Driver and Vehicle for any suggested route via dropdown menus.
+    - **Route Editing:** Added granular removal of specific orders from suggested routes before creation, with orders automatically returning to the unassigned pool.
+- **Supportive & Internal Tasks:** Added an "Intern Oppgave" (Internal Task) button to the Routing Dashboard.
+    - Allows administrators to quickly create non-delivery routes (e.g., Workshop service, equipment move).
+    - These tasks are tracked as active routes for time management and personnel availability.
 - **Employee Progress Tracking (LMS):** Implemented a new "Ansattstatus" (Employee Status) view in the Learning Admin panel.
     - Administrators can now monitor the real-time progress of every employee across all assigned courses.
     - Added a tabbed interface to the Admin view to switch between Course Library management and Employee Status tracking.
@@ -158,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Fixed
+- **Routing Engine Loop Reliability:** Fixed a critical bug in the assignment loop that caused the engine to stop prematurely. Added a `stalledRoutes` tracking mechanism to ensure every available driver is utilized if they can accommodate remaining orders.
 - **LMS Admin Navigation:** Fixed an issue where "Se Status per Ansatt" and "Administrer Kursbibliotek" both linked to the same view. Added a tabbed interface to the Admin view with deep-linking support.
 - **Firestore Place Deletion Permission Bug:** Fixed an issue where administrators encountered a permission error when trying to delete a place. The Firestore security rule for deleting places was incorrectly referencing `request.resource.data.orgId` (which is null during a delete operation) instead of the existing `resource.data.orgId`.
 - **Missing Firestore Index:** Added a composite index for `workLogs` (`orgId` ASC, `actualPunchIn` ASC) to resolve a `failed-precondition` error when fetching today's work logs on the dashboard.
