@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dedicated "Nødvendige Nøkler for Ruten" card to the active route view (`/dashboard/routes/[id]`). It dynamically scans all stops on the assigned route and alerts the driver to any physical keys they need to bring from the terminal before departing.
 
 ### Changed
+- **UI Redundancy Cleanup:** Removed the duplicate "+ Ny Rute" button from the Routes overview page, as the global "New" button in the header provides the same functionality.
+- **Admin Dashboard UI Refresh:** 
+    - Darkened the background color for administrators (`bg-slate-100/50`) to create better visual separation for white content cards.
+    - Restored vertical list layouts for Workforce and Fleet status cards to prevent text collisions and improve readability of expanded categories.
 - **Date-Aware Route Planning:** Fixed a bug where the routing engine ignored the user-selected date during suggestion generation.
     - The engine now correctly calculates the day of the week based on the selected date.
     - Delivery window warnings (ETAs vs. opening hours) are now validated against the specific day the route is planned for.
@@ -197,6 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Redesigned Route Page Layout:** Completely overhauled the UI for the individual route page (`/dashboard/routes/[id]`) for improved clarity and usability.
 
 ### Fixed
+- **Admin Dashboard UI Contrast:** Darkened the background color for administrators (`bg-slate-100/50`) to create better visual separation for white content cards.
 - **Date-Aware Route Planning:** Fixed a bug where the routing engine ignored the user-selected date during suggestion generation.
     - The engine now correctly calculates the day of the week based on the selected date.
     - Delivery window warnings (ETAs vs. opening hours) are now validated against the specific day the route is planned for.

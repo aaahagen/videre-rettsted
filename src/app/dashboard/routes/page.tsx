@@ -171,14 +171,6 @@ export default function RoutesPage() {
                : "Oversikt over dine tildelte ruter."}
           </p>
         </div>
-        
-        {userData?.role === 'admin' && (
-            <Button asChild className="bg-indigo-600 hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100">
-                <Link href="/dashboard/routes/new">
-                    <Plus className="mr-2 h-5 w-5" /> Ny Rute
-                </Link>
-            </Button>
-        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -190,7 +182,7 @@ export default function RoutesPage() {
             
             {activeTab === 'template' && userData?.role === 'admin' && (
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest italic">
-                    Tips: Lagre en eksisterende rute som mal fra rutedetaljene.
+                    Tips: Lagre en eksisterende rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
                 </p>
             )}
         </div>
