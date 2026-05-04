@@ -485,6 +485,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const safeMainIndex = Math.min(data.mainImageIndex, finalImages.length - 1);
         const finalMainIndex = safeMainIndex >= 0 ? safeMainIndex : 0;
 
+        // Helper to determine if we should use deleteField() or undefined
+        // deleteField() is required for updateDoc, but illegal for addDoc
+        const removeField = () => place ? deleteField() : undefined;
+
         const placeData = {
             name: data.name,
             address: data.address,
@@ -496,11 +500,11 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             isZeroEmissionZone: data.isZeroEmissionZone,
             isCityCenter: data.isCityCenter,
-            maxVehicleHeight: typeof data.maxVehicleHeight !== 'number' ? deleteField() : data.maxVehicleHeight,
-            maxVehicleWidth: typeof data.maxVehicleWidth !== 'number' ? deleteField() : data.maxVehicleWidth,
-            maxVehicleLength: typeof data.maxVehicleLength !== 'number' ? deleteField() : data.maxVehicleLength,
-            maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? deleteField() : data.maxVehicleWeight,
-            weeklySchedule: data.hasDeliveryWindow ? data.weeklySchedule : deleteField(),
+            maxVehicleHeight: typeof data.maxVehicleHeight !== 'number' ? removeField() : data.maxVehicleHeight,
+            maxVehicleWidth: typeof data.maxVehicleWidth !== 'number' ? removeField() : data.maxVehicleWidth,
+            maxVehicleLength: typeof data.maxVehicleLength !== 'number' ? removeField() : data.maxVehicleLength,
+            maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? removeField() : data.maxVehicleWeight,
+            weeklySchedule: data.hasDeliveryWindow ? data.weeklySchedule : removeField(),
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
@@ -1059,7 +1063,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     )}
                     />
                     <FormField
-                    control={form.control}
+                     control={form.control}
                     name="maxVehicleLength"
                     render={({ field }) => (
                         <FormItem>
