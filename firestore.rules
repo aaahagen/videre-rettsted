@@ -95,6 +95,14 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
     }
 
+    // Vehicle Damages & Maintenance
+    match /vehicleDamages/{reportId} {
+      allow read: if isAuthenticated() && isUserInOrg(resource.data.orgId);
+      allow create: if isAuthenticated() && isUserInOrg(request.resource.data.orgId);
+      allow update: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+      allow delete: if isAuthenticated() && isUserInOrg(resource.data.orgId) && isAdmin();
+    }
+
     // WorkLogs
     match /workLogs/{logId} {
       allow read: if isAuthenticated() && (
@@ -109,7 +117,7 @@ service cloud.firestore {
         
       allow update: if isAuthenticated() && (
         (request.auth.uid == resource.data.driverId) || 
-        (isAdmin() && isUserInOrg(request.resource.data.orgId))
+        (isAdmin() && isUserInOrg(resource.data.orgId))
       );
       
       allow delete: if isAuthenticated() && isAdmin() && isUserInOrg(resource.data.orgId);

@@ -14,7 +14,7 @@ import * as logsDb from '../db/logs';
 import * as routesDb from '../db/routes';
 import * as vehiclesDb from '../db/vehicles';
 import * as workLogsDb from '../db/workLogs';
-import * as ordersDb from '../db/orders';
+import * as usersOrdersDb from '../db/orders'; // Avoid naming conflict
 import * as manifestsDb from '../db/manifests';
 import * as inspectionsDb from '../db/inspections';
 
@@ -59,6 +59,9 @@ export const firebaseDB: Database = {
   getVehicles: vehiclesDb.getVehicles,
   updateVehicle: vehiclesDb.updateVehicle,
   deleteVehicle: vehiclesDb.deleteVehicle,
+  getVehicleDamages: vehiclesDb.getVehicleDamages,
+  createVehicleDamageReport: vehiclesDb.reportVehicleDamage,
+  updateVehicleDamageReport: vehiclesDb.updateVehicleDamageReport,
 
   // WorkLog methods
   createWorkLog: workLogsDb.createWorkLog,
@@ -69,13 +72,13 @@ export const firebaseDB: Database = {
   deleteWorkLog: workLogsDb.deleteWorkLog,
 
   // Order & Manifest methods (Phase 3)
-  createOrder: ordersDb.createOrder,
-  getOrder: ordersDb.getOrder,
-  getOrders: ordersDb.getOrders,
-  getOrdersForRoute: ordersDb.getOrdersForRoute,
-  updateOrderStatus: ordersDb.updateOrderStatus,
-  updateOrder: ordersDb.updateOrder,
-  deleteOrder: ordersDb.deleteOrder,
+  createOrder: usersOrdersDb.createOrder,
+  getOrder: usersOrdersDb.getOrder,
+  getOrders: usersOrdersDb.getOrders,
+  getOrdersForRoute: usersOrdersDb.getOrdersForRoute,
+  updateOrderStatus: usersOrdersDb.updateOrderStatus,
+  updateOrder: usersOrdersDb.updateOrder,
+  deleteOrder: usersOrdersDb.deleteOrder,
 
   createManifest: manifestsDb.createManifest,
   updateManifest: manifestsDb.updateManifest,

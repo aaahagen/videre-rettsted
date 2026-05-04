@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star, Info, Settings2, Construction } from 'lucide-react';
+import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star, Info, Settings2, Construction, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,8 +31,8 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
     const [images, setImages] = useState<Array<{ url: string, preview?: string, file?: File, isMain?: boolean }>>(
         initialData?.images || []
     );
-     const [documents, setDocuments] = useState<Array<{ url: string, name: string, type: 'registration' | 'insurance' | 'other', file?: File }>>(
-        initialData?.documents || []
+     const [documents, setDocuments] = useState<Array<{ url: string, name: string, type: 'registration' | 'insurance' | 'other' | 'workshop_order' | 'workshop_receipt', file?: File }>>(
+        (initialData?.documents as any) || []
     );
     const [isUploading, setIsUploading] = useState(false);
 
@@ -48,6 +48,9 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
             dimensions: { length: undefined, height: undefined, width: undefined },
             capabilities: { refrigeration: false, tailLift: false, adr: false, trailerCoupling: false, fifthWheel: false },
             documents: [],
+            euControl: '',
+            nextService: '',
+            tachographCalibration: '',
         }
     );
 
@@ -184,7 +187,10 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 ...formData, 
                 orgId,
                 capacity: cleanedCapacity,
-                dimensions: cleanedDimensions
+                dimensions: cleanedDimensions,
+                euControl: formData.euControl || deleteField(),
+                nextService: formData.nextService || deleteField(),
+                tachographCalibration: formData.tachographCalibration || deleteField(),
             };
 
             // If creating a new vehicle, create it first to get an ID
@@ -338,7 +344,36 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 </CardContent>
             </Card>
 
-            {/* 2. PHYSICAL CONSTRAINTS */}
+            {/* 2. COMPLIANCE & DEADLINES */}
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
+                    <CardTitle className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                        Samsvar & Frister
+                    </CardTitle>
+                    <CardDescription>Viktige datoer for lovpålagt kontroll og vedlikehold.</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <Label className="font-bold text-slate-700">EU-kontroll frist</Label>
+                            <Input type="date" value={formData.euControl || ''} onChange={e => handleChange('euControl', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="font-bold text-slate-700">Neste Service</Label>
+                            <Input placeholder="F.eks. 15.06.24 eller 150 000 km" value={formData.nextService || ''} onChange={e => handleChange('nextService', e.target.value)} />
+                        </div>
+                        {(formData.type === 'truck' || formData.type === 'tractor') && (
+                            <div className="space-y-2">
+                                <Label className="font-bold text-slate-700">Kalibrering fartsskriver</Label>
+                                <Input type="date" value={formData.tachographCalibration || ''} onChange={e => handleChange('tachographCalibration', e.target.value)} />
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 3. PHYSICAL CONSTRAINTS */}
             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
                 <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle className="flex items-center gap-2">
@@ -380,7 +415,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 </CardContent>
             </Card>
 
-            {/* 3. CAPABILITIES */}
+            {/* 4. CAPABILITIES */}
             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
                 <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle className="flex items-center gap-2">
@@ -468,7 +503,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 </CardContent>
             </Card>
 
-            {/* 4. VISUALS */}
+            {/* 5. VISUALS */}
             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
                  <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Bilder</CardTitle>
@@ -507,7 +542,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 </CardContent>
             </Card>
 
-             {/* 5. DOCUMENTATION */}
+             {/* 6. DOCUMENTATION */}
              <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
                 <CardHeader className="bg-slate-50/80 border-b border-slate-100 pb-4">
                     <CardTitle>Dokumentasjon</CardTitle>

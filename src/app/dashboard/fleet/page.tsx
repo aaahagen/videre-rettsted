@@ -7,10 +7,11 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText, Weight, Box } from 'lucide-react';
+import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText, Weight, Box, ShieldCheck, AlertTriangle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { VehicleForm } from '@/components/fleet/vehicle-form';
+import { VehicleDetailsModal } from '@/components/fleet/vehicle-details-modal';
 import {
     Dialog,
     DialogContent,
@@ -27,6 +28,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { format, isBefore, addDays, parseISO } from 'date-fns';
+import { nb } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function FleetPage() {
     const { dbUser } = useAuth();
@@ -35,6 +39,7 @@ export default function FleetPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const { query: searchQuery, setContext } = useSearch();
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+    const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
     const { toast } = useToast();
     const [stats, setStats] = useState({ ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 });
     const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
@@ -81,6 +86,12 @@ export default function FleetPage() {
             setIsLoading(true);
             const data = await firebaseDB.getVehicles(dbUser!.orgId);
             setVehicles(data);
+            
+            // If a vehicle is currently selected for details, refresh its data
+            if (selectedVehicle) {
+                const updated = data.find(v => v.id === selectedVehicle.id);
+                if (updated) setSelectedVehicle(updated);
+            }
         } catch (error) {
             console.error("Failed to load vehicles", error);
             toast({ title: "Feil", description: "Kunne ikke laste kjøretøy", variant: "destructive" });
@@ -103,8 +114,6 @@ export default function FleetPage() {
         if (!dbUser?.orgId) return;
 
         try {
-            // VehicleForm handles the initial creation if it's new to secure an ID for uploads.
-            // We update the document here with the complete data (including image/doc URLs).
             if (data.id) {
                 await firebaseDB.updateVehicle(data.id, data);
                 toast({ 
@@ -112,7 +121,6 @@ export default function FleetPage() {
                     description: editingVehicle ? "Kjøretøyet ble oppdatert." : "Nytt kjøretøy ble lagt til." 
                 });
             } else {
-                // Fallback for safety
                 await firebaseDB.createVehicle({ ...data, orgId: dbUser.orgId } as any);
                 toast({ title: "Lagret", description: "Nytt kjøretøy ble lagt til." });
             }
@@ -145,6 +153,21 @@ export default function FleetPage() {
                 description: `Kunne ikke slette kjøretøyet: ${error.message || 'Ukjent feil'}`, 
                 variant: "destructive" 
             });
+        }
+    };
+
+    const getDeadlineStatus = (dateStr?: string) => {
+        if (!dateStr) return null;
+        try {
+            const date = parseISO(dateStr);
+            const today = new Date();
+            const warningDate = addDays(today, 30);
+            
+            if (isBefore(date, today)) return 'expired';
+            if (isBefore(date, warningDate)) return 'warning';
+            return 'ok';
+        } catch (e) {
+            return null;
         }
     };
 
@@ -254,7 +277,11 @@ export default function FleetPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredVehicles.map(v => (
-                            <Card key={v.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden bg-white border-slate-200 group">
+                            <Card 
+                                key={v.id} 
+                                onClick={() => setSelectedVehicle(v)}
+                                className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden bg-white border-slate-200 group cursor-pointer"
+                            >
                                 {v.images && v.images.length > 0 && (
                                     <div className="w-full h-48 relative bg-slate-100 border-b border-slate-100">
                                         <img 
@@ -312,10 +339,54 @@ export default function FleetPage() {
                                     )}
                                 </CardHeader>
                                 <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 font-medium">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
                                             <Truck className="h-4 w-4 text-indigo-500" />
                                             <span>{getVehicleTypeLabel(v.type)}</span>
+                                        </div>
+
+                                        {/* COMPLIANCE MINI DASHBOARD */}
+                                        <div className="grid grid-cols-1 gap-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                            <div className="flex items-center justify-between text-[11px]">
+                                                <span className="text-slate-500 font-bold uppercase tracking-tight">EU-kontroll:</span>
+                                                <div className="flex items-center gap-1.5 font-black">
+                                                    {v.euControl ? (
+                                                        <>
+                                                            <span className={cn(
+                                                                getDeadlineStatus(v.euControl) === 'expired' ? "text-red-600" : 
+                                                                getDeadlineStatus(v.euControl) === 'warning' ? "text-orange-600" : "text-emerald-600"
+                                                            )}>
+                                                                {format(parseISO(v.euControl), 'dd.MM.yy')}
+                                                            </span>
+                                                            {getDeadlineStatus(v.euControl) !== 'ok' && <AlertTriangle className="h-3 w-3 text-orange-500" />}
+                                                        </>
+                                                    ) : <span className="text-slate-300 italic">Ikke satt</span>}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center justify-between text-[11px]">
+                                                <span className="text-slate-500 font-bold uppercase tracking-tight">Service:</span>
+                                                <span className="font-black text-slate-700">{v.nextService || <span className="text-slate-300 italic">Ikke satt</span>}</span>
+                                            </div>
+
+                                            {(v.type === 'truck' || v.type === 'tractor') && (
+                                                <div className="flex items-center justify-between text-[11px]">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-tight">Fartsskriver:</span>
+                                                    <div className="flex items-center gap-1.5 font-black">
+                                                        {v.tachographCalibration ? (
+                                                            <>
+                                                                <span className={cn(
+                                                                    getDeadlineStatus(v.tachographCalibration) === 'expired' ? "text-red-600" : 
+                                                                    getDeadlineStatus(v.tachographCalibration) === 'warning' ? "text-orange-600" : "text-emerald-600"
+                                                                )}>
+                                                                    {format(parseISO(v.tachographCalibration), 'dd.MM.yy')}
+                                                                </span>
+                                                                {getDeadlineStatus(v.tachographCalibration) !== 'ok' && <AlertTriangle className="h-3 w-3 text-orange-500" />}
+                                                            </>
+                                                        ) : <span className="text-slate-300 italic">Ikke satt</span>}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="flex flex-wrap gap-2 text-xs">
@@ -325,76 +396,13 @@ export default function FleetPage() {
                                             {v.capabilities?.adr && <Badge variant="destructive" className="bg-amber-100 text-amber-800 border-amber-200">ADR</Badge>}
                                             {v.capabilities?.flatbed && <Badge variant="outline" className="bg-slate-100 border-slate-300">Flak/Åpen</Badge>}
                                         </div>
+                                    </div>
 
-                                        {(v.dimensions?.height || v.dimensions?.width || v.dimensions?.length || v.capacity?.weight || v.capacity?.volume) && (
-                                            <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
-                                                {v.capacity?.weight && (
-                                                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                                        <Weight className="h-3 w-3 text-slate-400" />
-                                                        <span className="font-bold text-slate-700">{v.capacity.weight} kg</span>
-                                                    </div>
-                                                )}
-                                                {v.capacity?.volume && (
-                                                    <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                                        <Box className="h-3 w-3 text-slate-400" />
-                                                        <span className="font-bold text-slate-700">{v.capacity.volume} m³</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex gap-2 items-center text-slate-400 font-medium">
-                                                    {v.dimensions?.height && <span title="Høyde">H: {v.dimensions.height}m</span>}
-                                                    {v.dimensions?.width && <span title="Bredde">B: {v.dimensions.width}m</span>}
-                                                    {v.dimensions?.length && <span title="Lengde">L: {v.dimensions.length}m</span>}
-                                                </div>
-                                            </div>
-                                        )}
-                                        
-                                        {v.capabilities?.customFields && v.capabilities.customFields.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
-                                                {v.capabilities.customFields.map((field, idx) => (
-                                                    <div key={idx} className="bg-slate-50 border border-slate-100 px-2 py-1 rounded text-[10px] flex flex-col">
-                                                        <span className="text-muted-foreground font-semibold uppercase tracking-tighter">{field.name}</span>
-                                                        <span className="text-slate-700 font-bold">{field.value}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                        
-                                        {(v.capacity?.notes || v.capabilities?.notes) && (
-                                            <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                                                {v.capacity?.notes && (
-                                                    <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded-md">
-                                                        <span className="font-semibold block mb-0.5 text-slate-700">Kapasitet info:</span>
-                                                        <span className="whitespace-pre-wrap">{v.capacity.notes}</span>
-                                                    </div>
-                                                )}
-                                                {v.capabilities?.notes && (
-                                                    <div className="text-xs text-slate-600 bg-slate-50 p-2 rounded-md">
-                                                        <span className="font-semibold block mb-0.5 text-slate-700">Utstyr info:</span>
-                                                        <span className="whitespace-pre-wrap">{v.capabilities.notes}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {v.documents && v.documents.length > 0 && (
-                                            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vedlagte Dokumenter</span>
-                                                <div className="flex flex-col gap-1.5">
-                                                    {v.documents.map((doc, idx) => (
-                                                        <a 
-                                                            key={idx} 
-                                                            href={doc.url} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-primary transition-colors border border-slate-200 rounded-md p-2 group"
-                                                        >
-                                                            <FileText className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary shrink-0" />
-                                                            <span className="truncate">{doc.name}</span>
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
+                                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-primary group-hover:translate-x-1 transition-transform">
+                                        <div className="flex items-center gap-1">
+                                            <Info className="h-3 w-3" />
+                                            <span>SE DETALJER & STATUS</span>
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -420,6 +428,13 @@ export default function FleetPage() {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                <VehicleDetailsModal 
+                    vehicle={selectedVehicle} 
+                    isOpen={!!selectedVehicle} 
+                    onClose={() => setSelectedVehicle(null)} 
+                    onUpdate={loadVehicles}
+                />
 
                 <Dialog open={!!vehicleToDelete} onOpenChange={(open) => {
                     if (!open) {

@@ -238,12 +238,18 @@ export interface Vehicle {
     notes?: string;
     customFields?: { name: string; value: string }[];
   };
+  
+  // Compliance & Deadlines
+  euControl?: string; // ISO date (YYYY-MM-DD)
+  nextService?: string; // ISO date or descriptive string
+  tachographCalibration?: string; // ISO date (YYYY-MM-DD)
+
   status: 'active' | 'maintenance' | 'inactive'; // DEPRECATED: Use currentStatuses array instead.
   currentStatuses: ("ready" | "pending_workshop" | "workshop" | "observation" | "on_tour" | "parked")[];
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
   images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
-  documents?: { url: string; name: string; type: 'registration' | 'insurance' | 'other'; uploadedAt?: any }[];
+  documents?: { url: string; name: string; type: 'registration' | 'insurance' | 'other' | 'workshop_order' | 'workshop_receipt'; uploadedAt?: any }[];
 }
 
 export interface Contract {
@@ -510,7 +516,21 @@ export interface VehicleInspection {
   }[];
   notes?: string;
 }
-export interface VehicleDamageReport { id: string; orgId: string; vehicleId: string; reportedBy: string; reportedByName: string; description: string; images: string[]; status: 'reported' | 'in_progress' | 'fixed'; createdAt: FieldValue | Date; resolvedAt?: FieldValue | Date; resolvedBy?: string; }
+export interface VehicleDamageReport { 
+  id: string; 
+  orgId: string; 
+  vehicleId: string; 
+  reportedBy: string; 
+  reportedByName: string; 
+  description: string; 
+  images: string[]; 
+  status: 'reported' | 'in_progress' | 'fixed'; 
+  createdAt: FieldValue | Date; 
+  resolvedAt?: FieldValue | Date; 
+  resolvedBy?: string;
+  workshopOrderReceiptUrl?: string;
+  workshopRepairReceiptUrl?: string;
+}
 
 // --- PHASE 2: LMS (Learning Management System) MODELS ---
 

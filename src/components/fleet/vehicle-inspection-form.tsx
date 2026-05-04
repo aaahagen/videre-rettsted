@@ -91,6 +91,28 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
 
             await firebaseDB.submitVehicleInspection(inspectionData);
             
+            // AUTOMATIC STATUS UPDATE: If damage is reported, mark vehicle as "observation"
+            if (damagesReported) {
+                const currentStatuses = vehicle.currentStatuses || [];
+                if (!currentStatuses.includes('observation')) {
+                    await firebaseDB.updateVehicle(vehicle.id, {
+                        currentStatuses: [...currentStatuses, 'observation']
+                    });
+                }
+                
+                // Also create a Damage Report entry for the admin to see
+                await firebaseDB.createVehicleDamageReport({
+                    orgId: dbUser.orgId,
+                    vehicleId: vehicle.id,
+                    reportedBy: dbUser.id,
+                    reportedByName: dbUser.name || 'Ukjent fører',
+                    description: damageDescription,
+                    images: [],
+                    status: 'reported',
+                    createdAt: new Date()
+                } as any);
+            }
+            
             toast({
                 title: "Kontroll fullført",
                 description: `Sjekkliste for ${vehicle.registrationNumber} er lagret.`,
@@ -107,7 +129,7 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
                 variant: "destructive"
             });
         } finally {
-            setIsSubmitting(true);
+            setIsSubmitting(false);
         }
     };
 

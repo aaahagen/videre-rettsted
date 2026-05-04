@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+  import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Vehicle, VehicleDamageReport } from '../types';
 import { cleanObject } from '../utils';
@@ -137,7 +137,11 @@ export async function getVehicleDamages(vehicleId: string): Promise<VehicleDamag
       ...doc.data(),
       createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
       resolvedAt: doc.data().resolvedAt ? (doc.data().resolvedAt as Timestamp).toDate() : undefined,
-    })).sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime()) as VehicleDamageReport[];
+    })).sort((a: any, b: any) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+      const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+      return dateB - dateA;
+    }) as VehicleDamageReport[];
   } catch (error) {
     console.error("Error getting vehicle damages:", error);
     throw error;
@@ -160,6 +164,20 @@ export async function reportVehicleDamage(data: Omit<VehicleDamageReport, 'id' |
     return { id: docRef.id, ...data, createdAt: new Date() } as VehicleDamageReport;
   } catch (error) {
     console.error("Error reporting vehicle damage:", error);
+    throw error;
+  }
+}
+
+export async function updateVehicleDamageReport(id: string, data: Partial<VehicleDamageReport>): Promise<void> {
+  try {
+    const docRef = doc(db, 'vehicleDamages', id);
+    const { id: _, createdAt, ...rest } = data as any;
+    await updateDoc(docRef, {
+      ...rest,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error updating vehicle damage report:", error);
     throw error;
   }
 }

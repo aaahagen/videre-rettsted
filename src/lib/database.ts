@@ -1,4 +1,4 @@
-import { Place, User, Organization, Route, Vehicle, WorkLog, LogEntry, ProofOfDelivery, Order, Manifest, VehicleInspection, ManifestNote } from './types';
+import { Place, User, Organization, Route, Vehicle, WorkLog, LogEntry, ProofOfDelivery, Order, Manifest, VehicleInspection, ManifestNote, VehicleDamageReport } from './types';
 
 export interface Database {
   createOrganization(name: string): Promise<string>;
@@ -32,7 +32,9 @@ export interface Database {
   updateVehicle(id: string, updates: Partial<Vehicle>): Promise<void>;
   deleteVehicle(id: string): Promise<void>;
 
-
+  getVehicleDamages(vehicleId: string): Promise<VehicleDamageReport[]>;
+  createVehicleDamageReport(data: Omit<VehicleDamageReport, 'id' | 'createdAt'>): Promise<VehicleDamageReport>;
+  updateVehicleDamageReport(id: string, data: Partial<VehicleDamageReport>): Promise<void>;
 
   createWorkLog(workLog: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>): Promise<WorkLog>;
   getWorkLog(id: string): Promise<WorkLog | null>;
