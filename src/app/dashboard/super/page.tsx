@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Users, ShieldCheck, Settings, Globe, CheckCircle2, XCircle, LayoutGrid } from 'lucide-react';
+import { Loader2, Building2, Users, ShieldCheck, Settings, Globe, CheckCircle2, XCircle, LayoutGrid, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -18,6 +18,7 @@ export default function SuperAdminPage() {
   const { dbUser, loading } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSwitching, setIsSwitching] = useState<string | null>(null);
   const [globalStats, setGlobalStats] = useState({ total: 0, admins: 0, drivers: 0 });
   const { toast } = useToast();
   const router = useRouter();
@@ -88,6 +89,30 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handleSwitchOrg = async (orgId: string) => {
+    if (!dbUser) return;
+    setIsSwitching(orgId);
+    try {
+      await superDB.switchToOrganization(dbUser.id, orgId);
+      toast({
+        title: "Byttet organisasjon",
+        description: "Du ser nå data for den valgte organisasjonen.",
+      });
+      // Force a small delay to ensure Firestore syncs before redirect or just let the sidebar listener handle it
+      setTimeout(() => {
+          router.push('/dashboard');
+      }, 500);
+    } catch (error: any) {
+      toast({
+        title: "Kunne ikke bytte",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSwitching(null);
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -116,14 +141,17 @@ export default function SuperAdminPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {organizations.map((org) => (
-          <Card key={org.id} className="overflow-hidden border-2 border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+          <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-2 ring-blue-600/10' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
             <div className="bg-slate-50 border-b p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-xl bg-white border flex items-center justify-center shadow-sm">
                   <Building2 className="h-6 w-6 text-slate-600" />
                 </div>
                 <div>
-                  <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight">{org.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight">{org.name}</h3>
+                    {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[10px]">Aktiv i Dashboard</Badge>}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="font-mono text-[10px]">{org.id}</Badge>
                     <Badge className={org.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}>
@@ -134,6 +162,17 @@ export default function SuperAdminPage() {
               </div>
 
               <div className="flex items-center gap-3">
+                <Button 
+                    variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
+                    size="sm" 
+                    className="font-bold"
+                    disabled={dbUser?.orgId === org.id || isSwitching !== null}
+                    onClick={() => handleSwitchOrg(org.id)}
+                >
+                    {isSwitching === org.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
+                    {dbUser?.orgId === org.id ? 'Valgt Organisasjon' : 'Logg inn som denne org'}
+                </Button>
+                
                 <Select value={org.status || 'trial'} onValueChange={(val: any) => handleStatusChange(org.id, val)}>
                   <SelectTrigger className="w-32 font-bold h-9">
                     <SelectValue />
@@ -144,7 +183,6 @@ export default function SuperAdminPage() {
                     <SelectItem value="suspended">Suspendert</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm" className="font-bold">Se Detaljer</Button>
               </div>
             </div>
 

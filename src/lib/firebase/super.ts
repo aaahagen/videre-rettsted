@@ -20,6 +20,12 @@ export const superDB = {
     await updateDoc(docRef, { status });
   },
 
+  // Context Switching for Super Admins
+  switchToOrganization: async (userId: string, orgId: string): Promise<void> => {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, { orgId });
+  },
+
   // Users Across All Orgs (Global View)
   getGlobalUserStats: async () => {
     const snapshot = await getDocs(collection(db, 'users'));
