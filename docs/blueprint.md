@@ -12,6 +12,7 @@
 > **Core Developer Rules:**
 > - **Primary Tooling:** Use the `write_file` tool for all code modifications. Avoid creating temporary Python or Bash scripts for patching or refactoring unless the task is a complex data migration.
 > - **Verification:** After modifying code, ALWAYS run `npm run build` or `npm run typecheck` to verify that the changes haven't introduced regressions. If you update interfaces, run `npm run docs` to update the API reference.
+> - **Deployment & Versioning:** When asked to build and push to Github, you MUST FIRST run `npm run build`. If the build is successful, you MUST update the `docs/CHANGELOG.md` file with the changes made, and update any other relevant documentation before pushing to Github.
 > - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`) as dictated by `engineering.md`.
 > - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin).
 > - **Communication Protocol:** When asked a question or given a task, you MUST briefly explain your plan and answer the question *before* you start using tools to write code.

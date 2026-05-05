@@ -357,11 +357,18 @@ export default function MessagesPage() {
                               {m.createdAt ? format(toDate(m.createdAt), 'HH:mm') : 'Sender...'}
                             </span>
                             {isMe && (
-                              <span className="text-blue-500">
+                              <span className="text-blue-500 flex items-center gap-1">
                                   {activeTab === 'broadcast' ? (
-                                      <div className="flex -space-x-1">
-                                          {(m.readBy || []).length > 1 ? <CheckCheck className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-                                      </div>
+                                      <>
+                                        {(m.readBy || []).length > 1 && (
+                                            <span className="text-[10px] font-bold opacity-70">
+                                                {(m.readBy || []).length - 1}
+                                            </span>
+                                        )}
+                                        <div className="flex -space-x-1">
+                                            {(m.readBy || []).length > 1 ? <CheckCheck className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                                        </div>
+                                      </>
                                   ) : (
                                       (m.readBy || []).includes(selectedUser?.id || '') ? <CheckCheck className="h-3 w-3" /> : <Circle className="h-3 w-3" />
                                   )}
