@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -34,7 +33,7 @@ export const getInvitations = functions.https.onCall(async (request) => {
             );
         }
 
-        if (role !== "admin") {
+        if (role !== "admin" && role !== "super_admin") {
             throw new functions.https.HttpsError(
                 "permission-denied",
                 "Only administrators can view invitations."
