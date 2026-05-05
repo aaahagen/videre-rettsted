@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2026-05-05]
+### Added
+- Added read count indicator for broadcast messages
+### Fixed
+- Fixed modules rendering in admin dashboard according to org settings
+- Fixed automatic read status on messages when opening chat
+
 ### Added
 - **Super Admin Dashboard (App Owner Control):** Launched a centralized cockpit at `/dashboard/super` for the application owner to manage organizations and modular access.
 - **Organization Context Switching:** Super Admins can now instantly "log in" as any organization to view data and verify settings from their perspective.
