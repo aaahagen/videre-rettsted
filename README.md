@@ -1,68 +1,73 @@
-# Videre RettSted
+# VIDERE RettSted
 
-**Videre RettSted** is a comprehensive logistics and workforce management platform designed for the modern delivery organization. It began as a tool to help drivers navigate the "last meter" of their journey and has evolved into a full-suite application for managing routes, vehicles, personnel, and operational integrity.
+**Finn frem på første forsøk. Hver gang.**
 
-## 📋 Project Overview
-Standard GPS often fails at the most critical point: the final approach. **Videre RettSted** solves this with a rich, visual database of precise delivery locations. Building on this foundation, it now integrates advanced workforce and fleet management capabilities to provide a single source of truth for daily logistics operations.
+VIDERE RettSted is a comprehensive logistics and workforce management platform designed to solve the "last meter" delivery problem. It bridges the gap between the terminal and the customer's door by providing a rich visual database of precise delivery locations, alongside integrated tools for route execution, load manifesting, fleet compliance, and workforce management.
 
-## ✨ Key Features (Current)
-* **Visual Delivery Database:** A clean grid view of delivery locations with large preview images, entrance descriptions, and #hashtags.
-* **Smart Route Planning:** Admins can build ordered delivery routes, assign drivers, and save routes as templates.
-* **Real-time Route Monitoring:** A dedicated command-center view for admins to track the progress of active routes with live driver locations and stop-completion timestamps.
-* **Fleet Management:** A complete registry of company vehicles, including capacities and specialized capabilities (e.g., ADR, refrigeration).
-* **Workforce & Timeline Scheduling:** Advanced driver profiles supporting standard hours and multi-week rotation plans. Includes a timeline view for admins to visualize schedules across the entire workforce.
-* **Integrated Messaging:** Real-time chat with read receipts for seamless communication between admins and drivers.
-* **Navigation & Favorites:** Deep-linking to Google Maps for turn-by-turn navigation and personalized favorite locations for drivers.
-* **Offline-Ready:** Built-in Firestore IndexedDB caching ensures drivers can access critical route data even in network dead zones.
-* **Robust Testing Infrastructure:** Fully integrated with Jest for unit testing and Playwright for End-to-End (E2E) testing against the local Firebase Emulator Suite.
+---
 
-## 🗺️ Roadmap & Future Vision
+## 📚 The Documentation Pyramid
 
-This project is under active development. The roadmap is organized into phases to deliver value incrementally. For a detailed breakdown, please see the [**`docs/STRATEGY.md`**](docs/STRATEGY.md) file.
+We maintain a strict separation of documentation to keep our architecture clean and understandable. If you are developing on this project, please refer to the following pillars:
 
-*   **Phase 2: Advanced Workforce Management & HR**
-    *   Implementing a comprehensive **Time & Attendance** system with geofence and GPS-based time stamping.
-    *   Introducing an automated **overtime approval workflow** for administrators.
-    *   Adding **compliance alerts** to prevent scheduling conflicts with working-hour directives.
+1. **[Strategy & Roadmap (`docs/strategy.md`)](docs/strategy.md)** 
+   *Read this to understand the "Why" and the "When".* It covers the product vision, target audience, what we *won't* build, and our phased release roadmap.
+2. **[Domain & Business Logic (`docs/domain.md`)](docs/domain.md)** 
+   *Read this to understand the "What".* It covers Role-Based Access Control (RBAC), multi-tenancy rules, constraint-based routing logic, and manifest workflows.
+3. **[Engineering & QA (`docs/engineering.md`)](docs/engineering.md)** 
+   *Read this to understand the "How".* It covers our technical stack, database abstraction rules, UI/UX philosophy (Tailwind/shadcn), and our manual QA testing loops.
+4. **[API Reference (`docs/api/README.md`)](docs/api/README.md)** 
+   *Read this for code structure.* Auto-generated documentation of our internal TypeScript interfaces, models, and database functions.
+5. **[Changelog (`docs/CHANGELOG.md`)](docs/CHANGELOG.md)** 
+   The absolute ground truth of what has been built, fixed, or is planned for the future.
 
-*   **Phase 3: End-to-End Verification**
-    *   Building a full **Proof of Delivery (POD)** system with signatures, photos, and barcode scanning.
-    *   Creating an in-app **digital vehicle inspection** module.
-
-*   **Phase 4: Intelligent Automation**
-    *   Integrating **Google OR-Tools** to enable constraint-based automatic route generation and optimization.
-
-*   **Phase 5 & 6: Commercialization & Resilience**
-    *   Developing the features for a **multi-tenant SaaS product** with Stripe integration.
-    *   Building a fully **offline-capable mobile application**.
-
-## 🔐 Roles and Permissions
-
-### Administrator (Hjelpefunksjonær)
-* **Organization Control:** Register and manage the organization's settings.
-* **User & Fleet Management:** Generate expiring invitations for new users, manage driver profiles/rotations, and maintain the vehicle fleet.
-* **Route Planning & Oversight:** Create, assign, and monitor delivery routes in real-time.
-* **Content Management:** Full access to create, update, and delete delivery places.
-
-### Driver (Bruker)
-* **Authentication:** Can log in using credentials provided via the administrator's invitation and has the authority to set a new password.
-* **Place Management:** Can create new delivery places and update information for existing ones.
-* **Restrictions:** Does NOT have the authority to delete places or change organization settings.
-* **Personalization:** Can save specific delivery locations as favorites for quick access.
+---
 
 ## 🛠 Tech Stack
-* **Frontend:** Next.js 14 (App Router) with TypeScript and Tailwind CSS.
-* **Testing:** Jest, React Testing Library, Playwright.
-* **UI Components:** shadcn/ui.
-* **Backend:** Firebase (Firestore, Authentication, Storage, Functions, Local Emulators).
-* **Hosting:** Firebase Hosting.
-* **Maps:** Google Maps Platform API.
 
-## 🧪 Testing
+*   **Frontend:** [Next.js 15](https://nextjs.org/) (App Router), React 19
+*   **Language:** [TypeScript](https://www.typescriptlang.org/)
+*   **Styling:** [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
+*   **State:** React Context, [Zustand](https://github.com/pmndrs/zustand)
+*   **Backend/BaaS:** [Firebase](https://firebase.google.com/) (Firestore, Auth, Storage, Cloud Functions, App Hosting)
+*   **Testing:** Jest, Playwright
 
-This project utilizes a dual-layered testing strategy against the local Firebase Emulator Suite:
+---
 
-1.  **Start Emulators:** Ensure your emulators are running (`npm run dev` in IDX handles this automatically, or use `npx firebase emulators:start`).
-2.  **Seed Database:** Populate the emulator with test data: `npm run test:seed`
-3.  **Unit Tests (Jest):** `npm run test`
-4.  **End-to-End Tests (Playwright):** `npm run test:e2e`
+## 🚀 Quick Start
+
+### Prerequisites
+Make sure you have Node.js (v18+) installed. You will also need access to the Firebase project.
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Environment Variables
+Create a `.env.local` file in the root directory. You will need the Firebase client configuration keys.
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-auth-domain"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-storage-bucket"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
+NEXT_PUBLIC_FIREBASE_APP_ID="your-app-id"
+```
+
+### 3. Run the Development Server
+```bash
+npm run dev
+```
+The application will be available at [http://localhost:9002](http://localhost:9002).
+
+### 4. Running Tests & Docs
+*   **Type Checking:** `npm run typecheck`
+*   **Unit Tests:** `npm test`
+*   **E2E Tests:** `npm run test:e2e` (Ensure the dev server is running or configure Playwright accordingly).
+*   **Generate API Docs:** `npm run docs` (Updates the `docs/api` folder using TypeDoc).
+
+---
+
+## 🤖 AI Assistant Note
+If you are an AI assistant analyzing this repository, **DO NOT** use this file as your primary instruction set. Please navigate immediately to `docs/blueprint.md` for your core system prompts and behavioral rules.
