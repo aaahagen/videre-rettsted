@@ -7,7 +7,7 @@ import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield } from 'lucide-react';
-import { User, Route, WorkLog } from '@/lib/types';
+import { User, Route, WorkLog, Organization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { doc, onSnapshot, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { useSearch } from '@/hooks/use-search';
@@ -28,6 +28,7 @@ import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock
 export default function DashboardPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
   const [userData, setUserData] = useState<User | null>(null);
+  const [org, setOrg] = useState<Organization | null>(null);
 
   const [drivers, setDrivers] = useState<DriverProfile[]>([]);
   const [allRoutes, setAllRoutes] = useState<RouteType[]>([]);
@@ -55,9 +56,20 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authUser) return;
-    const unsub = onSnapshot(doc(db, 'users', authUser.uid), (doc) => {
-      if (doc.exists()) {
-        setUserData({ ...doc.data(), id: doc.id } as User);
+    const unsub = onSnapshot(doc(db, 'users', authUser.uid), (docSnap) => {
+      if (docSnap.exists()) {
+        const uData = { ...docSnap.data(), id: docSnap.id } as User;
+        setUserData(uData);
+        
+        // Fetch org data
+        if (uData.orgId) {
+            const orgRef = doc(db, 'organizations', uData.orgId);
+            onSnapshot(orgRef, (oSnap) => {
+                if (oSnap.exists()) {
+                    setOrg({ ...oSnap.data(), id: oSnap.id } as Organization);
+                }
+            });
+        }
       }
     });
     return () => unsub();
@@ -298,6 +310,8 @@ export default function DashboardPage() {
   if (!authUser || !userData) return null;
 
   const isAdmin = userData.role === 'admin' || userData.role === 'super_admin';
+  const isLogisticsEnabled = org?.modules?.logistics !== false;
+  const isMessagesEnabled = org?.modules?.messages !== false;
 
   return (
     <div className={cn(
@@ -650,63 +664,65 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <TimeStampCard user={userData} />
                 
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col h-full border-l-4 border-l-blue-600">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                                <RouteIcon className="h-6 w-6" />
-                            </div>
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Aktiv Rute</span>
-                        </div>
-                        {activeRoute && <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Live</span>}
-                    </div>
-
-                    {activeRoute ? (
-                        <div className="flex-1 space-y-6">
-                            <div>
-                                <p className="text-xl font-black text-slate-900 leading-tight">{activeRoute.name}</p>
-                                <p className="text-xs text-slate-500 font-bold uppercase tracking-tight mt-1">{activeRoute.places.length} leveringer i dag</p>
-                            </div>
-
-                            {activeManifest && (
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lasting</span>
-                                        <span className="text-xs font-black text-slate-700 font-mono bg-white px-2 py-0.5 rounded border">{driverLoadedKolli} / {driverTotalKolli}</span>
-                                    </div>
-                                    <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden mb-3">
-                                        <div className="h-full bg-indigo-500 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: `${safeProgress(driverManifestProgress)}%` }} />
-                                    </div>
-                                    <div className="flex justify-center">
-                                        {activeManifest.status === 'verified' ? (
-                                            <span className="text-[10px] text-green-700 bg-green-100 px-3 py-1 rounded-full border border-green-200 font-black uppercase tracking-tighter flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5"/> Verifisert & Klar</span>
-                                        ) : activeManifest.status === 'loading' ? (
-                                            <span className="text-[10px] text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-black uppercase tracking-tighter flex items-center gap-1.5"><Loader2 className="h-3.5 w-3.5 animate-spin"/> Laster...</span>
-                                        ) : (
-                                            <span className="text-[10px] text-slate-600 bg-slate-200 px-3 py-1 rounded-full border border-slate-300 font-black uppercase tracking-tighter flex items-center gap-1.5"><Clock className="h-3.5 w-3.5"/> Venter på lasting</span>
-                                        )}
-                                    </div>
+                {isLogisticsEnabled && (
+                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col h-full border-l-4 border-l-blue-600">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                    <RouteIcon className="h-6 w-6" />
                                 </div>
-                            )}
-
-                            <Button asChild size="lg" className="w-full font-black uppercase tracking-widest h-12 shadow-lg shadow-primary/20">
-                                <Link href={`/dashboard/routes/${activeRoute.id}`}>
-                                    Åpne Kontrollpanel
-                                </Link>
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-                            <div className="p-4 bg-slate-50 rounded-full mb-4">
-                                <RouteIcon className="h-8 w-8 text-slate-300" />
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-400">Aktiv Rute</span>
                             </div>
-                            <p className="text-slate-400 text-sm font-bold uppercase tracking-tight mb-6">Ingen planlagt rute</p>
-                            <Button variant="outline" size="sm" asChild className="font-black uppercase tracking-tighter">
-                                <Link href="/dashboard/routes">Se alle ruter</Link>
-                            </Button>
+                            {activeRoute && <span className="bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Live</span>}
                         </div>
-                    )}
-                </div>
+
+                        {activeRoute ? (
+                            <div className="flex-1 space-y-6">
+                                <div>
+                                    <p className="text-xl font-black text-slate-900 leading-tight">{activeRoute.name}</p>
+                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-tight mt-1">{activeRoute.places.length} leveringer i dag</p>
+                                </div>
+
+                                {activeManifest && (
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lasting</span>
+                                            <span className="text-xs font-black text-slate-700 font-mono bg-white px-2 py-0.5 rounded border">{driverLoadedKolli} / {driverTotalKolli}</span>
+                                        </div>
+                                        <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden mb-3">
+                                            <div className="h-full bg-indigo-500 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(99,102,241,0.5)]" style={{ width: `${safeProgress(driverManifestProgress)}%` }} />
+                                        </div>
+                                        <div className="flex justify-center">
+                                            {activeManifest.status === 'verified' ? (
+                                                <span className="text-[10px] text-green-700 bg-green-100 px-3 py-1 rounded-full border border-green-200 font-black uppercase tracking-tighter flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5"/> Verifisert & Klar</span>
+                                            ) : activeManifest.status === 'loading' ? (
+                                                <span className="text-[10px] text-amber-700 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 font-black uppercase tracking-tighter flex items-center gap-1.5"><Loader2 className="h-3.5 w-3.5 animate-spin"/> Laster...</span>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-600 bg-slate-200 px-3 py-1 rounded-full border border-slate-300 font-black uppercase tracking-tighter flex items-center gap-1.5"><Clock className="h-3.5 w-3.5"/> Venter på lasting</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <Button asChild size="lg" className="w-full font-black uppercase tracking-widest h-12 shadow-lg shadow-primary/20">
+                                    <Link href={`/dashboard/routes/${activeRoute.id}`}>
+                                        Åpne Kontrollpanel
+                                    </Link>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                                <div className="p-4 bg-slate-50 rounded-full mb-4">
+                                    <RouteIcon className="h-8 w-8 text-slate-300" />
+                                </div>
+                                <p className="text-slate-400 text-sm font-bold uppercase tracking-tight mb-6">Ingen planlagt rute</p>
+                                <Button variant="outline" size="sm" asChild className="font-black uppercase tracking-tighter">
+                                    <Link href="/dashboard/routes">Se alle ruter</Link>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
             </div>
 
@@ -723,29 +739,33 @@ export default function DashboardPage() {
                     </div>
                 </Link>
                 
-                <Link href="/dashboard/messages" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
-                            <MessageSquare className="h-6 w-6" />
+                {isMessagesEnabled && (
+                    <Link href="/dashboard/messages" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
+                                <MessageSquare className="h-6 w-6" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-black text-slate-800 group-hover:text-primary transition-colors uppercase tracking-tight text-sm">Kommunikasjon</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Meldinger</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="font-black text-slate-800 group-hover:text-primary transition-colors uppercase tracking-tight text-sm">Kommunikasjon</span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Meldinger</span>
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
+                )}
 
-                <Link href="/dashboard/routes" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
-                            <RouteIcon className="h-6 w-6" />
+                {isLogisticsEnabled && (
+                    <Link href="/dashboard/routes" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
+                                <RouteIcon className="h-6 w-6" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="font-black text-slate-800 group-hover:text-primary transition-colors uppercase tracking-tight text-sm">Ruteoversikt</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Planlagte turer</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="font-black text-slate-800 group-hover:text-primary transition-colors uppercase tracking-tight text-sm">Ruteoversikt</span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Planlagte turer</span>
-                        </div>
-                    </div>
-                </Link>
+                    </Link>
+                )}
             </div>
         </div>
       )}
