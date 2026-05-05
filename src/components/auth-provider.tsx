@@ -15,6 +15,7 @@ interface AuthContextType {
   dbUser: User | null;
   loading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   dbUser: null,
   loading: true,
   isAdmin: false,
+  isSuperAdmin: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -61,7 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const isLoading = loading || dataLoading;
-  const isAdmin = dbUser?.role === 'admin';
+  const isSuperAdmin = dbUser?.role === 'super_admin';
+  const isAdmin = isSuperAdmin || dbUser?.role === 'admin';
 
   // Protect routes logic
   useEffect(() => {
@@ -91,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, dbUser, loading: isLoading, isAdmin }}>
+    <AuthContext.Provider value={{ user, dbUser, loading: isLoading, isAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );

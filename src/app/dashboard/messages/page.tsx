@@ -1,417 +1,391 @@
 'use client';
-import { SplashScreen } from "@/components/ui/splash-screen";
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/auth-provider';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, updateDoc, doc, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
-import { firebaseDB } from '@/lib/firebase/database';
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  addDoc, 
+  serverTimestamp, 
+  orderBy, 
+  doc, 
+  updateDoc, 
+  arrayUnion,
+  getDocs
+} from 'firebase/firestore';
 import { Message, User } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Loader2, Send, MessageSquare, Check, CheckCheck, Users, Trash2, Info } from 'lucide-react';
-import { format, isValid } from 'date-fns';
+import { 
+  Send, 
+  Users, 
+  User as UserIcon, 
+  Shield, 
+  Search, 
+  Circle, 
+  CheckCheck,
+  MoreVertical,
+  Trash2,
+  Bell
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSearch } from '@/hooks/use-search';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 export default function MessagesPage() {
-  const { user: authUser, dbUser } = useAuth();
+  const { dbUser } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [users, setUsers] = useState<Record<string, User>>({});
-  const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
-  const [selectedRecipient, setSelectedRecipient] = useState<string>('all_drivers');
-  const [isSending, setIsSending] = useState(false);
-  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'direct' | 'broadcast'>('broadcast');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [allOrgUsers, setAllOrgUsers] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { query: searchQuery } = useSearch();
 
   useEffect(() => {
-    if (!dbUser?.orgId || !dbUser?.id) return;
+    if (!dbUser?.orgId) return;
 
-    // Fetch users for display names
+    // Fetch all users in organization
     const fetchUsers = async () => {
-      try {
-        const fetchedUsers = await firebaseDB.getUsers(dbUser.orgId);
-        const usersMap: Record<string, User> = {};
-        fetchedUsers.forEach(u => usersMap[u.id] = u);
-        setUsers(usersMap);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+      const q = query(collection(db, 'users'), where('orgId', '==', dbUser.orgId));
+      const snap = await getDocs(q);
+      const users = snap.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
+      setAllOrgUsers(users.filter(u => u.id !== dbUser.id));
     };
     fetchUsers();
 
-    // Listen to messages
-    const messagesRef = collection(db, 'messages');
-    
-    // Admins see all messages in the org. Drivers see broadcasts + direct messages to them.
-    let q;
-    if (dbUser.role === 'admin') {
-         q = query(
-            messagesRef, 
-            where('orgId', '==', dbUser.orgId),
-            orderBy('createdAt', 'asc')
-        );
-    } else {
-        // Drivers see messages sent to 'all_drivers', 'all', or directly to them
-        // Firestore doesn't support OR queries across different fields easily with ordering,
-        // so we'll fetch all org messages and filter client-side for simplicity and speed.
-        q = query(
-            messagesRef, 
-            where('orgId', '==', dbUser.orgId),
-            orderBy('createdAt', 'asc')
-        );
-    }
+    // Listen for messages
+    const q = query(
+      collection(db, 'messages'),
+      where('orgId', '==', dbUser.orgId),
+      orderBy('createdAt', 'asc')
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: Message[] = [];
-      snapshot.forEach((doc) => {
-          const data = { id: doc.id, ...doc.data() } as Message;
-          
-          if (dbUser.role === 'admin') {
-              msgs.push(data);
-          } else {
-             // Client-side filter for drivers
-             if (data.recipientId === 'all' || data.recipientId === 'all_drivers' || data.recipientId === dbUser.id || data.senderId === dbUser.id) {
-                 msgs.push(data);
-             }
-          }
-      });
+      const msgs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Message));
       setMessages(msgs);
-      setLoading(false);
-      
-      // Mark visible messages as read
-      msgs.forEach(msg => {
-          if (msg.senderId !== dbUser.id && !(msg.readBy || []).includes(dbUser.id)) {
-             markAsRead(msg.id);
-          }
-      });
-      
-    }, (error) => {
-      console.error("Error listening to messages:", error);
-      setLoading(false);
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
     });
 
     return () => unsubscribe();
-  }, [dbUser]);
-
-  useEffect(() => {
-    // Scroll to bottom when messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const markAsRead = async (messageId: string) => {
-      if (!dbUser) return;
-      try {
-          const msgRef = doc(db, 'messages', messageId);
-          await updateDoc(msgRef, {
-              readBy: arrayUnion(dbUser.id)
-          });
-      } catch (err) {
-          console.error("Error marking message as read:", err);
-      }
-  };
+  }, [dbUser?.orgId, dbUser?.id]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !dbUser?.orgId) return;
+    if (!newMessage.trim() || !dbUser) return;
 
-    setIsSending(true);
+    const recipientId = activeTab === 'broadcast' ? 'all' : selectedUser?.id;
+    if (!recipientId) return;
+
     try {
-      const msgData: Partial<Message> = {
+      await addDoc(collection(db, 'messages'), {
         orgId: dbUser.orgId,
         senderId: dbUser.id,
-        recipientId: selectedRecipient,
-        content: newMessage.trim(),
+        recipientId,
+        content: newMessage,
         createdAt: serverTimestamp(),
-        readBy: [dbUser.id], // Sender has read it
-        type: ['all', 'all_drivers', 'all_admins'].includes(selectedRecipient) ? 'broadcast' : 'direct'
-      };
-
-      await addDoc(collection(db, 'messages'), msgData);
+        readBy: [dbUser.id],
+        type: activeTab
+      });
       setNewMessage('');
     } catch (error) {
       console.error("Error sending message:", error);
-      toast({ title: "Feil", description: "Kunne ikke sende meldingen.", variant: "destructive" });
-    } finally {
-      setIsSending(false);
     }
   };
 
-  const handleDeleteMessage = async () => {
-      if (!messageToDelete) return;
-      
-      try {
-          await deleteDoc(doc(db, 'messages', messageToDelete));
-          toast({ title: "Slettet", description: "Meldingen ble slettet." });
-      } catch (error) {
-          console.error("Error deleting message:", error);
-          toast({ title: "Feil", description: "Kunne ikke slette meldingen.", variant: "destructive" });
-      } finally {
-          setMessageToDelete(null);
-      }
-  }
-
-  const formatTime = (timestamp: any) => {
-    if (!timestamp) return '';
-    // Handle Firestore FieldValue sentinel during optimistic updates
-    if (typeof timestamp === 'object' && timestamp._methodName) {
-        return 'Sender...';
+  const markAsRead = async (messageId: string) => {
+    if (!dbUser) return;
+    const msg = messages.find(m => m.id === messageId);
+    if (msg && !msg.readBy.includes(dbUser.id)) {
+      await updateDoc(doc(db, 'messages', messageId), {
+        readBy: arrayUnion(dbUser.id)
+      });
     }
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    if (!isValid(date)) return '...';
-    return format(date, 'HH:mm - dd.MM.yy');
   };
 
-  const filteredMessages = messages.filter(msg => {
-      if (!searchQuery) return true;
-      
-      const q = searchQuery.toLowerCase();
-      const contentMatch = msg.content.toLowerCase().includes(q);
-      const sender = users[msg.senderId];
-      const senderNameMatch = sender && (sender.name?.toLowerCase().includes(q) || sender.email?.toLowerCase().includes(q));
-      
-      return contentMatch || senderNameMatch;
+  const isPrivileged = dbUser?.role === 'admin' || dbUser?.role === 'super_admin';
+
+  const filteredMessages = messages.filter(m => {
+    if (activeTab === 'broadcast') {
+      return m.type === 'broadcast';
+    } else {
+      if (!selectedUser) return false;
+      return m.type === 'direct' && (
+        (m.senderId === dbUser?.id && m.recipientId === selectedUser.id) ||
+        (m.senderId === selectedUser.id && m.recipientId === dbUser?.id)
+      );
+    }
   });
 
-  if (loading || !dbUser) {
-    return <SplashScreen />;
-  }
+  const unreadCount = (userId: string) => {
+    return messages.filter(m => 
+      m.type === 'direct' && 
+      m.senderId === userId && 
+      m.recipientId === dbUser?.id && 
+      !m.readBy.includes(dbUser?.id || '')
+    ).length;
+  };
 
-  const isAdmin = dbUser.role === 'admin';
+  const filteredUsers = allOrgUsers.filter(u => 
+    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (!dbUser) return null;
+
+  const isAdmin = isPrivileged;
 
   return (
-    <>
-    <div className="container mx-auto max-w-4xl px-4 py-8 h-[calc(100vh-4rem)] flex flex-col">
-      <div className="mb-6 shrink-0">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-          <MessageSquare className="h-8 w-8 text-primary" />
-          Meldinger
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Intern kommunikasjon og oppdateringer.
-        </p>
+    <div className="flex flex-col h-[calc(100vh-4rem)] lg:flex-row bg-slate-50 overflow-hidden">
+      {/* Sidebar - Contacts */}
+      <div className="w-full lg:w-80 bg-white border-r flex flex-col shrink-0">
+        <div className="p-4 border-b space-y-4">
+          <h1 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-blue-600" />
+            Meldinger
+          </h1>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Søk i kontakter..." 
+              className="pl-9 bg-slate-50 border-none h-9 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-2 space-y-1">
+            <button
+              onClick={() => { setActiveTab('broadcast'); setSelectedUser(null); }}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                activeTab === 'broadcast' ? 'bg-blue-50 text-blue-600 shadow-sm' : 'hover:bg-slate-50 text-slate-600'
+              }`}
+            >
+              <div className={`p-2 rounded-lg ${activeTab === 'broadcast' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                <Bell className="h-4 w-4" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="font-black text-xs uppercase tracking-widest">Felleskanalen</p>
+                <p className="text-[10px] opacity-70">Viktige beskjeder til alle</p>
+              </div>
+            </button>
+
+            <div className="pt-4 pb-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Direktemeldinger</div>
+            
+            {filteredUsers.map(u => (
+              <button
+                key={u.id}
+                onClick={() => { setActiveTab('direct'); setSelectedUser(u); }}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                  selectedUser?.id === u.id ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'hover:bg-slate-50 text-slate-600'
+                }`}
+              >
+                <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
+                  <AvatarImage src={u.avatarUrl} />
+                  <AvatarFallback className="bg-slate-100 text-slate-500 font-bold text-xs">
+                    {u.name.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left truncate">
+                  <p className="font-bold text-sm truncate">
+                    {u.name || u.email} {u.role === 'admin' || u.role === 'super_admin' ? '(Admin)' : ''}
+                  </p>
+                  <p className="text-[10px] opacity-70 truncate uppercase tracking-tighter font-medium">{u.role}</p>
+                </div>
+                {unreadCount(u.id) > 0 && (
+                  <Badge className="bg-blue-600 text-white h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] animate-bounce">
+                    {unreadCount(u.id)}
+                  </Badge>
+                )}
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
 
-      <Card className="flex-1 flex flex-col overflow-hidden border-slate-200 shadow-sm">
-        {/* Recipient Selection (Admins only) */}
-        {isAdmin && (
-           <div className="p-4 border-b bg-slate-50/50 flex items-center gap-4 shrink-0">
-               <span className="text-sm font-medium text-slate-600">Til:</span>
-               <Select value={selectedRecipient} onValueChange={setSelectedRecipient}>
-                  <SelectTrigger className="w-[280px] bg-white">
-                    <SelectValue placeholder="Velg mottaker" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_drivers">
-                        <div className="flex items-center gap-2 font-medium text-blue-600">
-                            <Users className="h-4 w-4" /> Alle Sjåfører (Kringkasting)
-                        </div>
-                    </SelectItem>
-                    <SelectItem value="all_admins">Alle Administratorer</SelectItem>
-                    <SelectItem value="all">Hele Organisasjonen</SelectItem>
-                    {/* List individual users */}
-                    {Object.values(users).filter(u => u.id !== dbUser.id).map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                            {u.name || u.email} {u.role === 'admin' ? '(Admin)' : ''}
-                        </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-           </div>
-        )}
-        {!isAdmin && (
-             <div className="p-3 border-b bg-slate-50/50 flex items-center justify-center shrink-0">
-                 <span className="text-sm font-medium text-slate-600">Meldinger til Admin-teamet</span>
-             </div>
-        )}
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-white relative">
+        {/* Chat Header */}
+        <div className="h-16 border-b flex items-center justify-between px-6 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            {activeTab === 'broadcast' ? (
+              <>
+                <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-black text-slate-800 uppercase tracking-tight">Felleskanalen</h2>
+                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Alle ansatte</p>
+                </div>
+              </>
+            ) : selectedUser ? (
+              <>
+                <Avatar className="h-10 w-10 border-2 border-blue-50 shadow-sm">
+                  <AvatarImage src={selectedUser.avatarUrl} />
+                  <AvatarFallback className="bg-blue-600 text-white font-black">{selectedUser.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="font-black text-slate-800 uppercase tracking-tight">{selectedUser.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tilgjengelig</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-400 font-medium">Velg en samtale for å starte</p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-slate-600">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
 
-        <ScrollArea className="flex-1 p-4 bg-slate-50/30">
-          <div className="flex flex-col gap-4 pr-10">
+        {/* Messages List */}
+        <ScrollArea className="flex-1 p-6 bg-slate-50/50">
+          <div className="space-y-6 max-w-4xl mx-auto">
             {filteredMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground h-full">
-                <MessageSquare className="h-12 w-12 opacity-20 mb-4" />
-                <p>{searchQuery ? 'Ingen meldinger matcher søket ditt.' : 'Ingen meldinger enda.'}</p>
+              <div className="flex flex-col items-center justify-center h-64 text-center space-y-4 opacity-30">
+                <div className="p-6 bg-slate-100 rounded-full">
+                  <MessageSquare className="h-12 w-12 text-slate-400" />
+                </div>
+                <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Ingen meldinger ennå</p>
               </div>
             ) : (
-              filteredMessages.map((msg) => {
-                const isMe = msg.senderId === dbUser.id;
-                const sender = users[msg.senderId];
-                const senderName = isMe ? 'Du' : (sender?.name || sender?.email || 'Ukjent');
-                const isBroadcast = msg.type === 'broadcast';
-                const canDelete = isAdmin || isMe; // Admins can delete any, users can delete their own
-                
-                // Determine read status for messages I sent
-                let readStatusIcon = null;
-                if (isMe) {
-                    const otherReadersIds = (msg.readBy || []).filter(id => id !== dbUser.id);
-                    const hasBeenRead = otherReadersIds.length > 0;
-
-                    if (isBroadcast && isAdmin) {
-                         // Determine who should have read it based on the recipient type
-                        let expectedReaders: User[] = [];
-                        const allOrgUsers = Object.values(users);
-                        
-                        if (msg.recipientId === 'all') {
-                             expectedReaders = allOrgUsers.filter(u => u.id !== dbUser.id);
-                        } else if (msg.recipientId === 'all_drivers') {
-                             expectedReaders = allOrgUsers.filter(u => u.role === 'driver' && u.id !== dbUser.id);
-                        } else if (msg.recipientId === 'all_admins') {
-                             expectedReaders = allOrgUsers.filter(u => u.role === 'admin' && u.id !== dbUser.id);
-                        }
-
-                        const readUsers = expectedReaders.filter(u => otherReadersIds.includes(u.id));
-                        const unreadUsers = expectedReaders.filter(u => !otherReadersIds.includes(u.id));
-                        
-                        // Calculate percentage for visual feedback (optional)
-                        // const percentRead = expectedReaders.length > 0 ? Math.round((readUsers.length / expectedReaders.length) * 100) : 0;
-
-                        readStatusIcon = (
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                 <span className="flex items-center gap-1 cursor-help" title="Lest status">
-                                    {hasBeenRead ? <CheckCheck className="h-3 w-3 text-blue-500" /> : <Check className="h-3 w-3 text-slate-400" />}
-                                    <span className="text-[10px] text-muted-foreground ml-1">({readUsers.length}/{expectedReaders.length})</span>
-                                 </span>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-80">
-                                <div className="space-y-2">
-                                  <h4 className="text-sm font-semibold">Lest status</h4>
-                                  <div className="grid grid-cols-2 gap-4 text-xs">
-                                     <div>
-                                         <span className="font-semibold text-green-600 block mb-1">Lest av:</span>
-                                         {readUsers.length > 0 ? (
-                                             <ul className="list-disc pl-4 space-y-1">
-                                                 {readUsers.map(u => <li key={u.id}>{u.name || u.email}</li>)}
-                                             </ul>
-                                         ) : <span className="text-muted-foreground italic">Ingen enda</span>}
-                                     </div>
-                                     <div>
-                                         <span className="font-semibold text-slate-500 block mb-1">Venter på:</span>
-                                         {unreadUsers.length > 0 ? (
-                                             <ul className="list-disc pl-4 space-y-1">
-                                                {unreadUsers.map(u => <li key={u.id}>{u.name || u.email}</li>)}
-                                             </ul>
-                                         ) : <span className="text-muted-foreground italic">Alle har lest</span>}
-                                     </div>
-                                  </div>
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
-                        )
-
-                    } else {
-                         // Standard direct message read receipt
-                        readStatusIcon = hasBeenRead ? (
-                            <span title="Lest"><CheckCheck className="h-3 w-3 text-blue-500" /></span>
-                        ) : (
-                            <span title="Levert"><Check className="h-3 w-3 text-slate-400" /></span>
-                        );
-                    }
-                }
+              filteredMessages.map((m, idx) => {
+                const isMe = m.senderId === dbUser.id;
+                const sender = allOrgUsers.find(u => u.id === m.senderId) || (isMe ? dbUser : null);
+                const showDate = idx === 0 || 
+                  format(messages[idx-1].createdAt?.toDate() || new Date(), 'yyyy-MM-dd') !== 
+                  format(m.createdAt?.toDate() || new Date(), 'yyyy-MM-dd');
 
                 return (
-                  <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%] ${isMe ? 'self-end' : 'self-start'} group relative`}>
-                    <div className="flex items-center gap-2 mb-1 px-1">
-                        {!isMe && <span className="text-xs font-semibold text-slate-600">{senderName}</span>}
-                        {isBroadcast && !isMe && <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Kunngjøring</span>}
-                    </div>
-                    
-                    <div className="flex items-center gap-2 relative w-full">
-                        <div className={`px-4 py-3 rounded-2xl shadow-sm text-sm break-words relative ${
-                            isMe 
-                                ? 'bg-primary text-primary-foreground rounded-tr-sm w-full' 
-                                : isBroadcast 
-                                    ? 'bg-blue-50 border border-blue-100 text-slate-800 rounded-tl-sm w-full'
-                                    : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm w-full'
-                        }`}>
-                          {msg.content}
-                           {canDelete && (
-                                 <button 
-                                    type="button"
-                                    className={`h-8 w-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity absolute top-1/2 -translate-y-1/2 hover:bg-red-50 hover:text-red-600 text-slate-400 ${isMe ? '-left-10' : '-right-10'}`}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setMessageToDelete(msg.id);
-                                    }}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
-                            )}
+                  <div key={m.id} className="space-y-2">
+                    {showDate && m.createdAt && (
+                      <div className="flex justify-center my-8">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">
+                          {format(m.createdAt.toDate(), "eeee d. MMMM", { locale: nb })}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
+                      {!isMe && (
+                        <Avatar className="h-8 w-8 mr-2 mt-1 shrink-0 border border-white shadow-sm">
+                          <AvatarImage src={sender?.avatarUrl} />
+                          <AvatarFallback className="text-[10px] font-black">{sender?.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className={`max-w-[70%] space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
+                        {!isMe && activeTab === 'broadcast' && (
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{sender?.name}</span>
+                        )}
+                        <div 
+                          onMouseEnter={() => !isMe && markAsRead(m.id)}
+                          className={`p-4 rounded-2xl text-sm font-medium shadow-sm transition-all ${
+                          isMe 
+                            ? 'bg-blue-600 text-white rounded-tr-none' 
+                            : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none hover:shadow-md'
+                        }`}
+                        >
+                          {m.content}
                         </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-1 mt-1 px-1 opacity-70">
-                        <span className="text-[10px] text-muted-foreground">{formatTime(msg.createdAt)}</span>
-                        {readStatusIcon}
+                        <div className={`flex items-center gap-1.5 px-1 ${isMe ? 'flex-row-reverse' : ''}`}>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">
+                            {m.createdAt ? format(m.createdAt.toDate(), 'HH:mm') : 'Sender...'}
+                          </span>
+                          {isMe && (
+                            <span className="text-blue-500">
+                                {activeTab === 'broadcast' ? (
+                                    <div className="flex -space-x-1">
+                                        {m.readBy.length > 1 ? <CheckCheck className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
+                                    </div>
+                                ) : (
+                                    m.readBy.includes(selectedUser?.id || '') ? <CheckCheck className="h-3 w-3" /> : <Circle className="h-3 w-3" />
+                                )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
               })
             )}
-            <div ref={messagesEndRef} />
+            <div ref={scrollRef} />
           </div>
         </ScrollArea>
 
-        <div className="p-4 bg-white border-t shrink-0">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Skriv en melding..."
-              className="flex-1 rounded-full bg-slate-50 border-slate-200 focus-visible:ring-primary/20"
-              disabled={isSending}
-            />
-            <Button 
+        {/* Input Area */}
+        <div className="p-6 bg-white border-t sticky bottom-0 z-10">
+          {(activeTab === 'direct' && !selectedUser) ? (
+            <div className="text-center p-4 bg-slate-50 rounded-xl border border-dashed text-slate-400 text-xs font-bold uppercase tracking-widest">
+              Velg en mottaker for å sende melding
+            </div>
+          ) : (
+            <form onSubmit={handleSendMessage} className="flex gap-3 max-w-4xl mx-auto">
+              <div className="flex-1 relative">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder={activeTab === 'broadcast' ? "Skriv en fellesbeskjed..." : `Melding til ${selectedUser?.name}...`}
+                  className="bg-slate-50 border-none h-12 pr-12 focus-visible:ring-blue-600 rounded-xl shadow-inner font-medium"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                   {/* Emoji or Attachment icons could go here */}
+                </div>
+              </div>
+              <Button 
                 type="submit" 
-                size="icon" 
-                className="rounded-full shrink-0"
-                disabled={!newMessage.trim() || isSending}
-            >
-              {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
+                disabled={!newMessage.trim()} 
+                className="h-12 w-12 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95"
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </form>
+          )}
         </div>
-      </Card>
+      </div>
     </div>
+  );
+}
 
-    <AlertDialog open={!!messageToDelete} onOpenChange={(open) => !open && setMessageToDelete(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>Slett melding</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Er du sikker på at du vil slette denne meldingen? Dette kan ikke angres.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteMessage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Slett
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-    </AlertDialog>
-    </>
+function MessageSquare(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
   );
 }

@@ -160,7 +160,6 @@ export default function AppSidebar() {
       label: 'Daglig Drift',
       items: [
         { href: '/dashboard', icon: Home, label: 'Oversikt' },
-        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'analytics' },
         { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger', module: 'messages' },
         { href: '/dashboard/learning', icon: GraduationCap, label: 'Læringsportal', module: 'learning' },
       ]
@@ -168,6 +167,7 @@ export default function AppSidebar() {
     {
       label: 'Logistikk',
       items: [
+        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics' },
         { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics' },
         { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },

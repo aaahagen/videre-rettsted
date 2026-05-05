@@ -108,7 +108,8 @@ export default function DashboardPage() {
 
   
   useEffect(() => {
-    if (userData?.orgId && userData.role === 'admin') {
+    const isPrivileged = userData?.role === 'admin' || userData?.role === 'super_admin';
+    if (userData?.orgId && isPrivileged) {
       const fetchDrivers = async () => {
         try {
           const users = await firebaseDB.getUsers(userData.orgId!);
@@ -239,7 +240,7 @@ export default function DashboardPage() {
         unsubWorkLogs();
       };
     }
-  }, [userData?.orgId, userData?.role === 'admin']);
+  }, [userData?.orgId, userData?.role]);
 
   const workforceStats = useMemo(() => {
         let working = 0;
@@ -296,7 +297,7 @@ export default function DashboardPage() {
 
   if (!authUser || !userData) return null;
 
-  const isAdmin = userData.role === 'admin';
+  const isAdmin = userData.role === 'admin' || userData.role === 'super_admin';
 
   return (
     <div className={cn(
