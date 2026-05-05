@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed modules rendering in admin dashboard according to org settings
 - Fixed automatic read status on messages when opening chat
+- **Fixed `getInvitations` cloud function**: Super Admins can now correctly fetch and view invitations, resolving the permission denied error on the admin dashboard.
 
 ### Added
 - **Super Admin Dashboard (App Owner Control):** Launched a centralized cockpit at `/dashboard/super` for the application owner to manage organizations and modular access.
