@@ -8,4 +8,4 @@
 
 > **DeliveryPlace** = [`Place`](../interfaces/Place.md)
 
-Defined in: [types.ts:126](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L126)
+Defined in: [types.ts:136](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L136)

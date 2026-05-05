@@ -6,7 +6,7 @@
 
 # Interface: Course
 
-Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L537)
+Defined in: [types.ts:547](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L547)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **category**: `"other"` \| `"safety"` \| `"tools"` \| `"equipment"` \| `"company_policy"`
 
-Defined in: [types.ts:542](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L542)
+Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L552)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:542](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **content**: `object`[]
 
-Defined in: [types.ts:543](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L543)
+Defined in: [types.ts:553](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L553)
 
 #### body?
 
@@ -42,7 +42,7 @@ Defined in: [types.ts:543](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:553](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L553)
+Defined in: [types.ts:563](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L563)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [types.ts:553](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **description**: `string`
 
-Defined in: [types.ts:541](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L541)
+Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L551)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types.ts:541](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **estimatedMinutes?**: `number`
 
-Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L551)
+Defined in: [types.ts:561](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L561)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L538)
+Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L548)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **isCertification?**: `boolean`
 
-Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L548)
+Defined in: [types.ts:558](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L558)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **isPublished**: `boolean`
 
-Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L552)
+Defined in: [types.ts:562](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L562)
 
 ***
 
@@ -90,15 +90,15 @@ Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:539](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L539)
+Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L549)
 
 ***
 
 ### requiredRoles?
 
-> `optional` **requiredRoles?**: (`"loader"` \| `"admin"` \| `"driver"` \| `"contractor"` \| `"planner"`)[]
+> `optional` **requiredRoles?**: (`"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"contractor"` \| `"planner"`)[]
 
-Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L550)
+Defined in: [types.ts:560](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L560)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **title**: `string`
 
-Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L540)
+Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L550)
 
 ***
 
@@ -114,7 +114,7 @@ Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **updatedAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:554](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L554)
+Defined in: [types.ts:564](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L564)
 
 ***
 
@@ -122,4 +122,4 @@ Defined in: [types.ts:554](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **validityMonths?**: `number`
 
-Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L549)
+Defined in: [types.ts:559](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L559)

@@ -6,7 +6,7 @@
 
 # Interface: ManifestNote
 
-Defined in: [types.ts:466](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L466)
+Defined in: [types.ts:476](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L476)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:466](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **content**: `string`
 
-Defined in: [types.ts:467](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L467)
+Defined in: [types.ts:477](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L477)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:467](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:468](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L468)
+Defined in: [types.ts:478](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L478)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:468](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdBy**: `string`
 
-Defined in: [types.ts:469](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L469)
+Defined in: [types.ts:479](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L479)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:469](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"note"` \| `"issue"`
 
-Defined in: [types.ts:471](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L471)
+Defined in: [types.ts:481](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L481)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [types.ts:471](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **userName?**: `string`
 
-Defined in: [types.ts:470](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L470)
+Defined in: [types.ts:480](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L480)

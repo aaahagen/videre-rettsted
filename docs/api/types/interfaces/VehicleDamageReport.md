@@ -6,7 +6,7 @@
 
 # Interface: VehicleDamageReport
 
-Defined in: [types.ts:519](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L519)
+Defined in: [types.ts:529](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L529)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:519](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:528](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L528)
+Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L538)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:528](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **description**: `string`
 
-Defined in: [types.ts:525](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L525)
+Defined in: [types.ts:535](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L535)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:525](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:520](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L520)
+Defined in: [types.ts:530](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L530)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:520](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **images**: `string`[]
 
-Defined in: [types.ts:526](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L526)
+Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L536)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:526](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:521](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L521)
+Defined in: [types.ts:531](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L531)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:521](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **reportedBy**: `string`
 
-Defined in: [types.ts:523](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L523)
+Defined in: [types.ts:533](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L533)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:523](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **reportedByName**: `string`
 
-Defined in: [types.ts:524](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L524)
+Defined in: [types.ts:534](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L534)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types.ts:524](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **resolvedAt?**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:529](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L529)
+Defined in: [types.ts:539](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L539)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:529](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **resolvedBy?**: `string`
 
-Defined in: [types.ts:530](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L530)
+Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L540)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [types.ts:530](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"fixed"` \| `"reported"` \| `"in_progress"`
 
-Defined in: [types.ts:527](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L527)
+Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L537)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [types.ts:527](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **vehicleId**: `string`
 
-Defined in: [types.ts:522](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L522)
+Defined in: [types.ts:532](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L532)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types.ts:522](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **workshopOrderReceiptUrl?**: `string`
 
-Defined in: [types.ts:531](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L531)
+Defined in: [types.ts:541](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L541)
 
 ***
 
@@ -110,4 +110,4 @@ Defined in: [types.ts:531](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **workshopRepairReceiptUrl?**: `string`
 
-Defined in: [types.ts:532](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L532)
+Defined in: [types.ts:542](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L542)

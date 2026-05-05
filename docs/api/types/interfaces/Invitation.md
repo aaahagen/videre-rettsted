@@ -6,7 +6,7 @@
 
 # Interface: Invitation
 
-Defined in: [types.ts:179](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L179)
+Defined in: [types.ts:189](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L189)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:179](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **email**: `string`
 
-Defined in: [types.ts:181](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L181)
+Defined in: [types.ts:191](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L191)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:181](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **expiresAt**: `FieldValue`
 
-Defined in: [types.ts:184](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L184)
+Defined in: [types.ts:194](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L194)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:184](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:180](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L180)
+Defined in: [types.ts:190](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L190)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:180](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **organizationId**: `string`
 
-Defined in: [types.ts:182](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L182)
+Defined in: [types.ts:192](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L192)
 
 ***
 
@@ -46,12 +46,12 @@ Defined in: [types.ts:182](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **organizationName?**: `string`
 
-Defined in: [types.ts:185](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L185)
+Defined in: [types.ts:195](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L195)
 
 ***
 
 ### role
 
-> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"contractor"` \| `"planner"`
+> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"contractor"` \| `"planner"`
 
-Defined in: [types.ts:183](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L183)
+Defined in: [types.ts:193](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L193)

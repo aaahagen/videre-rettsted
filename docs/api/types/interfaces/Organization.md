@@ -14,7 +14,7 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **fieldSettings?**: `object`
 
-Defined in: [types.ts:23](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L23)
+Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L33)
 
 #### contactPersons?
 
@@ -94,7 +94,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:45](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L45)
+Defined in: [types.ts:55](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L55)
 
 #### dpaAcceptedAt?
 
@@ -142,7 +142,7 @@ Defined in: [types.ts:45](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **mainDepot?**: `object`
 
-Defined in: [types.ts:18](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L18)
+Defined in: [types.ts:28](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L28)
 
 #### address
 
@@ -163,6 +163,42 @@ Defined in: [types.ts:18](https://github.com/aaahagen/videre-rettsted/blob/main/
 #### radius
 
 > **radius**: `number`
+
+***
+
+### modules?
+
+> `optional` **modules?**: `object`
+
+Defined in: [types.ts:19](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L19)
+
+#### analytics?
+
+> `optional` **analytics?**: `boolean`
+
+#### fleet?
+
+> `optional` **fleet?**: `boolean`
+
+#### learning?
+
+> `optional` **learning?**: `boolean`
+
+#### logistics?
+
+> `optional` **logistics?**: `boolean`
+
+#### messages?
+
+> `optional` **messages?**: `boolean`
+
+#### places?
+
+> `optional` **places?**: `boolean`
+
+#### workforce?
+
+> `optional` **workforce?**: `boolean`
 
 ***
 
@@ -187,3 +223,11 @@ Defined in: [types.ts:16](https://github.com/aaahagen/videre-rettsted/blob/main/
 > `optional` **ownerId?**: `string`
 
 Defined in: [types.ts:17](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L17)
+
+***
+
+### status?
+
+> `optional` **status?**: `"active"` \| `"trial"` \| `"suspended"`
+
+Defined in: [types.ts:18](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L18)

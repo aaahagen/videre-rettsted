@@ -6,7 +6,7 @@
 
 # Interface: RouteSuggestion
 
-Defined in: [types.ts:138](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L138)
+Defined in: [types.ts:148](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L148)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:138](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **driverId?**: `string`
 
-Defined in: [types.ts:140](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L140)
+Defined in: [types.ts:150](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L150)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:140](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **errors**: `string`[]
 
-Defined in: [types.ts:146](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L146)
+Defined in: [types.ts:156](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L156)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:146](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **estimatedDistance**: `number`
 
-Defined in: [types.ts:144](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L144)
+Defined in: [types.ts:154](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L154)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:144](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **estimatedDuration**: `number`
 
-Defined in: [types.ts:143](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L143)
+Defined in: [types.ts:153](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L153)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:143](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orders**: [`Order`](Order.md)[]
 
-Defined in: [types.ts:141](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L141)
+Defined in: [types.ts:151](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L151)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:141](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **places**: [`Place`](Place.md)[]
 
-Defined in: [types.ts:142](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L142)
+Defined in: [types.ts:152](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L152)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:142](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **vehicleId**: `string`
 
-Defined in: [types.ts:139](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L139)
+Defined in: [types.ts:149](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L149)
 
 ***
 
@@ -70,4 +70,4 @@ Defined in: [types.ts:139](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **warnings**: `string`[]
 
-Defined in: [types.ts:145](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L145)
+Defined in: [types.ts:155](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L155)

@@ -6,7 +6,7 @@
 
 # Interface: OpeningHours
 
-Defined in: [types.ts:59](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L59)
+Defined in: [types.ts:69](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L69)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:59](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **close?**: `string`
 
-Defined in: [types.ts:62](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L62)
+Defined in: [types.ts:72](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L72)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:62](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > **isOpen**: `boolean`
 
-Defined in: [types.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L60)
+Defined in: [types.ts:70](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L70)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [types.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **open?**: `string`
 
-Defined in: [types.ts:61](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L61)
+Defined in: [types.ts:71](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L71)

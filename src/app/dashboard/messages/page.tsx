@@ -14,7 +14,8 @@ import {
   doc, 
   updateDoc, 
   arrayUnion,
-  getDocs
+  getDocs,
+  Timestamp
 } from 'firebase/firestore';
 import { Message, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,15 @@ export default function MessagesPage() {
 
   const isAdmin = isPrivileged;
 
+  // Type-safe date conversion helper
+  const toDate = (timestamp: any): Date => {
+    if (!timestamp) return new Date();
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp instanceof Timestamp) return timestamp.toDate();
+    if (typeof timestamp.toDate === 'function') return timestamp.toDate();
+    return new Date();
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] lg:flex-row bg-slate-50 overflow-hidden">
       {/* Sidebar - Contacts */}
@@ -277,16 +287,17 @@ export default function MessagesPage() {
               filteredMessages.map((m, idx) => {
                 const isMe = m.senderId === dbUser.id;
                 const sender = allOrgUsers.find(u => u.id === m.senderId) || (isMe ? dbUser : null);
+                
                 const showDate = idx === 0 || 
-                  format(messages[idx-1].createdAt?.toDate() || new Date(), 'yyyy-MM-dd') !== 
-                  format(m.createdAt?.toDate() || new Date(), 'yyyy-MM-dd');
+                  format(toDate(messages[idx-1].createdAt), 'yyyy-MM-dd') !== 
+                  format(toDate(m.createdAt), 'yyyy-MM-dd');
 
                 return (
                   <div key={m.id} className="space-y-2">
                     {showDate && m.createdAt && (
                       <div className="flex justify-center my-8">
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-white px-4 py-1 rounded-full border border-slate-100 shadow-sm">
-                          {format(m.createdAt.toDate(), "eeee d. MMMM", { locale: nb })}
+                          {format(toDate(m.createdAt), "eeee d. MMMM", { locale: nb })}
                         </span>
                       </div>
                     )}
@@ -313,7 +324,7 @@ export default function MessagesPage() {
                         </div>
                         <div className={`flex items-center gap-1.5 px-1 ${isMe ? 'flex-row-reverse' : ''}`}>
                           <span className="text-[9px] font-bold text-slate-400 uppercase">
-                            {m.createdAt ? format(m.createdAt.toDate(), 'HH:mm') : 'Sender...'}
+                            {m.createdAt ? format(toDate(m.createdAt), 'HH:mm') : 'Sender...'}
                           </span>
                           {isMe && (
                             <span className="text-blue-500">
