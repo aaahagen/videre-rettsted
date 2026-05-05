@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Package,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import {
   Sidebar,
@@ -64,46 +65,6 @@ import { Progress } from "@/components/ui/progress";
 import { firebaseDB } from '@/lib/firebase/database';
 import Link from 'next/link';
 import { useAuth } from '../auth-provider';
-
-const navGroups = [
-  {
-    label: 'Daglig Drift',
-    items: [
-      { href: '/dashboard', icon: Home, label: 'Oversikt' },
-      { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', adminOnly: true },
-      { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger' },
-      { href: '/dashboard/learning', icon: GraduationCap, label: 'Læringsportal' },
-    ]
-  },
-  {
-    label: 'Logistikk',
-    items: [
-      { href: '/dashboard/routes', icon: Route, label: 'Ruter' },
-      { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true },
-      { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true },
-      { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader'] },
-      { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder' },
-      { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
-      { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted' },
-    ]
-  },
-  {
-    label: 'Ressurser',
-    adminOnly: true,
-    items: [
-      { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true },
-      { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true },
-    ]
-  },
-  {
-    label: 'Administrasjon',
-    adminOnly: true,
-    items: [
-      { href: '/dashboard/admin', icon: Shield, label: 'Innstillinger', adminOnly: true },
-      { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
-    ]
-  }
-];
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -157,7 +118,7 @@ export default function AppSidebar() {
               
               // Only count if it's meant for me
               let isForMe = false;
-              if (dbUser.role === 'admin') {
+              if (dbUser.role === 'admin' || dbUser.role === 'super_admin') {
                   isForMe = true; // Admins see everything
               } else {
                   isForMe = msg.recipientId === 'all' || msg.recipientId === 'all_drivers' || msg.recipientId === dbUser.id;
@@ -191,7 +152,57 @@ export default function AppSidebar() {
   };
 
   const displayName = dbUser?.name || authUser?.displayName || authUser?.email || 'Bruker';
-  const isAdmin = dbUser?.role === 'admin';
+  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin';
+  const isSuperAdmin = dbUser?.role === 'super_admin';
+
+  const navGroups = [
+    {
+      label: 'Daglig Drift',
+      items: [
+        { href: '/dashboard', icon: Home, label: 'Oversikt' },
+        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'analytics' },
+        { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger', module: 'messages' },
+        { href: '/dashboard/learning', icon: GraduationCap, label: 'Læringsportal', module: 'learning' },
+      ]
+    },
+    {
+      label: 'Logistikk',
+      items: [
+        { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics' },
+        { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
+        { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
+        { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin'], module: 'logistics' },
+        { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder', module: 'places' },
+        { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
+        { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places' },
+      ]
+    },
+    {
+      label: 'Ressurser',
+      adminOnly: true,
+      items: [
+        { href: '/dashboard/workforce', icon: Users, label: 'Personell', adminOnly: true, module: 'workforce' },
+        { href: '/dashboard/fleet', icon: Truck, label: 'Kjøretøy', adminOnly: true, module: 'fleet' },
+      ]
+    },
+    {
+      label: 'Administrasjon',
+      adminOnly: true,
+      items: [
+        { href: '/dashboard/admin', icon: Shield, label: 'Innstillinger', adminOnly: true },
+        { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
+      ]
+    }
+  ];
+
+  if (isSuperAdmin) {
+    navGroups.push({
+      label: 'App Eier',
+      items: [
+        { href: '/dashboard/super', icon: Globe, label: 'Super Admin' }
+      ]
+    } as any);
+  }
 
   return (
     <Sidebar
@@ -284,13 +295,21 @@ export default function AppSidebar() {
         <ScrollArea className="flex-1 -mx-2 px-2">
             <SidebarGroup>
             <SidebarMenu>
-            {navGroups.map((group, index) => {
+            {navGroups.map((group: any, index) => {
               if (group.adminOnly && !isAdmin) return null;
               
-              // Filter items based on roles/admin status
-              const visibleItems = group.items.filter(item => {
-                  if ((item as any).adminOnly && !isAdmin) return false;
-                  if ((item as any).roles && !(item as any).roles.includes(dbUser?.role || '')) return false;
+              // Filter items based on roles/admin status AND modules
+              const visibleItems = group.items.filter((item: any) => {
+                  if (item.adminOnly && !isAdmin) return false;
+                  if (item.roles && !item.roles.includes(dbUser?.role || '')) return false;
+                  
+                  // Module Gating
+                  if (item.module && org?.modules) {
+                    const moduleEnabled = (org.modules as any)[item.module];
+                    // If module setting exists and is false, hide it
+                    if (moduleEnabled === false) return false;
+                  }
+
                   return true;
               });
 
@@ -301,7 +320,7 @@ export default function AppSidebar() {
                       <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1 px-4">
                           {group.label}
                       </SidebarGroupLabel>
-                      {visibleItems.map((item) => (
+                      {visibleItems.map((item: any) => (
                           <SidebarMenuItem key={item.href}>
                               <SidebarMenuButton
                               asChild

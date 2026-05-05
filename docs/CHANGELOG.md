@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Super Admin Dashboard (App Owner Control):** Launched a centralized cockpit at `/dashboard/super` for the application owner to manage organizations and modular access.
+- **Multi-Tenancy Module Gating:** Implemented a robust feature-toggling system.
+    - **Modular Organizations:** Organizations can now have specific modules (LMS, Fleet, Logistics, etc.) enabled or disabled.
+    - **Intelligent Sidebar:** The navigation menu automatically adjusts based on the organization's active modules and the user's role.
+    - **Global Statistics:** Super Admins can see total user counts across the entire platform.
+- **New `super_admin` Role:** Introduced a high-level administrative role with cross-organization visibility and system-wide configuration rights.
+- **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
+
+### Changed
+- **Sidebar Architecture:** Refactored the sidebar to support dynamic module checks and enhanced role-based filtering for `super_admin`.
+- **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
+
+### Fixed
+- **Role Propagation:** Updated message count and permission logic to correctly account for the new `super_admin` role.
+
+## [0.1.0] - 2024-05-22
+
+### Added
 - **API Documentation:** Integrated `typedoc` and `typedoc-plugin-markdown` to automatically generate Markdown-based documentation from internal TypeScript interfaces and libraries. Run `npm run docs` to build. Output is located in `docs/api`.
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
     - **Quick Status Manager:** Added a `VehicleDetailsModal` allowing administrators to instantly toggle operational states (Klar, På rute, Parkert, Observasjon, Venter på verksted, På verksted) without full record editing.
@@ -47,17 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Order 'Varer & Palletering':** Added detailed line item support and automatic pallet estimation to the New Order form.
 - **Route Keys Dashboard Card:** Added a dynamic card that alerts drivers to specific keys needed for their assigned route.
 
-### Changed
-- **Terminology Refinement:** Standardized "Leveringsvindu" (Delivery window) across the app to replace "Åpningstider" for better context.
-- **Dashboard UI Refresh:** Implemented layered contrast and semantic logic striping for a more professional, "glance-first" interface.
-- **Place Details Layout:** Reordered sections to prioritize map and location info, hiding empty fields to reduce visual noise.
-- **Route Planning Strategy:** Updated documentation to reflect "Open Access" policy for locations without registered constraints.
-- **Cascading Order Deletion:** Implemented atomic transactions to clean up manifests and routes when an order is deleted.
-
 ### Fixed
-- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save race condition during the initial vehicle registration.
-- **Fleet Compliance Indexing:** Fixed a bug where `euControl` and `nextService` dates were not correctly saved to the `Vehicle` model.
-- **Firestore Sentinel Conflict:** Fixed a critical bug in `cleanObject` utility that broke `deleteField()` operations during vehicle updates.
+- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles.
+- **Fleet Compliance Indexing:** Fixed a bug where `euControl` and `nextService` dates were not correctly saved.
+- **Firestore Sentinel Conflict:** Fixed a critical bug in `cleanObject` utility that broke `deleteField()` operations.
 - **iOS Map Rendering:** Resolved hardware acceleration issues causing iframes to fail on certain mobile devices.
 - **Place Form Numeric Validation:** Implemented robust preprocessing for numeric fields to handle regional decimal formats (commas).
 
@@ -68,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Tachograph Download Tracking:** Implement a system to register and track when tachograph data was last downloaded for compliance.
-- **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage. This includes adding a `kilometerstand` field to the vehicle model, displaying it on fleet cards, and creating a prompt for drivers to update the reading upon clocking out.
+- **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage.
 - **Geofence-based Delivery Alerts:** Automatically flag deliveries completed outside a configurable radius from the destination.
 - **API Intake:** Secure REST endpoint for external TMS/ERP order ingestion.
 - **Tachograph Analysis:** Detailed reporting on driving/rest time regulation breaches (Phase 6).
@@ -76,5 +87,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Capacitor.js Integration:** True native mobile distribution for iOS and Android (Phase 8).
 
 ### Fixed
-- **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust, potentially preventing accidental closure when clicking outside, or persisting draft data to prevent data loss.
-- **Fleet Card Notifications:** Fix the issue where "ny sak/ service" (new issue/service) notifications are not showing up correctly on the vehicle cards.
+- **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust.
+- **Fleet Card Notifications:** Fix the issue where "ny sak/ service" notifications are not showing up correctly on the vehicle cards.

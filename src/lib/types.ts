@@ -4,7 +4,7 @@ export interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   organizationId: string;
   photoURL?: string;
   disabled?: boolean;
@@ -15,6 +15,16 @@ export interface Organization {
   name: string;
   orgNumber?: string;
   ownerId?: string;
+  status?: 'active' | 'trial' | 'suspended';
+  modules?: {
+    places?: boolean;
+    learning?: boolean;
+    messages?: boolean;
+    fleet?: boolean;
+    workforce?: boolean;
+    logistics?: boolean;
+    analytics?: boolean;
+  };
   mainDepot?: {
     address: string;
     coordinates: { lat: number, lng: number };
@@ -180,7 +190,7 @@ export interface Invitation {
   id: string;
   email: string;
   organizationId: string;
-  role: 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   expiresAt: FieldValue;
   organizationName?: string;
 }
@@ -191,7 +201,7 @@ export interface User {
   name: string;
   email: string;
   orgId: string;
-  role: 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   favorites: string[];
   visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
@@ -547,7 +557,7 @@ export interface Course {
   }[];
   isCertification?: boolean; // New field
   validityMonths?: number;   // New field
-  requiredRoles?: ('admin' | 'driver' | 'contractor' | 'loader' | 'planner')[];
+  requiredRoles?: ('super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner')[];
   estimatedMinutes?: number;
   isPublished: boolean;
   createdAt: FieldValue | Date;
