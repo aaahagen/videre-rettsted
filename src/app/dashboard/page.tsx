@@ -6,10 +6,10 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield } from 'lucide-react';
-import { User, Route, WorkLog, Organization } from '@/lib/types';
+import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield, GraduationCap, Bell } from 'lucide-react';
+import { User, Route, WorkLog, Organization, CourseAssignment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { doc, onSnapshot, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { useSearch } from '@/hooks/use-search';
 import { TimeStampCard } from '@/components/workforce/time-stamp-card';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
-import { DriverProfile, Route as RouteType, Place, Order, Manifest } from '@/lib/types';
+import { DriverProfile, Route as RouteType, Place, Order, Manifest, Message } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
 import { UserCheck, Activity, Palmtree, Coffee, Briefcase, Truck, Package, Clock, CheckCircle2, BarChart3, ArrowRight, LogIn, LogOut, Users2, HelpCircle } from 'lucide-react';
 
@@ -38,8 +38,12 @@ export default function DashboardPage() {
   const [manifestStats, setManifestStats] = useState({ totalManifests: 0, activeManifests: 0, totalKolli: 0, loadedKolli: 0 });
   const [todayWorkLogs, setTodayWorkLogs] = useState<WorkLog[]>([]);
 
+  // Driver dynamic data
   const [activeRoute, setActiveRoute] = useState<Route | null>(null);
   const [activeManifest, setActiveManifest] = useState<Manifest | null>(null);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [pendingCoursesCount, setPendingCoursesCount] = useState(0);
+
   const [loadingRoute, setLoadingRoute] = useState(true);
   const { setContext } = useSearch();
   const router = useRouter();
@@ -117,6 +121,40 @@ export default function DashboardPage() {
     });
     return () => unsub();
   }, [userData?.orgId, activeRoute?.id]);
+
+  // Listen for dynamic driver notification data
+  useEffect(() => {
+    if (!userData?.id || !userData?.orgId) return;
+
+    // 1. Unread Messages
+    const msgQ = query(collection(db, 'messages'), where('orgId', '==', userData.orgId));
+    const unsubMsgs = onSnapshot(msgQ, (snap) => {
+        let count = 0;
+        snap.forEach(d => {
+            const m = d.data() as Message;
+            const isForMe = m.recipientId === 'all' || m.recipientId === userData.id;
+            if (isForMe && m.senderId !== userData.id && !(m.readBy || []).includes(userData.id)) {
+                count++;
+            }
+        });
+        setUnreadMessagesCount(count);
+    });
+
+    // 2. Pending Courses
+    const courseQ = query(
+        collection(db, 'courseAssignments'), 
+        where('userId', '==', userData.id),
+        where('status', 'in', ['assigned', 'in_progress'])
+    );
+    const unsubCourses = onSnapshot(courseQ, (snap) => {
+        setPendingCoursesCount(snap.size);
+    });
+
+    return () => {
+        unsubMsgs();
+        unsubCourses();
+    };
+  }, [userData?.id, userData?.orgId]);
 
   
   useEffect(() => {
@@ -312,6 +350,7 @@ export default function DashboardPage() {
   const isAdmin = userData.role === 'admin' || userData.role === 'super_admin';
   const isLogisticsEnabled = org?.modules?.logistics !== false;
   const isMessagesEnabled = org?.modules?.messages !== false;
+  const isLearningEnabled = org?.modules?.learning !== false;
 
   return (
     <div className={cn(
@@ -723,10 +762,55 @@ export default function DashboardPage() {
                         )}
                     </div>
                 )}
-                {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
+
+                {/* DYNAMIC MODULE CARDS (Messages & Learning) */}
+                <div className="flex flex-col gap-6 h-full">
+                    {isMessagesEnabled && (
+                        <Link href="/dashboard/messages" className="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-600 transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-blue-600 flex-1 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform rounded-xl">
+                                    <MessageSquare className="h-6 w-6" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-black text-slate-800 uppercase tracking-tight text-sm">Meldinger</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Kommunikasjon</span>
+                                </div>
+                            </div>
+                            {unreadMessagesCount > 0 && (
+                                <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-black text-xs animate-bounce shadow-lg shadow-blue-200">
+                                    {unreadMessagesCount}
+                                </div>
+                            )}
+                        </Link>
+                    )}
+
+                    {isLearningEnabled && (
+                        <Link href="/dashboard/learning" className="group bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-600 transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-indigo-600 flex-1 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 group-hover:scale-110 transition-transform rounded-xl">
+                                    <GraduationCap className="h-6 w-6" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-black text-slate-800 uppercase tracking-tight text-sm">Læringsportal</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Kurs & Opplæring</span>
+                                </div>
+                            </div>
+                            {pendingCoursesCount > 0 && (
+                                <div className="h-8 w-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-200">
+                                    {pendingCoursesCount}
+                                </div>
+                            )}
+                        </Link>
+                    )}
+                </div>
+
+                <div className="h-full">
+                    {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Bottom Shortcuts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
                 <Link href="/dashboard/places" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
@@ -738,20 +822,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </Link>
-                
-                {isMessagesEnabled && (
-                    <Link href="/dashboard/messages" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all group-hover:scale-110">
-                                <MessageSquare className="h-6 w-6" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="font-black text-slate-800 group-hover:text-primary transition-colors uppercase tracking-tight text-sm">Kommunikasjon</span>
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Meldinger</span>
-                            </div>
-                        </div>
-                    </Link>
-                )}
 
                 {isLogisticsEnabled && (
                     <Link href="/dashboard/routes" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-primary transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-primary">
@@ -766,6 +836,19 @@ export default function DashboardPage() {
                         </div>
                     </Link>
                 )}
+                
+                {/* Favorites - Always available if Places are available */}
+                <Link href="/dashboard/favorites" className="group bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-yellow-500 transition-all hover:shadow-md border-b-4 border-b-slate-200 hover:border-b-yellow-500">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-slate-50 text-slate-400 group-hover:bg-yellow-50 group-hover:text-yellow-600 rounded-xl transition-all group-hover:scale-110">
+                            <Star className="h-6 w-6" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="font-black text-slate-800 group-hover:text-yellow-600 transition-colors uppercase tracking-tight text-sm">Favoritter</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Dine lagrede steder</span>
+                        </div>
+                    </div>
+                </Link>
             </div>
         </div>
       )}
