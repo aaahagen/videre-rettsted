@@ -6,7 +6,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield, GraduationCap, Bell } from 'lucide-react';
+import { Loader2, Route as RouteIcon, MessageSquare, MapPin, User as UserIcon, Shield, GraduationCap, Bell, Star } from 'lucide-react';
 import { User, Route, WorkLog, Organization, CourseAssignment } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { doc, onSnapshot, collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
@@ -351,6 +351,7 @@ export default function DashboardPage() {
   const isLogisticsEnabled = org?.modules?.logistics !== false;
   const isMessagesEnabled = org?.modules?.messages !== false;
   const isLearningEnabled = org?.modules?.learning !== false;
+  const isAnalyticsEnabled = org?.modules?.analytics !== false;
 
   return (
     <div className={cn(
@@ -680,7 +681,7 @@ export default function DashboardPage() {
 
                 <div className="space-y-8">
                     <TimeStampCard user={userData} />
-                    {userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
+                    {isAnalyticsEnabled && userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
                     {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
                 </div>
             </div>
