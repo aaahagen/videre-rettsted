@@ -64,6 +64,7 @@ The application strictly enforces role-based access control (RBAC) at both the U
 - **Fleet Management & Safety:**
     - A complete registry of company vehicles, tracking physical dimensions, capacities, and attached documents (insurance).
     - **Digital Vehicle Inspections:** Drivers perform and log Pre-trip and Post-trip safety checks, including damage reporting with photos.
+    - **Odometer Tracking (`kilometerstand`):** System for regularly prompting drivers to update vehicle mileage, with the data being displayed in fleet dashboards for maintenance and tracking.
 - **Internal Communication:**
     - Real-time messaging hub with read-receipts. Admins can broadcast to all drivers, and drivers can reply directly.
 - **Navigation Integration:**

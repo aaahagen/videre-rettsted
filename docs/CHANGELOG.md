@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save conflict during the initial vehicle registration.
+- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save race condition during the initial vehicle registration.
 
 ### Added
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
@@ -68,8 +68,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **Tachograph Download Tracking:** Implement a system to register and track when tachograph data was last downloaded for compliance.
+- **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage. This includes adding a `kilometerstand` field to the vehicle model, displaying it on fleet cards, and creating a prompt for drivers to update the reading upon clocking out.
 - **Geofence-based Delivery Alerts:** Automatically flag deliveries completed outside a configurable radius from the destination.
 - **API Intake:** Secure REST endpoint for external TMS/ERP order ingestion.
 - **Tachograph Analysis:** Detailed reporting on driving/rest time regulation breaches (Phase 6).
 - **Commercialization:** Stripe payment integration and feature gating for modular SaaS distribution (Phase 7).
 - **Capacitor.js Integration:** True native mobile distribution for iOS and Android (Phase 8).
+
+### Fixed
+- **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust, potentially preventing accidental closure when clicking outside, or persisting draft data to prevent data loss.
+- **Fleet Card Notifications:** Fix the issue where "ny sak/ service" (new issue/service) notifications are not showing up correctly on the vehicle cards.
