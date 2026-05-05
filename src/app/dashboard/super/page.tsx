@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Users, ShieldCheck, Settings, Globe, CheckCircle2, XCircle, LayoutGrid, Zap } from 'lucide-react';
+import { Loader2, Building2, Users, ShieldCheck, Settings, Globe, CheckCircle2, XCircle, LayoutGrid, Zap, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -13,6 +13,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function SuperAdminPage() {
   const { dbUser, loading } = useAuth();
@@ -98,7 +104,6 @@ export default function SuperAdminPage() {
         title: "Byttet organisasjon",
         description: "Du ser nå data for den valgte organisasjonen.",
       });
-      // Force a small delay to ensure Firestore syncs before redirect or just let the sidebar listener handle it
       setTimeout(() => {
           router.push('/dashboard');
       }, 500);
@@ -122,77 +127,107 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic flex items-center gap-3">
-            <Globe className="h-10 w-10 text-blue-600" />
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2 sm:gap-3">
+            <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
             Super Admin <span className="text-slate-400">Control</span>
           </h1>
-          <p className="text-slate-500 font-medium">Global oversikt over alle organisasjoner og moduler.</p>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium">Global oversikt over alle organisasjoner og moduler.</p>
         </div>
-        <div className="flex gap-4">
-            <Card className="px-6 py-2 border-2 border-slate-100 shadow-none">
-                <p className="text-[10px] font-black uppercase text-slate-400">Totale Brukere</p>
-                <p className="text-xl font-black">{globalStats.total}</p>
+        <div className="flex shrink-0">
+            <Card className="px-4 py-2 sm:px-6 sm:py-2 border-2 border-slate-100 shadow-none w-full sm:w-auto">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</p>
+                <p className="text-xl sm:text-2xl font-black">{globalStats.total}</p>
             </Card>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {organizations.map((org) => (
-          <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-2 ring-blue-600/10' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
+          <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-4 ring-blue-600/5' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
             <div className="bg-slate-50 border-b p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-white border flex items-center justify-center shadow-sm">
-                  <Building2 className="h-6 w-6 text-slate-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-white border flex items-center justify-center shadow-sm shrink-0">
+                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight">{org.name}</h3>
-                    {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[10px]">Aktiv i Dashboard</Badge>}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-black text-base sm:text-lg text-slate-800 uppercase tracking-tight truncate">{org.name}</h3>
+                    {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[8px] sm:text-[10px]">Aktiv i Dashboard</Badge>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="font-mono text-[10px]">{org.id}</Badge>
-                    <Badge className={org.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}>
+                    <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0">{org.id.substring(0, 8)}...</Badge>
+                    <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 ${org.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                       {org.status || 'trial'}
                     </Badge>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Button 
-                    variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
-                    size="sm" 
-                    className="font-bold"
-                    disabled={dbUser?.orgId === org.id || isSwitching !== null}
-                    onClick={() => handleSwitchOrg(org.id)}
-                >
-                    {isSwitching === org.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
-                    {dbUser?.orgId === org.id ? 'Valgt Organisasjon' : 'Logg inn som denne org'}
-                </Button>
-                
-                <Select value={org.status || 'trial'} onValueChange={(val: any) => handleStatusChange(org.id, val)}>
-                  <SelectTrigger className="w-32 font-bold h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Aktiv</SelectItem>
-                    <SelectItem value="trial">Prøveperiode</SelectItem>
-                    <SelectItem value="suspended">Suspendert</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                {/* Desktop Buttons */}
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button 
+                      variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
+                      size="sm" 
+                      className="font-bold text-xs"
+                      disabled={dbUser?.orgId === org.id || isSwitching !== null}
+                      onClick={() => handleSwitchOrg(org.id)}
+                  >
+                      {isSwitching === org.id ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
+                      {dbUser?.orgId === org.id ? 'Valgt' : 'Logg inn'}
+                  </Button>
+                  
+                  <Select value={org.status || 'trial'} onValueChange={(val: any) => handleStatusChange(org.id, val)}>
+                    <SelectTrigger className="w-28 font-bold h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Aktiv</SelectItem>
+                      <SelectItem value="trial">Prøve</SelectItem>
+                      <SelectItem value="suspended">Suspendert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Mobile Actions */}
+                <div className="flex sm:hidden w-full gap-2">
+                   <Button 
+                      variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
+                      size="sm" 
+                      className="flex-1 font-bold text-xs h-9"
+                      disabled={dbUser?.orgId === org.id || isSwitching !== null}
+                      onClick={() => handleSwitchOrg(org.id)}
+                  >
+                      {isSwitching === org.id ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
+                      {dbUser?.orgId === org.id ? 'Aktiv' : 'Bytt til org'}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'active')}>Sett Aktiv</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'trial')}>Sett Prøveperiode</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'suspended')} className="text-destructive">Suspender</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
 
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div className="md:col-span-1 space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
+                <div className="lg:col-span-1 space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                     <LayoutGrid className="h-3 w-3" /> Moduler
                   </h4>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                     {[
                       { id: 'places', label: 'RettSted (Steder)', core: true },
                       { id: 'learning', label: 'Læringsportal' },
@@ -202,14 +237,15 @@ export default function SuperAdminPage() {
                       { id: 'logistics', label: 'Logistikk (Rute/Scan)' },
                       { id: 'analytics', label: 'Statistikk / BI' },
                     ].map((mod) => (
-                      <div key={mod.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
-                        <Label htmlFor={`${org.id}-${mod.id}`} className="text-sm font-bold text-slate-700 cursor-pointer">
+                      <div key={mod.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 sm:bg-transparent border border-slate-100 sm:border-none">
+                        <Label htmlFor={`${org.id}-${mod.id}`} className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer">
                           {mod.label}
                           {mod.core && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase">Core</span>}
                         </Label>
                         <Switch
                           id={`${org.id}-${mod.id}`}
                           disabled={mod.core}
+                          className="scale-75 sm:scale-100 origin-right"
                           checked={mod.core || !!(org.modules as any)?.[mod.id]}
                           onCheckedChange={() => handleModuleToggle(org.id, mod.id as any, !!(org.modules as any)?.[mod.id])}
                         />
@@ -218,12 +254,12 @@ export default function SuperAdminPage() {
                   </div>
                 </div>
 
-                <div className="md:col-span-3">
-                    <div className="bg-slate-50/50 rounded-xl border border-dashed p-8 flex flex-col items-center justify-center text-center">
-                        <ShieldCheck className="h-12 w-12 text-slate-200 mb-4" />
-                        <h4 className="font-black text-slate-400 uppercase tracking-tighter">Organisasjons-oversikt</h4>
-                        <p className="text-xs text-slate-400 max-w-xs mt-2 font-medium">
-                            Her kan vi legge til spesifikk statistikk for denne organisasjonen, som antall steder opprettet, aktive ruter i dag, og siste innlogging.
+                <div className="lg:col-span-3">
+                    <div className="bg-slate-50/50 rounded-xl border border-dashed border-slate-200 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+                        <ShieldCheck className="h-8 w-8 sm:h-12 sm:w-12 text-slate-200 mb-3 sm:mb-4" />
+                        <h4 className="font-black text-slate-400 uppercase tracking-tighter text-xs sm:text-sm">Organisasjons-oversikt</h4>
+                        <p className="text-[10px] sm:text-xs text-slate-400 max-w-xs mt-2 font-medium">
+                            Status for {org.name}. Her kan vi legge til spesifikk statistikk for denne organisasjonen senere.
                         </p>
                     </div>
                 </div>
