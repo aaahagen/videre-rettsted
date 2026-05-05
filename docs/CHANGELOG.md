@@ -7,10 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save race condition during the initial vehicle registration.
-
 ### Added
+- **API Documentation:** Integrated `typedoc` and `typedoc-plugin-markdown` to automatically generate Markdown-based documentation from internal TypeScript interfaces and libraries. Run `npm run docs` to build. Output is located in `docs/api`.
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
     - **Quick Status Manager:** Added a `VehicleDetailsModal` allowing administrators to instantly toggle operational states (Klar, På rute, Parkert, Observasjon, Venter på verksted, På verksted) without full record editing.
     - **Automated Damage Triage:** Integrated `VehicleInspectionForm` with the fleet system. If a driver reports damage, the vehicle is automatically tagged as "Observasjon" and a structured `Damage Report` is created for admin review.
@@ -57,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cascading Order Deletion:** Implemented atomic transactions to clean up manifests and routes when an order is deleted.
 
 ### Fixed
+- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save race condition during the initial vehicle registration.
 - **Fleet Compliance Indexing:** Fixed a bug where `euControl` and `nextService` dates were not correctly saved to the `Vehicle` model.
 - **Firestore Sentinel Conflict:** Fixed a critical bug in `cleanObject` utility that broke `deleteField()` operations during vehicle updates.
 - **iOS Map Rendering:** Resolved hardware acceleration issues causing iframes to fail on certain mobile devices.
