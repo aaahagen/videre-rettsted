@@ -9,19 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Super Admin Dashboard (App Owner Control):** Launched a centralized cockpit at `/dashboard/super` for the application owner to manage organizations and modular access.
+- **Organization Context Switching:** Super Admins can now instantly "log in" as any organization to view data and verify settings from their perspective.
 - **Multi-Tenancy Module Gating:** Implemented a robust feature-toggling system.
     - **Modular Organizations:** Organizations can now have specific modules (LMS, Fleet, Logistics, etc.) enabled or disabled.
     - **Intelligent Sidebar:** The navigation menu automatically adjusts based on the organization's active modules and the user's role.
+    - **Driver Dashboard Gating:** The main dashboard for drivers now conditionally hides Logistics and Message sections based on organization setup.
+    - **Workforce Gating:** The "Arbeidstid" punch-in card is now hidden if the workforce module is disabled.
     - **Global Statistics:** Super Admins can see total user counts across the entire platform.
 - **New `super_admin` Role:** Introduced a high-level administrative role with cross-organization visibility and system-wide configuration rights.
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Responsive Message System:** Completely redesigned the messages page for mobile.
+    - **Split-View Layout:** Implemented a WhatsApp-style view that switches between contact list and chat window on mobile.
+    - **Scroll Performance:** Optimized layout to ensure independent scrolling for both contacts and messages without page-level overflow.
+    - **Global Search Integration:** The messages contact list is now synced with the main dashboard search bar at the top of the screen.
 - **Sidebar Architecture:** Refactored the sidebar to support dynamic module checks and enhanced role-based filtering for `super_admin`.
+- **Logistics Menu Order:** Reorganized the Logistikk sidebar group into a more logical operational flow (Ordrer -> Ruter -> Auto-plan -> Lasterampe -> Overvåkning).
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
-- **Role Propagation:** Updated message count and permission logic to correctly account for the new `super_admin` role.
+- **Message System Robustness:** 
+    - Added backwards compatibility for older messages without a `type` field.
+    - Fixed `.toDate()` type errors by implementing a safe date conversion helper.
+    - Added safe array checks for `readBy` and name fields to prevent crashes.
+- **Role Propagation:** Updated message count and permission logic to correctly account for the new `super_admin` role across the entire application.
 
 ## [0.1.0] - 2024-05-22
 
