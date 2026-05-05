@@ -196,6 +196,13 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
         return <Card className="border-slate-200 shadow-sm"><CardContent className="p-6 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></CardContent></Card>;
     }
 
+    // Check if the module is enabled
+    const isWorkforceEnabled = organization?.modules?.workforce !== false;
+
+    if (!isWorkforceEnabled) {
+        return null;
+    }
+
     return (
         <>
             <AlertDialog open={confirmStartOpen} onOpenChange={setConfirmStartOpen}>
