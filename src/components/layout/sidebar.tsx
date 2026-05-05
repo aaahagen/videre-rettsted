@@ -167,11 +167,11 @@ export default function AppSidebar() {
     {
       label: 'Logistikk',
       items: [
-        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics' },
+        { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics' },
         { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
-        { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin'], module: 'logistics' },
+        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics' },
         { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder', module: 'places' },
         { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
         { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places' },
