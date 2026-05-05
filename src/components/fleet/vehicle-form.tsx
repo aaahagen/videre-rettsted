@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { firebaseDB } from '@/lib/firebase/database';
 import { cn } from '@/lib/utils';
 import { deleteField } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 interface VehicleFormProps {
     initialData?: Vehicle | null;
@@ -25,6 +26,7 @@ interface VehicleFormProps {
 }
 
 export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleFormProps) {
+    const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const docFileInputRef = useRef<HTMLInputElement>(null);
@@ -167,20 +169,30 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
         setIsSubmitting(true);
         setIsUploading(true);
         try {
+            const isNew = !initialData;
             let currentVehicleId = initialData?.id;
             
+            // Helper to get value or deletion sentinel. 
+            // deleteField() is ONLY allowed for updates. For new docs, we use undefined so cleanObject removes it.
+            const getVal = (val: any) => {
+                if (val === undefined || val === null || val === '') {
+                    return isNew ? undefined : deleteField();
+                }
+                return val;
+            };
+
             // Explicitly handle clearing capacity and dimensions
             const cleanedCapacity = {
-                weight: typeof formData.capacity?.weight !== 'number' ? deleteField() : formData.capacity.weight,
-                volume: typeof formData.capacity?.volume !== 'number' ? deleteField() : formData.capacity.volume,
-                pallets: typeof formData.capacity?.pallets !== 'number' ? deleteField() : formData.capacity.pallets,
-                notes: formData.capacity?.notes || deleteField()
+                weight: typeof formData.capacity?.weight !== 'number' ? getVal(undefined) : formData.capacity.weight,
+                volume: typeof formData.capacity?.volume !== 'number' ? getVal(undefined) : formData.capacity.volume,
+                pallets: typeof formData.capacity?.pallets !== 'number' ? getVal(undefined) : formData.capacity.pallets,
+                notes: getVal(formData.capacity?.notes)
             };
 
             const cleanedDimensions = {
-                height: typeof formData.dimensions?.height !== 'number' ? deleteField() : formData.dimensions.height,
-                width: typeof formData.dimensions?.width !== 'number' ? deleteField() : formData.dimensions.width,
-                length: typeof formData.dimensions?.length !== 'number' ? deleteField() : formData.dimensions.length
+                height: typeof formData.dimensions?.height !== 'number' ? getVal(undefined) : formData.dimensions.height,
+                width: typeof formData.dimensions?.width !== 'number' ? getVal(undefined) : formData.dimensions.width,
+                length: typeof formData.dimensions?.length !== 'number' ? getVal(undefined) : formData.dimensions.length
             };
 
             let finalFormData = { 
@@ -188,14 +200,16 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 orgId,
                 capacity: cleanedCapacity,
                 dimensions: cleanedDimensions,
-                euControl: formData.euControl || deleteField(),
-                nextService: formData.nextService || deleteField(),
-                tachographCalibration: formData.tachographCalibration || deleteField(),
+                euControl: getVal(formData.euControl),
+                nextService: getVal(formData.nextService),
+                tachographCalibration: getVal(formData.tachographCalibration),
             };
 
-            // If creating a new vehicle, create it first to get an ID
+            // If creating a new vehicle, create it first to get an ID for storage paths
             if (!currentVehicleId) {
-                const newVehicle = await firebaseDB.createVehicle(finalFormData as any);
+                // Remove ID and timestamps before creation if they somehow snuck in
+                const { id: _, createdAt: __, updatedAt: ___, ...createData } = finalFormData as any;
+                const newVehicle = await firebaseDB.createVehicle(createData);
                 currentVehicleId = newVehicle.id;
                 finalFormData = { ...finalFormData, id: newVehicle.id };
             }
@@ -228,10 +242,15 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 }
             }
 
+            // Call onSubmit which will perform the final update (saving image/doc URLs)
             await onSubmit({ ...finalFormData, images: finalImages, documents: finalDocuments } as any);
         } catch (error) {
             console.error("Error submitting vehicle form:", error);
-            throw error;
+            toast({ 
+                title: "Feil", 
+                description: "Kunne ikke lagre kjøretøyet. Vennligst sjekk alle felt.", 
+                variant: "destructive" 
+            });
         } finally {
             setIsSubmitting(false);
             setIsUploading(false);

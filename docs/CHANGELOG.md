@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles. The form now correctly distinguishes between new document creation (using `undefined` for empty fields) and existing document updates (using Firestore `deleteField()` sentinels). Also resolved a double-save conflict during the initial vehicle registration.
+
 ### Added
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
     - **Quick Status Manager:** Added a `VehicleDetailsModal` allowing administrators to instantly toggle operational states (Klar, På rute, Parkert, Observasjon, Venter på verksted, På verksted) without full record editing.
