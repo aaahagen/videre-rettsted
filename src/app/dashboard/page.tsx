@@ -352,6 +352,9 @@ export default function DashboardPage() {
   const isMessagesEnabled = org?.modules?.messages !== false;
   const isLearningEnabled = org?.modules?.learning !== false;
   const isAnalyticsEnabled = org?.modules?.analytics !== false;
+  const isWorkforceEnabled = org?.modules?.workforce !== false;
+  const isFleetEnabled = org?.modules?.fleet !== false;
+
 
   return (
     <div className={cn(
@@ -368,6 +371,7 @@ export default function DashboardPage() {
             <div className="w-full lg:w-2/3 space-y-8">
                 
                 {/* 1. OPERATIONAL STATUS (White with blue metrics) */}
+                {isLogisticsEnabled && (
                 <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm relative overflow-hidden transition-all hover:shadow-md">
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-8">
@@ -420,8 +424,10 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+                )}
 
                 {/* LOGISTICS ROW */}
+                {isLogisticsEnabled && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* LASTERAMPE (Indigo tinted) */}
                     <div className="bg-indigo-50/30 rounded-xl border border-indigo-100/50 p-8 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:bg-indigo-50/50">
@@ -509,11 +515,13 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+                )}
 
                 {/* TELEMETRY ROW */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
                     {/* WORKFORCE LIST (Blue Tinted) */}
+                    {isWorkforceEnabled && (
                     <div className="bg-blue-50/30 rounded-xl border border-blue-100/50 p-8 shadow-sm flex flex-col transition-all hover:shadow-md hover:bg-blue-50/50">
                         <div className="flex justify-between items-center mb-8 border-b border-blue-100 pb-4 shrink-0">
                             <div className="flex items-center gap-3">
@@ -571,8 +579,10 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
+                    )}
 
                     {/* FLEET LIST (Slate tinted) */}
+                    {isFleetEnabled && (
                     <div className="bg-slate-100/50 rounded-xl border border-slate-200/50 p-8 shadow-sm flex flex-col transition-all hover:shadow-md hover:bg-slate-100/80">
                         <div className="flex justify-between items-center mb-8 border-b border-slate-200 pb-4 shrink-0">
                             <div className="flex items-center gap-3">
@@ -623,6 +633,7 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
 
             </div>
@@ -630,6 +641,7 @@ export default function DashboardPage() {
             {/* ACTION SIDEBAR (Right - 33%) */}
             <div className="w-full lg:w-1/3 space-y-8">
                 {/* ATTENDANCE CARD (Emerald tinted) */}
+                {isWorkforceEnabled && (
                 <div className="bg-emerald-50/30 rounded-xl border border-emerald-100/50 p-8 shadow-sm transition-all hover:shadow-md hover:bg-emerald-50/50">
                     <div className="flex justify-between items-center mb-8 border-b border-emerald-100 pb-4">
                         <div className="flex items-center gap-3">
@@ -678,9 +690,10 @@ export default function DashboardPage() {
                         <span className="text-slate-900 font-black">{workforceStats.working} ansatte</span>
                     </div>
                 </div>
+                )}
 
                 <div className="space-y-8">
-                    <TimeStampCard user={userData} />
+                    {isWorkforceEnabled && <TimeStampCard user={userData} />}
                     {isAnalyticsEnabled && userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
                     {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
                 </div>
@@ -702,7 +715,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <TimeStampCard user={userData} />
+                {isWorkforceEnabled && <TimeStampCard user={userData} />}
                 
                 {isLogisticsEnabled && (
                     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col h-full border-l-4 border-l-blue-600">

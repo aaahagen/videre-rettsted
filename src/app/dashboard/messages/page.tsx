@@ -141,6 +141,20 @@ export default function MessagesPage() {
     }
   });
 
+  // Auto-mark as read when viewing messages
+  useEffect(() => {
+    if (!dbUser || !activeTab) return;
+
+    const messagesToMark = filteredMessages.filter(m => 
+      m.senderId !== dbUser.id && 
+      !(m.readBy || []).includes(dbUser.id)
+    );
+
+    if (messagesToMark.length > 0) {
+      messagesToMark.forEach(m => markAsRead(m.id));
+    }
+  }, [filteredMessages.length, activeTab, selectedUser?.id, dbUser?.id]);
+
   const unreadCount = (userId: string) => {
     return messages.filter(m => 
       (m.type === 'direct' || (!m.type && m.recipientId !== 'all')) && 
@@ -191,7 +205,12 @@ export default function MessagesPage() {
                 <Bell className="h-4 w-4" />
               </div>
               <div className="flex-1 text-left">
-                <p className="font-black text-xs uppercase tracking-widest">Felleskanalen</p>
+                <div className="flex items-center justify-between">
+                  <p className="font-black text-xs uppercase tracking-widest">Felleskanalen</p>
+                  {messages.filter(m => (m.type === 'broadcast' || m.recipientId === 'all') && m.senderId !== dbUser.id && !(m.readBy || []).includes(dbUser.id)).length > 0 && (
+                    <Badge className="bg-blue-600 text-white h-2 w-2 rounded-full p-0 flex items-center justify-center animate-pulse" />
+                  )}
+                </div>
                 <p className="text-[10px] opacity-70">Viktige beskjeder til alle</p>
               </div>
             </button>
@@ -301,7 +320,7 @@ export default function MessagesPage() {
                   const sender = allOrgUsers.find(u => u.id === m.senderId) || (isMe ? dbUser : null);
                   
                   const showDate = idx === 0 || 
-                    format(toDate(messages[idx-1].createdAt), 'yyyy-MM-dd') !== 
+                    format(toDate(filteredMessages[idx-1].createdAt), 'yyyy-MM-dd') !== 
                     format(toDate(m.createdAt), 'yyyy-MM-dd');
 
                   return (
@@ -325,7 +344,6 @@ export default function MessagesPage() {
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{sender?.name}</span>
                           )}
                           <div 
-                            onMouseEnter={() => !isMe && markAsRead(m.id)}
                             className={`p-3 sm:p-4 rounded-2xl text-sm font-medium shadow-sm transition-all ${
                             isMe 
                               ? 'bg-blue-600 text-white rounded-tr-none' 
