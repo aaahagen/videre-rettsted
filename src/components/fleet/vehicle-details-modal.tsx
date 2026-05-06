@@ -41,6 +41,8 @@ import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { v4 as uuidv4 } from 'uuid';
 import { Separator } from '@/components/ui/separator';
+import { onSnapshot, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
 
 interface VehicleDetailsModalProps {
     vehicle: Vehicle | null;
@@ -59,25 +61,47 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
     const [newReportDescription, setNewReportDescription] = useState('');
 
     useEffect(() => {
-        if (vehicle && isOpen) {
-            loadDamageReports();
-        }
-    }, [vehicle, isOpen]);
+        let unsubscribe: () => void;
 
-    const loadDamageReports = async () => {
-        if (!vehicle) return;
-        try {
-            const reports = await firebaseDB.getVehicleDamages(vehicle.id);
-            // Sort by creation date descending
-            setDamageReports(reports.sort((a, b) => {
-                const dateA = (a.createdAt as any)?.toDate?.() || new Date(a.createdAt as any);
-                const dateB = (b.createdAt as any)?.toDate?.() || new Date(b.createdAt as any);
-                return dateB.getTime() - dateA.getTime();
-            }));
-        } catch (error) {
-            console.error("Error loading damage reports:", error);
+        if (vehicle && isOpen && dbUser?.orgId) {
+            // Use real-time listener for damage reports
+            const q = query(
+                collection(db, 'vehicleDamages'),
+                where('orgId', '==', dbUser.orgId),
+                where('vehicleId', '==', vehicle.id)
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const reports = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+                        resolvedAt: data.resolvedAt ? (data.resolvedAt as Timestamp).toDate() : undefined,
+                    } as VehicleDamageReport;
+                });
+
+                // Sort by creation date descending
+                setDamageReports(reports.sort((a, b) => {
+                    const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+                    const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+                    return dateB - dateA;
+                }));
+            }, (error) => {
+                console.error("Error listening to damage reports:", error);
+                toast({ 
+                    title: "Feil", 
+                    description: "Kunne ikke hente skadehistorikk i sanntid.", 
+                    variant: "destructive" 
+                });
+            });
         }
-    };
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [vehicle, isOpen, dbUser?.orgId, toast]);
 
     const updateStatuses = async (newStatuses: Vehicle['currentStatuses']) => {
         if (!vehicle) return;
@@ -126,8 +150,7 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
                 reportedByName: dbUser.name || 'Administrator',
                 description: newReportDescription,
                 images: [],
-                status: 'reported',
-                createdAt: new Date()
+                status: 'reported'
             } as any);
 
             // Auto-set to observation if not already severe
@@ -140,7 +163,7 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
             toast({ title: "Sak registrert" });
             setNewReportDescription('');
             setShowNewReportForm(false);
-            loadDamageReports();
+            // loadDamageReports(); // No longer needed thanks to onSnapshot
         } catch (error) {
             toast({ title: "Feil ved lagring", variant: "destructive" });
         } finally {
@@ -180,7 +203,7 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
 
             await firebaseDB.updateVehicleDamageReport(reportId, updateData);
             toast({ title: "Dokument lastet opp" });
-            loadDamageReports();
+            // loadDamageReports(); // No longer needed thanks to onSnapshot
         } catch (error) {
             toast({ title: "Feil ved opplasting", variant: "destructive" });
         } finally {

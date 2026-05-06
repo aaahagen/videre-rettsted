@@ -1,4 +1,4 @@
-  import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+  import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Vehicle, VehicleDamageReport } from '../types';
 import { cleanObject } from '../utils';
@@ -125,19 +125,32 @@ export async function removeVehicleStatus(id: string, status: string): Promise<v
     }
 }
 
-export async function getVehicleDamages(vehicleId: string): Promise<VehicleDamageReport[]> {
+export async function getVehicleDamages(vehicleId: string, orgId?: string): Promise<VehicleDamageReport[]> {
   try {
-    const q = query(
-      collection(db, 'vehicleDamages'),
-      where('vehicleId', '==', vehicleId)
-    );
+    let q;
+    if (orgId) {
+       q = query(
+        collection(db, 'vehicleDamages'),
+        where('orgId', '==', orgId),
+        where('vehicleId', '==', vehicleId)
+      );
+    } else {
+       q = query(
+        collection(db, 'vehicleDamages'),
+        where('vehicleId', '==', vehicleId)
+      );
+    }
+    
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
-      resolvedAt: doc.data().resolvedAt ? (doc.data().resolvedAt as Timestamp).toDate() : undefined,
-    })).sort((a: any, b: any) => {
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+        resolvedAt: data.resolvedAt ? (data.resolvedAt as Timestamp).toDate() : undefined,
+      };
+    }).sort((a: any, b: any) => {
       const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
       const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
       return dateB - dateA;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added read count indicator for broadcast messages
 - **Bulk Order Import Migration:** Moved the order import functionality from the Admin panel to the Orders page for better accessibility. Added a dedicated "Bulk Import" dialog on the Orders page.
+- **Real-time Fleet Maintenance Tracking:** Upgraded the `VehicleDetailsModal` to use a Firestore `onSnapshot` listener for damage reports. This ensures that cases reported by both drivers and admins appear instantly in the history list.
 
 ### Changed
 - **Admin Dashboard UI Refactor:**
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 
 ### Fixed
+- **Fleet History Visibility Fix:** Updated the `getVehicleDamages` query to include an `orgId` filter, satisfying Firestore security rules and ensuring reports are visible to organization admins.
 - Fixed modules rendering in admin dashboard according to org settings
 - Fixed automatic read status on messages when opening chat
 - **Fixed `getInvitations` cloud function**: Super Admins can now correctly fetch and view invitations, resolving the permission denied error on the admin dashboard.

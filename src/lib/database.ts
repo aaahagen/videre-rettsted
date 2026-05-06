@@ -32,7 +32,7 @@ export interface Database {
   updateVehicle(id: string, updates: Partial<Vehicle>): Promise<void>;
   deleteVehicle(id: string): Promise<void>;
 
-  getVehicleDamages(vehicleId: string): Promise<VehicleDamageReport[]>;
+  getVehicleDamages(vehicleId: string, orgId?: string): Promise<VehicleDamageReport[]>;
   createVehicleDamageReport(data: Omit<VehicleDamageReport, 'id' | 'createdAt'>): Promise<VehicleDamageReport>;
   updateVehicleDamageReport(id: string, data: Partial<VehicleDamageReport>): Promise<void>;
 
