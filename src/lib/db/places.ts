@@ -2,16 +2,27 @@ import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, 
 import { db } from '../firebase/firebase';
 import { Place, Organization } from '../types';
 
+// Helper for safe date conversion from Firestore
+const ensureDate = (val: any): Date => {
+  if (!val) return new Date();
+  if (val instanceof Date) return val;
+  if (typeof val.toDate === 'function') return val.toDate();
+  return new Date(val); // Fallback for ISO strings or numbers
+};
+
 export async function getPlaces(orgId: string): Promise<Place[]> {
   try {
     const q = query(collection(db, 'places'), where('orgId', '==', orgId));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
-      updatedAt: (doc.data().updatedAt as Timestamp)?.toDate() || new Date(),
-    })) as Place[];
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: ensureDate(data.createdAt),
+        updatedAt: ensureDate(data.updatedAt),
+      } as Place;
+    });
   } catch (error) {
     console.error("Error getting places:", error);
     throw error;
@@ -23,11 +34,12 @@ export async function getPlace(id: string): Promise<Place | null> {
     const docRef = doc(db, 'places', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      const data = docSnap.data();
       return {
         id: docSnap.id,
-        ...docSnap.data(),
-        createdAt: (docSnap.data().createdAt as Timestamp)?.toDate() || new Date(),
-        updatedAt: (docSnap.data().updatedAt as Timestamp)?.toDate() || new Date(),
+        ...data,
+        createdAt: ensureDate(data.createdAt),
+        updatedAt: ensureDate(data.updatedAt),
       } as Place;
     }
     return null;
@@ -95,7 +107,13 @@ export async function updatePlace(id: string, updates: Partial<Place>): Promise<
     await updateDoc(docRef, updateData);
     
     const updated = await getDoc(docRef);
-    return { id: updated.id, ...updated.data() } as Place;
+    const data = updated.data()!;
+    return { 
+        id: updated.id, 
+        ...data,
+        createdAt: ensureDate(data.createdAt),
+        updatedAt: ensureDate(data.updatedAt)
+    } as Place;
   } catch (error) {
     console.error("Error updating place:", error);
     throw error;

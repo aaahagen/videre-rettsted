@@ -9,7 +9,7 @@ import { auth, db } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Save } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Save, Hash } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -157,7 +157,9 @@ export default function PlaceDetailsPage() {
     
     let date: Date;
     
-    if (dateValue?.seconds) {
+    if (dateValue instanceof Date) {
+      date = dateValue;
+    } else if (dateValue?.seconds) {
       date = new Date(dateValue.seconds * 1000);
     } else {
       date = new Date(dateValue);
@@ -250,7 +252,15 @@ export default function PlaceDetailsPage() {
                 ) : (
                   <>
                     <section className="space-y-4">
-                      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{place.name}</h1>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <h1 className="text-3xl font-bold tracking-tight text-slate-900">{place.name}</h1>
+                          {place.customerNumber && (
+                              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 self-start sm:self-center font-mono py-1.5 px-3">
+                                  <Hash className="h-3.5 w-3.5 mr-1" />
+                                  Kundenr: {place.customerNumber}
+                              </Badge>
+                          )}
+                      </div>
                       
                       <div className="relative group">
                         {place.images && place.images.length > 0 ? (
@@ -269,7 +279,7 @@ export default function PlaceDetailsPage() {
                                               fill
                                               className="object-cover transition-transform duration-300 group-hover/img:scale-105"
                                               priority={index === 0}
-                                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 66vw"
+                                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 600px"
                                             />
                                           </AspectRatio>
                                           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
@@ -293,7 +303,7 @@ export default function PlaceDetailsPage() {
                                                   fill
                                                   className="object-contain"
                                                   priority
-                                                  sizes="90vw"
+                                                  sizes="95vw"
                                                 />
                                               </div>
                                             </TransformComponent>
