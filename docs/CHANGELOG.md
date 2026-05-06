@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added read count indicator for broadcast messages
+- **Bulk Order Import Migration:** Moved the order import functionality from the Admin panel to the Orders page for better accessibility. Added a dedicated "Bulk Import" dialog on the Orders page.
+
+### Changed
+- **Admin Dashboard UI Refactor:**
+    - Wrapped "Brukere & Tilganger" in a collapsible card to reduce vertical space.
+    - Moved "Hoveddepot & Geofencing" into a new dedicated "Timelister / Ansatte" card.
+    - Linked "Timelister / Ansatte" card visibility to the `workforce` module setting.
+    - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 
 ### Fixed
 - Fixed modules rendering in admin dashboard according to org settings

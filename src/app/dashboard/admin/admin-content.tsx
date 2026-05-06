@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -39,6 +39,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from '@/hooks/use-toast';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
@@ -48,7 +53,6 @@ import { db } from '@/lib/firebase/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
 import { DataExport } from '@/components/admin/data-export';
 import { DataImport } from '@/components/admin/data-import';
-import { OrderImport } from '@/components/admin/order-import';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { useAuth } from '@/components/auth-provider';
@@ -111,6 +115,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   const [newName, setNewName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isUsersOpen, setIsUsersOpen] = useState(true);
   const { toast } = useToast();
 
   // Organization Settings State
@@ -427,130 +432,61 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         
         {organization && <PendingInvitations orgId={organization.id} />}
 
-        {/* USER MANAGEMENT (New Design Integrated) */}
-        <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <CardTitle className="flex items-center gap-2 font-headline text-xl sm:text-2xl"><Users className="h-5 w-5" /> Brukere & Tilganger</CardTitle>
-              <CardDescription>Administrer hvem som har tilgang til systemet</CardDescription>
-            </div>
-            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" /> Inviter Bruker</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Inviter ny bruker</DialogTitle>
-                  <DialogDescription>
-                    Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteName">Navn eller internnummer</Label>
-                    <Input 
-                      id="inviteName" 
-                      type="text" 
-                      placeholder="Ola Nordmann" 
-                      value={name}
-                      onChange={handleNameChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteEmail">E-postadresse</Label>
-                    <Input 
-                      id="inviteEmail" 
-                      type="email" 
-                      placeholder="navn@bedrift.no" 
-                      value={email}
-                      onChange={handleEmailChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteRole">Rolle</Label>
-                    <Select 
-                      value={role} 
-                      onValueChange={(val: any) => setRole(val)}
-                    >
-                      <SelectTrigger id="inviteRole" className="w-full">
-                        <SelectValue placeholder="Velg en rolle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="driver">Fast Sjåfør</SelectItem>
-                        <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
-                        <SelectItem value="loader">Lager / Laster</SelectItem>
-                        <SelectItem value="planner">Ruteplanlegger</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+        {/* USER MANAGEMENT (Collapsible) */}
+        <Collapsible
+          open={isUsersOpen}
+          onOpenChange={setIsUsersOpen}
+          className="space-y-2"
+        >
+          <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1 w-full flex items-center justify-between">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsUsersOpen(!isUsersOpen)}>
+                  <CardTitle className="flex items-center gap-2 font-headline text-xl sm:text-2xl">
+                    <Users className="h-5 w-5" /> Brukere & Tilganger
+                  </CardTitle>
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Avbryt</Button>
-                  <Button onClick={() => handleInviteUser()} disabled={!email || isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Opprett Invitasjon
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Søk etter navn eller e-post..." 
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <div className="rounded-md border">
-                {/* Desktop Header */}
-                <div className="hidden sm:grid grid-cols-12 gap-4 p-4 font-semibold border-b bg-muted/50 text-sm">
-                  <div className="col-span-4">Bruker</div>
-                  <div className="col-span-3">Rolle</div>
-                  <div className="col-span-3">Status</div>
-                  <div className="col-span-2 text-right">Handlinger</div>
-                </div>
-                
-                {filteredUsers.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    Ingen brukere funnet.
-                  </div>
-                ) : (
-                  <div className="divide-y">
-                    {filteredUsers.map((user) => (
-                      <div key={user.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center text-sm">
-                        <div className="col-span-1 sm:col-span-4 flex justify-between sm:block">
-                          <div>
-                            <p className="font-medium truncate">{user.name || 'Ikke fullført'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                          </div>
-                          {/* Mobile Actions Button */}
-                          <div className="sm:hidden">
-                            <UserActionsDropdown 
-                                  user={user} 
-                                  handleUpdateRole={handleUpdateRole} 
-                                  handleToggleStatus={handleToggleStatus} 
-                                  handleDeleteUser={handleDeleteUser} 
-                                  onEditName={() => {
-                                    setEditingUser(user);
-                                    setNewName(user.name || '');
-                                  }}
-                                />
-                          </div>
+                <div className="flex items-center gap-4">
+                  <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="hidden sm:flex"><Plus className="mr-2 h-4 w-4" /> Inviter Bruker</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Inviter ny bruker</DialogTitle>
+                        <DialogDescription>
+                          Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="inviteName">Navn eller internnummer</Label>
+                          <Input 
+                            id="inviteName" 
+                            type="text" 
+                            placeholder="Ola Nordmann" 
+                            value={name}
+                            onChange={handleNameChange}
+                          />
                         </div>
-                        <div className="col-span-1 sm:col-span-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="inviteEmail">E-postadresse</Label>
+                          <Input 
+                            id="inviteEmail" 
+                            type="email" 
+                            placeholder="navn@bedrift.no" 
+                            value={email}
+                            onChange={handleNameChange}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="inviteRole">Rolle</Label>
                           <Select 
-                            disabled={user.id === dbUser?.id || user.id === authUser?.uid}
-                            value={user.role} 
-                            onValueChange={(val) => handleUpdateRole(user.id, val)}
+                            value={role} 
+                            onValueChange={(val: any) => setRole(val)}
                           >
-                            <SelectTrigger className="h-8 text-xs w-full sm:w-auto">
-                              <SelectValue />
+                            <SelectTrigger id="inviteRole" className="w-full">
+                              <SelectValue placeholder="Velg en rolle" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="driver">Fast Sjåfør</SelectItem>
@@ -561,43 +497,203 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="col-span-1 sm:col-span-3 flex items-center justify-between sm:justify-start gap-2">
-                           <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${user.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}`} />
-                              <span className="text-xs sm:text-sm">{user.status === 'paused' ? 'Pauset' : 'Aktiv'}</span>
-                           </div>
-                           <Switch 
-                              className="sm:hidden"
-                              checked={user.status !== 'paused'}
-                              disabled={user.id === dbUser?.id || user.id === authUser?.uid}
-                              onCheckedChange={() => handleToggleStatus(user.id, user.status)}
-                            />
-                        </div>
-                        <div className="hidden sm:flex col-span-2 justify-end items-center gap-2">
-                           <Switch 
-                              checked={user.status !== 'paused'}
-                              disabled={user.id === dbUser?.id || user.id === authUser?.uid}
-                              onCheckedChange={() => handleToggleStatus(user.id, user.status)}
-                            />
-                            <UserActionsDropdown 
-                                  user={user} 
-                                  handleUpdateRole={handleUpdateRole} 
-                                  handleToggleStatus={handleToggleStatus} 
-                                  handleDeleteUser={handleDeleteUser} 
-                                  onEditName={() => {
-                                    setEditingUser(user);
-                                    setNewName(user.name || '');
-                                  }}
-                                />
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Avbryt</Button>
+                        <Button onClick={() => handleInviteUser()} disabled={!email || isSubmitting}>
+                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Opprett Invitasjon
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-9 p-0">
+                      {isUsersOpen ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                      <span className="sr-only">Toggle</span>
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              {!isUsersOpen && (
+                <CardDescription className="w-full">Administrer hvem som har tilgang til systemet</CardDescription>
+              )}
+              <div className="w-full sm:hidden">
+                 <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full"><Plus className="mr-2 h-4 w-4" /> Inviter Bruker</Button>
+                    </DialogTrigger>
+                    {/* ... dialog content ... */}
+                 </Dialog>
+              </div>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent>
+                <div className="mb-4 text-sm text-muted-foreground">Administrer hvem som har tilgang til systemet</div>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Søk etter navn eller e-post..." 
+                      className="pl-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    {/* Desktop Header */}
+                    <div className="hidden sm:grid grid-cols-12 gap-4 p-4 font-semibold border-b bg-muted/50 text-sm">
+                      <div className="col-span-4">Bruker</div>
+                      <div className="col-span-3">Rolle</div>
+                      <div className="col-span-3">Status</div>
+                      <div className="col-span-2 text-right">Handlinger</div>
+                    </div>
+                    
+                    {filteredUsers.length === 0 ? (
+                      <div className="p-8 text-center text-muted-foreground">
+                        Ingen brukere funnet.
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {filteredUsers.map((user) => (
+                          <div key={user.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center text-sm">
+                            <div className="col-span-1 sm:col-span-4 flex justify-between sm:block">
+                              <div>
+                                <p className="font-medium truncate">{user.name || 'Ikke fullført'}</p>
+                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                              </div>
+                              {/* Mobile Actions Button */}
+                              <div className="sm:hidden">
+                                <UserActionsDropdown 
+                                      user={user} 
+                                      handleUpdateRole={handleUpdateRole} 
+                                      handleToggleStatus={handleToggleStatus} 
+                                      handleDeleteUser={handleDeleteUser} 
+                                      onEditName={() => {
+                                        setEditingUser(user);
+                                        setNewName(user.name || '');
+                                      }}
+                                    />
+                              </div>
+                            </div>
+                            <div className="col-span-1 sm:col-span-3">
+                              <Select 
+                                disabled={user.id === dbUser?.id || user.id === authUser?.uid}
+                                value={user.role} 
+                                onValueChange={(val) => handleUpdateRole(user.id, val)}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-full sm:w-auto">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="driver">Fast Sjåfør</SelectItem>
+                                  <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
+                                  <SelectItem value="loader">Lager / Laster</SelectItem>
+                                  <SelectItem value="planner">Ruteplanlegger</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="col-span-1 sm:col-span-3 flex items-center justify-between sm:justify-start gap-2">
+                               <div className="flex items-center gap-2">
+                                  <div className={`h-2 w-2 rounded-full ${user.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                                  <span className="text-xs sm:text-sm">{user.status === 'paused' ? 'Pauset' : 'Aktiv'}</span>
+                               </div>
+                               <Switch 
+                                  className="sm:hidden"
+                                  checked={user.status !== 'paused'}
+                                  disabled={user.id === dbUser?.id || user.id === authUser?.uid}
+                                  onCheckedChange={() => handleToggleStatus(user.id, user.status)}
+                                />
+                            </div>
+                            <div className="hidden sm:flex col-span-2 justify-end items-center gap-2">
+                               <Switch 
+                                  checked={user.status !== 'paused'}
+                                  disabled={user.id === dbUser?.id || user.id === authUser?.uid}
+                                  onCheckedChange={() => handleToggleStatus(user.id, user.status)}
+                                />
+                                <UserActionsDropdown 
+                                      user={user} 
+                                      handleUpdateRole={handleUpdateRole} 
+                                      handleToggleStatus={handleToggleStatus} 
+                                      handleDeleteUser={handleDeleteUser} 
+                                      onEditName={() => {
+                                        setEditingUser(user);
+                                        setNewName(user.name || '');
+                                      }}
+                                    />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* TIMELISTER / ANSATTE MODULE */}
+        {organization?.modules?.workforce && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline text-xl sm:text-2xl">
+                <Clock className="h-5 w-5" /> Timelister / Ansatte
+              </CardTitle>
+              <CardDescription>
+                Administrer innstillinger for timeregistrering og ansatte.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+               <div className="space-y-4">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> Hoveddepot & Geofencing
+                  </h3>
+                  <p className="text-xs text-slate-500 italic">Sett lokasjonen for organisasjonens hoveddepot. Dette brukes til å verifisere inn- og utstempling for sjåfører med fast oppmøte.</p>
+                  
+                  <form onSubmit={handleSaveSettings} className="space-y-6 max-w-3xl">
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="depotAddress">Adresse</Label>
+                        <Input id="depotAddress" placeholder="F.eks. Storgata 1, 0101 Oslo" value={orgSettings.depotAddress} onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="depotLat">Breddegrad (Lat)</Label>
+                        <Input id="depotLat" placeholder="59.9139" value={orgSettings.depotLat} onChange={(e) => setOrgSettings(s => ({ ...s, depotLat: e.target.value }))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="depotLng">Lengdegrad (Lng)</Label>
+                        <Input id="depotLng" placeholder="10.7522" value={orgSettings.depotLng} onChange={(e) => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))} />
+                      </div>
+                      <div className="space-y-4 md:col-span-2">
+                          <div className="flex justify-between items-center"><Label htmlFor="depotRadius">Radius for stempling: {orgSettings.depotRadius} meter</Label></div>
+                          <input type="range" id="depotRadius" min="100" max="5000" step="100" value={orgSettings.depotRadius} onChange={(e) => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" />
+                      </div>
+                    </div>
+                    <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
+                      {isSavingSettings ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Lagrer...
+                        </>
+                      ) : (
+                        <>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Lagre Hoveddepot
+                        </>
+                      )}
+                    </Button>
+                  </form>
+               </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="px-4 sm:px-6">
@@ -765,28 +861,6 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                  </div>
               </div>
 
-              <div className="space-y-4 pt-6 border-t">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Hoveddepot & Geofencing</h3>
-                  <p className="text-xs text-slate-500 italic">Sett lokasjonen for organisasjonens hoveddepot. Dette brukes til å verifisere inn- og utstempling for sjåfører med fast oppmøte.</p>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="depotAddress">Adresse</Label>
-                      <Input id="depotAddress" placeholder="F.eks. Storgata 1, 0101 Oslo" value={orgSettings.depotAddress} onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="depotLat">Breddegrad (Lat)</Label>
-                      <Input id="depotLat" placeholder="59.9139" value={orgSettings.depotLat} onChange={(e) => setOrgSettings(s => ({ ...s, depotLat: e.target.value }))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="depotLng">Lengdegrad (Lng)</Label>
-                      <Input id="depotLng" placeholder="10.7522" value={orgSettings.depotLng} onChange={(e) => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))} />
-                    </div>
-                    <div className="space-y-4 md:col-span-2">
-                        <div className="flex justify-between items-center"><Label htmlFor="depotRadius">Radius for stempling: {orgSettings.depotRadius} meter</Label></div>
-                        <input type="range" id="depotRadius" min="100" max="5000" step="100" value={orgSettings.depotRadius} onChange={(e) => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" />
-                    </div>
-                  </div>
-              </div>
               <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
                 {isSavingSettings ? (
                   <>
@@ -830,20 +904,10 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         <Card>
             <CardHeader>
             <CardTitle className="flex items-center gap-2"><DatabaseIcon className="h-5 w-5" /> Datahåndtering</CardTitle>
-            <CardDescription>Importer eller eksporter data fra din organisasjon</CardDescription>
+            <CardDescription>Eksporter eller importer leveringssteder</CardDescription>
             </CardHeader>
             <CardContent>
-                <Tabs defaultValue="places" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="places" className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" /> Leveringssteder
-                    </TabsTrigger>
-                    <TabsTrigger value="orders" className="flex items-center gap-2">
-                      <Package className="h-4 w-4" /> Ordrer (Bulk Import)
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="places" className="space-y-6">
+                <div className="space-y-6">
                     {organization && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
@@ -871,12 +935,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             </div>
                         </div>
                     )}
-                  </TabsContent>
-
-                  <TabsContent value="orders">
-                    {organization && <OrderImport orgId={organization.id} />}
-                  </TabsContent>
-                </Tabs>
+                </div>
 
                 <div className="pt-6 border-t mt-8">
                     {organization && <DeleteOrganization orgId={organization.id} />}

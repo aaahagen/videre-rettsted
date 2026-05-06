@@ -14,7 +14,8 @@ import {
   CheckCircle2, 
   AlertCircle,
   BarChart3,
-  Trash2
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
@@ -35,8 +36,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { OrderImport } from '@/components/admin/order-import';
 
 export default function OrdersPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -47,6 +57,7 @@ export default function OrdersPage() {
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const { query: searchQuery, setContext } = useSearch();
   const { setQuery } = useSearch();
   const { toast } = useToast();
@@ -154,7 +165,7 @@ export default function OrdersPage() {
     return null;
   }
 
-  const isAdmin = userData?.role === 'admin';
+  const isAdmin = userData?.role === 'admin' || userData?.role === 'super_admin';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 mx-auto w-full px-4 max-w-7xl py-8">
@@ -164,6 +175,31 @@ export default function OrdersPage() {
           <p className="text-slate-500 mt-2 max-w-2xl">
             Oversikt over alle aktive og historiske leveringsordre.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isAdmin && userData?.orgId && (
+            <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" /> Bulk Import
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Bulk-import av ordrer</DialogTitle>
+                  <DialogDescription>
+                    Last opp en CSV-fil for å opprette flere ordrer samtidig.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <OrderImport orgId={userData.orgId} />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+          <Button onClick={() => router.push('/dashboard/orders/new')}>
+            <Plus className="mr-2 h-4 w-4" /> Opprett Ny Ordre
+          </Button>
         </div>
       </div>
 
@@ -238,9 +274,16 @@ export default function OrdersPage() {
               : "Opprett din første ordre for å komme i gang."}
           </p>
           {!searchQuery && (
-            <Button onClick={() => router.push('/dashboard/orders/new')} variant="outline" className="mt-6">
-              <Plus className="mr-2 h-4 w-4" /> Opprett Ny Ordre
-            </Button>
+            <div className="flex items-center gap-2 mt-6">
+               {isAdmin && userData?.orgId && (
+                <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" /> Bulk Import
+                </Button>
+              )}
+              <Button onClick={() => router.push('/dashboard/orders/new')}>
+                <Plus className="mr-2 h-4 w-4" /> Opprett Ny Ordre
+              </Button>
+            </div>
           )}
         </div>
       ) : (
