@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added   
 - Added read count indicator for broadcast messages
 - **Bulk Order Import Migration:** Moved the order import functionality from the Admin panel to the Orders page for better accessibility. Added a dedicated "Bulk Import" dialog on the Orders page.
 - **Real-time Fleet Maintenance Tracking:** Upgraded the `VehicleDetailsModal` to use a Firestore `onSnapshot` listener for damage reports. This ensures that cases reported by both drivers and admins appear instantly in the history list.
+- **Hybrid Customer Numbering System:** 
+    - Introduced `customerNumber` field to `Place` model.
+    - Added Organization settings to toggle between manual and automatic customer numbering.
+    - Implemented thread-safe auto-generation using Firestore transactions, supporting custom prefixes and starting sequences.
+    - Added customer number badges to Place Cards for quick identification.
 
 ### Changed
 - **Admin Dashboard UI Refactor:**

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Map, Edit, Clock } from 'lucide-react';
+import { Map, Edit, Clock, Hash } from 'lucide-react';
 import type { DeliveryPlace } from '@/lib/types';
 import {
   Card,
@@ -41,6 +41,14 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
           <div className="absolute right-2 top-2">
             <FavoriteButton placeId={place.id} />
           </div>
+          {place.customerNumber && (
+            <div className="absolute left-2 top-2">
+                <Badge className="bg-white/90 text-slate-900 border-none shadow-sm hover:bg-white flex items-center gap-1 font-mono text-[10px]">
+                    <Hash className="h-3 w-3" />
+                    {place.customerNumber}
+                </Badge>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col p-4">

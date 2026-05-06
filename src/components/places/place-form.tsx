@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -66,6 +66,7 @@ const numericConstraintSchema = z.preprocess((val) => {
 const placeSchema = z.object({
   name: z.string().min(3, 'Navnet må være minst 3 tegn.'),
   address: z.string().min(5, 'Adresse er påkrevd.'),
+  customerNumber: z.string().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
   doorCode: z.array(z.object({ category: z.string().optional(), name: z.string().optional(), value: z.string().optional() })).optional(),
@@ -151,6 +152,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     defaultValues: {
       name: place?.name || '',
       address: place?.address || '',
+      customerNumber: place?.customerNumber || '',
       description: place?.description || '',
       notes: place?.notes || '',
       doorCode: Array.isArray(place?.doorCode) ? place.doorCode : [],
@@ -200,6 +202,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const partialData = {
           name: value.name,
           address: value.address,
+          customerNumber: value.customerNumber,
           description: value.description,
           notes: value.notes,
           doorCode: value.doorCode,
@@ -492,6 +495,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const placeData = {
             name: data.name,
             address: data.address,
+            customerNumber: data.customerNumber || '',
             description: data.description || '',
             notes: data.notes || '',
             doorCode: (data.doorCode || []).map(dc => ({ category: dc.category || '', name: dc.name || '', value: dc.value || '' })),
@@ -561,6 +565,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
   const contactPersonsPlaceholder = organization?.fieldSettings?.contactPersons?.placeholder || "Kontaktpersoner...";
 
+  const autoGenEnabled = organization?.placeSettings?.autoGenerateCustomerNumbers ?? false;
+
   return (
     
       <>
@@ -603,19 +609,46 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           <div className="space-y-6">
             <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Grunnleggende informasjon</h3>
-                <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Stedsnavn</FormLabel>
-                    <FormControl>
-                        <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
+                        <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Stedsnavn</FormLabel>
+                            <FormControl>
+                                <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <div>
+                        <FormField
+                        control={form.control}
+                        name="customerNumber"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="flex items-center gap-1.5">
+                                <Hash className="h-3 w-3 text-slate-400" />
+                                Kundenr
+                            </FormLabel>
+                            <FormControl>
+                                <Input 
+                                    placeholder={autoGenEnabled && !place ? "Auto" : "Valgfritt"} 
+                                    {...field} 
+                                    value={field.value ?? ''} 
+                                />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                </div>
                 
                 <FormField
                 control={form.control}

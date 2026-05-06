@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin, Hash } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -138,7 +138,11 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
     depotAddress: '',
     depotLat: '',
     depotLng: '',
-    depotRadius: 500
+    depotRadius: 500,
+    // Place Settings (Customer Numbers)
+    autoGenerateCustomerNumbers: false,
+    customerNumberPrefix: '',
+    nextCustomerNumber: 1000
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -175,7 +179,10 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
               depotAddress: org.mainDepot?.address || '',
               depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
               depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
-              depotRadius: org.mainDepot?.radius || 500
+              depotRadius: org.mainDepot?.radius || 500,
+              autoGenerateCustomerNumbers: org.placeSettings?.autoGenerateCustomerNumbers ?? false,
+              customerNumberPrefix: org.placeSettings?.customerNumberPrefix || '',
+              nextCustomerNumber: org.placeSettings?.nextCustomerNumber || 1000
             });
           }
 
@@ -386,6 +393,11 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           notes: { enabled: orgSettings.notesEnabled, label: orgSettings.notesLabel, placeholder: orgSettings.notesPlaceholder },
           doorCode: { enabled: orgSettings.doorCodeEnabled, label: orgSettings.doorCodeLabel, placeholder: orgSettings.doorCodePlaceholder },
           contactPersons: { enabled: orgSettings.contactPersonsEnabled, label: orgSettings.contactPersonsLabel, placeholder: orgSettings.contactPersonsPlaceholder }
+        },
+        placeSettings: {
+            autoGenerateCustomerNumbers: orgSettings.autoGenerateCustomerNumbers,
+            customerNumberPrefix: orgSettings.customerNumberPrefix,
+            nextCustomerNumber: orgSettings.nextCustomerNumber
         }
       });
       toast({
@@ -740,7 +752,52 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                   </div>
               </div>
 
-              <div className="space-y-4">
+              {/* CUSTOMER NUMBER SETTINGS */}
+              <div className="space-y-4 pt-6 border-t">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Hash className="h-4 w-4" /> Kundenummerering
+                  </h3>
+                  <p className="text-xs text-slate-500 italic">Velg om systemet skal tildele kundenummer automatisk når du oppretter nye steder.</p>
+                  
+                  <div className="p-4 rounded-xl border bg-slate-50/50 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <Label className="text-base font-semibold">Auto-generer kundenummer</Label>
+                            <p className="text-xs text-muted-foreground">Nye steder får tildelt neste ledige nummer automatisk.</p>
+                        </div>
+                        <Switch 
+                            checked={orgSettings.autoGenerateCustomerNumbers}
+                            onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, autoGenerateCustomerNumbers: checked }))}
+                        />
+                    </div>
+
+                    {orgSettings.autoGenerateCustomerNumbers && (
+                        <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-top-1">
+                            <div className="space-y-2">
+                                <Label htmlFor="custPrefix">Prefix (Valgfritt)</Label>
+                                <Input 
+                                    id="custPrefix"
+                                    placeholder="F.eks. K-"
+                                    value={orgSettings.customerNumberPrefix}
+                                    onChange={(e) => setOrgSettings(s => ({ ...s, customerNumberPrefix: e.target.value }))}
+                                />
+                                <p className="text-[10px] text-muted-foreground">Legges foran nummeret (f.eks. K-1001)</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="custNext">Neste nummer i rekken</Label>
+                                <Input 
+                                    id="custNext"
+                                    type="number"
+                                    value={orgSettings.nextCustomerNumber}
+                                    onChange={(e) => setOrgSettings(s => ({ ...s, nextCustomerNumber: parseInt(e.target.value) || 1000 }))}
+                                />
+                            </div>
+                        </div>
+                    )}
+                  </div>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t">
                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider border-b pb-2">Tilpass Skjema for "Nytt Sted"</h3>
                  <div className="grid gap-8 md:grid-cols-3">
                     

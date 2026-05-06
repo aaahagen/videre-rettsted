@@ -30,6 +30,11 @@ export interface Organization {
     coordinates: { lat: number, lng: number };
     radius: number; // in meters
   };
+  placeSettings?: {
+    autoGenerateCustomerNumbers?: boolean;
+    customerNumberPrefix?: string;
+    nextCustomerNumber?: number;
+  };
   fieldSettings?: {
     description?: {
       label: string;
@@ -76,6 +81,7 @@ export interface Place {
   id: string;
   name: string;
   address: string;
+  customerNumber?: string; // Added: Manual or Auto-generated ID
   description: string; // Used for "description"
   notes?: string;      // Used for "notes"
   doorCode?: { category?: string; name?: string; value?: string; }[];
