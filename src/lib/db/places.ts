@@ -1,6 +1,7 @@
 import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Place, Organization } from '../types';
+import { cleanObject } from '../utils';
 
 // Helper for safe date conversion from Firestore
 const ensureDate = (val: any): Date => {
@@ -71,18 +72,18 @@ export async function createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updat
       }
 
       const docRef = doc(collection(db, 'places'));
-      const newPlace = {
+      const newPlaceData = cleanObject({
         ...place,
         customerNumber: finalCustomerNumber || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      };
+      });
 
-      transaction.set(docRef, newPlace);
+      transaction.set(docRef, newPlaceData);
 
       return {
         id: docRef.id,
-        ...newPlace,
+        ...newPlaceData,
         createdAt: new Date(),
         updatedAt: new Date(),
       } as Place;
@@ -96,10 +97,10 @@ export async function createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updat
 export async function updatePlace(id: string, updates: Partial<Place>): Promise<Place> {
   try {
     const docRef = doc(db, 'places', id);
-    const updateData = {
+    const updateData = cleanObject({
       ...updates,
       updatedAt: serverTimestamp(),
-    };
+    });
     // Don't include system fields in update
     delete (updateData as any).id;
     delete (updateData as any).createdAt;
