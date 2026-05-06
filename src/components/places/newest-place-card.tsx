@@ -82,6 +82,7 @@ export const NewestPlaceCard = ({ orgId }: NewestPlaceCardProps) => {
                      alt={`Bilde av ${newestPlace.name}`}
                      fill
                      className="object-cover"
+                     sizes="(max-width: 768px) 100vw, 400px"
                  />
              </div>
         ) : (
