@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin, Hash } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -464,134 +464,136 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           onOpenChange={setIsUsersOpen}
           className="space-y-2"
         >
-          <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex-1 w-full flex items-center justify-between">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsUsersOpen(!isUsersOpen)}>
-                  <CardTitle className="flex items-center gap-2 font-headline text-xl sm:text-2xl">
-                    <Users className="h-5 w-5" /> Brukere & Tilganger
-                  </CardTitle>
+          <Card className="overflow-hidden border-slate-200">
+            <CardHeader className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 bg-slate-50/50">
+              <div 
+                className="flex items-center gap-3 cursor-pointer group" 
+                onClick={() => setIsUsersOpen(!isUsersOpen)}
+              >
+                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 group-hover:border-primary/30 transition-colors">
+                    <Users className="h-5 w-5 text-slate-600 group-hover:text-primary transition-colors" />
                 </div>
-                <div className="flex items-center gap-4">
-                  <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="hidden sm:flex"><Plus className="mr-2 h-4 w-4" /> Inviter Bruker</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Inviter ny bruker</DialogTitle>
-                        <DialogDescription>
-                          Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="inviteName">Navn eller internnummer</Label>
-                          <Input 
-                            id="inviteName" 
-                            type="text" 
-                            placeholder="Ola Nordmann" 
-                            value={name}
-                            onChange={handleNameChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="inviteEmail">E-postadresse</Label>
-                          <Input 
-                            id="inviteEmail" 
-                            type="email" 
-                            placeholder="navn@bedrift.no" 
-                            value={email}
-                            onChange={handleNameChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="inviteRole">Rolle</Label>
-                          <Select 
-                            value={role} 
-                            onValueChange={(val: any) => setRole(val)}
-                          >
-                            <SelectTrigger id="inviteRole" className="w-full">
-                              <SelectValue placeholder="Velg en rolle" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="driver">Fast Sjåfør</SelectItem>
-                              <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
-                              <SelectItem value="loader">Lager / Laster</SelectItem>
-                              <SelectItem value="planner">Ruteplanlegger</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Avbryt</Button>
-                        <Button onClick={() => handleInviteUser()} disabled={!email || isSubmitting}>
-                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Opprett Invitasjon
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-9 p-0">
-                      {isUsersOpen ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">Toggle</span>
-                    </Button>
-                  </CollapsibleTrigger>
+                <div>
+                  <CardTitle className="font-headline text-xl">Brukere & Tilganger</CardTitle>
+                  {!isUsersOpen && (
+                    <CardDescription className="text-xs">Administrer hvem som har tilgang til systemet</CardDescription>
+                  )}
                 </div>
               </div>
-              {!isUsersOpen && (
-                <CardDescription className="w-full">Administrer hvem som har tilgang til systemet</CardDescription>
-              )}
-              <div className="w-full sm:hidden">
-                 <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full"><Plus className="mr-2 h-4 w-4" /> Inviter Bruker</Button>
-                    </DialogTrigger>
-                    {/* ... dialog content ... */}
-                 </Dialog>
+              
+              <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+                <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="h-9 font-bold">
+                        <Plus className="mr-1.5 h-4 w-4" /> 
+                        <span className="hidden xs:inline">Inviter</span>
+                        <span className="xs:hidden">Ny</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Inviter ny bruker</DialogTitle>
+                      <DialogDescription>
+                        Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inviteName">Navn eller internnummer</Label>
+                        <Input 
+                          id="inviteName" 
+                          type="text" 
+                          placeholder="Ola Nordmann" 
+                          value={name}
+                          onChange={handleNameChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inviteEmail">E-postadresse</Label>
+                        <Input 
+                          id="inviteEmail" 
+                          type="email" 
+                          placeholder="navn@bedrift.no" 
+                          value={email}
+                          onChange={handleNameChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inviteRole">Rolle</Label>
+                        <Select 
+                          value={role} 
+                          onValueChange={(val: any) => setRole(val)}
+                        >
+                          <SelectTrigger id="inviteRole" className="w-full">
+                            <SelectValue placeholder="Velg en rolle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="driver">Fast Sjåfør</SelectItem>
+                            <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
+                            <SelectItem value="loader">Lager / Laster</SelectItem>
+                            <SelectItem value="planner">Ruteplanlegger</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Avbryt</Button>
+                      <Button onClick={() => handleInviteUser()} disabled={!email || isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Opprett Invitasjon
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-white border">
+                    {isUsersOpen ? (
+                      <ChevronUp className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    )}
+                    <span className="sr-only">Toggle</span>
+                  </Button>
+                </CollapsibleTrigger>
               </div>
             </CardHeader>
             <CollapsibleContent>
-              <CardContent>
-                <div className="mb-4 text-sm text-muted-foreground">Administrer hvem som har tilgang til systemet</div>
+              <CardContent className="p-4 sm:p-6 border-t border-slate-100">
                 <div className="space-y-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       placeholder="Søk etter navn eller e-post..." 
-                      className="pl-10"
+                      className="pl-10 h-10"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                   
-                  <div className="rounded-md border">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden">
                     {/* Desktop Header */}
-                    <div className="hidden sm:grid grid-cols-12 gap-4 p-4 font-semibold border-b bg-muted/50 text-sm">
+                    <div className="hidden sm:grid grid-cols-12 gap-4 p-4 font-bold bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b">
                       <div className="col-span-4">Bruker</div>
                       <div className="col-span-3">Rolle</div>
                       <div className="col-span-3">Status</div>
-                      <div className="col-span-2 text-right">Handlinger</div>
+                      <div className="col-span-2 text-right">Valg</div>
                     </div>
                     
                     {filteredUsers.length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground">
-                        Ingen brukere funnet.
+                      <div className="p-12 text-center text-muted-foreground">
+                        <Users className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                        <p>Ingen brukere funnet.</p>
                       </div>
                     ) : (
-                      <div className="divide-y">
+                      <div className="divide-y divide-slate-100">
                         {filteredUsers.map((user) => (
-                          <div key={user.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center text-sm">
+                          <div key={user.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center text-sm hover:bg-slate-50/50 transition-colors">
                             <div className="col-span-1 sm:col-span-4 flex justify-between sm:block">
-                              <div>
-                                <p className="font-medium truncate">{user.name || 'Ikke fullført'}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-900 truncate">{user.name || 'Ikke fullført'}</p>
+                                <p className="text-xs text-slate-500 truncate">{user.email}</p>
                               </div>
                               {/* Mobile Actions Button */}
                               <div className="sm:hidden">
@@ -613,7 +615,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                 value={user.role} 
                                 onValueChange={(val) => handleUpdateRole(user.id, val)}
                               >
-                                <SelectTrigger className="h-8 text-xs w-full sm:w-auto">
+                                <SelectTrigger className="h-9 text-xs w-full sm:w-auto bg-white">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -625,10 +627,10 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="col-span-1 sm:col-span-3 flex items-center justify-between sm:justify-start gap-2">
-                               <div className="flex items-center gap-2">
-                                  <div className={`h-2 w-2 rounded-full ${user.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}`} />
-                                  <span className="text-xs sm:text-sm">{user.status === 'paused' ? 'Pauset' : 'Aktiv'}</span>
+                            <div className="col-span-1 sm:col-span-3 flex items-center justify-between sm:justify-start gap-3">
+                               <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-white border border-slate-200">
+                                  <div className={`h-2 w-2 rounded-full ${user.status === 'paused' ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
+                                  <span className="text-[10px] font-bold uppercase tracking-tight text-slate-600">{user.status === 'paused' ? 'Pauset' : 'Aktiv'}</span>
                                </div>
                                <Switch 
                                   className="sm:hidden"
@@ -667,21 +669,26 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
 
         {/* TIMELISTER / ANSATTE MODULE */}
         {organization?.modules?.workforce && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline text-xl sm:text-2xl">
-                <Clock className="h-5 w-5" /> Timelister / Ansatte
-              </CardTitle>
-              <CardDescription>
-                Administrer innstillinger for timeregistrering og ansatte.
-              </CardDescription>
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                    <Clock className="h-5 w-5 text-indigo-500" />
+                </div>
+                <div>
+                    <CardTitle className="font-headline text-xl">Timelister / Ansatte</CardTitle>
+                    <CardDescription className="text-xs">Innstillinger for timeregistrering og lokasjon</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-               <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    <MapPin className="h-4 w-4" /> Hoveddepot & Geofencing
-                  </h3>
-                  <p className="text-xs text-slate-500 italic">Sett lokasjonen for organisasjonens hoveddepot. Dette brukes til å verifisere inn- og utstempling for sjåfører med fast oppmøte.</p>
+            <CardContent className="p-4 sm:p-6">
+               <div className="space-y-6">
+                  <div className="space-y-2">
+                      <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-slate-400" /> Hoveddepot & Geofencing
+                      </h3>
+                      <p className="text-xs text-slate-500">Sett lokasjonen for organisasjonens hoveddepot for å verifisere innstempling.</p>
+                  </div>
                   
                   <form onSubmit={handleSaveSettings} className="space-y-6 max-w-3xl">
                     <div className="grid gap-6 md:grid-cols-2">
@@ -697,12 +704,15 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                         <Label htmlFor="depotLng">Lengdegrad (Lng)</Label>
                         <Input id="depotLng" placeholder="10.7522" value={orgSettings.depotLng} onChange={(e) => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))} />
                       </div>
-                      <div className="space-y-4 md:col-span-2">
-                          <div className="flex justify-between items-center"><Label htmlFor="depotRadius">Radius for stempling: {orgSettings.depotRadius} meter</Label></div>
+                      <div className="space-y-4 md:col-span-2 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                          <div className="flex justify-between items-center mb-2">
+                            <Label htmlFor="depotRadius" className="font-bold text-xs uppercase tracking-wider text-slate-500">Stemplingsradius</Label>
+                            <Badge variant="secondary" className="font-mono">{orgSettings.depotRadius} meter</Badge>
+                          </div>
                           <input type="range" id="depotRadius" min="100" max="5000" step="100" value={orgSettings.depotRadius} onChange={(e) => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary" />
                       </div>
                     </div>
-                    <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
+                    <Button type="submit" disabled={isSavingSettings} className="font-bold">
                       {isSavingSettings ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -710,7 +720,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                         </>
                       ) : (
                         <>
-                          <Settings className="mr-2 h-4 w-4" />
+                          <Save className="mr-2 h-4 w-4" />
                           Lagre Hoveddepot
                         </>
                       )}
@@ -721,20 +731,23 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           </Card>
         )}
 
-        <Card>
-          <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="font-headline text-xl sm:text-2xl">
-              Organisasjonsinnstillinger
-            </CardTitle>
-            <CardDescription>
-              Tilpass organisasjonsnavn, etiketter og plassholdere for stedsskjemaet. Du kan også velge hvilke felt som skal vises for sjåførene.
-            </CardDescription>
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                    <Building2 className="h-5 w-5 text-slate-600" />
+                </div>
+                <div>
+                    <CardTitle className="font-headline text-xl">Organisasjonsinnstillinger</CardTitle>
+                    <CardDescription className="text-xs">Tilpass organisasjonsnavn og skjemaer</CardDescription>
+                </div>
+            </div>
           </CardHeader>
-          <CardContent className="px-4 sm:px-6">
+          <CardContent className="p-4 sm:p-6">
             <form onSubmit={handleSaveSettings} className="space-y-8 max-w-3xl">
               
               <div className="space-y-4">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Generelt</h3>
+                  <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest">Generelt</h3>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="orgName">Organisasjonsnavn</Label>
@@ -767,16 +780,15 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
               </div>
 
               {/* CUSTOMER NUMBER SETTINGS */}
-              <div className="space-y-4 pt-6 border-t">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    <Hash className="h-4 w-4" /> Kundenummerering
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <Hash className="h-3.5 w-3.5" /> Kundenummerering
                   </h3>
-                  <p className="text-xs text-slate-500 italic">Velg om systemet skal tildele kundenummer automatisk når du oppretter nye steder.</p>
                   
                   <div className="p-4 rounded-xl border bg-slate-50/50 space-y-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label className="text-base font-semibold">Auto-generer kundenummer</Label>
+                            <Label className="text-sm font-bold">Auto-generer kundenummer</Label>
                             <p className="text-xs text-muted-foreground">Nye steder får tildelt neste ledige nummer automatisk.</p>
                         </div>
                         <Switch 
@@ -795,7 +807,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                     value={orgSettings.customerNumberPrefix}
                                     onChange={(e) => setOrgSettings(s => ({ ...s, customerNumberPrefix: e.target.value }))}
                                 />
-                                <p className="text-[10px] text-muted-foreground">Legges foran nummeret (f.eks. K-1001)</p>
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Legges foran nummeret (f.eks. K-1001)</p>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="custNext">Neste nummer i rekken</Label>
@@ -811,36 +823,38 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                   </div>
               </div>
 
-              <div className="space-y-4 pt-6 border-t">
-                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider border-b pb-2">Tilpass Skjema for "Nytt Sted"</h3>
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                 <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest border-b pb-2">Tilpass Skjema for "Nytt Sted"</h3>
                  <div className="grid gap-8 md:grid-cols-2">
                     
                     {/* Felt 1 */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Felt 1</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Felt 1</Label>
                          <Switch 
                             checked={orgSettings.descEnabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, descEnabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.descEnabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="descLabel" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="descLabel" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="descLabel"
                             placeholder="F.eks. Beskrivelse"
                             value={orgSettings.descLabel}
                             onChange={(e) => setOrgSettings(s => ({ ...s, descLabel: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="descPlaceholder" className="text-xs">Plassholder</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="descPlaceholder" className="text-[10px] font-bold uppercase text-slate-400">Plassholder</Label>
                           <Input
                             id="descPlaceholder"
                             placeholder="F.eks. Ring på klokken..."
                             value={orgSettings.descPlaceholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, descPlaceholder: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -849,29 +863,31 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     {/* Felt 2 */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Felt 2</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Felt 2</Label>
                          <Switch 
                             checked={orgSettings.notesEnabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, notesEnabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.notesEnabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="notesLabel" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="notesLabel" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="notesLabel"
                             placeholder="F.eks. Intern info"
                             value={orgSettings.notesLabel}
                             onChange={(e) => setOrgSettings(s => ({ ...s, notesLabel: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="notesPlaceholder" className="text-xs">Plassholder</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="notesPlaceholder" className="text-[10px] font-bold uppercase text-slate-400">Plassholder</Label>
                           <Input
                             id="notesPlaceholder"
-                            placeholder="F.eks. Kunden er ofte ikke hjemme..."
+                            placeholder="F.eks. Kunden er..."
                             value={orgSettings.notesPlaceholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, notesPlaceholder: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -880,29 +896,31 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     {/* Felt 3 */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Felt 3</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Felt 3</Label>
                          <Switch 
                             checked={orgSettings.field3Enabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, field3Enabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.field3Enabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="field3Label" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="field3Label" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="field3Label"
                             placeholder="F.eks. Instruksjoner"
                             value={orgSettings.field3Label}
                             onChange={(e) => setOrgSettings(s => ({ ...s, field3Label: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="field3Placeholder" className="text-xs">Plassholder</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="field3Placeholder" className="text-[10px] font-bold uppercase text-slate-400">Plassholder</Label>
                           <Input
                             id="field3Placeholder"
                             placeholder="Beskrivelse..."
                             value={orgSettings.field3Placeholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, field3Placeholder: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -911,29 +929,31 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     {/* Felt 4 */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Felt 4</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Felt 4</Label>
                          <Switch 
                             checked={orgSettings.field4Enabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, field4Enabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.field4Enabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="field4Label" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="field4Label" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="field4Label"
                             placeholder="F.eks. Diverse"
                             value={orgSettings.field4Label}
                             onChange={(e) => setOrgSettings(s => ({ ...s, field4Label: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="field4Placeholder" className="text-xs">Plassholder</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="field4Placeholder" className="text-[10px] font-bold uppercase text-slate-400">Plassholder</Label>
                           <Input
                             id="field4Placeholder"
                             placeholder="Beskrivelse..."
                             value={orgSettings.field4Placeholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, field4Placeholder: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -942,29 +962,31 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     {/* Dørkode */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Dørkode / Nøkkel</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Dørkode / Nøkkel</Label>
                          <Switch 
                             checked={orgSettings.doorCodeEnabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, doorCodeEnabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.doorCodeEnabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="doorCodeLabel" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="doorCodeLabel" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="doorCodeLabel"
                             placeholder="F.eks. Kode til port"
                             value={orgSettings.doorCodeLabel}
                             onChange={(e) => setOrgSettings(s => ({ ...s, doorCodeLabel: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="doorCodePlaceholder" className="text-xs">Plassholder</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="doorCodePlaceholder" className="text-[10px] font-bold uppercase text-slate-400">Plassholder</Label>
                           <Input
                             id="doorCodePlaceholder"
                             placeholder="F.eks. 1234*"
                             value={orgSettings.doorCodePlaceholder}
                             onChange={(e) => setOrgSettings(s => ({ ...s, doorCodePlaceholder: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -972,20 +994,21 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     {/* Kontaktpersoner */}
                     <div className="space-y-4 p-4 rounded-lg border bg-slate-50/50">
                       <div className="flex items-center justify-between">
-                         <Label className="text-base font-semibold">Kontaktpersoner</Label>
+                         <Label className="text-sm font-bold uppercase tracking-tight">Kontaktpersoner</Label>
                          <Switch 
                             checked={orgSettings.contactPersonsEnabled} 
                             onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, contactPersonsEnabled: checked }))} 
                          />
                       </div>
                       <div className={`space-y-4 ${!orgSettings.contactPersonsEnabled && 'opacity-50 pointer-events-none'}`}>
-                        <div className="space-y-2">
-                          <Label htmlFor="contactPersonsLabel" className="text-xs">Etikett (Label)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="contactPersonsLabel" className="text-[10px] font-bold uppercase text-slate-400">Etikett</Label>
                           <Input
                             id="contactPersonsLabel"
                             placeholder="F.eks. Kontaktpersoner"
                             value={orgSettings.contactPersonsLabel}
                             onChange={(e) => setOrgSettings(s => ({ ...s, contactPersonsLabel: e.target.value }))}
+                            className="bg-white h-9 text-xs"
                           />
                         </div>
                       </div>
@@ -994,16 +1017,16 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                  </div>
               </div>
 
-              <Button type="submit" disabled={isSavingSettings} className="w-full sm:w-auto">
+              <Button type="submit" disabled={isSavingSettings} className="font-bold px-8 h-12">
                 {isSavingSettings ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Lagrer...
+                    Lagrer endringer...
                   </>
                 ) : (
                   <>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Lagre Innstillinger
+                    <Save className="mr-2 h-5 w-5" />
+                    Lagre Alle Innstillinger
                   </>
                 )}
               </Button>
@@ -1012,16 +1035,18 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             {/* Legal Status Section */}
             {organization?.legal && (
                <div className="mt-8 pt-6 border-t border-slate-200">
-                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider mb-4">Juridisk Status</h3>
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                  <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Juridisk Status</h3>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div className="p-1 bg-green-100 rounded-full">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      </div>
                       <div>
-                        <p className="font-medium text-sm">Databehandleravtale (DPA) v{organization.legal.dpaVersion || '1.0'} er elektronisk akseptert.</p>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <p className="font-bold text-sm">Databehandleravtale (DPA) v{organization.legal.dpaVersion || '1.0'} er elektronisk akseptert.</p>
+                        <p className="text-xs text-slate-500 mt-1">
                           Akseptert av: {organization.legal.dpaAcceptedByEmail || 'Administrator'}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-xs text-slate-500">
                           Dato: {formatLegalDate(organization.legal.dpaAcceptedAt)}
                         </p>
                       </div>
@@ -1034,12 +1059,19 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         </Card>
 
         {/* DATA MANAGEMENT */}
-        <Card>
-            <CardHeader>
-            <CardTitle className="flex items-center gap-2"><DatabaseIcon className="h-5 w-5" /> Datahåndtering</CardTitle>
-            <CardDescription>Eksporter eller importer leveringssteder</CardDescription>
+        <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <DatabaseIcon className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                        <CardTitle className="font-headline text-xl">Datahåndtering</CardTitle>
+                        <CardDescription className="text-xs">Eksporter eller importer leveringssteder</CardDescription>
+                    </div>
+                </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
                 <div className="space-y-6">
                     {organization && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
