@@ -1,7 +1,7 @@
 'use client';
 
 import { Place, Organization } from '@/lib/types';
-import { MapPin, Clipboard, FileText, Tag, User, Info, PhoneCall, Mail } from 'lucide-react';
+import { MapPin, Clipboard, FileText, Tag, User, Info, PhoneCall, Mail, Hash } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -17,6 +17,12 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
   
   const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
+
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Beskrivelse & Instruksjoner 3";
+
+  const field4Enabled = organization?.fieldSettings?.field4?.enabled ?? false;
+  const field4Label = organization?.fieldSettings?.field4?.label || "Beskrivelse & Instruksjoner 4";
 
   const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
   const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Ekstra Informasjon";
@@ -49,7 +55,15 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
       <div className="p-8 page-break-after-always">
         {/* Header */}
         <div className="border-b-2 border-black pb-4 mb-6">
-          <h1 className="text-3xl font-bold uppercase tracking-tight">{place.name}</h1>
+          <div className="flex justify-between items-start">
+              <h1 className="text-3xl font-bold uppercase tracking-tight">{place.name}</h1>
+              {place.customerNumber && (
+                  <div className="flex items-center text-xl font-bold border-2 border-black px-3 py-1">
+                      <Hash className="mr-1 h-5 w-5" />
+                      {place.customerNumber}
+                  </div>
+              )}
+          </div>
           <div className="flex items-center text-lg mt-2 font-medium">
             <MapPin className="mr-2 h-5 w-5" />
             {place.address}
@@ -82,6 +96,30 @@ export function PrintPlace({ place, organization }: PrintPlaceProps) {
                 </h2>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">
                   {place.notes}
+                </p>
+              </div>
+            )}
+
+            {field3Enabled && place.field3 && (
+              <div>
+                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
+                  <FileText className="mr-2 h-4 w-4" />
+                  {field3Label}
+                </h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {place.field3}
+                </p>
+              </div>
+            )}
+
+            {field4Enabled && place.field4 && (
+              <div>
+                <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 flex items-center">
+                  <FileText className="mr-2 h-4 w-4" />
+                  {field4Label}
+                </h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {place.field4}
                 </p>
               </div>
             )}

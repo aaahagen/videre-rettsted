@@ -46,6 +46,16 @@ export interface Organization {
       placeholder: string;
       enabled?: boolean;
     };
+    field3?: {
+      label: string;
+      placeholder: string;
+      enabled?: boolean;
+    };
+    field4?: {
+      label: string;
+      placeholder: string;
+      enabled?: boolean;
+    };
     contactPersons?: {
       label: string;
       placeholder: string;
@@ -84,6 +94,8 @@ export interface Place {
   customerNumber?: string; // Added: Manual or Auto-generated ID
   description: string; // Used for "description"
   notes?: string;      // Used for "notes"
+  field3?: string;     // Added: Additional text field 3
+  field4?: string;     // Added: Additional text field 4
   doorCode?: { category?: string; name?: string; value?: string; }[];
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];

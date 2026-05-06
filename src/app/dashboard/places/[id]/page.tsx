@@ -199,6 +199,12 @@ export default function PlaceDetailsPage() {
   const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
 
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Beskrivelse & Instruksjoner 3";
+
+  const field4Enabled = organization?.fieldSettings?.field4?.enabled ?? false;
+  const field4Label = organization?.fieldSettings?.field4?.label || "Beskrivelse & Instruksjoner 4";
+
   const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
   const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Dørkoder / Tilgang";
 
@@ -365,6 +371,30 @@ export default function PlaceDetailsPage() {
                           </h2>
                           <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
                               {place.notes}
+                          </p>
+                      </section>
+                    )}
+
+                    {field3Enabled && place.field3 && (
+                      <section className="bg-white p-5 rounded-xl shadow-sm border">
+                          <h2 className="text-xl font-semibold mb-3 flex items-center">
+                              <FileText className="mr-2 h-5 w-5 text-primary" />
+                              {field3Label}
+                          </h2>
+                          <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+                              {place.field3}
+                          </p>
+                      </section>
+                    )}
+
+                    {field4Enabled && place.field4 && (
+                      <section className="bg-white p-5 rounded-xl shadow-sm border">
+                          <h2 className="text-xl font-semibold mb-3 flex items-center">
+                              <FileText className="mr-2 h-5 w-5 text-primary" />
+                              {field4Label}
+                          </h2>
+                          <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+                              {place.field4}
                           </p>
                       </section>
                     )}
@@ -648,9 +678,11 @@ export default function PlaceDetailsPage() {
                     <DialogContent aria-describedby={undefined}>
                       <DialogHeader>
                         <DialogTitle>Er du sikker?</DialogTitle>
-                        <DialogDescription>
-                          Dette vil permanent slette "{place.name}" og alle tilhørende data.
-                        </DialogDescription>
+                        <DialogHeader>
+                          <DialogDescription>
+                            Dette vil permanent slette "{place.name}" og alle tilhørende data.
+                          </DialogDescription>
+                        </DialogHeader>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <Label className="text-destructive font-bold">

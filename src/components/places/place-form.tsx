@@ -69,6 +69,8 @@ const placeSchema = z.object({
   customerNumber: z.string().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
+  field3: z.string().optional(),
+  field4: z.string().optional(),
   doorCode: z.array(z.object({ category: z.string().optional(), name: z.string().optional(), value: z.string().optional() })).optional(),
   contactPersons: z.array(z.object({ name: z.string().optional(), phone: z.string().optional(), email: z.string().optional() })).optional(),
   hashtags: z.string().optional(),
@@ -155,6 +157,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       customerNumber: place?.customerNumber || '',
       description: place?.description || '',
       notes: place?.notes || '',
+      field3: place?.field3 || '',
+      field4: place?.field4 || '',
       doorCode: Array.isArray(place?.doorCode) ? place.doorCode : [],
       contactPersons: place?.contactPersons || [],
       hashtags: place?.hashtags?.join(', ') || '',
@@ -205,6 +209,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           customerNumber: value.customerNumber,
           description: value.description,
           notes: value.notes,
+          field3: value.field3,
+          field4: value.field4,
           doorCode: value.doorCode,
           contactPersons: value.contactPersons,
           hashtags: value.hashtags,
@@ -498,6 +504,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             customerNumber: data.customerNumber || '',
             description: data.description || '',
             notes: data.notes || '',
+            field3: data.field3 || '',
+            field4: data.field4 || '',
             doorCode: (data.doorCode || []).map(dc => ({ category: dc.category || '', name: dc.name || '', value: dc.value || '' })),
             contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
@@ -556,6 +564,14 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const notesEnabled = organization?.fieldSettings?.notes?.enabled ?? true;
   const notesLabel = organization?.fieldSettings?.notes?.label || "Beskrivelse & Instruksjoner 2";
   const notesPlaceholder = organization?.fieldSettings?.notes?.placeholder || "f.eks. 'Kunden er ofte ikke hjemme før kl. 16'";
+
+  const field3Enabled = organization?.fieldSettings?.field3?.enabled ?? false;
+  const field3Label = organization?.fieldSettings?.field3?.label || "Beskrivelse & Instruksjoner 3";
+  const field3Placeholder = organization?.fieldSettings?.field3?.placeholder || "Beskrivelse...";
+
+  const field4Enabled = organization?.fieldSettings?.field4?.enabled ?? false;
+  const field4Label = organization?.fieldSettings?.field4?.label || "Beskrivelse & Instruksjoner 4";
+  const field4Placeholder = organization?.fieldSettings?.field4?.placeholder || "Beskrivelse...";
 
   const doorCodeEnabled = organization?.fieldSettings?.doorCode?.enabled ?? false;
   const doorCodeLabel = organization?.fieldSettings?.doorCode?.label || "Dørkode / Nøkkel";
@@ -834,6 +850,48 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     )}
                     />
                 )}
+
+                {field3Enabled && (
+                    <FormField
+                    control={form.control}
+                    name="field3"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{field3Label}</FormLabel>
+                        <FormControl>
+                            <Textarea
+                            placeholder={field3Placeholder}
+                            className="min-h-[120px]"
+                            {...field}
+                            value={field.value ?? ''}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                )}
+
+                {field4Enabled && (
+                    <FormField
+                    control={form.control}
+                    name="field4"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{field4Label}</FormLabel>
+                        <FormControl>
+                            <Textarea
+                            placeholder={field4Placeholder}
+                            className="min-h-[120px]"
+                            {...field}
+                            value={field.value ?? ''}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                )}
             </div>
           </div>
 
@@ -882,6 +940,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                           alt={`Bilde ${index + 1}`}
                           fill
                           className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 400px"
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400">
