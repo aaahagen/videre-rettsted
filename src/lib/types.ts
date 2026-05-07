@@ -143,9 +143,11 @@ export interface Place {
   orgId: string; // Database field is orgId
   organizationId?: string; // Alias or legacy
   
-  authorId?: string;
-  createdBy: string;
-  updatedBy?: string;
+  authorId?: string; // Legacy
+  authorName?: string; // Cache for display
+  createdBy: string; // UID
+  updatedBy?: string; // UID
+  updatedByName?: string; // Cache for display
   
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;

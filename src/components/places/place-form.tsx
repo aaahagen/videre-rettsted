@@ -523,7 +523,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             orgId: userDoc.orgId,
             updatedAt: new Date(),
             coordinates: data.coordinates || { lat: 0, lng: 0 },
-            authorName: userDoc.name || 'Ukjent bruker'
+            createdBy: place ? place.createdBy : userDoc.id,
+            authorName: place ? place.authorName : (userDoc.name || 'Ukjent bruker'),
+            updatedBy: userDoc.id,
+            updatedByName: userDoc.name || 'Ukjent bruker'
         };
 
         if (place) {

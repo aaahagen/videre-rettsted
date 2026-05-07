@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 
 ### Fixed
+- **Place Form Log Persistence:** Fixed an issue where the user who created or edited a place was not being correctly saved or displayed in the activity log.
+    - Added `updatedBy`, `updatedByName`, and `authorName` fields to the `Place` model.
+    - Updated `PlaceForm` to correctly capture and save the current user's UID and Name during creation and updates.
+    - Updated `PlaceDetailsPage` to display both the creator and the last editor in the Log section.
 - **Fleet History Visibility Fix:** Updated the `getVehicleDamages` query to include an `orgId` filter, satisfying Firestore security rules and ensuring reports are visible to organization admins.
 - Fixed modules rendering in admin dashboard according to org settings
 - Fixed automatic read status on messages when opening chat
