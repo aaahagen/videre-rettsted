@@ -41,23 +41,25 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
           <div className="absolute right-2 top-2 flex flex-col gap-2">
             <FavoriteButton placeId={place.id} />
           </div>
-          <div className="absolute left-2 top-2 flex flex-col items-start gap-2">
-            {hasCoordinates && (
-                <Badge className="bg-emerald-500/90 hover:bg-emerald-500 text-white border-none shadow-sm flex items-center gap-1 font-bold text-[10px]" title="Koordinater registrert - Klar for ruteplanlegging">
-                    <MapPin className="h-3 w-3" />
-                </Badge>
-            )}
-            {place.customerNumber && (
-                <Badge className="bg-white/90 text-slate-900 border-none shadow-sm hover:bg-white flex items-center gap-1 font-mono text-[10px]">
-                    <Hash className="h-3 w-3" />
-                    {place.customerNumber}
-                </Badge>
-            )}
-          </div>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col p-4">
-        <CardTitle className="font-headline text-lg">{place.name}</CardTitle>
+        <div className="flex justify-between items-start gap-2">
+            <CardTitle className="font-headline text-lg break-words leading-tight flex-1">{place.name}</CardTitle>
+            <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                {place.customerNumber && (
+                    <Badge className="bg-slate-100 text-slate-700 border-slate-200 shadow-sm hover:bg-slate-200 flex items-center gap-1 font-mono text-[10px] px-2 py-0.5">
+                        <Hash className="h-3 w-3" />
+                        {place.customerNumber}
+                    </Badge>
+                )}
+                {hasCoordinates && (
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 shadow-sm flex items-center justify-center font-bold text-[10px] w-6 h-6 p-0 rounded-md" title="Koordinater registrert - Klar for ruteplanlegging">
+                        <MapPin className="h-3.5 w-3.5" />
+                    </Badge>
+                )}
+            </div>
+        </div>
         <CardDescription className="mt-1 flex-grow">
           {place.address}
         </CardDescription>
