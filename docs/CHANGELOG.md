@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added customer number badges to Place Cards for quick identification.
 
 ### Changed
+- **Place Form UI Improvements:** 
+    - Removed the small inline map pin icon from the address field.
+    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
 - **Admin Dashboard UI Refactor:**
     - Wrapped "Brukere & Tilganger" in a collapsible card to reduce vertical space.
     - Moved "Hoveddepot & Geofencing" into a new dedicated "Timelister / Ansatte" card.
