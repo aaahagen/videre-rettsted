@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -122,6 +122,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [authUser] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
@@ -329,6 +330,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       return;
     }
 
+    setIsGettingLocation(true);
     toast({
       title: "Henter posisjon...",
       description: "Vennligst vent mens vi finner koordinatene dine.",
@@ -344,6 +346,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           title: "Posisjon hentet",
           description: "Koordinater er registrert.",
         });
+        setIsGettingLocation(false);
       },
       (error) => {
         toast({
@@ -351,6 +354,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           description: error.message,
           variant: "destructive",
         });
+        setIsGettingLocation(false);
       }
     );
   };
@@ -683,30 +687,31 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         )}
                     </div>
                     <FormControl>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <div className="relative flex-1">
-                                <Input placeholder="Storgata 1, 0101 Oslo" {...field} value={field.value ?? ''} />
+                        <div className="flex flex-col gap-3">
+                            <Input placeholder="Storgata 1, 0101 Oslo" {...field} value={field.value ?? ''} />
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full h-10"
+                                    onClick={handleGeocode}
+                                    disabled={isGeocoding}
+                                >
+                                    {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                                    Hent koordinater fra adresse
+                                </Button>
                                 <Button
                                     type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute right-1 top-1 h-8 w-8 text-slate-400 hover:text-primary"
+                                    variant="outline"
+                                    className="font-bold border-emerald-200 text-emerald-700 hover:bg-emerald-50 w-full h-10"
                                     onClick={handleGetLocation}
-                                    title="Hent min posisjon via GPS"
+                                    disabled={isGettingLocation}
                                 >
-                                    <MapPin className="h-4 w-4" />
+                                    {isGettingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-2" />}
+                                    Hent min posisjon via GPS
                                 </Button>
                             </div>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 sm:min-w-[100px] w-full sm:w-auto h-10"
-                                onClick={handleGeocode}
-                                disabled={isGeocoding}
-                            >
-                                {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4 mr-2" />}
-                                Hent koordinater fra adresse
-                            </Button>
                         </div>
                     </FormControl>
                     <FormMessage />
