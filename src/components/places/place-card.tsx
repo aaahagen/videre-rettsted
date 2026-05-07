@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Map, Edit, Clock, Hash } from 'lucide-react';
+import { Map, Edit, Clock, Hash, MapPin } from 'lucide-react';
 import type { DeliveryPlace } from '@/lib/types';
 import {
   Card,
@@ -38,17 +38,22 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </AspectRatio>
-          <div className="absolute right-2 top-2">
+          <div className="absolute right-2 top-2 flex flex-col gap-2">
             <FavoriteButton placeId={place.id} />
           </div>
-          {place.customerNumber && (
-            <div className="absolute left-2 top-2">
+          <div className="absolute left-2 top-2 flex flex-col items-start gap-2">
+            {hasCoordinates && (
+                <Badge className="bg-emerald-500/90 hover:bg-emerald-500 text-white border-none shadow-sm flex items-center gap-1 font-bold text-[10px]" title="Koordinater registrert - Klar for ruteplanlegging">
+                    <MapPin className="h-3 w-3" />
+                </Badge>
+            )}
+            {place.customerNumber && (
                 <Badge className="bg-white/90 text-slate-900 border-none shadow-sm hover:bg-white flex items-center gap-1 font-mono text-[10px]">
                     <Hash className="h-3 w-3" />
                     {place.customerNumber}
                 </Badge>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col p-4">
