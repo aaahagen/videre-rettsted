@@ -8,7 +8,7 @@
 
 > **deletePlace**(`id`): `Promise`\<`void`\>
 
-Defined in: [db/places.ts:73](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L73)
+Defined in: [db/places.ts:124](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L124)
 
 ## Parameters
 

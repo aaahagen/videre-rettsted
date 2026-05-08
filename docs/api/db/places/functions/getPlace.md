@@ -8,7 +8,7 @@
 
 > **getPlace**(`id`): `Promise`\<[`Place`](../../../types/interfaces/Place.md) \| `null`\>
 
-Defined in: [db/places.ts:30](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L30)
+Defined in: [db/places.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L33)
 
 ## Parameters
 

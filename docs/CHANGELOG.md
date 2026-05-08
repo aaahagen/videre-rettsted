@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
+    - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
+    - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
+    - **Optional Comments:** Admins can require or allow a final comment field for additional safety notes.
+    - **Audit Trail:** The system permanently records who completed the checklist and when.
 - Added read count indicator for broadcast messages
 - **Bulk Order Import Migration:** Moved the order import functionality from the Admin panel to the Orders page for better accessibility. Added a dedicated "Bulk Import" dialog on the Orders page.
 - **Real-time Fleet Maintenance Tracking:** Upgraded the `VehicleDetailsModal` to use a Firestore `onSnapshot` listener for damage reports. This ensures that cases reported by both drivers and admins appear instantly in the history list.
@@ -16,31 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Added Organization settings to toggle between manual and automatic customer numbering.
     - Implemented thread-safe auto-generation using Firestore transactions, supporting custom prefixes and starting sequences.
     - Added customer number badges to Place Cards for quick identification.
-
-### Changed
-- **Place Form UI Improvements:** 
-    - Removed the small inline map pin icon from the address field.
-    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
-- **Admin Dashboard UI Refactor:**
-    - Wrapped "Brukere & Tilganger" in a collapsible card to reduce vertical space.
-    - Moved "Hoveddepot & Geofencing" into a new dedicated "Timelister / Ansatte" card.
-    - Linked "Timelister / Ansatte" card visibility to the `workforce` module setting.
-    - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
-
-### Fixed
-- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
-- **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
-- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
-- **Place Form Log Persistence:** Fixed an issue where the user who created or edited a place was not being correctly saved or displayed in the activity log.
-    - Added `updatedBy`, `updatedByName`, and `authorName` fields to the `Place` model.
-    - Updated `PlaceForm` to correctly capture and save the current user's UID and Name during creation and updates.
-    - Updated `PlaceDetailsPage` to display both the creator and the last editor in the Log section.
-- **Fleet History Visibility Fix:** Updated the `getVehicleDamages` query to include an `orgId` filter, satisfying Firestore security rules and ensuring reports are visible to organization admins.
-- Fixed modules rendering in admin dashboard according to org settings
-- Fixed automatic read status on messages when opening chat
-- **Fixed `getInvitations` cloud function**: Super Admins can now correctly fetch and view invitations, resolving the permission denied error on the admin dashboard.
-
-### Added
 - **Super Admin Dashboard (App Owner Control):** Launched a centralized cockpit at `/dashboard/super` for the application owner to manage organizations and modular access.
 - **Organization Context Switching:** Super Admins can now instantly "log in" as any organization to view data and verify settings from their perspective.
 - **Multi-Tenancy Module Gating:** Implemented a robust feature-toggling system.
@@ -53,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Place Form UI Improvements:** 
+    - Removed the small inline map pin icon from the address field.
+    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
+- **Admin Dashboard UI Refactor:**
+    - Wrapped "Brukere & Tilganger" in a collapsible card to reduce vertical space.
+    - Moved "Hoveddepot & Geofencing" into a new dedicated "Timelister / Ansatte" card.
+    - Linked "Timelister / Ansatte" card visibility to the `workforce` module setting.
+    - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 - **Responsive Message System:** Completely redesigned the messages page for mobile.
     - **Split-View Layout:** Implemented a WhatsApp-style view that switches between contact list and chat window on mobile.
     - **Scroll Performance:** Optimized layout to ensure independent scrolling for both contacts and messages without page-level overflow.
@@ -62,9 +50,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
-- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
+- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field. Renamed the "Inviter" button to "+ Ny bruker" for clarity.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
+- **Place Form Log Persistence:** Fixed an issue where the user who created or edited a place was not being correctly saved or displayed in the activity log.
+    - Added `updatedBy`, `updatedByName`, and `authorName` fields to the `Place` model.
+    - Updated `PlaceForm` to correctly capture and save the current user's UID and Name during creation and updates.
+    - Updated `PlaceDetailsPage` to display both the creator and the last editor in the Log section.
+- **Fleet History Visibility Fix:** Updated the `getVehicleDamages` query to include an `orgId` filter, satisfying Firestore security rules and ensuring reports are visible to organization admins.
+- **Fixed modules rendering** in admin dashboard according to org settings.
+- **Fixed automatic read status** on messages when opening chat.
+- **Fixed `getInvitations` cloud function**: Super Admins can now correctly fetch and view invitations, resolving the permission denied error on the admin dashboard.
 - **Message System Robustness:** 
     - Added backwards compatibility for older messages without a `type` field.
     - Fixed `.toDate()` type errors by implementing a safe date conversion helper.
@@ -74,6 +70,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-05-22
 
 ### Added
+- **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
+    - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
+    - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
+    - **Optional Comments:** Admins can require or allow a final comment field for additional safety notes.
+    - **Audit Trail:** The system permanently records who completed the checklist and when.
 - **API Documentation:** Integrated `typedoc` and `typedoc-plugin-markdown` to automatically generate Markdown-based documentation from internal TypeScript interfaces and libraries. Run `npm run docs` to build. Output is located in `docs/api`.
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
     - **Quick Status Manager:** Added a `VehicleDetailsModal` allowing administrators to instantly toggle operational states (Klar, På rute, Parkert, Observasjon, Venter på verksted, På verksted) without full record editing.
@@ -114,9 +115,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dynamic card that alerts drivers to specific keys needed for their assigned route.
 
 ### Fixed
-- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
-- **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
-- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles.
 - **Fleet Compliance Indexing:** Fixed a bug where `euControl` and `nextService` dates were not correctly saved.
 - **Firestore Sentinel Conflict:** Fixed a critical bug in `cleanObject` utility that broke `deleteField()` operations.
@@ -129,6 +127,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
+    - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
+    - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
+    - **Optional Comments:** Admins can require or allow a final comment field for additional safety notes.
+    - **Audit Trail:** The system permanently records who completed the checklist and when.
 - **Tachograph Download Tracking:** Implement a system to register and track when tachograph data was last downloaded for compliance.
 - **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage.
 - **Geofence-based Delivery Alerts:** Automatically flag deliveries completed outside a configurable radius from the destination.
@@ -138,8 +141,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Capacitor.js Integration:** True native mobile distribution for iOS and Android (Phase 8).
 
 ### Fixed
-- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
-- **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
-- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust.
 - **Fleet Card Notifications:** Fix the issue where "ny sak/ service" notifications are not showing up correctly on the vehicle cards.

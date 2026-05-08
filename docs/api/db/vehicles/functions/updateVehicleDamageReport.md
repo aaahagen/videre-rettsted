@@ -8,7 +8,7 @@
 
 > **updateVehicleDamageReport**(`id`, `data`): `Promise`\<`void`\>
 
-Defined in: [db/vehicles.ts:171](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L171)
+Defined in: [db/vehicles.ts:184](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L184)
 
 ## Parameters
 

@@ -35,6 +35,12 @@ export interface Organization {
     customerNumberPrefix?: string;
     nextCustomerNumber?: number;
   };
+  hmsSettings?: {
+    enabled: boolean;
+    title?: string;
+    questions: { id: string; text: string }[];
+    requireComment?: boolean;
+  };
   fieldSettings?: {
     description?: {
       label: string;
@@ -100,6 +106,15 @@ export interface Place {
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
   
+  // Custom HMS Answers (One-time occurrence per place)
+  hmsData?: {
+    answers: Record<string, boolean>;
+    comment?: string;
+    completedBy?: string;
+    completedByName?: string;
+    completedAt?: any;
+  };
+
   // Zone constraints
   isZeroEmissionZone?: boolean; // If true, prefers/requires electric/gas
   isCityCenter?: boolean; // High toll area

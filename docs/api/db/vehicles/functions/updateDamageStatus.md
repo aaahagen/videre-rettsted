@@ -8,7 +8,7 @@
 
 > **updateDamageStatus**(`damageId`, `status`, `resolvedBy?`): `Promise`\<`void`\>
 
-Defined in: [db/vehicles.ts:185](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L185)
+Defined in: [db/vehicles.ts:198](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L198)
 
 ## Parameters
 

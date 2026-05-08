@@ -8,7 +8,7 @@
 
 > **reportVehicleDamage**(`data`): `Promise`\<[`VehicleDamageReport`](../../../types/interfaces/VehicleDamageReport.md)\>
 
-Defined in: [db/vehicles.ts:151](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L151)
+Defined in: [db/vehicles.ts:164](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L164)
 
 ## Parameters
 

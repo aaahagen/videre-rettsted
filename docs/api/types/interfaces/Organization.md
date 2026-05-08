@@ -14,7 +14,7 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **fieldSettings?**: `object`
 
-Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L33)
+Defined in: [types.ts:44](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L44)
 
 #### contactPersons?
 
@@ -64,6 +64,38 @@ Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > **placeholder**: `string`
 
+#### field3?
+
+> `optional` **field3?**: `object`
+
+##### field3.enabled?
+
+> `optional` **enabled?**: `boolean`
+
+##### field3.label
+
+> **label**: `string`
+
+##### field3.placeholder
+
+> **placeholder**: `string`
+
+#### field4?
+
+> `optional` **field4?**: `object`
+
+##### field4.enabled?
+
+> `optional` **enabled?**: `boolean`
+
+##### field4.label
+
+> **label**: `string`
+
+##### field4.placeholder
+
+> **placeholder**: `string`
+
 #### notes?
 
 > `optional` **notes?**: `object`
@@ -82,6 +114,30 @@ Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 ***
 
+### hmsSettings?
+
+> `optional` **hmsSettings?**: `object`
+
+Defined in: [types.ts:38](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L38)
+
+#### enabled
+
+> **enabled**: `boolean`
+
+#### questions
+
+> **questions**: `object`[]
+
+#### requireComment?
+
+> `optional` **requireComment?**: `boolean`
+
+#### title?
+
+> `optional` **title?**: `string`
+
+***
+
 ### id
 
 > **id**: `string`
@@ -94,7 +150,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:55](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L55)
+Defined in: [types.ts:76](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L76)
 
 #### dpaAcceptedAt?
 
@@ -223,6 +279,26 @@ Defined in: [types.ts:16](https://github.com/aaahagen/videre-rettsted/blob/main/
 > `optional` **ownerId?**: `string`
 
 Defined in: [types.ts:17](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L17)
+
+***
+
+### placeSettings?
+
+> `optional` **placeSettings?**: `object`
+
+Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L33)
+
+#### autoGenerateCustomerNumbers?
+
+> `optional` **autoGenerateCustomerNumbers?**: `boolean`
+
+#### customerNumberPrefix?
+
+> `optional` **customerNumberPrefix?**: `string`
+
+#### nextCustomerNumber?
+
+> `optional` **nextCustomerNumber?**: `number`
 
 ***
 

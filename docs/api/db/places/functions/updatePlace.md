@@ -8,7 +8,7 @@
 
 > **updatePlace**(`id`, `updates`): `Promise`\<[`Place`](../../../types/interfaces/Place.md)\>
 
-Defined in: [db/places.ts:52](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L52)
+Defined in: [db/places.ts:97](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L97)
 
 ## Parameters
 

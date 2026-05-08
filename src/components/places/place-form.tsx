@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed, Shield } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -101,6 +103,10 @@ const placeSchema = z.object({
   coordinates: z.object({
     lat: z.number(),
     lng: z.number(),
+  }).optional(),
+  hmsData: z.object({
+    answers: z.record(z.boolean()).optional(),
+    comment: z.string().optional(),
   }).optional(),
 });
 
@@ -187,6 +193,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         preview: img.url
       })) || [],
       coordinates: place?.coordinates || { lat: 0, lng: 0 },
+      hmsData: {
+          answers: place?.hmsData?.answers || {},
+          comment: place?.hmsData?.comment || ''
+      },
     },
   });
 
@@ -224,7 +234,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           maxVehicleWeight: value.maxVehicleWeight,
           coordinates: value.coordinates,
           weeklySchedule: value.weeklySchedule,
-          hasDeliveryWindow: value.hasDeliveryWindow
+          hasDeliveryWindow: value.hasDeliveryWindow,
+          hmsData: value.hmsData
         };
         localStorage.setItem('placeFormDraft', JSON.stringify(partialData));
       });
@@ -502,6 +513,16 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         // deleteField() is required for updateDoc, but illegal for addDoc
         const removeField = () => place ? deleteField() : undefined;
 
+        // HMS Logic
+        const hasHmsData = data.hmsData && (Object.keys(data.hmsData.answers || {}).length > 0 || data.hmsData.comment);
+        const hmsDataToSave = hasHmsData ? {
+            answers: data.hmsData?.answers || {},
+            comment: data.hmsData?.comment || '',
+            completedBy: (place?.hmsData as any)?.completedBy || userDoc.id,
+            completedByName: (place?.hmsData as any)?.completedByName || (userDoc.name || 'Ukjent bruker'),
+            completedAt: (place?.hmsData as any)?.completedAt || new Date()
+        } : ((place?.hmsData as any) || removeField());
+
         const placeData = {
             name: data.name,
             address: data.address,
@@ -521,6 +542,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             maxVehicleLength: typeof data.maxVehicleLength !== 'number' ? removeField() : data.maxVehicleLength,
             maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? removeField() : data.maxVehicleWeight,
             weeklySchedule: data.hasDeliveryWindow ? data.weeklySchedule : removeField(),
+            hmsData: hmsDataToSave,
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
@@ -589,6 +611,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const contactPersonsPlaceholder = organization?.fieldSettings?.contactPersons?.placeholder || "Kontaktpersoner...";
 
   const autoGenEnabled = organization?.placeSettings?.autoGenerateCustomerNumbers ?? false;
+
+  const hmsAnswers = form.watch('hmsData.answers') || {};
 
   return (
     
@@ -901,6 +925,75 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     />
                 )}
             </div>
+
+            {/* HMS SECTION */}
+            {organization?.hmsSettings?.enabled && (
+                <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 border-b pb-2">
+                        <Shield className="h-5 w-5 text-red-500" />
+                        <h3 className="text-lg font-black text-slate-800 italic uppercase tracking-tighter">
+                            {organization.hmsSettings.title || 'HMS Sjekkliste'}
+                        </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        {organization.hmsSettings.questions.map((q) => (
+                            <div 
+                                key={q.id} 
+                                className={cn(
+                                    "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                                    hmsAnswers[q.id] 
+                                        ? "bg-green-50 border-green-200 shadow-sm" 
+                                        : "bg-slate-50 border-slate-100 hover:border-slate-200"
+                                )}
+                                onClick={() => {
+                                    const current = form.getValues(`hmsData.answers.${q.id}`);
+                                    form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
+                                }}
+                            >
+                                <FormControl>
+                                    <Checkbox 
+                                        checked={hmsAnswers[q.id] || false}
+                                        onCheckedChange={(checked) => {
+                                            form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
+                                        }}
+                                        className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
+                                    />
+                                </FormControl>
+                                <Label className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug">
+                                    {q.text}
+                                </Label>
+                            </div>
+                        ))}
+
+                        {organization.hmsSettings.requireComment && (
+                            <FormField
+                                control={form.control}
+                                name="hmsData.comment"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-2 mt-4">
+                                        <FormLabel className="text-sm font-bold text-slate-500 uppercase">HMS Kommentar</FormLabel>
+                                        <FormControl>
+                                            <Textarea 
+                                                placeholder="Legg til utfyllende HMS-informasjon her..."
+                                                className="min-h-[100px] bg-slate-50/50"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                        
+                        {(place?.hmsData as any)?.completedAt && (
+                            <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 rounded border border-dashed text-center">
+                                Fullført av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN */}

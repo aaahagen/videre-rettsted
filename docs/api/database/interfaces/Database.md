@@ -688,13 +688,17 @@ Defined in: [database.ts:30](https://github.com/aaahagen/videre-rettsted/blob/ma
 
 ### getVehicleDamages()
 
-> **getVehicleDamages**(`vehicleId`): `Promise`\<[`VehicleDamageReport`](../../types/interfaces/VehicleDamageReport.md)[]\>
+> **getVehicleDamages**(`vehicleId`, `orgId?`): `Promise`\<[`VehicleDamageReport`](../../types/interfaces/VehicleDamageReport.md)[]\>
 
 Defined in: [database.ts:35](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/database.ts#L35)
 
 #### Parameters
 
 ##### vehicleId
+
+`string`
+
+##### orgId?
 
 `string`
 

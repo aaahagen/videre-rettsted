@@ -8,13 +8,13 @@
 
 > **createPlace**(`place`): `Promise`\<[`Place`](../../../types/interfaces/Place.md)\>
 
-Defined in: [db/places.ts:8](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L8)
+Defined in: [db/places.ts:53](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L53)
 
 ## Parameters
 
 ### place
 
-`Omit`\<[`Place`](../../../types/interfaces/Place.md), `"id"` \| `"createdAt"` \| `"updatedAt"` \| `"createdBy"`\>
+`Omit`\<[`Place`](../../../types/interfaces/Place.md), `"id"` \| `"createdAt"` \| `"updatedAt"`\>
 
 ## Returns
 

@@ -8,7 +8,7 @@
 
 > **getPlaces**(`orgId`): `Promise`\<[`Place`](../../../types/interfaces/Place.md)[]\>
 
-Defined in: [db/places.ts:43](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L43)
+Defined in: [db/places.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L14)
 
 ## Parameters
 

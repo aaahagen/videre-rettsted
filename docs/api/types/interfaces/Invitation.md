@@ -6,7 +6,7 @@
 
 # Interface: Invitation
 
-Defined in: [types.ts:189](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L189)
+Defined in: [types.ts:224](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L224)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:189](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **email**: `string`
 
-Defined in: [types.ts:191](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L191)
+Defined in: [types.ts:226](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L226)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:191](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **expiresAt**: `FieldValue`
 
-Defined in: [types.ts:194](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L194)
+Defined in: [types.ts:229](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L229)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:194](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:190](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L190)
+Defined in: [types.ts:225](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L225)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:190](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **organizationId**: `string`
 
-Defined in: [types.ts:192](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L192)
+Defined in: [types.ts:227](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L227)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:192](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **organizationName?**: `string`
 
-Defined in: [types.ts:195](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L195)
+Defined in: [types.ts:230](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L230)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [types.ts:195](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"contractor"` \| `"planner"`
 
-Defined in: [types.ts:193](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L193)
+Defined in: [types.ts:228](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L228)

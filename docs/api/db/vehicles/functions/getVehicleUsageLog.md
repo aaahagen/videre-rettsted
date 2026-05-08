@@ -8,7 +8,7 @@
 
 > **getVehicleUsageLog**(`vehicleId`, `days?`): `Promise`\<`any`[]\>
 
-Defined in: [db/vehicles.ts:200](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L200)
+Defined in: [db/vehicles.ts:213](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L213)
 
 ## Parameters
 
