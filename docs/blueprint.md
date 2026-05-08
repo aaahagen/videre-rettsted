@@ -10,7 +10,7 @@
 > 4. **`docs/CHANGELOG.md`**: The absolute Ground Truth of what has *already been built*. Always check this to avoid rebuilding existing features. Whenever you complete a task, you MUST update the `[Unreleased]` -> `### Added`, `### Changed`, or `### Fixed` section of this file.
 > 
 > **Core Developer Rules:**
-> - **Primary Tooling:** Use the `write_file` tool for all code modifications. Avoid creating temporary Python or Bash scripts for patching or refactoring unless the task is a complex data migration.
+> - **Primary Tooling:** ALWAYS use the `write_file` tool for all code modifications. DO NOT use `sed`, `awk`, or other terminal commands to patch files, as this is prone to error and can lead to inconsistent state. `write_file` ensures the entire file content is correctly synchronized.
 > - **Verification:** After modifying code, ALWAYS run `npm run build` or `npm run typecheck` to verify that the changes haven't introduced regressions. If you update interfaces, run `npm run docs` to update the API reference.
 > - **Deployment & Versioning:** When asked to build and push to Github, you MUST FIRST run `npm run build`. If the build is successful, you MUST update the `docs/CHANGELOG.md` file with the changes made, and update any other relevant documentation before pushing to Github.
 > - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`) as dictated by `engineering.md`.
