@@ -515,7 +515,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                           type="email" 
                           placeholder="navn@bedrift.no" 
                           value={email}
-                          onChange={handleNameChange}
+                          onChange={handleEmailChange}
                         />
                       </div>
                       <div className="space-y-2">

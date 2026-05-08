@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 
 ### Fixed
+- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Place Form Log Persistence:** Fixed an issue where the user who created or edited a place was not being correctly saved or displayed in the activity log.
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Message System Robustness:** 
@@ -112,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dynamic card that alerts drivers to specific keys needed for their assigned route.
 
 ### Fixed
+- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles.
@@ -135,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Capacitor.js Integration:** True native mobile distribution for iOS and Android (Phase 8).
 
 ### Fixed
+- **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust.
