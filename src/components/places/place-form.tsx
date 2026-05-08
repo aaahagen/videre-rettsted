@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed, Shield } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed, Shield, FileText } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -130,6 +130,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
+  
+  const [isBasicOpen, setIsBasicOpen] = useState(true);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(true);
+  const [isHmsOpen, setIsHmsOpen] = useState(true);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
 
@@ -654,8 +658,21 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {/* LEFT COLUMN */}
           <div className="space-y-6">
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Grunnleggende informasjon</h3>
+            <Collapsible
+              open={isBasicOpen}
+              onOpenChange={setIsBasicOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
+                    <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-indigo-500" />
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Grunnleggende informasjon</h3>
+                    </div>
+                    {isBasicOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="p-6 space-y-6">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="sm:col-span-2">
@@ -723,7 +740,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     disabled={isGeocoding}
                                 >
                                     {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
-                                    Hent koordinater fra adresse
+                                    Hent koordinater
                                 </Button>
                                 <Button
                                     type="button"
@@ -733,7 +750,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     disabled={isGettingLocation}
                                 >
                                     {isGettingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-2" />}
-                                    Hent min posisjon via GPS
+                                    Bruk GPS
                                 </Button>
                             </div>
                         </div>
@@ -802,10 +819,24 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         )}
                     />
                 </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
 
-            <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                <h3 className="text-lg font-black text-slate-800 border-b pb-2">Leveringsdetaljer</h3>
+            <Collapsible
+              open={isDetailsOpen}
+              onOpenChange={setIsDetailsOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
+                    <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-indigo-500" />
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Leveringsdetaljer</h3>
+                    </div>
+                    {isDetailsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="p-6 space-y-6">
                 <FormField
                 control={form.control}
                 name="estimatedDeliveryTime"
@@ -924,19 +955,28 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     )}
                     />
                 )}
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* HMS SECTION */}
             {organization?.hmsSettings?.enabled && (
-                <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
-                    <div className="flex items-center gap-3 border-b pb-2">
-                        <Shield className="h-5 w-5 text-red-500" />
-                        <h3 className="text-lg font-black text-slate-800 italic uppercase tracking-tighter">
-                            {organization.hmsSettings.title || 'HMS Sjekkliste'}
-                        </h3>
-                    </div>
-
-                    <div className="space-y-4">
+                <Collapsible
+                  open={isHmsOpen}
+                  onOpenChange={setIsHmsOpen}
+                  className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
+                        <div className="flex items-center gap-3">
+                            <Shield className="h-5 w-5 text-red-500" />
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                {organization.hmsSettings.title || 'HMS Sjekkliste'}
+                            </h3>
+                        </div>
+                        {isHmsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-6 space-y-4">
                         {organization.hmsSettings.questions.map((q) => (
                             <div 
                                 key={q.id} 
@@ -991,8 +1031,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 Fullført av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
                             </div>
                         )}
-                    </div>
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
             )}
           </div>
 

@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
 - **Place Form UI Improvements:** 
     - Removed the small inline map pin icon from the address field.
     - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
@@ -50,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Maximum update depth exceeded with Collapsible:** Fixed a UI crash related to Radix UI's Collapsible component. The issue was resolved by updating the `@radix-ui/react-collapsible` and `@radix-ui/react-accordion` dependencies to their latest versions to eliminate mismatched duplicate versions causing infinite loops in React 19.
+- **Maximum update depth exceeded with Switch:** Fixed a UI crash related to Radix UI's Switch component. This was resolved by forcing an update to `@radix-ui/react-compose-refs` to eliminate duplicate and conflicting versions causing infinite loops under React 19, and updated `@radix-ui/react-switch` to the newest version compatible with it.
 - **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field. Renamed the "Inviter" button to "+ Ny bruker" for clarity.
 - **Place Form Validation:** Fixed an issue where validation errors would appear immediately on page load and persist incorrectly due to local storage drafts overriding React Hook Form state.
 - **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
