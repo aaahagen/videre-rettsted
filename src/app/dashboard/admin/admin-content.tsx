@@ -486,8 +486,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                   <DialogTrigger asChild>
                     <Button size="sm" className="h-9 font-bold">
                         <Plus className="mr-1.5 h-4 w-4" /> 
-                        <span className="hidden xs:inline">Inviter</span>
-                        <span className="xs:hidden">Ny</span>
+                        Ny bruker
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
