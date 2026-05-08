@@ -70,11 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-05-22
 
 ### Added
-- **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
-    - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
-    - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
-    - **Optional Comments:** Admins can require or allow a final comment field for additional safety notes.
-    - **Audit Trail:** The system permanently records who completed the checklist and when.
 - **API Documentation:** Integrated `typedoc` and `typedoc-plugin-markdown` to automatically generate Markdown-based documentation from internal TypeScript interfaces and libraries. Run `npm run docs` to build. Output is located in `docs/api`.
 - **Advanced Fleet Compliance & Workshop Workflow:** Implemented a multi-stage status and document tracking system for the vehicle fleet.
     - **Quick Status Manager:** Added a `VehicleDetailsModal` allowing administrators to instantly toggle operational states (Klar, På rute, Parkert, Observasjon, Venter på verksted, På verksted) without full record editing.
@@ -127,11 +122,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
-- **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
-    - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
-    - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
-    - **Optional Comments:** Admins can require or allow a final comment field for additional safety notes.
-    - **Audit Trail:** The system permanently records who completed the checklist and when.
 - **Tachograph Download Tracking:** Implement a system to register and track when tachograph data was last downloaded for compliance.
 - **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage.
 - **Geofence-based Delivery Alerts:** Automatically flag deliveries completed outside a configurable radius from the destination.
