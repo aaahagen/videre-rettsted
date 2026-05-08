@@ -240,7 +240,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           const parsedDraft = JSON.parse(savedDraft);
           Object.keys(parsedDraft).forEach(key => {
               const currentVal = form.getValues()[key as keyof PlaceFormValues];
-              if (parsedDraft[key] !== undefined && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
+              if (parsedDraft[key] !== undefined && parsedDraft[key] !== '' && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
                   form.setValue(key as any, parsedDraft[key], { shouldValidate: true, shouldDirty: true });
               }
           });
@@ -642,7 +642,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <FormItem>
                             <FormLabel>Stedsnavn</FormLabel>
                             <FormControl>
-                                <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} value={field.value ?? ''} />
+                                <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -663,7 +663,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 <Input 
                                     placeholder={autoGenEnabled && !place ? "Auto" : "Valgfritt"} 
                                     {...field} 
-                                    value={field.value ?? ''} 
+                                    
                                 />
                             </FormControl>
                             <FormMessage />
@@ -688,7 +688,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </div>
                     <FormControl>
                         <div className="flex flex-col gap-3">
-                            <Input placeholder="Storgata 1, 0101 Oslo" {...field} value={field.value ?? ''} />
+                            <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <Button 
@@ -729,7 +729,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         Hashtags
                     </FormLabel>
                     <FormControl>
-                        <Input placeholder="lager, prioritert" {...field} value={field.value ?? ''} />
+                        <Input placeholder="lager, prioritert" {...field} />
                     </FormControl>
                     <FormDescription className="text-[10px]">
                         Kommadelt liste med tagger.
@@ -829,7 +829,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={descPlaceholder}
                             className="min-h-[120px]"
                             {...field}
-                            value={field.value ?? ''}
+                           
                             />
                         </FormControl>
                         <FormMessage />
@@ -850,7 +850,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={notesPlaceholder}
                             className="min-h-[120px]"
                             {...field}
-                            value={field.value ?? ''}
+                           
                             />
                         </FormControl>
                         <FormMessage />
@@ -871,7 +871,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={field3Placeholder}
                             className="min-h-[120px]"
                             {...field}
-                            value={field.value ?? ''}
+                           
                             />
                         </FormControl>
                         <FormMessage />
@@ -892,7 +892,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={field4Placeholder}
                             className="min-h-[120px]"
                             {...field}
-                            value={field.value ?? ''}
+                           
                             />
                         </FormControl>
                         <FormMessage />
@@ -1081,7 +1081,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                                             type="time" 
                                                             {...field} 
                                                             className="h-7 text-[10px] font-bold px-1" 
-                                                            value={field.value ?? ''}
+                                                           
                                                         />
                                                     )}
                                                 />
@@ -1094,7 +1094,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                                             type="time" 
                                                             {...field} 
                                                             className="h-7 text-[10px] font-bold px-1" 
-                                                            value={field.value ?? ''}
+                                                           
                                                         />
                                                     )}
                                                 />
@@ -1253,7 +1253,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             render={({ field }) => (
                                 <FormItem>
                                 <FormControl>
-                                    <Input placeholder="Beskrivelse" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                    <Input placeholder="Beskrivelse" {...field} className="bg-white h-8 text-xs" />
                                 </FormControl>
                                 </FormItem>
                             )}
@@ -1264,7 +1264,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             render={({ field }) => (
                                 <FormItem>
                                 <FormControl>
-                                    <Input placeholder="Verdi" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                    <Input placeholder="Verdi" {...field} className="bg-white h-8 text-xs" />
                                 </FormControl>
                                 </FormItem>
                             )}
@@ -1316,7 +1316,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormControl>
-                                        <Input placeholder="Navn" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                        <Input placeholder="Navn" {...field} className="bg-white h-8 text-xs" />
                                     </FormControl>
                                     </FormItem>
                                 )}
@@ -1327,7 +1327,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormControl>
-                                        <Input type="tel" placeholder="Telefon" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                        <Input type="tel" placeholder="Telefon" {...field} className="bg-white h-8 text-xs" />
                                     </FormControl>
                                     </FormItem>
                                 )}
@@ -1338,7 +1338,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormControl>
-                                        <Input type="email" placeholder="E-post" {...field} className="bg-white h-8 text-xs" value={field.value ?? ''} />
+                                        <Input type="email" placeholder="E-post" {...field} className="bg-white h-8 text-xs" />
                                     </FormControl>
                                     </FormItem>
                                 )}
