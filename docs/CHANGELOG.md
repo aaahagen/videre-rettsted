@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Simplified the "Datahåndtering" card to focus solely on Leveringssteder export/import.
 
 ### Fixed
+- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Place Form Log Persistence:** Fixed an issue where the user who created or edited a place was not being correctly saved or displayed in the activity log.
     - Added `updatedBy`, `updatedByName`, and `authorName` fields to the `Place` model.
     - Updated `PlaceForm` to correctly capture and save the current user's UID and Name during creation and updates.
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Message System Robustness:** 
     - Added backwards compatibility for older messages without a `type` field.
     - Fixed `.toDate()` type errors by implementing a safe date conversion helper.
@@ -108,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Route Keys Dashboard Card:** Added a dynamic card that alerts drivers to specific keys needed for their assigned route.
 
 ### Fixed
+- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Creation Bug:** Fixed a critical issue where the "Registrer enhet" button failed to save new vehicles.
 - **Fleet Compliance Indexing:** Fixed a bug where `euControl` and `nextService` dates were not correctly saved.
 - **Firestore Sentinel Conflict:** Fixed a critical bug in `cleanObject` utility that broke `deleteField()` operations.
@@ -129,5 +132,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Capacitor.js Integration:** True native mobile distribution for iOS and Android (Phase 8).
 
 ### Fixed
+- **Super Admin Operations:** Fixed permission rules and backend functions to allow Super Admins to correctly invite and delete users across organizations.
 - **Vehicle Form Persistence:** Refactor the "Ny enhet" form to be more robust.
 - **Fleet Card Notifications:** Fix the issue where "ny sak/ service" notifications are not showing up correctly on the vehicle cards.

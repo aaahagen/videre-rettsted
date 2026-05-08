@@ -264,7 +264,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
 
     setIsSubmitting(true);
     try {
-      const link = await firebaseAuth.inviteUser(email, role, name);
+      const link = await firebaseAuth.inviteUser(email, role, name, organization?.id);
       setInviteLink(link);
       toast({
         title: 'Invitasjon opprettet',

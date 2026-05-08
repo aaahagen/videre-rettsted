@@ -1,4 +1,3 @@
-
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -35,7 +34,7 @@ export const deleteUser = functions.https.onCall(async (request) => {
         }
 
         const callerData = callerDoc.data();
-        if (callerData?.role !== "admin") {
+        if (callerData?.role !== "admin" && callerData?.role !== "super_admin") {
             throw new functions.https.HttpsError(
                 "permission-denied",
                 "Only administrators can delete users."
@@ -47,7 +46,7 @@ export const deleteUser = functions.https.onCall(async (request) => {
 
         if (userToDeleteDoc.exists) {
             const userToDeleteData = userToDeleteDoc.data();
-            if (userToDeleteData?.orgId !== callerData.orgId) {
+            if (callerData?.role !== "super_admin" && userToDeleteData?.orgId !== callerData.orgId) {
                 throw new functions.https.HttpsError(
                     "permission-denied",
                     "Administrators can only delete users within their own organization."

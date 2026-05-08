@@ -44,7 +44,7 @@ export const firebaseAuth = {
     return { uid, orgId };
   },
 
-  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor' | 'loader' | 'planner', name?: string) {
+  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor' | 'loader' | 'planner', name?: string, explicitOrgId?: string) {
     const user = auth.currentUser;
     if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
 
@@ -52,7 +52,10 @@ export const firebaseAuth = {
     if (!userDoc.exists()) throw new Error('Brukerprofil ikke funnet.');
 
     const userData = userDoc.data();
-    const orgId = userData.orgId;
+    let orgId = userData.orgId;
+    if (userData.role === 'super_admin' && explicitOrgId) {
+        orgId = explicitOrgId;
+    }
 
     if (!orgId) throw new Error('Ingen organisasjon funnet for brukeren.');
 
