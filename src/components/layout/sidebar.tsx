@@ -189,6 +189,7 @@ export default function AppSidebar() {
       label: 'Administrasjon',
       adminOnly: true,
       items: [
+        { href: '/dashboard/owner', icon: Building2, label: 'Bedriftsoversikt', ownerOnly: true },
         { href: '/dashboard/admin', icon: Shield, label: 'Innstillinger', adminOnly: true },
         { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
       ]

@@ -30,7 +30,7 @@ export default function DashboardLayout({
   useEffect(() => {
     if (user) {
       firebaseDB.getUser(user.uid).then(u => {
-        setIsAdmin(u?.role === 'admin');
+        setIsAdmin(u?.role === 'admin' || u?.role === 'owner');
       });
     }
   }, [user]);

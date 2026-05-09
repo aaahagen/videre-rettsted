@@ -4,7 +4,7 @@ export interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   organizationId: string;
   photoURL?: string;
   disabled?: boolean;
@@ -227,7 +227,7 @@ export interface Invitation {
   id: string;
   email: string;
   organizationId: string;
-  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   expiresAt: FieldValue;
   organizationName?: string;
 }
@@ -238,7 +238,7 @@ export interface User {
   name: string;
   email: string;
   orgId: string;
-  role: 'super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
   favorites: string[];
   visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
