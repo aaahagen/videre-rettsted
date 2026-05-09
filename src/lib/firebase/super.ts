@@ -40,6 +40,7 @@ export const superDB = {
   getGlobalPlatformStats: async () => {
     const usersSnap = await getCountFromServer(collection(db, 'users'));
     const placesSnap = await getCountFromServer(collection(db, 'places'));
+    // Routes are soft-deleted or kept as completed. We count all completed routes historically across the platform.
     const routesQ = query(collection(db, 'routes'), where('status', '==', 'completed'));
     const completedRoutesSnap = await getCountFromServer(routesQ);
 

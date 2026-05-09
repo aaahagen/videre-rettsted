@@ -14,7 +14,7 @@
 > - **Verification:** After modifying code, ALWAYS run `npm run build` or `npm run typecheck` to verify that the changes haven't introduced regressions. If you update interfaces, run `npm run docs` to update the API reference.
 > - **Deployment & Versioning:** When asked to build and push to Github, you MUST FIRST run `npm run build`. If the build is successful, you MUST update the `docs/CHANGELOG.md` file with the changes made, and update any other relevant documentation before pushing to Github.
 > - **No God Objects:** Keep database operations separated by domain (e.g., `orders.ts`, `places.ts`) as dictated by `engineering.md`.
-> - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin).
+> - **Role Awareness:** Every UI change must consider the user's role (Driver, Loader, Planner, Admin, Owner).
 > - **Strict Scope Adherence:** DO NOT alter, fix, or refactor anything outside the explicit scope of the user's request. If you notice unrelated issues or improvements, you MUST ask the user for permission before making those changes.
 > - **Communication Protocol:** When asked a question or given a task, you MUST briefly explain your plan and answer the question *before* you start using tools to write code.
 > - **Action over words:** While you must explain your plan first, once the plan is stated, use your tools to execute it without further prompting. Update the changelog upon completion.
