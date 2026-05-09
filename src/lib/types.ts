@@ -16,6 +16,8 @@ export interface Organization {
   orgNumber?: string;
   ownerId?: string;
   status?: 'active' | 'trial' | 'suspended';
+  plan?: 'free' | 'pro' | 'enterprise';
+  trialExpiresAt?: any; // Firestore Timestamp or Date
   modules?: {
     places?: boolean;
     learning?: boolean;

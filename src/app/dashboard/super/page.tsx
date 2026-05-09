@@ -114,6 +114,16 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handlePlanChange = async (orgId: string, plan: Organization['plan']) => {
+    try {
+      await superDB.updateOrganizationDetails(orgId, { plan });
+      setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, plan } : o));
+      toast({ title: "Abonnement oppdatert" });
+    } catch (error: any) {
+      toast({ title: "Kunne ikke oppdatere abonnement", variant: "destructive" });
+    }
+  };
+
   const handleStatusChange = async (orgId: string, status: Organization['status']) => {
     try {
       await superDB.updateOrganizationStatus(orgId, status);
@@ -274,9 +284,15 @@ export default function SuperAdminPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0">{org.id.substring(0, 8)}...</Badge>
-                    <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 ${org.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
-                      {org.status || 'trial'}
+                    <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 ${org.status === 'active' ? 'bg-emerald-500' : org.status === 'suspended' ? 'bg-red-500' : 'bg-amber-500'}`}>
+                      {org.status === 'active' ? 'Aktiv' : org.status === 'suspended' ? 'Suspendert' : 'Prøveperiode'}
                     </Badge>
+                    <Badge variant="outline" className="text-[8px] sm:text-[10px] px-1.5 py-0 uppercase bg-slate-50 text-slate-500 border-slate-200">
+                      {org.plan || 'Free'}
+                    </Badge>
+                    {org.status === 'trial' && org.trialExpiresAt && (
+                        <span className="text-[10px] text-slate-400 font-medium">Utløper: {new Date(org.trialExpiresAt.toDate ? org.trialExpiresAt.toDate() : org.trialExpiresAt).toLocaleDateString('no-NO')}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -294,6 +310,17 @@ export default function SuperAdminPage() {
                       {isSwitching === org.id ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
                       {dbUser?.orgId === org.id ? 'Valgt' : 'Logg inn'}
                   </Button>
+                  
+                  <Select value={org.plan || 'free'} onValueChange={(val: any) => handlePlanChange(org.id, val)}>
+                    <SelectTrigger className="w-24 font-bold h-8 text-xs bg-slate-50">
+                      <SelectValue placeholder="Plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="pro">Pro</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
                   
                   <Select value={org.status || 'trial'} onValueChange={(val: any) => handleStatusChange(org.id, val)}>
                     <SelectTrigger className="w-28 font-bold h-8 text-xs">
@@ -344,6 +371,7 @@ export default function SuperAdminPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'active')}>Sett Aktiv</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'trial')}>Sett Prøveperiode</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlanChange(org.id, 'pro')}>Sett til Pro Plan</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'suspended')}>Suspendert</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setEditingOrg(org); setIsEditModalOpen(true); }}>Rediger</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setOrgToDelete(org); setIsDeleteModalOpen(true); }} className="text-destructive">Slett</DropdownMenuItem>

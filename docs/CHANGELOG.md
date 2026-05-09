@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added   
 - **Super Admin Analytics & Management Enhancements:**
+    - **Billing & Subscription Context:** Introduced a foundation for SaaS plans (`Free`, `Pro`, `Enterprise`). Super Admins can now view and modify an organization's subscription plan directly from the dashboard.
     - **Global Broadcast System:** Super Admins can now send a global "System Message" (Broadcast) to all users across all active organizations directly from the Super Admin panel. This uses a batched database operation to insert the message securely without compromising RBAC rules.
     - **Real-time Quota Tracking:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for fast aggregation.
     - **Organization Editing:** Super Admins can now quickly rename organizations and update their Organization Numbers directly from a modal without leaving the panel.
