@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added   
 - **Super Admin Analytics & Management Enhancements:**
     - **Global Broadcast System:** Super Admins can now send a global "System Message" (Broadcast) to all users across all active organizations directly from the Super Admin panel. This uses a batched database operation to insert the message securely without compromising RBAC rules.
-    - **Search & Filter:** Added a robust search and filtering system to the Super Admin dashboard. You can now search by Organization Name or ID, and filter the list by Status (Active, Trial, Suspended) or by Plan (Free, Pro, Enterprise).
-    - **Module Presets:** Added quick-action "Presets" for configuring organization modules. Super admins can instantly apply configurations like "Enterprise (Alle)" or "Logistics Only" instead of toggling 7 individual switches.
+    - **Intelligent Module Plans:** The Plan dropdown (Free, Pro, Enterprise) now automatically configures the appropriate modules for the organization when selected.
     - **Billing & Subscription Context:** Introduced a foundation for SaaS plans (`Free`, `Pro`, `Enterprise`). Super Admins can now view and modify an organization's subscription plan directly from the dashboard.
     - **Real-time Quota Tracking:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for fast aggregation.
     - **Organization Editing:** Super Admins can now quickly rename organizations and update their Organization Numbers directly from a modal without leaving the panel.
@@ -41,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact and readable. Moved the search bar to the header, compressed the organization statistics into a horizontal bar, and redesigned the module toggles as compact pill-shaped badges.
 - **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
 - **Place Form UI Improvements:** 
     - Removed the small inline map pin icon from the address field.

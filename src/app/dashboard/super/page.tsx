@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search, Filter } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -43,14 +43,11 @@ export default function SuperAdminPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Search & Filter State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [planFilter, setPlanFilter] = useState('all');
-
-  
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!loading) {
@@ -94,6 +91,20 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handleSendBroadcast = async () => {
+      if (!broadcastMessage.trim() || !dbUser) return;
+      setIsSendingBroadcast(true);
+      try {
+          await superDB.sendGlobalBroadcast(dbUser.id, broadcastMessage.trim());
+          toast({ title: "Melding sendt", description: "Systemmelding er sendt ut til alle organisasjoner." });
+          setBroadcastMessage('');
+      } catch (error: any) {
+          toast({ title: "Kunne ikke sende", description: error.message, variant: "destructive" });
+      } finally {
+          setIsSendingBroadcast(false);
+      }
+  };
+
   const handleModuleToggle = async (orgId: string, module: keyof NonNullable<Organization['modules']>, currentVal: boolean) => {
     const org = organizations.find(o => o.id === orgId);
     if (!org) return;
@@ -122,9 +133,22 @@ export default function SuperAdminPage() {
 
   const handlePlanChange = async (orgId: string, plan: Organization['plan']) => {
     try {
-      await superDB.updateOrganizationDetails(orgId, { plan });
-      setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, plan } : o));
-      toast({ title: "Abonnement oppdatert" });
+      let newModules = undefined;
+      if (plan === 'enterprise') {
+          newModules = { places: true, learning: true, messages: true, fleet: true, workforce: true, logistics: true, analytics: true };
+      } else if (plan === 'pro') {
+          newModules = { places: true, learning: false, messages: true, fleet: true, workforce: true, logistics: true, analytics: false };
+      } else if (plan === 'free') {
+          newModules = { places: true, learning: false, messages: false, fleet: false, workforce: false, logistics: true, analytics: false };
+      }
+
+      const updates: Partial<Organization> = { plan };
+      if (newModules) updates.modules = newModules;
+
+      await superDB.updateOrganizationDetails(orgId, updates);
+      
+      setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, plan, ...(newModules ? {modules: newModules} : {}) } : o));
+      toast({ title: "Abonnement oppdatert", description: `Satt til ${plan} og oppdaterte moduler.` });
     } catch (error: any) {
       toast({ title: "Kunne ikke oppdatere abonnement", variant: "destructive" });
     }
@@ -163,30 +187,6 @@ export default function SuperAdminPage() {
     }
   };
 
-  const handlePresetModules = async (orgId: string, preset: 'all' | 'logistics') => {
-      const org = organizations.find(o => o.id === orgId);
-      if (!org) return;
-      
-      const newModules = preset === 'all' 
-          ? { places: true, learning: true, messages: true, fleet: true, workforce: true, logistics: true, analytics: true }
-          : { places: true, learning: false, messages: false, fleet: false, workforce: false, logistics: true, analytics: false };
-          
-      try {
-          await superDB.updateOrganizationModules(orgId, newModules);
-          setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, modules: newModules } : o));
-          toast({ title: "Moduler oppdatert", description: `Satt forhåndsvalg: ${preset === 'all' ? 'Enterprise' : 'Logistics Only'}` });
-      } catch (error: any) {
-          toast({ title: "Kunne ikke oppdatere", description: error.message, variant: "destructive" });
-      }
-  };
-
-  const filteredOrganizations = organizations.filter(org => {
-      const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.id.includes(searchQuery);
-      const matchesStatus = statusFilter === 'all' || (org.status || 'trial') === statusFilter;
-      const matchesPlan = planFilter === 'all' || (org.plan || 'free') === planFilter;
-      return matchesSearch && matchesStatus && matchesPlan;
-  });
-
   const handleSaveEdit = async () => {
       if (!editingOrg || !editingOrg.id) return;
       setIsSaving(true);
@@ -202,20 +202,6 @@ export default function SuperAdminPage() {
           toast({ title: "Feil ved oppdatering", description: error.message, variant: "destructive" });
       } finally {
           setIsSaving(false);
-      }
-  };
-
-  const handleSendBroadcast = async () => {
-      if (!broadcastMessage.trim() || !dbUser) return;
-      setIsSendingBroadcast(true);
-      try {
-          await superDB.sendGlobalBroadcast(dbUser.id, broadcastMessage.trim());
-          toast({ title: "Melding sendt", description: "Systemmelding er sendt ut til alle organisasjoner." });
-          setBroadcastMessage('');
-      } catch (error: any) {
-          toast({ title: "Kunne ikke sende", description: error.message, variant: "destructive" });
-      } finally {
-          setIsSendingBroadcast(false);
       }
   };
 
@@ -241,6 +227,10 @@ export default function SuperAdminPage() {
       }
   };
 
+  const filteredOrganizations = organizations.filter(org => {
+      return org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.id.includes(searchQuery);
+  });
+
   if (loading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -252,7 +242,7 @@ export default function SuperAdminPage() {
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2 sm:gap-3">
             <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
@@ -260,50 +250,21 @@ export default function SuperAdminPage() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Global oversikt over alle organisasjoner og moduler.</p>
         </div>
-        <div className="flex shrink-0">
-            <Card className="px-4 py-2 sm:px-6 sm:py-2 border-2 border-slate-100 shadow-none w-full sm:w-auto">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</p>
-                <p className="text-xl sm:text-2xl font-black">{globalStats.total}</p>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+            {/* Compact Search */}
+            <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input 
+                    placeholder="Søk organisasjon..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10 bg-white border-slate-200"
+                />
+            </div>
+            <Card className="px-4 py-2 border-2 border-slate-100 shadow-none w-full sm:w-auto h-10 flex flex-row items-center justify-between sm:justify-start gap-4">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</span>
+                <span className="text-lg font-black leading-none">{globalStats.total}</span>
             </Card>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-                placeholder="Søk etter navn eller ID..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500"
-            />
-        </div>
-        <div className="flex gap-4 w-full sm:w-auto">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 focus:ring-indigo-500">
-                    <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
-                    <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Alle Statuser</SelectItem>
-                    <SelectItem value="active">Kun Aktive</SelectItem>
-                    <SelectItem value="trial">Kun Prøve</SelectItem>
-                    <SelectItem value="suspended">Kun Suspendert</SelectItem>
-                </SelectContent>
-            </Select>
-            <Select value={planFilter} onValueChange={setPlanFilter}>
-                <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 focus:ring-indigo-500">
-                    <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
-                    <SelectValue placeholder="Plan" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Alle Planer</SelectItem>
-                    <SelectItem value="free">Kun Free</SelectItem>
-                    <SelectItem value="pro">Kun Pro</SelectItem>
-                    <SelectItem value="enterprise">Kun Enterprise</SelectItem>
-                </SelectContent>
-            </Select>
         </div>
       </div>
 
@@ -321,13 +282,13 @@ export default function SuperAdminPage() {
                         placeholder="Skriv inn meldingsteksten her..." 
                         value={broadcastMessage}
                         onChange={(e) => setBroadcastMessage(e.target.value)}
-                        className="min-h-[100px] text-sm"
+                        className="min-h-[80px] text-sm"
                     />
                     <div className="flex justify-end">
                         <Button 
                             onClick={handleSendBroadcast} 
                             disabled={isSendingBroadcast || !broadcastMessage.trim()}
-                            className="bg-indigo-600 hover:bg-indigo-700 font-bold"
+                            className="bg-indigo-600 hover:bg-indigo-700 font-bold h-9"
                         >
                             {isSendingBroadcast ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Megaphone className="h-4 w-4 mr-2" />}
                             Send til alle
@@ -341,26 +302,26 @@ export default function SuperAdminPage() {
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {filteredOrganizations.map((org) => (
           <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-4 ring-blue-600/5' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
-            <div className="bg-slate-50 border-b p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-white border flex items-center justify-center shadow-sm shrink-0">
-                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-600" />
+            <div className="bg-white border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-500" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <h3 className="font-black text-base sm:text-lg text-slate-800 uppercase tracking-tight truncate">{org.name}</h3>
-                    {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[8px] sm:text-[10px]">Aktiv i Dashboard</Badge>}
+                    {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[8px] sm:text-[10px]">Aktiv</Badge>}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0">{org.id.substring(0, 8)}...</Badge>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0 bg-slate-50 text-slate-500 border-slate-200">{org.id.substring(0, 8)}</Badge>
                     <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 ${org.status === 'active' ? 'bg-emerald-500' : org.status === 'suspended' ? 'bg-red-500' : 'bg-amber-500'}`}>
                       {org.status === 'active' ? 'Aktiv' : org.status === 'suspended' ? 'Suspendert' : 'Prøveperiode'}
                     </Badge>
-                    <Badge variant="outline" className="text-[8px] sm:text-[10px] px-1.5 py-0 uppercase bg-slate-50 text-slate-500 border-slate-200">
+                    <Badge variant="outline" className={`text-[8px] sm:text-[10px] px-1.5 py-0 uppercase border-slate-200 ${org.plan === 'enterprise' ? 'bg-indigo-50 text-indigo-700' : org.plan === 'pro' ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'}`}>
                       {org.plan || 'Free'}
                     </Badge>
                     {org.status === 'trial' && org.trialExpiresAt && (
-                        <span className="text-[10px] text-slate-400 font-medium">Utløper: {new Date(org.trialExpiresAt.toDate ? org.trialExpiresAt.toDate() : org.trialExpiresAt).toLocaleDateString('no-NO')}</span>
+                        <span className="text-[10px] text-slate-400 font-medium ml-1">Utløper: {new Date(org.trialExpiresAt.toDate ? org.trialExpiresAt.toDate() : org.trialExpiresAt).toLocaleDateString('no-NO')}</span>
                     )}
                   </div>
                 </div>
@@ -372,7 +333,7 @@ export default function SuperAdminPage() {
                   <Button 
                       variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
                       size="sm" 
-                      className="font-bold text-xs"
+                      className="font-bold text-xs shadow-none"
                       disabled={dbUser?.orgId === org.id || isSwitching !== null}
                       onClick={() => handleSwitchOrg(org.id)}
                   >
@@ -381,7 +342,7 @@ export default function SuperAdminPage() {
                   </Button>
                   
                   <Select value={org.plan || 'free'} onValueChange={(val: any) => handlePlanChange(org.id, val)}>
-                    <SelectTrigger className="w-24 font-bold h-8 text-xs bg-slate-50">
+                    <SelectTrigger className="w-24 font-bold h-8 text-xs bg-slate-50 shadow-none border-slate-200">
                       <SelectValue placeholder="Plan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,7 +353,7 @@ export default function SuperAdminPage() {
                   </Select>
                   
                   <Select value={org.status || 'trial'} onValueChange={(val: any) => handleStatusChange(org.id, val)}>
-                    <SelectTrigger className="w-28 font-bold h-8 text-xs">
+                    <SelectTrigger className="w-28 font-bold h-8 text-xs shadow-none border-slate-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -404,13 +365,13 @@ export default function SuperAdminPage() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 shadow-none border-slate-200">
+                        <MoreVertical className="h-4 w-4 text-slate-500" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setEditingOrg(org); setIsEditModalOpen(true); }}>
-                          <Edit2 className="h-4 w-4 mr-2" /> Rediger
+                          <Edit2 className="h-4 w-4 mr-2" /> Rediger Org
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setOrgToDelete(org); setIsDeleteModalOpen(true); }} className="text-destructive">
                           <Trash2 className="h-4 w-4 mr-2" /> Slett organisasjon
@@ -424,7 +385,7 @@ export default function SuperAdminPage() {
                    <Button 
                       variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
                       size="sm" 
-                      className="flex-1 font-bold text-xs h-9"
+                      className="flex-1 font-bold text-xs h-9 shadow-none"
                       disabled={dbUser?.orgId === org.id || isSwitching !== null}
                       onClick={() => handleSwitchOrg(org.id)}
                   >
@@ -433,14 +394,16 @@ export default function SuperAdminPage() {
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0 shadow-none">
+                        <MoreVertical className="h-4 w-4 text-slate-500" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handlePlanChange(org.id, 'free')}>Sett Free Plan</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlanChange(org.id, 'pro')}>Sett Pro Plan</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePlanChange(org.id, 'enterprise')}>Sett Enterprise Plan</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'active')}>Sett Aktiv</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'trial')}>Sett Prøveperiode</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handlePlanChange(org.id, 'pro')}>Sett til Pro Plan</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'suspended')}>Suspendert</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setEditingOrg(org); setIsEditModalOpen(true); }}>Rediger</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setOrgToDelete(org); setIsDeleteModalOpen(true); }} className="text-destructive">Slett</DropdownMenuItem>
@@ -450,86 +413,54 @@ export default function SuperAdminPage() {
               </div>
             </div>
 
-            <CardContent className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
-                <div className="lg:col-span-1 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                        <LayoutGrid className="h-3 w-3" /> Moduler
-                    </h4>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] uppercase font-bold tracking-tight text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700">Presets</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handlePresetModules(org.id, 'all')}>Enterprise (Alle)</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handlePresetModules(org.id, 'logistics')}>Logistics Only</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-4 divide-x border-b bg-slate-50/50">
+                  <div className="p-3 sm:p-4 text-center">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Brukere</p>
+                      <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.users ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                    {[
-                      { id: 'places', label: 'RettSted (Steder)', core: true },
-                      { id: 'learning', label: 'Læringsportal' },
+                  <div className="p-3 sm:p-4 text-center">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Steder</p>
+                      <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.places ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
+                  </div>
+                  <div className="p-3 sm:p-4 text-center">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Kjøretøy</p>
+                      <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.vehicles ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
+                  </div>
+                  <div className="p-3 sm:p-4 text-center">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Ordrer</p>
+                      <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.orders ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
+                  </div>
+              </div>
+
+              <div className="p-4 sm:p-5 space-y-3">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                      <LayoutGrid className="h-3 w-3" /> Moduler
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                  {[
+                      { id: 'places', label: 'RettSted', core: true },
+                      { id: 'logistics', label: 'Logistikk' },
+                      { id: 'fleet', label: 'Flåte' },
+                      { id: 'workforce', label: 'Ansatte' },
+                      { id: 'learning', label: 'Læring' },
                       { id: 'messages', label: 'Meldinger' },
-                      { id: 'fleet', label: 'Bilpark / Flåte' },
-                      { id: 'workforce', label: 'Timelister / Ansatte' },
-                      { id: 'logistics', label: 'Logistikk (Rute/Scan)' },
-                      { id: 'analytics', label: 'Statistikk / BI' },
-                    ].map((mod) => (
-                      <div key={mod.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 sm:bg-transparent border border-slate-100 sm:border-none">
-                        <Label htmlFor={`${org.id}-${mod.id}`} className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer">
-                          {mod.label}
-                          {mod.core && <span className="ml-2 text-[8px] bg-slate-200 text-slate-500 px-1 rounded uppercase">Core</span>}
-                        </Label>
-                        <Switch
+                      { id: 'analytics', label: 'Statistikk' },
+                  ].map((mod) => (
+                      <div key={mod.id} className={`flex items-center pr-3 py-1 rounded-full border ${mod.core || (org.modules as any)?.[mod.id] ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200'}`}>
+                      <Switch
                           id={`${org.id}-${mod.id}`}
                           disabled={mod.core}
-                          className="scale-75 sm:scale-100 origin-right"
+                          className="scale-50 origin-left ml-1 data-[state=checked]:bg-indigo-600"
                           checked={mod.core || !!(org.modules as any)?.[mod.id]}
                           onCheckedChange={() => handleModuleToggle(org.id, mod.id as any, !!(org.modules as any)?.[mod.id])}
-                        />
+                      />
+                      <Label htmlFor={`${org.id}-${mod.id}`} className={`text-[10px] sm:text-xs font-black uppercase tracking-tight cursor-pointer -ml-1 ${mod.core || (org.modules as any)?.[mod.id] ? 'text-indigo-700' : 'text-slate-400'}`}>
+                          {mod.label}
+                      </Label>
                       </div>
-                    ))}
+                  ))}
                   </div>
-                </div>
-
-                <div className="lg:col-span-3">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <Card className="shadow-none border-slate-100 bg-white">
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Brukere</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="text-2xl font-black">{orgStats[org.id]?.users ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="shadow-none border-slate-100 bg-white">
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Steder</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="text-2xl font-black">{orgStats[org.id]?.places ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="shadow-none border-slate-100 bg-white">
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Kjøretøy</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="text-2xl font-black">{orgStats[org.id]?.vehicles ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
-                        </CardContent>
-                      </Card>
-                      <Card className="shadow-none border-slate-100 bg-white">
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Ordrer</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="text-2xl font-black">{orgStats[org.id]?.orders ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                </div>
               </div>
             </CardContent>
           </Card>
