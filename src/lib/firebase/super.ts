@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Organization, User } from '../types';
 
@@ -47,6 +47,29 @@ export const superDB = {
   },
 
   // Analytics per organization
+  sendGlobalBroadcast: async (senderId: string, content: string): Promise<void> => {
+    const q = query(collection(db, 'organizations'));
+    const orgsSnap = await getDocs(q);
+    
+    const batch = writeBatch(db);
+    
+    orgsSnap.docs.forEach((orgDoc) => {
+      const orgId = orgDoc.id;
+      const newMsgRef = doc(collection(doc(db, 'organizations', orgId), 'messages'));
+      batch.set(newMsgRef, {
+        orgId,
+        senderId,
+        recipientId: 'all',
+        content,
+        createdAt: serverTimestamp(),
+        readBy: [],
+        type: 'broadcast'
+      });
+    });
+
+    await batch.commit();
+  },
+
   getOrgStats: async (orgId: string) => {
     try {
       const usersQ = query(collection(db, 'users'), where('orgId', '==', orgId));

@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -41,6 +42,9 @@ export default function SuperAdminPage() {
   const [orgToDelete, setOrgToDelete] = useState<Organization | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -161,6 +165,20 @@ export default function SuperAdminPage() {
       }
   };
 
+  const handleSendBroadcast = async () => {
+      if (!broadcastMessage.trim() || !dbUser) return;
+      setIsSendingBroadcast(true);
+      try {
+          await superDB.sendGlobalBroadcast(dbUser.id, broadcastMessage.trim());
+          toast({ title: "Melding sendt", description: "Systemmelding er sendt ut til alle organisasjoner." });
+          setBroadcastMessage('');
+      } catch (error: any) {
+          toast({ title: "Kunne ikke sende", description: error.message, variant: "destructive" });
+      } finally {
+          setIsSendingBroadcast(false);
+      }
+  };
+
   const handleDeleteOrg = async () => {
       if (!orgToDelete) return;
       if (deleteConfirmation !== orgToDelete.name) {
@@ -206,6 +224,37 @@ export default function SuperAdminPage() {
             <Card className="px-4 py-2 sm:px-6 sm:py-2 border-2 border-slate-100 shadow-none w-full sm:w-auto">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</p>
                 <p className="text-xl sm:text-2xl font-black">{globalStats.total}</p>
+            </Card>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2">
+            <Card className="border-2 border-slate-100 shadow-sm">
+                <CardHeader className="bg-slate-50 border-b p-4">
+                    <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                        <Megaphone className="h-4 w-4 text-indigo-500" /> Systemmelding (Global Broadcast)
+                    </CardTitle>
+                    <CardDescription className="text-xs">Send en viktig melding til alle brukere på tvers av alle organisasjoner.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                    <Textarea 
+                        placeholder="Skriv inn meldingsteksten her..." 
+                        value={broadcastMessage}
+                        onChange={(e) => setBroadcastMessage(e.target.value)}
+                        className="min-h-[100px] text-sm"
+                    />
+                    <div className="flex justify-end">
+                        <Button 
+                            onClick={handleSendBroadcast} 
+                            disabled={isSendingBroadcast || !broadcastMessage.trim()}
+                            className="bg-indigo-600 hover:bg-indigo-700 font-bold"
+                        >
+                            {isSendingBroadcast ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Megaphone className="h-4 w-4 mr-2" />}
+                            Send til alle
+                        </Button>
+                    </div>
+                </CardContent>
             </Card>
         </div>
       </div>
