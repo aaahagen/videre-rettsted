@@ -471,7 +471,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         
         <h1 className="text-3xl font-bold font-headline px-1">Adminpanel</h1>
         
-        {organization && <PendingInvitations orgId={organization.id} />}
+        
 
         {/* USER MANAGEMENT (Collapsible) */}
         <Collapsible
@@ -1184,6 +1184,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             
           </CardContent>
         </Card>
+
+        {organization && <PendingInvitations orgId={organization.id} />}
 
         {/* DATA MANAGEMENT */}
         <Card className="border-slate-200 shadow-sm">

@@ -173,12 +173,18 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
   const currentInvitations = invitations.slice(startIndex, endIndex);
 
   return (
-    <Card>
-      <CardHeader className="px-4 sm:px-6">
+    <Card className="overflow-hidden border-slate-200">
+      <CardHeader className="bg-slate-50 border-b p-4 sm:p-6">
         <div className="flex justify-between items-center">
-            <CardTitle className="font-headline text-xl sm:text-2xl">
-            Utestående Invitasjoner
-            </CardTitle>
+            <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                <Mail className="h-5 w-5 text-slate-600" />
+            </div>
+            <div>
+                <CardTitle className="font-headline text-xl">Utestående Invitasjoner</CardTitle>
+                <p className="text-xs text-slate-500">Invitasjoner som er sendt ut, men ikke er blitt brukt enda.</p>
+            </div>
+        </div>
             <div className="flex items-center gap-2">
                 {hasExpiredInvitations && (
                     <AlertDialog>
@@ -212,11 +218,9 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                 </Button>
             </div>
         </div>
-        <CardDescription>
-          Her er invitasjonene som er sendt ut, men ikke er blitt brukt enda. De utløper etter 7 dager.
-        </CardDescription>
+        
       </CardHeader>
-      <CardContent className="px-0 sm:px-6 pb-0">
+      <CardContent className="p-0">
         {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -238,10 +242,10 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>E-post</TableHead>
-                        <TableHead>Rolle</TableHead>
-                        <TableHead>Gjenstående tid</TableHead>
-                        <TableHead className="w-[100px] text-right">Handling</TableHead>
+                        <TableHead className="py-2 text-xs">E-post</TableHead>
+                        <TableHead className="py-2 text-xs">Rolle</TableHead>
+                        <TableHead className="py-2 text-xs">Utløper</TableHead>
+                        <TableHead className="w-[80px] text-right py-2 text-xs"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -249,16 +253,16 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                           const expiry = formatRemainingTime(invite.expiresAt);
                           return (
                             <TableRow key={invite.id}>
-                              <TableCell className="font-medium">{invite.email}</TableCell>
-                              <TableCell>
+                              <TableCell className="font-medium text-xs py-2">{invite.email}</TableCell>
+                              <TableCell className="py-2">
                                   <Badge variant={invite.role === 'admin' ? 'default' : 'secondary'} className={invite.role === 'admin' ? 'bg-primary' : ''}>
                                       {invite.role === 'admin' ? 'Admin' : 'Sjåfør'}
                                   </Badge>
                               </TableCell>
-                              <TableCell className={expiry.color}>
+                              <TableCell className={`py-2 text-xs font-medium ${expiry.color}`}>
                                   {expiry.text}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right py-1">
                                  <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">

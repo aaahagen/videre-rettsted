@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Admin Dashboard UI Refactor:** Completely reorganized the layout of the standard Admin Dashboard to prioritize critical configuration. The new order is: Organisasjonsinnstillinger (Top) -> Brukere & Tilganger -> Utestående Invitasjoner -> (Rest).
+- **Pending Invitations UI Polish:** Redesigned the "Utestående Invitasjoner" card on the Admin Dashboard to be much more compact and visually aligned with the rest of the new UI components. It now has a matching header, tighter table rows, and reduced whitespace to save vertical screen real estate.
 - **Super Admin Search Context:** Removed the top-level main navigation search bar from the Super Admin panel to keep the interface clean, as global search is handled within the panel itself.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact and readable. Moved the search bar to the header, compressed the organization statistics into a horizontal bar, and redesigned the module toggles as compact pill-shaped badges.
 - **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
