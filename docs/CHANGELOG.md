@@ -66,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Super Admin Owner View Access:** Fixed a routing bug where users with the `super_admin` role were incorrectly redirected away from the `/dashboard/owner` (Executive Dashboard) page.
 - **Maximum update depth exceeded with Collapsible:** Fixed a UI crash related to Radix UI's Collapsible component. The issue was resolved by updating the `@radix-ui/react-collapsible` and `@radix-ui/react-accordion` dependencies to their latest versions to eliminate mismatched duplicate versions causing infinite loops in React 19.
 - **Maximum update depth exceeded with Switch:** Fixed a UI crash related to Radix UI's Switch component. This was resolved by forcing an update to `@radix-ui/react-compose-refs` to eliminate duplicate and conflicting versions causing infinite loops under React 19, and updated `@radix-ui/react-switch` to the newest version compatible with it.
 - **Admin Dashboard:** Fixed a bug in the "Inviter ny bruker" modal where typing in the email field would incorrectly update the name field. Renamed the "Inviter" button to "+ Ny bruker" for clarity.

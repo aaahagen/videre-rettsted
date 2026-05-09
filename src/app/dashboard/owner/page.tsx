@@ -23,7 +23,7 @@ export default function OwnerDashboard() {
 
   useEffect(() => {
     if (!loading) {
-      if (!dbUser || dbUser.role !== 'owner') {
+      if (!dbUser || (dbUser.role !== 'owner' && dbUser.role !== 'super_admin')) {
         router.push('/dashboard');
       } else if (dbUser.orgId) {
         loadData(dbUser.orgId);
