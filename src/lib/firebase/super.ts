@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, orderBy, where, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Organization, User } from '../types';
 
@@ -34,5 +34,38 @@ export const superDB = {
         admins: snapshot.docs.filter(d => d.data().role === 'admin').length,
         drivers: snapshot.docs.filter(d => d.data().role === 'driver').length,
     };
+  },
+
+  // Analytics per organization
+  getOrgStats: async (orgId: string) => {
+    try {
+      const usersQ = query(collection(db, 'users'), where('orgId', '==', orgId));
+      const placesQ = query(collection(db, 'places'), where('orgId', '==', orgId));
+      const vehiclesQ = query(collection(db, 'vehicles'), where('orgId', '==', orgId));
+      
+      const ordersQ = query(collection(doc(db, 'organizations', orgId), 'orders'));
+
+      const [usersSnap, placesSnap, vehiclesSnap, ordersSnap] = await Promise.all([
+        getCountFromServer(usersQ),
+        getCountFromServer(placesQ),
+        getCountFromServer(vehiclesQ),
+        getCountFromServer(ordersQ)
+      ]);
+
+      return {
+        users: usersSnap.data().count,
+        places: placesSnap.data().count,
+        vehicles: vehiclesSnap.data().count,
+        orders: ordersSnap.data().count
+      };
+    } catch (error) {
+      console.error(`Error getting stats for org ${orgId}`, error);
+      return {
+        users: 0,
+        places: 0,
+        vehicles: 0,
+        orders: 0
+      };
+    }
   }
 };

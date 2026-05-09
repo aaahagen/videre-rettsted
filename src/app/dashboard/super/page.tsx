@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function SuperAdminPage() {
+  const [orgStats, setOrgStats] = useState<Record<string, any>>({});
+
   const { dbUser, loading } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +50,18 @@ export default function SuperAdminPage() {
       ]);
       setOrganizations(orgs);
       setGlobalStats(stats);
+      
+      // Fetch stats for all orgs in parallel
+      const statsPromises = orgs.map(async (org) => {
+        const orgStatsData = await superDB.getOrgStats(org.id);
+        return { id: org.id, stats: orgStatsData };
+      });
+      const resolvedStats = await Promise.all(statsPromises);
+      const statsMap: Record<string, any> = {};
+      resolvedStats.forEach(item => {
+        statsMap[item.id] = item.stats;
+      });
+      setOrgStats(statsMap);
     } catch (error: any) {
       toast({
         title: "Feil ved lasting",
@@ -255,12 +269,39 @@ export default function SuperAdminPage() {
                 </div>
 
                 <div className="lg:col-span-3">
-                    <div className="bg-slate-50/50 rounded-xl border border-dashed border-slate-200 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
-                        <ShieldCheck className="h-8 w-8 sm:h-12 sm:w-12 text-slate-200 mb-3 sm:mb-4" />
-                        <h4 className="font-black text-slate-400 uppercase tracking-tighter text-xs sm:text-sm">Organisasjons-oversikt</h4>
-                        <p className="text-[10px] sm:text-xs text-slate-400 max-w-xs mt-2 font-medium">
-                            Status for {org.name}. Her kan vi legge til spesifikk statistikk for denne organisasjonen senere.
-                        </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Card className="shadow-none border-slate-100 bg-white">
+                        <CardHeader className="p-4 pb-2">
+                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Brukere</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="text-2xl font-black">{orgStats[org.id]?.users ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="shadow-none border-slate-100 bg-white">
+                        <CardHeader className="p-4 pb-2">
+                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Steder</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="text-2xl font-black">{orgStats[org.id]?.places ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="shadow-none border-slate-100 bg-white">
+                        <CardHeader className="p-4 pb-2">
+                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Kjøretøy</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="text-2xl font-black">{orgStats[org.id]?.vehicles ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
+                        </CardContent>
+                      </Card>
+                      <Card className="shadow-none border-slate-100 bg-white">
+                        <CardHeader className="p-4 pb-2">
+                          <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Ordrer</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <div className="text-2xl font-black">{orgStats[org.id]?.orders ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 inline-block"/>}</div>
+                        </CardContent>
+                      </Card>
                     </div>
                 </div>
               </div>

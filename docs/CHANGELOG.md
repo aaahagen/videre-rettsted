@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **Super Admin Usage Analytics:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for blazing fast aggregation.
 - **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
     - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
     - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
