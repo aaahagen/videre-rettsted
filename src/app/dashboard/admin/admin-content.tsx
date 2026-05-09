@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, Trash2 } from 'lucide-react';
+import { UserPlus, Loader2, Copy, Check, MoreVertical, Shield, ShieldAlert, UserX, Pause, Play, Mail, User as UserIcon, Edit2, Settings, IdCard, Search, Building2, CheckCircle2, ChevronLeft, ChevronRight, Plus, Users, Download, Upload, Package, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, Trash2, LocateFixed } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -45,6 +45,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useToast } from '@/hooks/use-toast';
+import { geocodeAddress } from '@/lib/geocoding';
 import { firebaseAuth } from '@/lib/firebase/auth';
 import { firebaseDB } from '@/lib/firebase/database';
 import { User, Organization } from '@/lib/types';
@@ -120,6 +121,76 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
 
   // Organization Settings State
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Ikke støttet",
+        description: "Nettleseren din støtter ikke geolokasjon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+    toast({
+      title: "Henter posisjon...",
+      description: "Vennligst vent mens vi finner koordinatene dine.",
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setOrgSettings(s => ({ 
+            ...s, 
+            depotLat: position.coords.latitude.toString(), 
+            depotLng: position.coords.longitude.toString() 
+        }));
+        toast({
+          title: "Posisjon hentet",
+          description: "Koordinater er registrert.",
+        });
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        toast({
+          title: "Feil ved henting av posisjon",
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsGettingLocation(false);
+      }
+    );
+  };
+
+  const handleGeocode = async () => {
+    if (!orgSettings.depotAddress || orgSettings.depotAddress.length < 5) {
+      toast({ title: "Mangler adresse", description: "Vennligst skriv inn en gyldig adresse først.", variant: "destructive" });
+      return;
+    }
+
+    setIsGeocoding(true);
+    try {
+      const coords = await geocodeAddress(orgSettings.depotAddress);
+      if (coords) {
+        setOrgSettings(s => ({
+            ...s,
+            depotLat: coords.lat.toString(),
+            depotLng: coords.lng.toString()
+        }));
+        toast({ title: "Adresse funnet", description: `Koordinater satt til ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
+      } else {
+        toast({ title: "Fant ikke adressen", description: "Kunne ikke finne koordinater for denne adressen. Sjekk skrivemåten.", variant: "destructive" });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Feil ved søk", description: "Noe gikk galt under adresseoppslag.", variant: "destructive" });
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
   const [orgSettings, setOrgSettings] = useState({
     name: '',
     orgNumber: '',
@@ -708,7 +779,31 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     <div className="grid gap-6 md:grid-cols-2">
                       <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="depotAddress">Adresse</Label>
-                        <Input id="depotAddress" placeholder="F.eks. Storgata 1, 0101 Oslo" value={orgSettings.depotAddress} onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} />
+                        <div className="flex flex-col gap-3">
+                            <Input id="depotAddress" placeholder="F.eks. Storgata 1, 0101 Oslo" value={orgSettings.depotAddress} onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    className="font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full h-10"
+                                    onClick={handleGeocode}
+                                    disabled={isGeocoding}
+                                >
+                                    {isGeocoding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                                    Hent koordinater
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="font-bold border-emerald-200 text-emerald-700 hover:bg-emerald-50 w-full h-10"
+                                    onClick={handleGetLocation}
+                                    disabled={isGettingLocation}
+                                >
+                                    {isGettingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-2" />}
+                                    Bruk GPS
+                                </Button>
+                            </div>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="depotLat">Breddegrad (Lat)</Label>
