@@ -37,6 +37,19 @@ export const superDB = {
   },
 
   // Users Across All Orgs (Global View)
+  getGlobalPlatformStats: async () => {
+    const usersSnap = await getCountFromServer(collection(db, 'users'));
+    const placesSnap = await getCountFromServer(collection(db, 'places'));
+    const routesQ = query(collection(db, 'routes'), where('status', '==', 'completed'));
+    const completedRoutesSnap = await getCountFromServer(routesQ);
+
+    return {
+        totalUsers: usersSnap.data().count,
+        totalPlaces: placesSnap.data().count,
+        completedRoutes: completedRoutesSnap.data().count,
+    };
+  },
+
   getGlobalUserStats: async () => {
     const snapshot = await getDocs(collection(db, 'users'));
     return {

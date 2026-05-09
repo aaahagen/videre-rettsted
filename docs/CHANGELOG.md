@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added   
 - **Super Admin Analytics & Management Enhancements:**
+    - **Global Platform Statistics:** Expanded the global statistics counter in the Super Admin dashboard header. In addition to "Totale Brukere", it now cleanly lists the "Totale Steder" and "Fullførte Ruter" across the entire platform.
     - **Global Broadcast System:** Super Admins can now send a global "System Message" (Broadcast) to all users across all active organizations directly from the Super Admin panel. This uses a batched database operation to insert the message securely without compromising RBAC rules.
     - **Intelligent Module Plans:** The Plan dropdown (Free, Pro, Enterprise) now automatically configures the appropriate modules for the organization when selected.
     - **Billing & Subscription Context:** Introduced a foundation for SaaS plans (`Free`, `Pro`, `Enterprise`). Super Admins can now view and modify an organization's subscription plan directly from the dashboard.

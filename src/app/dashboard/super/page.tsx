@@ -29,7 +29,7 @@ export default function SuperAdminPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSwitching, setIsSwitching] = useState<string | null>(null);
-  const [globalStats, setGlobalStats] = useState({ total: 0, admins: 0, drivers: 0 });
+  const [globalStats, setGlobalStats] = useState({ totalUsers: 0, totalPlaces: 0, completedRoutes: 0 });
   const { toast } = useToast();
   const router = useRouter();
 
@@ -64,7 +64,7 @@ export default function SuperAdminPage() {
     try {
       const [orgs, stats] = await Promise.all([
         superDB.getAllOrganizations(),
-        superDB.getGlobalUserStats()
+        superDB.getGlobalPlatformStats()
       ]);
       setOrganizations(orgs);
       setGlobalStats(stats);
@@ -261,9 +261,19 @@ export default function SuperAdminPage() {
                     className="pl-9 h-10 bg-white border-slate-200"
                 />
             </div>
-            <Card className="px-4 py-2 border-2 border-slate-100 shadow-none w-full sm:w-auto h-10 flex flex-row items-center justify-between sm:justify-start gap-4">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</span>
-                <span className="text-lg font-black leading-none">{globalStats.total}</span>
+            <Card className="p-3 border-2 border-slate-100 shadow-none w-full sm:w-auto flex flex-col gap-2">
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</span>
+                    <span className="text-sm font-black leading-none">{globalStats.totalUsers}</span>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Steder</span>
+                    <span className="text-sm font-black leading-none">{globalStats.totalPlaces}</span>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-4">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Fullførte Ruter</span>
+                    <span className="text-sm font-black leading-none">{globalStats.completedRoutes}</span>
+                </div>
             </Card>
         </div>
       </div>
