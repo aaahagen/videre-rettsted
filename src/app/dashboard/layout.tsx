@@ -47,7 +47,7 @@ export default function DashboardLayout({
   const isMessagesPage = pathname === '/dashboard/messages';
 
   // Define paths where search bar should NOT be shown
-  const hideSearchPaths = ['/dashboard', '/dashboard/admin', '/dashboard/new', '/dashboard/super'];
+  const hideSearchPaths = ['/dashboard', '/dashboard/admin', '/dashboard/new', '/dashboard/super', '/dashboard/owner'];
   const showSearch = !hideSearchPaths.includes(pathname);
 
 
