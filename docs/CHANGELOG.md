@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
-- **Super Admin Usage Analytics:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for blazing fast aggregation.
+- **Super Admin Analytics & Management Enhancements:**
+    - **Real-time Quota Tracking:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for fast aggregation.
+    - **Organization Editing:** Super Admins can now quickly rename organizations and update their Organization Numbers directly from a modal without leaving the panel.
+    - **Hard Delete (Danger Zone):** Added a protected action to permanently delete an organization. This requires typing the exact organization name to confirm the destructive action.
 - **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
     - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
     - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.

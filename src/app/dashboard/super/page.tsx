@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Users, ShieldCheck, Settings, Globe, CheckCircle2, XCircle, LayoutGrid, Zap, MoreVertical } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -22,7 +24,6 @@ import {
 
 export default function SuperAdminPage() {
   const [orgStats, setOrgStats] = useState<Record<string, any>>({});
-
   const { dbUser, loading } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +31,16 @@ export default function SuperAdminPage() {
   const [globalStats, setGlobalStats] = useState({ total: 0, admins: 0, drivers: 0 });
   const { toast } = useToast();
   const router = useRouter();
+
+  // Modals state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Partial<Organization> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [orgToDelete, setOrgToDelete] = useState<Organization | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!loading) {
@@ -132,6 +143,46 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handleSaveEdit = async () => {
+      if (!editingOrg || !editingOrg.id) return;
+      setIsSaving(true);
+      try {
+          await superDB.updateOrganizationDetails(editingOrg.id, {
+              name: editingOrg.name,
+              orgNumber: editingOrg.orgNumber
+          });
+          setOrganizations(prev => prev.map(o => o.id === editingOrg.id ? { ...o, ...editingOrg } : o));
+          toast({ title: "Organisasjon oppdatert" });
+          setIsEditModalOpen(false);
+      } catch (error: any) {
+          toast({ title: "Feil ved oppdatering", description: error.message, variant: "destructive" });
+      } finally {
+          setIsSaving(false);
+      }
+  };
+
+  const handleDeleteOrg = async () => {
+      if (!orgToDelete) return;
+      if (deleteConfirmation !== orgToDelete.name) {
+          toast({ title: "Feil bekreftelse", description: "Du må skrive inn nøyaktig navn for å slette.", variant: "destructive" });
+          return;
+      }
+
+      setIsDeleting(true);
+      try {
+          await superDB.deleteOrganizationHard(orgToDelete.id);
+          setOrganizations(prev => prev.filter(o => o.id !== orgToDelete.id));
+          toast({ title: "Organisasjon slettet", description: `${orgToDelete.name} er nå fjernet.` });
+          setIsDeleteModalOpen(false);
+          setOrgToDelete(null);
+          setDeleteConfirmation('');
+      } catch (error: any) {
+          toast({ title: "Feil ved sletting", description: error.message, variant: "destructive" });
+      } finally {
+          setIsDeleting(false);
+      }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -205,6 +256,22 @@ export default function SuperAdminPage() {
                       <SelectItem value="suspended">Suspendert</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingOrg(org); setIsEditModalOpen(true); }}>
+                          <Edit2 className="h-4 w-4 mr-2" /> Rediger
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setOrgToDelete(org); setIsDeleteModalOpen(true); }} className="text-destructive">
+                          <Trash2 className="h-4 w-4 mr-2" /> Slett organisasjon
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Mobile Actions */}
@@ -228,7 +295,9 @@ export default function SuperAdminPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'active')}>Sett Aktiv</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'trial')}>Sett Prøveperiode</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'suspended')} className="text-destructive">Suspender</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(org.id, 'suspended')}>Suspendert</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setEditingOrg(org); setIsEditModalOpen(true); }}>Rediger</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setOrgToDelete(org); setIsDeleteModalOpen(true); }} className="text-destructive">Slett</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -309,6 +378,78 @@ export default function SuperAdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Edit Organization Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rediger Organisasjon</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Organisasjonsnavn</Label>
+              <Input 
+                value={editingOrg?.name || ''} 
+                onChange={(e) => setEditingOrg(prev => prev ? {...prev, name: e.target.value} : null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Organisasjonsnummer</Label>
+              <Input 
+                value={editingOrg?.orgNumber || ''} 
+                onChange={(e) => setEditingOrg(prev => prev ? {...prev, orgNumber: e.target.value} : null)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Avbryt</Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving || !editingOrg?.name}>
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Lagre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Organization Modal */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={(open) => {
+          if (!open) {
+              setDeleteConfirmation('');
+              setOrgToDelete(null);
+          }
+          setIsDeleteModalOpen(open);
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Slett Organisasjon Permanent</DialogTitle>
+            <DialogDescription>
+                Dette er en irreversibel handling. Sletting av {orgToDelete?.name} vil slette selve organisasjonsdokumentet. Merk at tilhørende brukere og subcollections kan bli liggende som foreldreløse dokumenter hvis de ikke ryddes via Cloud Functions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>For å bekrefte, skriv inn: <strong>{orgToDelete?.name}</strong></Label>
+              <Input 
+                value={deleteConfirmation} 
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder={orgToDelete?.name}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Avbryt</Button>
+            <Button 
+                variant="destructive" 
+                onClick={handleDeleteOrg} 
+                disabled={isDeleting || deleteConfirmation !== orgToDelete?.name}
+            >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Slett Permanent
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

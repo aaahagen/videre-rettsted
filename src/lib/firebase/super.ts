@@ -1,4 +1,4 @@
-import { collection, getDocs, doc, updateDoc, query, orderBy, where, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Organization, User } from '../types';
 
@@ -18,6 +18,16 @@ export const superDB = {
   updateOrganizationStatus: async (orgId: string, status: Organization['status']): Promise<void> => {
     const docRef = doc(db, 'organizations', orgId);
     await updateDoc(docRef, { status });
+  },
+  
+  updateOrganizationDetails: async (orgId: string, data: Partial<Organization>): Promise<void> => {
+    const docRef = doc(db, 'organizations', orgId);
+    await updateDoc(docRef, data);
+  },
+
+  deleteOrganizationHard: async (orgId: string): Promise<void> => {
+    const docRef = doc(db, 'organizations', orgId);
+    await deleteDoc(docRef);
   },
 
   // Context Switching for Super Admins
