@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added   
 - **Super Admin Analytics & Management Enhancements:**
-    - **Billing & Subscription Context:** Introduced a foundation for SaaS plans (`Free`, `Pro`, `Enterprise`). Super Admins can now view and modify an organization's subscription plan directly from the dashboard.
     - **Global Broadcast System:** Super Admins can now send a global "System Message" (Broadcast) to all users across all active organizations directly from the Super Admin panel. This uses a batched database operation to insert the message securely without compromising RBAC rules.
+    - **Search & Filter:** Added a robust search and filtering system to the Super Admin dashboard. You can now search by Organization Name or ID, and filter the list by Status (Active, Trial, Suspended) or by Plan (Free, Pro, Enterprise).
+    - **Module Presets:** Added quick-action "Presets" for configuring organization modules. Super admins can instantly apply configurations like "Enterprise (Alle)" or "Logistics Only" instead of toggling 7 individual switches.
+    - **Billing & Subscription Context:** Introduced a foundation for SaaS plans (`Free`, `Pro`, `Enterprise`). Super Admins can now view and modify an organization's subscription plan directly from the dashboard.
     - **Real-time Quota Tracking:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for fast aggregation.
     - **Organization Editing:** Super Admins can now quickly rename organizations and update their Organization Numbers directly from a modal without leaving the panel.
     - **Hard Delete (Danger Zone):** Added a protected action to permanently delete an organization. This requires typing the exact organization name to confirm the destructive action.

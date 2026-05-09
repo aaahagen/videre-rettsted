@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -42,6 +42,12 @@ export default function SuperAdminPage() {
   const [orgToDelete, setOrgToDelete] = useState<Organization | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [planFilter, setPlanFilter] = useState('all');
+
   
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
@@ -157,6 +163,30 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handlePresetModules = async (orgId: string, preset: 'all' | 'logistics') => {
+      const org = organizations.find(o => o.id === orgId);
+      if (!org) return;
+      
+      const newModules = preset === 'all' 
+          ? { places: true, learning: true, messages: true, fleet: true, workforce: true, logistics: true, analytics: true }
+          : { places: true, learning: false, messages: false, fleet: false, workforce: false, logistics: true, analytics: false };
+          
+      try {
+          await superDB.updateOrganizationModules(orgId, newModules);
+          setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, modules: newModules } : o));
+          toast({ title: "Moduler oppdatert", description: `Satt forhåndsvalg: ${preset === 'all' ? 'Enterprise' : 'Logistics Only'}` });
+      } catch (error: any) {
+          toast({ title: "Kunne ikke oppdatere", description: error.message, variant: "destructive" });
+      }
+  };
+
+  const filteredOrganizations = organizations.filter(org => {
+      const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) || org.id.includes(searchQuery);
+      const matchesStatus = statusFilter === 'all' || (org.status || 'trial') === statusFilter;
+      const matchesPlan = planFilter === 'all' || (org.plan || 'free') === planFilter;
+      return matchesSearch && matchesStatus && matchesPlan;
+  });
+
   const handleSaveEdit = async () => {
       if (!editingOrg || !editingOrg.id) return;
       setIsSaving(true);
@@ -238,6 +268,45 @@ export default function SuperAdminPage() {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+                placeholder="Søk etter navn eller ID..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500"
+            />
+        </div>
+        <div className="flex gap-4 w-full sm:w-auto">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 focus:ring-indigo-500">
+                    <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
+                    <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Alle Statuser</SelectItem>
+                    <SelectItem value="active">Kun Aktive</SelectItem>
+                    <SelectItem value="trial">Kun Prøve</SelectItem>
+                    <SelectItem value="suspended">Kun Suspendert</SelectItem>
+                </SelectContent>
+            </Select>
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+                <SelectTrigger className="w-full sm:w-40 bg-slate-50 border-slate-200 focus:ring-indigo-500">
+                    <Filter className="h-4 w-4 mr-2 text-slate-400 shrink-0" />
+                    <SelectValue placeholder="Plan" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Alle Planer</SelectItem>
+                    <SelectItem value="free">Kun Free</SelectItem>
+                    <SelectItem value="pro">Kun Pro</SelectItem>
+                    <SelectItem value="enterprise">Kun Enterprise</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2">
             <Card className="border-2 border-slate-100 shadow-sm">
@@ -270,7 +339,7 @@ export default function SuperAdminPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
-        {organizations.map((org) => (
+        {filteredOrganizations.map((org) => (
           <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-4 ring-blue-600/5' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
             <div className="bg-slate-50 border-b p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -384,9 +453,20 @@ export default function SuperAdminPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
                 <div className="lg:col-span-1 space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                    <LayoutGrid className="h-3 w-3" /> Moduler
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                        <LayoutGrid className="h-3 w-3" /> Moduler
+                    </h4>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] uppercase font-bold tracking-tight text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700">Presets</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handlePresetModules(org.id, 'all')}>Enterprise (Alle)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handlePresetModules(org.id, 'logistics')}>Logistics Only</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                     {[
                       { id: 'places', label: 'RettSted (Steder)', core: true },
