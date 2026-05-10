@@ -17,7 +17,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return getUserData().role == 'admin';
+      return getUserData().role == 'admin' || getUserData().role == 'owner';
     }
 
     function isSuperAdmin() {
@@ -72,7 +72,7 @@ service cloud.firestore {
       allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
       allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
+      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
     }
 
     // Routes
@@ -82,7 +82,7 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId) && (
         isAdmin() || (request.auth.uid == resource.data.driverId)
       ));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
+      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
     }
 
     // Messages
@@ -90,7 +90,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
       allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId)));
+      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId)));
     }
 
     // Vehicles
@@ -139,7 +139,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(resource.data.orgId));
       allow create: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
       allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
+      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
     }
 
     // LMS - Course Assignments

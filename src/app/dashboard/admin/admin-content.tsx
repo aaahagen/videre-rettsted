@@ -618,6 +618,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             <SelectItem value="loader">Lager / Laster</SelectItem>
                             <SelectItem value="planner">Ruteplanlegger</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="owner">Eier</SelectItem>
+                            <SelectItem value="owner">Eier</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -709,6 +711,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                   <SelectItem value="loader">Lager / Laster</SelectItem>
                                   <SelectItem value="planner">Ruteplanlegger</SelectItem>
                                   <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="owner">Eier</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>

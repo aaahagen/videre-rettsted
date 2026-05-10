@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **Owner Role Management:**
+    - **Role Assignment:** Admins and Super Admins can now explicitly invite new users with the `owner` role.
+    - **Role Promotion/Demotion:** Added the ability to upgrade existing users to `owner` or demote them back to `admin` directly from the user list in the Admin Dashboard.
+    - **Security Rules Update:** Updated Firestore security rules to formally grant the `owner` role the same administrative read/write permissions as the `admin` role across all organizational collections (Places, Vehicles, Routes, etc.).
 - **Owner Role & Executive Dashboard:**
     - **New `owner` Role:** Added a new high-level role (`owner`) designed for executives and finance departments. This role bypasses standard `admin` checks but also has access to exclusive views.
     - **Executive Dashboard (`/dashboard/owner`):** Created a premium, minimalist dashboard specifically for business owners. It aggregates key metrics (Users, Address Database, Fleet Size, Total Orders) without the clutter of daily operations.

@@ -2,7 +2,7 @@ import { collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, w
 import { db } from '../firebase/firebase';
 import { User } from '../types';
 
-export const createUser = async (uid: string, name: string, email: string, orgId: string, role: 'owner' | 'admin' | 'driver'): Promise<void> => {
+export const createUser = async (uid: string, name: string, email: string, orgId: string, role: string): Promise<void> => {
   await setDoc(doc(db, 'users', uid), { name, email, orgId, role, favorites: [] });
 };
 
