@@ -48,7 +48,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSearch } from '@/hooks/use-search';
 
 export default function MessagesPage() {
-  const { dbUser } = useAuth();
+  const { dbUser, user: authUser } = useAuth();
   const { query: searchQuery, setContext } = useSearch();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -122,9 +122,10 @@ export default function MessagesPage() {
   const markAsRead = async (messageId: string) => {
     if (!dbUser) return;
     const msg = messages.find(m => m.id === messageId);
-    if (msg && !(msg.readBy || []).includes(dbUser.id)) {
+    if (msg && authUser && !(msg.readBy || []).includes(authUser.uid)) {
+      if (!authUser) return;
       await updateDoc(doc(db, 'messages', messageId), {
-        readBy: arrayUnion(dbUser.id)
+        readBy: arrayUnion(authUser.uid)
       });
     }
   };
