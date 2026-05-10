@@ -14,7 +14,7 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **fieldSettings?**: `object`
 
-Defined in: [types.ts:44](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L44)
+Defined in: [types.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L46)
 
 #### contactPersons?
 
@@ -118,7 +118,7 @@ Defined in: [types.ts:44](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **hmsSettings?**: `object`
 
-Defined in: [types.ts:38](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L38)
+Defined in: [types.ts:40](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L40)
 
 #### enabled
 
@@ -150,7 +150,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:76](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L76)
+Defined in: [types.ts:78](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L78)
 
 #### dpaAcceptedAt?
 
@@ -198,7 +198,7 @@ Defined in: [types.ts:76](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **mainDepot?**: `object`
 
-Defined in: [types.ts:28](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L28)
+Defined in: [types.ts:30](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L30)
 
 #### address
 
@@ -226,7 +226,7 @@ Defined in: [types.ts:28](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **modules?**: `object`
 
-Defined in: [types.ts:19](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L19)
+Defined in: [types.ts:21](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L21)
 
 #### analytics?
 
@@ -286,7 +286,7 @@ Defined in: [types.ts:17](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **placeSettings?**: `object`
 
-Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L33)
+Defined in: [types.ts:35](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L35)
 
 #### autoGenerateCustomerNumbers?
 
@@ -302,8 +302,24 @@ Defined in: [types.ts:33](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 ***
 
+### plan?
+
+> `optional` **plan?**: `"free"` \| `"pro"` \| `"enterprise"`
+
+Defined in: [types.ts:19](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L19)
+
+***
+
 ### status?
 
 > `optional` **status?**: `"active"` \| `"trial"` \| `"suspended"`
 
 Defined in: [types.ts:18](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L18)
+
+***
+
+### trialExpiresAt?
+
+> `optional` **trialExpiresAt?**: `any`
+
+Defined in: [types.ts:20](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L20)

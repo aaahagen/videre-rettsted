@@ -6,7 +6,7 @@
 
 # Interface: User
 
-Defined in: [types.ts:233](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L233)
+Defined in: [types.ts:235](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L235)
 
 ## Extended by
 
@@ -18,7 +18,7 @@ Defined in: [types.ts:233](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **avatarUrl?**: `string`
 
-Defined in: [types.ts:234](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L234)
+Defined in: [types.ts:236](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L236)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [types.ts:234](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **disabled?**: `boolean`
 
-Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L243)
+Defined in: [types.ts:245](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L245)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **email**: `string`
 
-Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L237)
+Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L239)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **favorites**: `string`[]
 
-Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L240)
+Defined in: [types.ts:242](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L242)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:235](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L235)
+Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L237)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types.ts:235](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **images?**: `object`[]
 
-Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L244)
+Defined in: [types.ts:246](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L246)
 
 #### description?
 
@@ -82,7 +82,7 @@ Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **name**: `string`
 
-Defined in: [types.ts:236](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L236)
+Defined in: [types.ts:238](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L238)
 
 ***
 
@@ -90,15 +90,15 @@ Defined in: [types.ts:236](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:238](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L238)
+Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L240)
 
 ***
 
 ### role
 
-> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"contractor"` \| `"planner"`
+> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"owner"` \| `"contractor"` \| `"planner"`
 
-Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L239)
+Defined in: [types.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L241)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **status?**: `"active"` \| `"paused"`
 
-Defined in: [types.ts:242](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L242)
+Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L244)
 
 ***
 
@@ -114,4 +114,4 @@ Defined in: [types.ts:242](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **visitedPlaces?**: `string`[]
 
-Defined in: [types.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L241)
+Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L243)

@@ -6,7 +6,7 @@
 
 # Interface: CompletedStopEvent
 
-Defined in: [types.ts:173](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L173)
+Defined in: [types.ts:175](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L175)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:173](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **coordinates?**: `object`
 
-Defined in: [types.ts:176](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L176)
+Defined in: [types.ts:178](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L178)
 
 #### lat
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:176](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **placeId**: `string`
 
-Defined in: [types.ts:174](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L174)
+Defined in: [types.ts:176](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L176)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:174](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **pod?**: [`ProofOfDelivery`](ProofOfDelivery.md)
 
-Defined in: [types.ts:180](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L180)
+Defined in: [types.ts:182](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L182)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [types.ts:180](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **timestamp**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:175](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L175)
+Defined in: [types.ts:177](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L177)

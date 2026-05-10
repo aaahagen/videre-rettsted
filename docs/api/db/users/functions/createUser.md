@@ -30,7 +30,7 @@ Defined in: [db/users.ts:5](https://github.com/aaahagen/videre-rettsted/blob/mai
 
 ### role
 
-`"admin"` \| `"driver"`
+`string`
 
 ## Returns
 
