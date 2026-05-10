@@ -84,6 +84,17 @@ export const superDB = {
     await batch.commit();
   },
 
+  createOrganization: async (name: string): Promise<string> => {
+    const { addDoc } = await import("firebase/firestore");
+    const docRef = await addDoc(collection(db, "organizations"), {
+      name,
+      status: "trial",
+      plan: "free",
+      modules: { places: true, logistics: true }
+    });
+    return docRef.id;
+  },
+
   getOrgStats: async (orgId: string) => {
     try {
       const usersQ = query(collection(db, 'users'), where('orgId', '==', orgId));

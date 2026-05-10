@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization } from '@/lib/types';
@@ -37,6 +37,11 @@ export default function SuperAdminPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Partial<Organization> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState('');
+  const [isCreating, setIsCreateSaving] = useState(false);
+
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [orgToDelete, setOrgToDelete] = useState<Organization | null>(null);
@@ -187,6 +192,22 @@ export default function SuperAdminPage() {
     }
   };
 
+  const handleCreateOrg = async () => {
+      if (!newOrgName.trim()) return;
+      setIsCreateSaving(true);
+      try {
+          const newId = await superDB.createOrganization(newOrgName.trim());
+          toast({ title: "Organisasjon opprettet", description: `${newOrgName} har blitt opprettet med ID: ${newId}` });
+          setNewOrgName('');
+          setIsCreateModalOpen(false);
+          loadData();
+      } catch (error: any) {
+          toast({ title: "Feil ved opprettelse", description: error.message, variant: "destructive" });
+      } finally {
+          setIsCreateSaving(false);
+      }
+  };
+
   const handleSaveEdit = async () => {
       if (!editingOrg || !editingOrg.id) return;
       setIsSaving(true);
@@ -251,6 +272,13 @@ export default function SuperAdminPage() {
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Global oversikt over alle organisasjoner og moduler.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3">
+            <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold h-10 shadow-none"
+            >
+                <PlusCircle className="h-4 w-4 mr-2" /> Ny Organisasjon
+            </Button>
+
             {/* Compact Search */}
             <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -476,6 +504,35 @@ export default function SuperAdminPage() {
           </Card>
         ))}
       </div>
+
+      {/* Create Organization Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Opprett Ny Organisasjon</DialogTitle>
+            <DialogDescription>
+                Dette vil opprette en ny organisasjon på plattformen. Du må invitere den første eieren manuelt etterpå.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Organisasjonsnavn</Label>
+              <Input 
+                placeholder="F.eks. Transport AS"
+                value={newOrgName} 
+                onChange={(e) => setNewOrgName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Avbryt</Button>
+            <Button onClick={handleCreateOrg} disabled={isCreating || !newOrgName.trim()} className="bg-blue-600 hover:bg-blue-700">
+                {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Opprett
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Organization Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>

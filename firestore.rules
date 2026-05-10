@@ -27,7 +27,7 @@ service cloud.firestore {
     // Organizations
     match /organizations/{orgId} {
       allow read: if isAuthenticated() && (isUserInOrg(orgId) || isSuperAdmin());
-      allow create: if isAuthenticated(); 
+      allow create: if isSuperAdmin(); 
       allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(orgId) && isAdmin()));
       allow delete: if isAuthenticated() && isSuperAdmin();
 

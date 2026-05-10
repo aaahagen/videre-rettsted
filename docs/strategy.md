@@ -56,15 +56,15 @@ Leveraged data structures from previous phases to manage incoming jobs.
 - Multi-Modal Order Intake & Management (Manual & Bulk CSV).
 - Constraint-Based Routing Engine (Weight/Volume/Capability, Opening Hours, Physical Firewalls).
 
-### Phase 5: Business Intelligence & Data Exposure (In Progress)
-Aggregating rich operational data into high-level, strategic insights.
-- **Completed:** Backend Data Aggregation Layer, Admin Stats, Attendance Tracking.
+### Phase 5: Managed Onboarding & Hardened Security (CURRENT)
+Closing open vulnerabilities and moving to a white-glove onboarding process.
+- **Completed:** Owner Role implementation, Executive Dashboard.
+- **In Progress:** Closing public registration, locking organization creation to Super Admin only, MFA Planning.
 - **Planned:** API-First Design (Exposing KPIs via secure endpoints).
 
-### Phase 6: Compliance & Risk Management (In Progress)
+### Phase 6: Compliance & Risk Management (Planned)
 Introducing a suite of tools for Norwegian/EU transport regulations.
-- **Completed:** Centralized Deadline Management, Vehicle Damage Reporting.
-- **Planned:** Tachograph Download Tracking, Tachograph & Driving Time Analysis.
+- **Planned:** Tachograph Download Tracking, Tachograph & Driving Time Analysis, Vehicle Damage Reporting (Expanded).
 
 ### Phase 7: Commercialization & Multi-Tenancy (Planned)
 Transforming the application into a subscription-based SaaS.

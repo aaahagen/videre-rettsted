@@ -171,7 +171,7 @@ export default function LoginPage() {
             </Button>
             <div className="text-center text-sm text-slate-600">
               Har du ikke en konto?{' '}
-              <Link href="/register" className="font-semibold text-[#1A237E] hover:underline">
+              <Link href="mailto:support@videre.no" className="font-semibold text-[#1A237E] hover:underline">
                 Registrer deg her
               </Link>
             </div>
