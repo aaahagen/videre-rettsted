@@ -115,7 +115,7 @@ export default function PricingPage() {
                         </CardContent>
                         <CardFooter>
                         <Button asChild className="w-full">
-                            <a href="mailto:videre-communication@gmail.com?subject=Forespørsel om kjøp av lisens">Kontakt oss for kjøp</a>
+                            <a href="mailto:videre.logistics@gmail.com?subject=Forespørsel om kjøp av lisens">Kontakt oss for kjøp</a>
                         </Button>
                         </CardFooter>
                     </Card>
@@ -172,7 +172,7 @@ export default function PricingPage() {
                 </p>
                 <div className="flex justify-center gap-6 my-4 text-sm">
                     <a href="#" className="hover:underline">Om Oss</a>
-                    <a href="mailto:videre-communications@gmail.com" className="hover:underline">Kontakt Oss</a>
+                    <a href="mailto:videre.logistics@gmail.com" className="hover:underline">Kontakt Oss</a>
                 </div>
                 <div className="flex justify-center gap-4 my-4 text-xs text-slate-500">
                     <Link href="/legal/personvern" className="hover:underline">Personvern</Link>

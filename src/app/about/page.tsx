@@ -400,7 +400,7 @@ export default function AboutPage() {
                 <div className="flex gap-8 text-sm font-bold text-slate-600 uppercase tracking-tighter">
                     <Link href="/about" className="hover:text-primary transition-colors">Om Oss</Link>
                     <Link href="/pricing" className="hover:text-primary transition-colors">Priser</Link>
-                    <a href="mailto:videre-communications@gmail.com" className="hover:text-primary transition-colors">Kontakt</a>
+                    <a href="mailto:videre.logistics@gmail.com" className="hover:text-primary transition-colors">Kontakt</a>
                 </div>
             </div>
 

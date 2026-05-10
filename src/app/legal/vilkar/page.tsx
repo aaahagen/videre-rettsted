@@ -60,10 +60,10 @@ const TermsAndConditions: NextPage = () => {
             <p>
               For spørsmål om disse Vilkårene, kontakt:{' '}
               <a
-                href="mailto:videre-communication@gmail.com"
+                href="mailto:videre.logistics@gmail.com"
                 className="text-blue-500 hover:underline"
               >
-                videre-communication@gmail.com
+                videre.logistics@gmail.com
               </a>
               .
             </p>

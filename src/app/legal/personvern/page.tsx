@@ -24,10 +24,10 @@ const PrivacyPolicy: NextPage = () => {
             <p>
               Kontakt:{' '}
               <a
-                href="mailto:videre-communication@gmail.com"
+                href="mailto:videre.logistics@gmail.com"
                 className="text-blue-500 hover:underline"
               >
-                videre-communication@gmail.com
+                videre.logistics@gmail.com
               </a>
               , Oslo, Norge.
             </p>
@@ -102,10 +102,10 @@ const PrivacyPolicy: NextPage = () => {
               abonnement. Brukere har rett til innsyn, retting og sletting.
               Henvendelser sendes til{' '}
               <a
-                href="mailto:videre-communication@gmail.com"
+                href="mailto:videre.logistics@gmail.com"
                 className="text-blue-500 hover:underline"
               >
-                videre-communication@gmail.com
+                videre.logistics@gmail.com
               </a>
               . Du kan også klage til Datatilsynet.
             </p>
