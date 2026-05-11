@@ -8,7 +8,9 @@
 
 > **getLogs**(`orgId`): `Promise`\<[`LogEntry`](../../../types/interfaces/LogEntry.md)[]\>
 
-Defined in: [db/logs.ts:19](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/logs.ts#L19)
+Defined in: [db/logs.ts:41](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/logs.ts#L41)
+
+Henter alle revisjonslogger for en spesifikk organisasjon.
 
 ## Parameters
 
@@ -16,6 +18,10 @@ Defined in: [db/logs.ts:19](https://github.com/aaahagen/videre-rettsted/blob/mai
 
 `string`
 
+Den unike ID-en til organisasjonen.
+
 ## Returns
 
 `Promise`\<[`LogEntry`](../../../types/interfaces/LogEntry.md)[]\>
+
+En Promise med en liste over loggføringer (`LogEntry`).

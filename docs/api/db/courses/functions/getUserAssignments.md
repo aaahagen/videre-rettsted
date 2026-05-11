@@ -8,7 +8,9 @@
 
 > **getUserAssignments**(`userId`): `Promise`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md)[]\>
 
-Defined in: [db/courses.ts:84](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L84)
+Defined in: [db/courses.ts:135](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L135)
+
+Henter alle aktive og fullførte kurstildelinger for en bruker.
 
 ## Parameters
 
@@ -16,6 +18,10 @@ Defined in: [db/courses.ts:84](https://github.com/aaahagen/videre-rettsted/blob/
 
 `string`
 
+Brukerens ID.
+
 ## Returns
 
 `Promise`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md)[]\>
+
+En Promise med listen over tildelte kurs.

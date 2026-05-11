@@ -8,9 +8,12 @@
 
 > **deleteCourse**(`courseId`, `orgId`): `Promise`\<`void`\>
 
-Defined in: [db/courses.ts:45](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L45)
+Defined in: [db/courses.ts:84](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L84)
 
-Deletes a course and all associated assignments (Cascading Deletion)
+Sletter et kurs og alle tilhørende kurstildelinger (kaskadesletting).
+
+Denne funksjonen bruker en atomær `writeBatch` for å sikre at ingen 
+foreldreløse tildelinger blir liggende igjen i databasen hvis kurset slettes.
 
 ## Parameters
 
@@ -18,9 +21,13 @@ Deletes a course and all associated assignments (Cascading Deletion)
 
 `string`
 
+ID-en til kurset som skal fjernes.
+
 ### orgId
 
 `string`
+
+Organisasjonens ID (påkrevd for sikkerhetsverifisering).
 
 ## Returns
 

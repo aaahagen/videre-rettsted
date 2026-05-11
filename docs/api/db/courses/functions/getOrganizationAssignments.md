@@ -8,7 +8,9 @@
 
 > **getOrganizationAssignments**(`orgId`): `Promise`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md)[]\>
 
-Defined in: [db/courses.ts:94](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L94)
+Defined in: [db/courses.ts:151](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L151)
+
+Henter alle kurstildelinger for en hel organisasjon (for lederoversikt).
 
 ## Parameters
 
@@ -16,6 +18,10 @@ Defined in: [db/courses.ts:94](https://github.com/aaahagen/videre-rettsted/blob/
 
 `string`
 
+Organisasjonens ID.
+
 ## Returns
 
 `Promise`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md)[]\>
+
+En Promise med alle tildelinger i organisasjonen.

@@ -8,9 +8,9 @@
 
 > **assignCourseToUser**(`assignment`): `Promise`\<`string`\>
 
-Defined in: [db/courses.ts:75](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L75)
+Defined in: [db/courses.ts:120](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L120)
 
-ASSIGNMENT CRUD
+Tildeler et kurs til en spesifikk bruker.
 
 ## Parameters
 
@@ -18,6 +18,20 @@ ASSIGNMENT CRUD
 
 `Omit`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md), `"id"` \| `"assignedAt"`\>
 
+Tildelingsdata (uten ID).
+
 ## Returns
 
 `Promise`\<`string`\>
+
+En Promise med ID for tildelingen.
+
+## Example
+
+```typescript
+await assignCourseToUser({
+  userId: "user_abc",
+  courseId: "course_123",
+  orgId: "org_99"
+});
+```
