@@ -158,7 +158,7 @@ export default function DashboardPage() {
 
   
   useEffect(() => {
-    const isPrivileged = userData?.role === 'admin' || userData?.role === 'super_admin';
+    const isPrivileged = userData?.role === 'admin' || userData?.role === 'super_admin' || userData?.role === 'owner';
     if (userData?.orgId && isPrivileged) {
       const fetchDrivers = async () => {
         try {
@@ -347,7 +347,7 @@ export default function DashboardPage() {
 
   if (!authUser || !userData) return null;
 
-  const isAdmin = userData.role === 'admin' || userData.role === 'super_admin';
+  const isAdmin = userData.role === 'admin' || userData.role === 'super_admin' || userData.role === 'owner';
   const isLogisticsEnabled = org?.modules?.logistics !== false;
   const isMessagesEnabled = org?.modules?.messages !== false;
   const isLearningEnabled = org?.modules?.learning !== false;
