@@ -8,7 +8,9 @@
 
 > **deleteManifest**(`orgId`, `manifestId`): `Promise`\<`void`\>
 
-Defined in: [db/manifests.ts:55](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L55)
+Defined in: [db/manifests.ts:104](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L104)
+
+Sletter et manifest permanent.
 
 ## Parameters
 
@@ -16,9 +18,13 @@ Defined in: [db/manifests.ts:55](https://github.com/aaahagen/videre-rettsted/blo
 
 `string`
 
+Organisasjonens ID.
+
 ### manifestId
 
 `string`
+
+Manifestets ID.
 
 ## Returns
 

@@ -8,13 +8,17 @@
 
 > **deleteUser**(`uid`): `Promise`\<`void`\>
 
-Defined in: [db/users.ts:63](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/users.ts#L63)
+Defined in: [db/users.ts:115](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/users.ts#L115)
+
+Fjerner en brukerprofil permanent fra databasen.
 
 ## Parameters
 
 ### uid
 
 `string`
+
+ID-en til brukeren som skal slettes.
 
 ## Returns
 

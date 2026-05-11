@@ -8,7 +8,11 @@
 
 > **decrementManifestItemLoadedCount**(`orgId`, `manifestId`, `orderId`): `Promise`\<`void`\>
 
-Defined in: [db/manifests.ts:97](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L97)
+Defined in: [db/manifests.ts:166](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L166)
+
+Reduserer antallet lastede varer (angreoperasjon).
+
+Setter status tilbake til 'pending' dersom antallet lastede varer blir mindre enn totalen.
 
 ## Parameters
 
@@ -16,13 +20,19 @@ Defined in: [db/manifests.ts:97](https://github.com/aaahagen/videre-rettsted/blo
 
 `string`
 
+Organisasjonens ID.
+
 ### manifestId
 
 `string`
 
+Manifestets ID.
+
 ### orderId
 
 `string`
+
+Ordrens ID.
 
 ## Returns
 

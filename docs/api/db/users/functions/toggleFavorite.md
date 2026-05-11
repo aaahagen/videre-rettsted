@@ -8,7 +8,9 @@
 
 > **toggleFavorite**(`userId`, `placeId`): `Promise`\<`void`\>
 
-Defined in: [db/users.ts:68](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/users.ts#L68)
+Defined in: [db/users.ts:131](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/users.ts#L131)
+
+Legger til eller fjerner et leveringssted fra brukerens favorittliste.
 
 ## Parameters
 
@@ -16,10 +18,20 @@ Defined in: [db/users.ts:68](https://github.com/aaahagen/videre-rettsted/blob/ma
 
 `string`
 
+ID-en til brukeren.
+
 ### placeId
 
 `string`
 
+ID-en til stedet som skal toggles.
+
 ## Returns
 
 `Promise`\<`void`\>
+
+## Example
+
+```typescript
+await toggleFavorite("user_123", "place_456");
+```

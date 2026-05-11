@@ -8,7 +8,9 @@
 
 > **getWorkLog**(`id`): `Promise`\<[`WorkLog`](../../../types/interfaces/WorkLog.md) \| `null`\>
 
-Defined in: [db/workLogs.ts:15](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/workLogs.ts#L15)
+Defined in: [db/workLogs.ts:40](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/workLogs.ts#L40)
+
+Henter en spesifikk arbeidsøkt basert på ID.
 
 ## Parameters
 
@@ -16,6 +18,10 @@ Defined in: [db/workLogs.ts:15](https://github.com/aaahagen/videre-rettsted/blob
 
 `string`
 
+Identifikatoren til arbeidsøkten.
+
 ## Returns
 
 `Promise`\<[`WorkLog`](../../../types/interfaces/WorkLog.md) \| `null`\>
+
+En Promise med `WorkLog`-objektet eller `null`.
