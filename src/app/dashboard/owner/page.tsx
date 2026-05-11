@@ -7,11 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Globe, TrendingUp, Users, MapPin, Truck, Building2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseDB } from '@/lib/firebase/database';
-import { superDB } from '@/lib/firebase/super'; // Reuse aggregation logic where possible
+import { superDB } from '@/lib/firebase/super'; 
 import { Organization, User } from '@/lib/types';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Card as TremorCard, Metric, Text, Flex, ProgressBar, AreaChart } from '@tremor/react';
 
 export default function OwnerDashboard() {
   const { dbUser, loading } = useAuth();
@@ -58,6 +59,14 @@ export default function OwnerDashboard() {
     );
   }
 
+  const chartData = [
+    { date: 'Jan 24', Ordrer: 167 },
+    { date: 'Feb 24', Ordrer: 254 },
+    { date: 'Mar 24', Ordrer: 450 },
+    { date: 'Apr 24', Ordrer: 680 },
+    { date: 'Mai 24', Ordrer: 910 },
+  ];
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
       {/* Header */}
@@ -78,7 +87,7 @@ export default function OwnerDashboard() {
       </div>
 
       {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="shadow-sm border-slate-200">
             <CardHeader className="p-4 pb-2">
                 <CardTitle className="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
@@ -109,19 +118,42 @@ export default function OwnerDashboard() {
                 <div className="text-3xl font-black text-slate-800">{stats.vehicles}</div>
             </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200 bg-indigo-50/50">
-            <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-[10px] font-black uppercase text-indigo-400 tracking-wider flex items-center gap-2">
-                    <TrendingUp className="h-3 w-3" /> Totale Ordrer
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-3xl font-black text-indigo-600">{stats.orders}</div>
-            </CardContent>
-        </Card>
+        
+        {/* PILOT: Tremor Metric Card */}
+        <TremorCard className="shadow-sm border-slate-200 ring-0 border" decoration="top" decorationColor="indigo">
+            <Flex alignItems="start">
+                <div className="truncate">
+                    <Text className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Ordrer</Text>
+                    <Metric className="font-black text-indigo-600 leading-none mt-1">{stats.orders}</Metric>
+                </div>
+                <TrendingUp className="h-4 w-4 text-indigo-400" />
+            </Flex>
+            <Flex className="mt-4">
+                <Text className="truncate text-[10px] uppercase font-bold text-slate-400">Måloppnåelse</Text>
+                <Text className="text-[10px] font-black text-slate-600">{(stats.orders / 1000 * 100).toFixed(0)}%</Text>
+            </Flex>
+            <ProgressBar value={(stats.orders / 1000 * 100)} color="indigo" className="mt-2" />
+        </TremorCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* LIVE VISUALIZATION */}
+          <TremorCard className="shadow-md border-slate-200">
+              <CardHeader className="p-0 mb-4">
+                  <CardTitle className="text-lg font-black uppercase tracking-tight">Vekst i Ordrer</CardTitle>
+                  <CardDescription>Oversikt over ordrevolum de siste 5 månedene.</CardDescription>
+              </CardHeader>
+              <AreaChart
+                className="h-72 mt-4"
+                data={chartData}
+                index="date"
+                categories={['Ordrer']}
+                colors={['indigo']}
+                valueFormatter={(number) => `${Intl.NumberFormat('no').format(number).toString()}`}
+                yAxisWidth={60}
+              />
+          </TremorCard>
+
           {/* Subscription Card */}
           <Card className="shadow-md border-slate-200 overflow-hidden relative">
               <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
@@ -157,15 +189,15 @@ export default function OwnerDashboard() {
           </Card>
 
           {/* Quick Links Card */}
-          <Card className="shadow-md border-slate-200">
+          <Card className="shadow-md border-slate-200 lg:col-span-2">
               <CardHeader className="bg-slate-50 border-b p-6">
                   <CardTitle className="text-lg font-black uppercase tracking-tight">Kjernefunksjoner</CardTitle>
                   <CardDescription>Direkte tilgang til bedriftens masterdata.</CardDescription>
               </CardHeader>
               <CardContent className="p-6">
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Link href="/dashboard/places" className="block">
-                          <div className="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors flex items-center justify-between group">
+                          <div className="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors flex items-center justify-between group h-full">
                               <div>
                                   <h4 className="font-black text-slate-800 group-hover:text-indigo-700">Adressedatabasen (RettSted)</h4>
                                   <p className="text-xs text-slate-500">Søk i, opprett eller rediger bedriftens lokasjoner.</p>
@@ -175,7 +207,7 @@ export default function OwnerDashboard() {
                       </Link>
                       
                       <Link href="/dashboard/admin" className="block">
-                          <div className="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors flex items-center justify-between group">
+                          <div className="p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors flex items-center justify-between group h-full">
                               <div>
                                   <h4 className="font-black text-slate-800 group-hover:text-indigo-700">Administrasjon & Ansatte</h4>
                                   <p className="text-xs text-slate-500">Gå til daglig admin for å invitere ansatte eller endre tilganger.</p>
