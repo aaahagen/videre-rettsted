@@ -8,7 +8,12 @@
 
 > **getRoutes**(`orgId`): `Promise`\<[`Route`](../../../types/interfaces/Route.md)[]\>
 
-Defined in: [db/routes.ts:18](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/routes.ts#L18)
+Defined in: [db/routes.ts:49](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/routes.ts#L49)
+
+Henter alle ruter tilhørende en spesifikk organisasjon.
+
+Denne funksjonen brukes primært av ruteplanleggere og administratorer for å få 
+oversikt over aktive, fullførte og planlagte ruter.
 
 ## Parameters
 
@@ -16,6 +21,17 @@ Defined in: [db/routes.ts:18](https://github.com/aaahagen/videre-rettsted/blob/m
 
 `string`
 
+Organisasjonens unike ID.
+
 ## Returns
 
 `Promise`\<[`Route`](../../../types/interfaces/Route.md)[]\>
+
+En Promise med en liste over alle rutene knyttet til organisasjonen.
+
+## Example
+
+```typescript
+const allRoutes = await getRoutes("org_123");
+const activeRoutes = allRoutes.filter(r => r.status === 'active');
+```

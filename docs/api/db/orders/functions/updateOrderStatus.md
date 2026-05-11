@@ -8,7 +8,9 @@
 
 > **updateOrderStatus**(`orgId`, `orderId`, `status`): `Promise`\<`void`\>
 
-Defined in: [db/orders.ts:138](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/orders.ts#L138)
+Defined in: [db/orders.ts:203](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/orders.ts#L203)
+
+Oppdaterer kun statusen på en ordre.
 
 ## Parameters
 
@@ -16,13 +18,19 @@ Defined in: [db/orders.ts:138](https://github.com/aaahagen/videre-rettsted/blob/
 
 `string`
 
+Organisasjonens ID.
+
 ### orderId
 
 `string`
 
+Ordrens ID.
+
 ### status
 
 `"pending"` \| `"loaded"` \| `"delivered"` \| `"failed"`
+
+Den nye statusverdien (f.eks. 'picked_up', 'delivered').
 
 ## Returns
 

@@ -8,9 +8,14 @@
 
 > **deleteOrder**(`orgId`, `orderId`): `Promise`\<`void`\>
 
-Defined in: [db/orders.ts:151](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/orders.ts#L151)
+Defined in: [db/orders.ts:232](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/orders.ts#L232)
 
-Deletes an order and handles cascading updates for routes and manifests.
+Sletter en ordre permanent og håndterer kaskadeoppdateringer for tilhørende ruter og manifester.
+
+Funksjonen utfører følgende:
+1. Fjerner referansen til ordren fra tilknyttede ruter.
+2. Oppdaterer tilknyttede manifester for å reflektere fjerningen.
+3. Sletter selve ordredokumentet.
 
 ## Parameters
 
@@ -18,10 +23,18 @@ Deletes an order and handles cascading updates for routes and manifests.
 
 `string`
 
+Organisasjonens ID.
+
 ### orderId
 
 `string`
 
+Ordrens ID som skal slettes.
+
 ## Returns
 
 `Promise`\<`void`\>
+
+## Throws
+
+Feil ved databaseoperasjoner.

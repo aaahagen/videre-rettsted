@@ -8,7 +8,9 @@
 
 > **deletePlace**(`id`): `Promise`\<`void`\>
 
-Defined in: [db/places.ts:124](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L124)
+Defined in: [db/places.ts:210](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/places.ts#L210)
+
+Sletter et leveringssted permanent fra databasen.
 
 ## Parameters
 
@@ -16,6 +18,20 @@ Defined in: [db/places.ts:124](https://github.com/aaahagen/videre-rettsted/blob/
 
 `string`
 
+Identifikatoren til stedet som skal fjernes.
+
 ## Returns
 
 `Promise`\<`void`\>
+
+En Promise som løses når slettingen er bekreftet av Firestore.
+
+## Throws
+
+Feil ved manglende slettetilgang (kun Admins/Super Admins).
+
+## Example
+
+```typescript
+await deletePlace("place_old_456");
+```
