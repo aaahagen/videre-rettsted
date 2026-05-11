@@ -3,17 +3,41 @@ import { db } from '../firebase/firebase';
 import { Order, Collie, HandlingUnit, Manifest, Route } from '../types';
 import { calculateVolumetrics } from '../volumetrics';
 
+/**
+ * Initialiserer og lagrer en ny ordre i organisasjonens ordresystem.
+ * 
+ * Denne arkitektoniske funksjonen utfører tre kritiske operasjoner:
+ * 1. Beregner volumetrisk behov (antall paller) basert på varelinjer.
+ * 2. Genererer unike strekkoder for hvert enkelt kolli (Collie) for full sporbarhet.
+ * 3. Oppretter handling units (paller) og knytter kolliene til disse via en round-robin logikk.
+ * 
+ * @param order - Ordreobjektet som skal lagres. Bruker `Omit` for å sikre at `id` og tidsstempler genereres av databasen.
+ * @returns En Promise som løses med den autogenererte dokument-ID-en fra Firestore.
+ * @throws Kan kaste feil ved nettverksbrudd eller manglende skrivetilgang til organisasjonens subcollection.
+ * 
+ * @example
+ * ```typescript
+ * const newOrderId = await createOrder({
+ *   orgId: "org_123",
+ *   barcode: "ORD-999",
+ *   placeId: "loc_456",
+ *   status: "pending",
+ *   lineItems: [{ id: "item_1", name: "Pakke", quantity: 5, weight: 10 }]
+ * });
+ * console.log(`Ordre opprettet med ID: ${newOrderId}`);
+ * ```
+ */
 export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   const orgRef = doc(db, 'organizations', order.orgId);
   const ordersRef = collection(orgRef, 'orders');
   
-  // 1. Calculate how many handling units (pallets) are needed based on volumetrics
+  // 1. Beregn antall paller basert på volumetrisk vekt/volum
   let handlingUnits: HandlingUnit[] = [];
   let estimatedPalletsCount = 0;
   
   if (order.lineItems && order.lineItems.length > 0) {
       const vol = calculateVolumetrics(order.lineItems);
-      estimatedPalletsCount = Math.ceil(vol.estimatedPallets); // e.g. 1.2 -> 2 pallets
+      estimatedPalletsCount = Math.ceil(vol.estimatedPallets); 
       
       for (let i = 0; i < estimatedPalletsCount; i++) {
           handlingUnits.push({
@@ -24,7 +48,7 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updat
       }
   }
 
-  // 2. Generate individual Collies (Items) based on line item quantities
+  // 2. Generer individuelle kolli basert på varelinje-antall
   let collies: Collie[] = [];
   let itemCounter = 1;
   
@@ -32,7 +56,7 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updat
       for (const lineItem of order.lineItems) {
           for (let i = 0; i < lineItem.quantity; i++) {
               
-              // Simple round-robin assignment to pallets (Handling Units)
+              // Tildel kolli til en pall via round-robin
               let assignedPalletId = undefined;
               if (handlingUnits.length > 0) {
                   const palletIndex = (itemCounter - 1) % handlingUnits.length;
@@ -50,7 +74,7 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updat
       }
   }
 
-  // 3. Save to database
+  // 3. Lagre til databasen
   const orderToSave = {
     ...order,
     collies: collies.length > 0 ? collies : order.collies,
@@ -64,7 +88,21 @@ export const createOrder = async (order: Omit<Order, 'id' | 'createdAt' | 'updat
 };
 
 /**
- * Rapidly ingests a 3rd party package. Creates a shell order or updates existing.
+ * Hurtigregistrering av en pakke fra tredjepart. Oppretter en "shell"-ordre eller oppdaterer eksisterende.
+ * 
+ * Brukes primært på terminalen/lasterampen når en sjåfør ankommer med uforutsette pakker som må spores.
+ * 
+ * @param data - Inneholder organisasjons-ID, strekkode og valgfrie rute/sted-identifikatorer.
+ * @returns En Promise som returnerer ordre-ID og en boolsk verdi som indikerer om ordren var ny.
+ * 
+ * @example
+ * ```typescript
+ * const result = await ingestThirdPartyPackage({
+ *   orgId: "org_abc",
+ *   barcode: "3PS-12345",
+ *   routeId: "route_morgen"
+ * });
+ * ```
  */
 export const ingestThirdPartyPackage = async (data: {
   orgId: string;
@@ -76,7 +114,7 @@ export const ingestThirdPartyPackage = async (data: {
 }): Promise<{ orderId: string, isNew: boolean }> => {
   const ordersRef = collection(db, `organizations/${data.orgId}/orders`);
   
-  // Check if order with this barcode already exists
+  // Sjekk om ordre med denne strekkoden allerede eksisterer
   const q = query(ordersRef, where('barcode', '==', data.barcode), limit(1));
   const snap = await getDocs(q);
   
@@ -92,7 +130,7 @@ export const ingestThirdPartyPackage = async (data: {
     return { orderId: existingOrder.id, isNew: false };
   }
 
-  // Create shell order
+  // Opprett shell-ordre
   const newOrder: Omit<Order, 'id' | 'createdAt' | 'updatedAt'> = {
     orgId: data.orgId,
     barcode: data.barcode,
@@ -114,6 +152,13 @@ export const ingestThirdPartyPackage = async (data: {
   return { orderId: id, isNew: true };
 };
 
+/**
+ * Henter en spesifikk ordre basert på organisasjons-ID og ordre-ID.
+ * 
+ * @param orgId - Den unike ID-en til organisasjonen.
+ * @param orderId - Dokument-ID-en til ordren.
+ * @returns En Promise med `Order`-objektet eller `null` hvis den ikke finnes.
+ */
 export const getOrder = async (orgId: string, orderId: string): Promise<Order | null> => {
   const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
   const docSnap = await getDoc(docRef);
@@ -121,6 +166,12 @@ export const getOrder = async (orgId: string, orderId: string): Promise<Order | 
   return { id: docSnap.id, ...docSnap.data() } as Order;
 };
 
+/**
+ * Henter alle ordrer for en gitt organisasjon, sortert etter opprettelsesdato (nyeste først).
+ * 
+ * @param orgId - Den unike ID-en til organisasjonen.
+ * @returns En Promise med en liste over alle ordrer.
+ */
 export const getOrders = async (orgId: string): Promise<Order[]> => {
   const ordersRef = collection(db, `organizations/${orgId}/orders`);
   const q = query(ordersRef, orderBy("createdAt", "desc"));
@@ -128,6 +179,13 @@ export const getOrders = async (orgId: string): Promise<Order[]> => {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
 };
 
+/**
+ * Henter alle ordrer som er tildelt en spesifikk rute.
+ * 
+ * @param orgId - Organisasjonens ID.
+ * @param routeId - Identifikatoren til ruten.
+ * @returns En Promise med listen over ordrer på ruten.
+ */
 export const getOrdersForRoute = async (orgId: string, routeId: string): Promise<Order[]> => {
   const ordersRef = collection(db, `organizations/${orgId}/orders`);
   const q = query(ordersRef, where('routeId', '==', routeId));
@@ -135,18 +193,41 @@ export const getOrdersForRoute = async (orgId: string, routeId: string): Promise
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
 };
 
+/**
+ * Oppdaterer kun statusen på en ordre.
+ * 
+ * @param orgId - Organisasjonens ID.
+ * @param orderId - Ordrens ID.
+ * @param status - Den nye statusverdien (f.eks. 'picked_up', 'delivered').
+ */
 export const updateOrderStatus = async (orgId: string, orderId: string, status: Order['status']): Promise<void> => {
   const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
   await updateDoc(docRef, { status, updatedAt: serverTimestamp() });
 };
 
+/**
+ * Utfører en delvis oppdatering av et ordreobjekt.
+ * 
+ * @param orgId - Organisasjonens ID.
+ * @param orderId - Ordrens ID.
+ * @param updates - Objektet som inneholder feltene som skal endres.
+ */
 export const updateOrder = async (orgId: string, orderId: string, updates: Partial<Order>): Promise<void> => {
   const docRef = doc(db, `organizations/${orgId}/orders/${orderId}`);
   await updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
 };
 
 /**
- * Deletes an order and handles cascading updates for routes and manifests.
+ * Sletter en ordre permanent og håndterer kaskadeoppdateringer for tilhørende ruter og manifester.
+ * 
+ * Funksjonen utfører følgende:
+ * 1. Fjerner referansen til ordren fra tilknyttede ruter.
+ * 2. Oppdaterer tilknyttede manifester for å reflektere fjerningen.
+ * 3. Sletter selve ordredokumentet.
+ * 
+ * @param orgId - Organisasjonens ID.
+ * @param orderId - Ordrens ID som skal slettes.
+ * @throws Feil ved databaseoperasjoner.
  */
 export const deleteOrder = async (orgId: string, orderId: string): Promise<void> => {
   const batch = writeBatch(db);
@@ -159,7 +240,7 @@ export const deleteOrder = async (orgId: string, orderId: string): Promise<void>
     const orderData = orderSnap.data() as Order;
     const { routeId, placeId } = orderData;
 
-    // 1. Remove order from any associated Route
+    // 1. Fjern ordre fra tilknyttet rute
     if (routeId) {
       const routeRef = doc(db, 'routes', routeId);
       const routeSnap = await getDoc(routeRef);
@@ -167,7 +248,7 @@ export const deleteOrder = async (orgId: string, orderId: string): Promise<void>
       if (routeSnap.exists()) {
         const routeData = routeSnap.data() as Route;
         
-        // Check if other orders on the same route point to the same place
+        // Sjekk om andre ordrer på samme rute peker til samme leveringssted
         const otherOrdersInRouteQ = query(
           collection(db, `organizations/${orgId}/orders`),
           where('routeId', '==', routeId),
@@ -176,7 +257,7 @@ export const deleteOrder = async (orgId: string, orderId: string): Promise<void>
         const otherOrdersSnap = await getDocs(otherOrdersInRouteQ);
         const placeStillNeeded = otherOrdersSnap.docs.some(d => (d.data() as Order).placeId === placeId);
 
-        // If no other order on this route needs this place, remove the place from the route
+        // Hvis ingen andre ordrer på ruten trenger dette stedet, fjern stoppestedet fra ruten
         if (!placeStillNeeded) {
           batch.update(routeRef, {
             places: arrayRemove(placeId),
@@ -185,7 +266,7 @@ export const deleteOrder = async (orgId: string, orderId: string): Promise<void>
         }
       }
 
-      // 2. Remove order from any associated Manifest
+      // 2. Fjern ordre fra tilknyttet manifest
       const manifestQ = query(
         collection(db, `organizations/${orgId}/manifests`),
         where('routeId', '==', routeId),
@@ -205,13 +286,13 @@ export const deleteOrder = async (orgId: string, orderId: string): Promise<void>
       }
     }
 
-    // 3. Delete the order document itself
+    // 3. Slett selve ordredokumentet
     batch.delete(orderRef);
 
-    // Commit all changes
+    // Utfør alle endringene atomært
     await batch.commit();
   } catch (error) {
-    console.error("Error in cascading order deletion:", error);
+    console.error("Feil ved kaskadesletting av ordre:", error);
     throw error;
   }
 };

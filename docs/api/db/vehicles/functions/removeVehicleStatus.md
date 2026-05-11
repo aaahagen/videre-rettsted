@@ -8,7 +8,11 @@
 
 > **removeVehicleStatus**(`id`, `status`): `Promise`\<`void`\>
 
-Defined in: [db/vehicles.ts:106](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L106)
+Defined in: [db/vehicles.ts:176](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L176)
+
+Fjerner en spesifikk status fra et kjøretøy.
+
+Dersom kjøretøyet står uten statuser etter fjerning, settes det automatisk tilbake til 'ready'.
 
 ## Parameters
 
@@ -16,9 +20,13 @@ Defined in: [db/vehicles.ts:106](https://github.com/aaahagen/videre-rettsted/blo
 
 `string`
 
+Kjøretøyets ID.
+
 ### status
 
 `string`
+
+Statusen som skal fjernes.
 
 ## Returns
 

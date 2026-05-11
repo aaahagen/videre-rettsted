@@ -8,7 +8,9 @@
 
 > **updateVehicle**(`id`, `data`): `Promise`\<`void`\>
 
-Defined in: [db/vehicles.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L60)
+Defined in: [db/vehicles.ts:105](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L105)
+
+Oppdaterer tekniske data eller informasjon om et kjøretøy.
 
 ## Parameters
 
@@ -16,9 +18,13 @@ Defined in: [db/vehicles.ts:60](https://github.com/aaahagen/videre-rettsted/blob
 
 `string`
 
+Identifikatoren til kjøretøyet.
+
 ### data
 
 `Partial`\<[`Vehicle`](../../../types/interfaces/Vehicle.md)\>
+
+Delvis modell med feltene som skal endres.
 
 ## Returns
 

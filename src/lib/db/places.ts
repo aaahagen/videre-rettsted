@@ -3,14 +3,35 @@ import { db } from '../firebase/firebase';
 import { Place, Organization } from '../types';
 import { cleanObject } from '../utils';
 
-// Helper for safe date conversion from Firestore
+/**
+ * Hjelpefunksjon for robust konvertering av Firestore-verdier til standard JavaScript Date-objekter.
+ * 
+ * @param val - Verdien som skal konverteres (Timestamp, Date, streng eller tall).
+ * @returns Et gyldig Date-objekt.
+ * @internal
+ */
 const ensureDate = (val: any): Date => {
   if (!val) return new Date();
   if (val instanceof Date) return val;
   if (typeof val.toDate === 'function') return val.toDate();
-  return new Date(val); // Fallback for ISO strings or numbers
+  return new Date(val); 
 };
 
+/**
+ * Henter alle lagrede leveringssteder tilhørende en spesifikk organisasjon.
+ * 
+ * Brukes primært for å populere oversiktslister og kartvisninger i dashbordet.
+ * 
+ * @param orgId - Den unike identifikatoren til organisasjonen (f.eks. "org_123").
+ * @returns En Promise som løses med en liste (array) av `Place`-objekter.
+ * @throws Feil ved manglende tilgang eller nettverksproblemer.
+ * 
+ * @example
+ * ```typescript
+ * const myPlaces = await getPlaces("my-org-id");
+ * console.log(`Fant ${myPlaces.length} leveringssteder.`);
+ * ```
+ */
 export async function getPlaces(orgId: string): Promise<Place[]> {
   try {
     const q = query(collection(db, 'places'), where('orgId', '==', orgId));
@@ -30,6 +51,22 @@ export async function getPlaces(orgId: string): Promise<Place[]> {
   }
 }
 
+/**
+ * Henter detaljert informasjon om et enkelt leveringssted basert på dets unike ID.
+ * 
+ * Inkluderer alle metadata som bilder, koordinater, åpningstider og HMS-data.
+ * 
+ * @param id - Dokument-ID-en til leveringsstedet i Firestore.
+ * @returns En Promise som løses med et `Place`-objekt, eller `null` dersom stedet ikke finnes.
+ * 
+ * @example
+ * ```typescript
+ * const place = await getPlace("place_abc_123");
+ * if (place) {
+ *   console.log(`Navn: ${place.name}, Adresse: ${place.address}`);
+ * }
+ * ```
+ */
 export async function getPlace(id: string): Promise<Place | null> {
   try {
     const docRef = doc(db, 'places', id);
@@ -50,6 +87,26 @@ export async function getPlace(id: string): Promise<Place | null> {
   }
 }
 
+/**
+ * Oppretter et nytt leveringssted i databasen ved bruk av en atomær transaksjon.
+ * 
+ * Funksjonen håndterer automatisk generering av kundenummer dersom organisasjonen 
+ * har aktivert dette i sine innstillinger. Transaksjonen sikrer at nummerrekkefølgen 
+ * forblir korrekt selv ved samtidige opprettelser.
+ * 
+ * @param place - Dataene for det nye stedet. `id` og tidsstempler utelates da de settes av systemet.
+ * @returns En Promise med det nyopprettede `Place`-objektet inkludert ID og tidsstempler.
+ * 
+ * @example
+ * ```typescript
+ * const newPlace = await createPlace({
+ *   name: "Hovedlageret",
+ *   address: "Industriveien 5, 0001 Oslo",
+ *   orgId: "org_123",
+ *   coordinates: { lat: 59.9, lng: 10.7 }
+ * });
+ * ```
+ */
 export async function createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updatedAt'>): Promise<Place> {
   try {
     return await runTransaction(db, async (transaction) => {
@@ -59,13 +116,13 @@ export async function createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updat
 
       let finalCustomerNumber = place.customerNumber;
 
-      // Logic for automatic customer number generation
+      // Logikk for automatisk generering av kundenummer
       if (!finalCustomerNumber && orgData?.placeSettings?.autoGenerateCustomerNumbers) {
         const prefix = orgData.placeSettings.customerNumberPrefix || '';
         const nextNum = orgData.placeSettings.nextCustomerNumber || 1000;
         finalCustomerNumber = `${prefix}${nextNum}`;
         
-        // Update the next number in the sequence
+        // Oppdater neste nummer i sekvensen i organisasjonsdokumentet
         transaction.update(orgRef, {
           'placeSettings.nextCustomerNumber': nextNum + 1
         });
@@ -94,6 +151,23 @@ export async function createPlace(place: Omit<Place, 'id' | 'createdAt' | 'updat
   }
 }
 
+/**
+ * Oppdaterer eksisterende data for et spesifikt leveringssted.
+ * 
+ * Funksjonen renser objektet for `undefined`-verdier før lagring og sørger for at 
+ * systemfelter som `createdAt` ikke overskrives.
+ * 
+ * @param id - Identifikatoren til stedet som skal endres.
+ * @param updates - En delvis `Place`-modell med de feltene som skal oppdateres.
+ * @returns En Promise med det oppdaterte `Place`-objektet i sin helhet.
+ * 
+ * @example
+ * ```typescript
+ * await updatePlace("place_123", { 
+ *   notes: "Viktig: Bruk bakdøren etter kl. 16:00" 
+ * });
+ * ```
+ */
 export async function updatePlace(id: string, updates: Partial<Place>): Promise<Place> {
   try {
     const docRef = doc(db, 'places', id);
@@ -101,7 +175,7 @@ export async function updatePlace(id: string, updates: Partial<Place>): Promise<
       ...updates,
       updatedAt: serverTimestamp(),
     });
-    // Don't include system fields in update
+    // Systemfelter skal ikke inkluderes i en standard oppdatering
     delete (updateData as any).id;
     delete (updateData as any).createdAt;
     
@@ -121,6 +195,18 @@ export async function updatePlace(id: string, updates: Partial<Place>): Promise<
   }
 }
 
+/**
+ * Sletter et leveringssted permanent fra databasen.
+ * 
+ * @param id - Identifikatoren til stedet som skal fjernes.
+ * @returns En Promise som løses når slettingen er bekreftet av Firestore.
+ * @throws Feil ved manglende slettetilgang (kun Admins/Super Admins).
+ * 
+ * @example
+ * ```typescript
+ * await deletePlace("place_old_456");
+ * ```
+ */
 export async function deletePlace(id: string): Promise<void> {
   try {
     const docRef = doc(db, 'places', id);

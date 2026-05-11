@@ -8,7 +8,9 @@
 
 > **updateVehicleDamageReport**(`id`, `data`): `Promise`\<`void`\>
 
-Defined in: [db/vehicles.ts:184](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L184)
+Defined in: [db/vehicles.ts:273](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/vehicles.ts#L273)
+
+Oppdaterer detaljer i en eksisterende skaderapport.
 
 ## Parameters
 
@@ -16,9 +18,13 @@ Defined in: [db/vehicles.ts:184](https://github.com/aaahagen/videre-rettsted/blo
 
 `string`
 
+Rapporten ID.
+
 ### data
 
 `Partial`\<[`VehicleDamageReport`](../../../types/interfaces/VehicleDamageReport.md)\>
+
+Felter som skal endres.
 
 ## Returns
 

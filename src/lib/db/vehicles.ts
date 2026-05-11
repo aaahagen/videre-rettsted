@@ -1,8 +1,24 @@
-  import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Vehicle, VehicleDamageReport } from '../types';
 import { cleanObject } from '../utils';
 
+/**
+ * Henter alle registrerte kjøretøy tilhørende en organisasjon.
+ * 
+ * Resultatet inkluderer tekniske detaljer som registreringsnummer, EU-kontrollfrister 
+ * og nåværende operasjonell status.
+ * 
+ * @param orgId - Den unike ID-en til organisasjonen.
+ * @returns En Promise som løses med en liste over `Vehicle`-objekter.
+ * @throws Feil ved databaseoppslag.
+ * 
+ * @example
+ * ```typescript
+ * const myFleet = await getVehicles("org_123");
+ * console.log(`Bedriften har ${myFleet.length} enheter i bilparken.`);
+ * ```
+ */
 export async function getVehicles(orgId: string): Promise<Vehicle[]> {
   try {
     const q = query(collection(db, 'vehicles'), where('orgId', '==', orgId));
@@ -19,6 +35,12 @@ export async function getVehicles(orgId: string): Promise<Vehicle[]> {
   }
 }
 
+/**
+ * Henter detaljert informasjon om et spesifikt kjøretøy.
+ * 
+ * @param id - Dokument-ID-en til kjøretøyet i Firestore.
+ * @returns En Promise som løses med et `Vehicle`-objekt eller `null`.
+ */
 export async function getVehicle(id: string): Promise<Vehicle | null> {
   try {
     const docRef = doc(db, 'vehicles', id);
@@ -38,9 +60,26 @@ export async function getVehicle(id: string): Promise<Vehicle | null> {
   }
 }
 
+/**
+ * Registrerer en ny enhet i bilparken.
+ * 
+ * Funksjonen renser inndata for systemfelter og setter standardstatus til 'ready'.
+ * 
+ * @param data - Kjøretøydata (uten ID og tidsstempler).
+ * @returns En Promise med det nyopprettede `Vehicle`-objektet inkludert ID.
+ * 
+ * @example
+ * ```typescript
+ * const newTruck = await createVehicle({
+ *   name: "Lastebil 1",
+ *   plateNumber: "AB12345",
+ *   type: "truck",
+ *   orgId: "org_123"
+ * });
+ * ```
+ */
 export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> {
   try {
-    // Clean data: remove system fields if present and convert undefined values
     const { id, createdAt, updatedAt, ...rest } = data as any;
     const finalData = cleanObject(rest);
 
@@ -57,11 +96,15 @@ export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'up
   }
 }
 
+/**
+ * Oppdaterer tekniske data eller informasjon om et kjøretøy.
+ * 
+ * @param id - Identifikatoren til kjøretøyet.
+ * @param data - Delvis modell med feltene som skal endres.
+ */
 export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise<void> {
   try {
     const docRef = doc(db, 'vehicles', id);
-    
-    // Remove ID and timestamps from the update payload
     const { id: _, createdAt, updatedAt, ...rest } = data as any;
     const finalData = cleanObject(rest);
 
@@ -75,6 +118,11 @@ export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise
   }
 }
 
+/**
+ * Sletter et kjøretøy permanent fra registeret.
+ * 
+ * @param id - Identifikatoren til kjøretøyet.
+ */
 export async function deleteVehicle(id: string): Promise<void> {
   try {
     const docRef = doc(db, 'vehicles', id);
@@ -85,6 +133,20 @@ export async function deleteVehicle(id: string): Promise<void> {
   }
 }
 
+/**
+ * Legger til en operasjonell status på et kjøretøy.
+ * 
+ * Hvis statusen som legges til er noe annet enn 'ready', fjernes 'ready'-flagget 
+ * automatisk for å indikere at enheten krever oppmerksomhet eller er i bruk.
+ * 
+ * @param id - Kjøretøyets ID.
+ * @param status - Statusstreng (f.eks. 'observation', 'workshop').
+ * 
+ * @example
+ * ```typescript
+ * await addVehicleStatus("v123", "observation");
+ * ```
+ */
 export async function addVehicleStatus(id: string, status: string): Promise<void> {
     try {
         const docRef = doc(db, 'vehicles', id);
@@ -103,6 +165,14 @@ export async function addVehicleStatus(id: string, status: string): Promise<void
     }
 }
 
+/**
+ * Fjerner en spesifikk status fra et kjøretøy.
+ * 
+ * Dersom kjøretøyet står uten statuser etter fjerning, settes det automatisk tilbake til 'ready'.
+ * 
+ * @param id - Kjøretøyets ID.
+ * @param status - Statusen som skal fjernes.
+ */
 export async function removeVehicleStatus(id: string, status: string): Promise<void> {
     try {
         const docRef = doc(db, 'vehicles', id);
@@ -125,6 +195,13 @@ export async function removeVehicleStatus(id: string, status: string): Promise<v
     }
 }
 
+/**
+ * Henter historikk over skaderapporter for et spesifikt kjøretøy.
+ * 
+ * @param vehicleId - ID-en til kjøretøyet.
+ * @param orgId - Valgfri organisasjons-ID for filtrering (sikkerhet).
+ * @returns En liste over skaderapporter sortert nyeste først.
+ */
 export async function getVehicleDamages(vehicleId: string, orgId?: string): Promise<VehicleDamageReport[]> {
   try {
     let q;
@@ -161,6 +238,12 @@ export async function getVehicleDamages(vehicleId: string, orgId?: string): Prom
   }
 }
 
+/**
+ * Oppretter en ny skaderapport og setter kjøretøyet automatisk i 'observation'-status.
+ * 
+ * @param data - Skaderapport-data (uten ID).
+ * @returns Den opprettede rapporten.
+ */
 export async function reportVehicleDamage(data: Omit<VehicleDamageReport, 'id' | 'createdAt'>): Promise<VehicleDamageReport> {
   try {
     const docRef = await addDoc(collection(db, 'vehicleDamages'), {
@@ -181,6 +264,12 @@ export async function reportVehicleDamage(data: Omit<VehicleDamageReport, 'id' |
   }
 }
 
+/**
+ * Oppdaterer detaljer i en eksisterende skaderapport.
+ * 
+ * @param id - Rapporten ID.
+ * @param data - Felter som skal endres.
+ */
 export async function updateVehicleDamageReport(id: string, data: Partial<VehicleDamageReport>): Promise<void> {
   try {
     const docRef = doc(db, 'vehicleDamages', id);
@@ -195,6 +284,15 @@ export async function updateVehicleDamageReport(id: string, data: Partial<Vehicl
   }
 }
 
+/**
+ * Endrer status på en skadesak (f.eks. fra 'reported' til 'fixed').
+ * 
+ * Dersom status settes til 'fixed', lagres automatisk tidspunkt og hvem som løste saken.
+ * 
+ * @param damageId - ID-en til skadesaken.
+ * @param status - Den nye statusen.
+ * @param resolvedBy - Valgfri bruker-ID som markerte saken som utbedret.
+ */
 export async function updateDamageStatus(damageId: string, status: 'reported' | 'in_progress' | 'fixed', resolvedBy?: string): Promise<void> {
   try {
     const docRef = doc(db, 'vehicleDamages', damageId);
@@ -210,6 +308,13 @@ export async function updateDamageStatus(damageId: string, status: 'reported' | 
   }
 }
 
+/**
+ * Henter en logg over kjøretøyets bruk i ruter de siste dagene.
+ * 
+ * @param vehicleId - Kjøretøyets ID.
+ * @param days - Antall dager tilbake i tid (standard er 7).
+ * @returns En liste over rute-hendelser knyttet til kjøretøyet.
+ */
 export async function getVehicleUsageLog(vehicleId: string, days: number = 7): Promise<any[]> {
     try {
         const startDate = new Date();
