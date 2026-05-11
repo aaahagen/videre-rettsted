@@ -15,6 +15,10 @@
     "test:seed": "npx tsx e2e/setup/seed.ts",
     "docs": "typedoc"
   },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -48,8 +52,6 @@
     "@radix-ui/react-toast": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@tremor/react": "^3.18.7",
-    "@types/bwip-js": "^3.2.3",
-    "@types/file-saver": "^2.0.7",
     "bwip-js": "^4.9.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
