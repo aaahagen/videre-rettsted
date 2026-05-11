@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **TSDoc Standards:** Established a formal "TSDoc System Instruction" to guide AI-generated documentation. This ensures high-quality, architect-level comments with code examples, type intelligence, and professional vibe checks for the entire codebase.
 - **Owner Role Management:**
     - **Role Assignment:** Admins and Super Admins can now explicitly invite new users with the `owner` role.
     - **Role Promotion/Demotion:** Added the ability to upgrade existing users to `owner` or demote them back to `admin` directly from the user list in the Admin Dashboard.
@@ -50,8 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
-- **Admin Dashboard UI Refactor:** Completely reorganized the layout of the standard Admin Dashboard to prioritize critical configuration. The new order is: Organisasjonsinnstillinger (Top) -> Brukere & Tilganger -> Utestående Invitasjoner -> (Rest). The Geofencing tools were also integrated directly into the "Timelister / Ansatte" card.
-- **Pending Invitations UI Polish:** Redesigned the "Utestående Invitasjoner" card on the Admin Dashboard to be much more compact and visually aligned with the rest of the new UI components. It now has a matching header, tighter table rows, and reduced whitespace to save vertical screen real estate.
 - **Super Admin Search Context:** Removed the top-level main navigation search bar from the Super Admin panel to keep the interface clean, as global search is handled within the panel itself.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact and readable. Moved the search bar to the header, compressed the organization statistics into a horizontal bar, and redesigned the module toggles as compact pill-shaped badges.
 - **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
