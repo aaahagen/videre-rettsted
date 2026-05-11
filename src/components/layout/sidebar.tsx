@@ -117,11 +117,14 @@ export default function AppSidebar() {
               const msg = doc.data();
               
               // Only count if it's meant for me
+              // Admins see everything in the UI, but should only be NOTIFIED about messages intended for them
               let isForMe = false;
-              if (dbUser.role === 'admin' || dbUser.role === 'super_admin' || dbUser.role === 'owner') {
-                  isForMe = true; // Admins see everything
-              } else {
-                  isForMe = msg.recipientId === 'all' || msg.recipientId === 'all_drivers' || msg.recipientId === dbUser.id;
+              if (msg.recipientId === 'all' || msg.recipientId === dbUser.id) {
+                  isForMe = true;
+              } else if (msg.recipientId === 'all_drivers' && (dbUser.role === 'driver' || dbUser.role === 'contractor')) {
+                  isForMe = true;
+              } else if (msg.recipientId === 'all_admins' && (dbUser.role === 'admin' || dbUser.role === 'super_admin' || dbUser.role === 'owner')) {
+                  isForMe = true;
               }
 
               // AND I haven't read it AND I didn't send it

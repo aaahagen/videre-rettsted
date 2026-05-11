@@ -76,6 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Admin Notification Overload:** Refactored the unread message logic for administrative roles (`super_admin`, `admin`, `owner`). Admins are no longer alerted to private direct messages between other users, reducing notification clutter while still allowing monitoring.
+- **Build Failure (Dependencies):** Resolved a production build failure by adding missing `@types` for `file-saver`, `jszip`, and `bwip-js`.
+- **Build Failure (React 19):** Added dependency overrides for `react` and `react-dom` to resolve peer dependency conflicts between React 19 and older UI libraries like Tremor.
 - **Place Form Draft Restoration:** Improved the draft system to correctly restore complex objects including HMS checklist answers, delivery windows, and GPS coordinates.
 - **HMS Checklist Interaction:** Resolved a double-toggle bug in the HMS checklist on the Place Form. Standardized the interaction by properly linking `Label` elements to `Checkbox` components and preventing event propagation.
 - **Owner Privilege Propagation:** Fixed an issue where users assigned the `owner` (Eier) role were not granted administrative privileges in the UI. Updated `AuthProvider`, `Sidebar`, and `AdminPage` to correctly identify `owner` as an administrative role.
