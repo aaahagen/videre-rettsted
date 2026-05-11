@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Map, Edit, Clock, Hash, MapPin } from 'lucide-react';
+import { Map, Edit, Clock, Hash, MapPin, Shield } from 'lucide-react';
 import type { DeliveryPlace } from '@/lib/types';
 import {
   Card,
@@ -19,6 +19,12 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
   // Check if coordinates exist and are not the default (0,0)
   const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
   
+  // Check if HMS checklist is filled
+  const hasHmsData = place.hmsData && (
+    (place.hmsData.answers && Object.keys(place.hmsData.answers).length > 0) || 
+    place.hmsData.comment
+  );
+
   const gmapsUrl = hasCoordinates 
     ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates?.lat},${place.coordinates?.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
@@ -51,6 +57,11 @@ export function PlaceCard({ place, priority = false }: { place: DeliveryPlace; p
                     <Badge className="bg-slate-100 text-slate-700 border-slate-200 shadow-sm hover:bg-slate-200 flex items-center gap-1 font-mono text-[10px] px-2 py-0.5">
                         <Hash className="h-3 w-3" />
                         {place.customerNumber}
+                    </Badge>
+                )}
+                {hasHmsData && (
+                    <Badge className="bg-red-50 text-red-600 border-red-100 shadow-sm flex items-center justify-center font-bold text-[10px] w-6 h-6 p-0 rounded-md" title="HMS Sjekkliste er utfylt">
+                        <Shield className="h-3.5 w-3.5 fill-red-50" />
                     </Badge>
                 )}
                 {hasCoordinates && (

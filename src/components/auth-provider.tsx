@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isLoading = loading || dataLoading;
   const isSuperAdmin = dbUser?.role === 'super_admin';
-  const isAdmin = isSuperAdmin || dbUser?.role === 'admin';
+  const isAdmin = isSuperAdmin || dbUser?.role === 'admin' || dbUser?.role === 'owner';
 
   // Protect routes logic
   useEffect(() => {

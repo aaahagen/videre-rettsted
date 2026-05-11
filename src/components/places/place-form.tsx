@@ -253,11 +253,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       if (savedDraft) {
         try {
           const parsedDraft = JSON.parse(savedDraft);
-          Object.keys(parsedDraft).forEach(key => {
-              const currentVal = form.getValues()[key as keyof PlaceFormValues];
-              if (parsedDraft[key] !== undefined && parsedDraft[key] !== '' && (!currentVal || (typeof currentVal === 'number' && currentVal === 0))) {
-                  form.setValue(key as any, parsedDraft[key], { shouldValidate: true, shouldDirty: true });
-              }
+          form.reset({
+            ...form.getValues(),
+            ...parsedDraft
           });
         } catch (e) {
           console.error("Failed to parse draft", e);
@@ -991,16 +989,20 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
                                 }}
                             >
-                                <FormControl>
-                                    <Checkbox 
-                                        checked={hmsAnswers[q.id] || false}
-                                        onCheckedChange={(checked) => {
-                                            form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
-                                        }}
-                                        className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
-                                    />
-                                </FormControl>
-                                <Label className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug">
+                                <Checkbox 
+                                    id={`hms-${q.id}`}
+                                    checked={hmsAnswers[q.id] || false}
+                                    onCheckedChange={(checked) => {
+                                        form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
+                                />
+                                <Label 
+                                    htmlFor={`hms-${q.id}`} 
+                                    className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     {q.text}
                                 </Label>
                             </div>

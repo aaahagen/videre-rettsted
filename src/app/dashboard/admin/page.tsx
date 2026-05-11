@@ -31,7 +31,7 @@ export default function AdminPage() {
     async function checkAdmin() {
       if (authUser) {
         const userDoc = await firebaseDB.getUser(authUser.uid);
-        if (userDoc?.role === 'admin' || userDoc?.role === 'super_admin') {
+        if (userDoc?.role === 'admin' || userDoc?.role === 'super_admin' || userDoc?.role === 'owner') {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);

@@ -58,6 +58,7 @@ import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { useAuth } from '@/components/auth-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HMSLog } from '@/components/admin/hms-log';
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -578,9 +579,11 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Inviter ny bruker</DialogTitle>
-                      <DialogDescription>
-                        Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
-                      </DialogDescription>
+                      <DialogHeader>
+                        <DialogDescription>
+                          Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
+                        </DialogDescription>
+                      </DialogHeader>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
@@ -618,7 +621,6 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             <SelectItem value="loader">Lager / Laster</SelectItem>
                             <SelectItem value="planner">Ruteplanlegger</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="owner">Eier</SelectItem>
                             <SelectItem value="owner">Eier</SelectItem>
                           </SelectContent>
                         </Select>
@@ -955,6 +957,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             </div>
           </CardContent>
         </Card>
+
+        {organization && <HMSLog orgId={organization.id} organization={organization} />}
 
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100">

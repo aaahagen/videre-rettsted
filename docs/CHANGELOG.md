@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Real-time Quota Tracking:** Added real-time usage metrics to the Super Admin panel. It now fetches and displays the precise count of Users, Places, Vehicles, and Orders for each organization dynamically using `getCountFromServer` for fast aggregation.
     - **Organization Editing:** Super Admins can now quickly rename organizations and update their Organization Numbers directly from a modal without leaving the panel.
     - **Hard Delete (Danger Zone):** Added a protected action to permanently delete an organization. This requires typing the exact organization name to confirm the destructive action.
+- **HMS Documentation Log & Export:**
+    - **Audit Log:** Added a comprehensive HMS Documentation Log to the Admin Dashboard. It automatically tracks all delivery locations where safety checklists have been completed.
+    - **Detailed Audit Trail:** Each log entry displays the place name, customer number, person who completed the checklist, and the timestamp.
+    - **Dynamic Expansion:** Users can click on any log entry to view the full question-by-question answers and any specific safety comments.
+    - **CSV Reporting:** Added a one-click "Export CSV" feature that generates a structured report of all HMS data for the organization, including dynamic columns for every safety question defined in the settings.
 - **HMS Sjekkliste for Places:** Added a customizable safety checklist system for delivery locations.
     - **Admin Controls:** Admins can enable the feature, set a custom title, and manage an unlimited number of questions from the Admin Dashboard.
     - **Glove-Friendly UI:** The Place Form now features extra-large checkboxes designed for drivers wearing gloves.
@@ -71,6 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
 
 ### Fixed
+- **Place Form Draft Restoration:** Improved the draft system to correctly restore complex objects including HMS checklist answers, delivery windows, and GPS coordinates.
+- **HMS Checklist Interaction:** Resolved a double-toggle bug in the HMS checklist on the Place Form. Standardized the interaction by properly linking `Label` elements to `Checkbox` components and preventing event propagation.
+- **Owner Privilege Propagation:** Fixed an issue where users assigned the `owner` (Eier) role were not granted administrative privileges in the UI. Updated `AuthProvider`, `Sidebar`, and `AdminPage` to correctly identify `owner` as an administrative role.
 - **Super Admin Owner View Access:** Fixed a routing bug where users with the `super_admin` role were incorrectly redirected away from the `/dashboard/owner` (Executive Dashboard) page.
 - **Maximum update depth exceeded with Collapsible:** Fixed a UI crash related to Radix UI's Collapsible component. The issue was resolved by updating the `@radix-ui/react-collapsible` and `@radix-ui/react-accordion` dependencies to their latest versions to eliminate mismatched duplicate versions causing infinite loops in React 19.
 - **Maximum update depth exceeded with Switch:** Fixed a UI crash related to Radix UI's Switch component. This was resolved by forcing an update to `@radix-ui/react-compose-refs` to eliminate duplicate and conflicting versions causing infinite loops under React 19, and updated `@radix-ui/react-switch` to the newest version compatible with it.

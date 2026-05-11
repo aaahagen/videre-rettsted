@@ -118,7 +118,7 @@ export default function AppSidebar() {
               
               // Only count if it's meant for me
               let isForMe = false;
-              if (dbUser.role === 'admin' || dbUser.role === 'super_admin') {
+              if (dbUser.role === 'admin' || dbUser.role === 'super_admin' || dbUser.role === 'owner') {
                   isForMe = true; // Admins see everything
               } else {
                   isForMe = msg.recipientId === 'all' || msg.recipientId === 'all_drivers' || msg.recipientId === dbUser.id;
@@ -152,8 +152,9 @@ export default function AppSidebar() {
   };
 
   const displayName = dbUser?.name || authUser?.displayName || authUser?.email || 'Bruker';
-  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin';
+  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
   const isSuperAdmin = dbUser?.role === 'super_admin';
+  const isOwner = dbUser?.role === 'owner';
 
   const navGroups = [
     {
@@ -170,7 +171,7 @@ export default function AppSidebar() {
         { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics' },
         { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
-        { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin'], module: 'logistics' },
+        { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin', 'owner'], module: 'logistics' },
         { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics' },
         { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder', module: 'places' },
         { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
@@ -302,6 +303,7 @@ export default function AppSidebar() {
               // Filter items based on roles/admin status AND modules
               const visibleItems = group.items.filter((item: any) => {
                   if (item.adminOnly && !isAdmin) return false;
+                  if (item.ownerOnly && !isOwner) return false;
                   if (item.roles && !item.roles.includes(dbUser?.role || '')) return false;
                   
                   // Module Gating
