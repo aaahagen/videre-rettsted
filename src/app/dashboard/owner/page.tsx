@@ -8,16 +8,26 @@ import { Loader2, Globe, TrendingUp, Users, MapPin, Truck, Building2, ExternalLi
 import { useToast } from '@/hooks/use-toast';
 import { firebaseDB } from '@/lib/firebase/database';
 import { superDB } from '@/lib/firebase/super'; 
-import { Organization, User } from '@/lib/types';
+import { Organization, Order } from '@/lib/types';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card as TremorCard, Metric, Text, Flex, ProgressBar, AreaChart } from '@tremor/react';
+import { subMonths, format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { nb } from 'date-fns/locale';
+
+interface MonthlyData {
+    date: string;
+    start: Date;
+    end: Date;
+    count: number;
+}
 
 export default function OwnerDashboard() {
   const { dbUser, loading } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [stats, setStats] = useState({ users: 0, places: 0, vehicles: 0, orders: 0 });
+  const [chartData, setChartData] = useState<{ date: string; Ordrer: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
@@ -40,7 +50,13 @@ export default function OwnerDashboard() {
       
       const orgStats = await superDB.getOrgStats(orgId);
       setStats(orgStats);
+
+      // Fetch orders to populate chart
+      const orders = await firebaseDB.getOrders(orgId);
+      processChartData(orders);
+      
     } catch (error: any) {
+      console.error("Error loading owner data:", error);
       toast({
         title: "Feil ved lasting",
         description: "Kunne ikke hente organisasjonsdata.",
@@ -51,6 +67,43 @@ export default function OwnerDashboard() {
     }
   };
 
+  const processChartData = (orders: Order[]) => {
+      const last6Months: MonthlyData[] = [];
+      for (let i = 5; i >= 0; i--) {
+          const d = subMonths(new Date(), i);
+          last6Months.push({
+              date: format(d, 'MMM yy', { locale: nb }),
+              start: startOfMonth(d),
+              end: endOfMonth(d),
+              count: 0
+          });
+      }
+
+      orders.forEach(order => {
+          let orderDate: Date;
+          if (!order.createdAt) return;
+          
+          if ((order.createdAt as any).toDate) {
+              orderDate = (order.createdAt as any).toDate();
+          } else if (order.createdAt instanceof Date) {
+              orderDate = order.createdAt;
+          } else {
+              return;
+          }
+
+          last6Months.forEach(month => {
+              if (isWithinInterval(orderDate, { start: month.start, end: month.end })) {
+                  month.count++;
+              }
+          });
+      });
+
+      setChartData(last6Months.map(m => ({
+          date: m.date,
+          Ordrer: m.count
+      })));
+  };
+
   if (loading || isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -58,14 +111,6 @@ export default function OwnerDashboard() {
       </div>
     );
   }
-
-  const chartData = [
-    { date: 'Jan 24', Ordrer: 167 },
-    { date: 'Feb 24', Ordrer: 254 },
-    { date: 'Mar 24', Ordrer: 450 },
-    { date: 'Apr 24', Ordrer: 680 },
-    { date: 'Mai 24', Ordrer: 910 },
-  ];
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-8">
@@ -141,7 +186,7 @@ export default function OwnerDashboard() {
           <TremorCard className="shadow-md border-slate-200">
               <CardHeader className="p-0 mb-4">
                   <CardTitle className="text-lg font-black uppercase tracking-tight">Vekst i Ordrer</CardTitle>
-                  <CardDescription>Oversikt over ordrevolum de siste 5 månedene.</CardDescription>
+                  <CardDescription>Oversikt over ordrevolum de siste 6 månedene.</CardDescription>
               </CardHeader>
               <AreaChart
                 className="h-72 mt-4"

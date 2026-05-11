@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Owner Role & Executive Dashboard:**
     - **New `owner` Role:** Added a new high-level role (`owner`) designed for executives and finance departments. This role bypasses standard `admin` checks but also has access to exclusive views.
     - **Executive Dashboard (`/dashboard/owner`):** Created a premium, minimalist dashboard specifically for business owners. It aggregates key metrics (Users, Address Database, Fleet Size, Total Orders) without the clutter of daily operations.
+    - **Live Order Growth Data:** The "Vekst i Ordrer" chart on the Owner Dashboard is now connected to live production data, dynamically calculating monthly volumes from the Firestore database.
     - **Subscription & API Management:** The new Owner dashboard includes placeholders and UI for managing the organization's SaaS subscription (Stripe integration planned for Phase 7) and generating API keys for external ERP/TMS software.
     - **Sidebar Integration:** Owners now have an exclusive "Bedriftsoversikt" link in the sidebar under Administration.
 - **Super Admin Analytics & Management Enhancements:**
