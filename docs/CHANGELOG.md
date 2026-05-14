@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Next.js 15 Async APIs:** Resolved warnings regarding direct access to `params` and `searchParams` by unwrapping them with `React.use()` in all relevant page components. This ensures compatibility with Next.js 15's asynchronous routing model.
+
 ### Changed
 - **Place Details UI Refactor:** Hidden the bottom action button bar when editing a place. This removes the redundant "Avbryt redigering" button, as the edit form (`PlaceForm`) already provides its own Cancel/Save controls.
 - **Place Form UI Improvements:** 
@@ -75,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Tenancy Module Gating:** Implemented a robust feature-toggling system.
     - **Modular Organizations:** Organizations can now have specific modules (LMS, Fleet, Logistics, etc.) enabled or disabled.
     - **Intelligent Sidebar:** The navigation menu automatically adjusts based on the organization's active modules and the user's role.
+    - **Driver Dashboard Gating:** The main dashboard for drivers now conditionally hides Logistics and Message sections based on organization setup.
     - **Driver Dashboard Gating:** The main dashboard for drivers now conditionally hides Logistics and Message sections based on organization setup.
     - **Workforce Gating:** The "Arbeidstid" punch-in card is now hidden if the workforce module is disabled.
     - **Global Statistics:** Super Admins can see total user counts across the entire platform.
@@ -175,11 +179,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Place Form Numeric Validation:** Implemented robust preprocessing for numeric fields to handle regional decimal formats (commas).
 
 ### Removed
-- **Redundant Navigation:** Removed duplicate "+ Ny Rute" and "Snarveier" cards to streamline the administrative experience.
+- **Redundant Navigation:** Removed duplicate "+ Ny Rute" and "Snarveier" card to streamline the administrative experience.
 
 ## [Future]
 
 ### Added
+- **Enhanced Sales Messaging Visibility:** 
+    - Display a `Megaphone` icon on the `PlaceCard` (Dashboard/Places) for active "Midlertidig Salgsmelding".
+    - Display the full Sales Message and its validity date in the Place Details view.
+- **Strict Role-Based Access for Sales Messages:** Restrict editing of `salesMessage` and `salesMessageValidUntil` fields to `salesman`, `admin`, and `super_admin` roles.
 - **Tachograph Download Tracking:** Implement a system to register and track when tachograph data was last downloaded for compliance.
 - **Odometer Tracking (`kilometerstand`):** Implement a system for tracking vehicle mileage.
 - **Geofence-based Delivery Alerts:** Automatically flag deliveries completed outside a configurable radius from the destination.

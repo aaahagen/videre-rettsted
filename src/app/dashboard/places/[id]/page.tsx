@@ -1,9 +1,9 @@
 'use client';
 import { useAuth } from '@/components/auth-provider';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { firebaseDB } from '../../../../lib/firebase/database';
 import { auth, db } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
@@ -56,7 +56,8 @@ const DAYS = [
     { key: 'sunday', label: 'Søndag' },
 ] as const;
 
-export default function PlaceDetailsPage() {
+export default function PlaceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [user, loading, error] = useAuthState(auth);
   const [place, setPlace] = useState<Place | null>(null);
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -68,8 +69,6 @@ export default function PlaceDetailsPage() {
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
   const router = useRouter();
-  const params = useParams();
-  const { id } = params;
   const { toast } = useToast();
   const { dbUser } = useAuth();
 

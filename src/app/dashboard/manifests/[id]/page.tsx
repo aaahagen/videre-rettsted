@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
@@ -18,8 +18,8 @@ import { db } from '@/lib/firebase/firebase';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 
-export default function ManifestDetailPage() {
-    const { id } = useParams();
+export default function ManifestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id: manifestId } = use(params);
     const { dbUser } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
@@ -29,428 +29,373 @@ export default function ManifestDetailPage() {
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isScanning, setIsScanning] = useState(false);
-    const [manualBarcode, setManualBarcode] = useState('');
-    const [isVerifying, setIsVerifying] = useState(false);
-    
-    const [noteContent, setNoteContent] = useState('');
-    const [isSubmittingNote, setIsSubmittingNote] = useState(false);
-    const [noteType, setNoteType] = useState<'note' | 'issue'>('note');
+    const [scanInput, setScanInput] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+    const [newNote, setNewNote] = useState('');
 
-    const barcodeInputRef = useRef<HTMLInputElement>(null);
+    const scanInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (barcodeInputRef.current) {
-            barcodeInputRef.current.focus();
-        }
-    }, [isScanning]);
+        if (!manifestId) return;
 
-    useEffect(() => {
-        if (!id || !dbUser?.orgId) return;
-
-        const manifestId = id as string;
-
-        const manifestRef = doc(db, 'organizations', dbUser.orgId, 'manifests', manifestId);
-        const unsubscribeManifest = onSnapshot(manifestRef, (docSnap) => {
+        // 1. Listen to manifest
+        const unsubManifest = onSnapshot(doc(db, 'manifests', manifestId), async (docSnap) => {
             if (docSnap.exists()) {
-                const data = { id: docSnap.id, ...docSnap.data() } as Manifest;
-                setManifest(data);
-                
-                if (!route || route.id !== data.routeId) {
-                    firebaseDB.getRoute(data.routeId).then(setRoute);
-                }
-                if (!vehicle || vehicle.id !== data.vehicleId) {
-                    if (data.vehicleId) {
-                        firebaseDB.getVehicle(data.vehicleId).then(setVehicle);
-                    } else {
-                        setVehicle(null);
+                const mData = { ...docSnap.data(), id: docSnap.id } as Manifest;
+                setManifest(mData);
+
+                // 2. Load route
+                if (mData.routeId) {
+                    const rData = await firebaseDB.getRoute(mData.routeId);
+                    setRoute(rData as Route);
+                    
+                    // 3. Load vehicle
+                    if (rData?.vehicleId) {
+                        const vData = await firebaseDB.getVehicle(rData.vehicleId);
+                        setVehicle(vData as Vehicle);
+                    }
+
+                    // 4. Load orders for this route
+                    if (dbUser?.orgId) {
+                        const allOrders = await firebaseDB.getOrders(dbUser.orgId);
+                        setOrders(allOrders.filter(o => o.routeId === mData.routeId));
                     }
                 }
-
-                const ordersRef = collection(db, 'organizations', dbUser.orgId, 'orders');
-                const q = query(ordersRef, where('routeId', '==', data.routeId));
-                const unsubscribeOrders = onSnapshot(q, (snapshot) => {
-                    const fetchedOrders: Order[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
-                    setOrders(fetchedOrders);
-                });
-                return () => unsubscribeOrders();
-
+                setIsLoading(false);
             } else {
-                setManifest(null);
-                toast({ title: "Feil", description: "Fant ikke manifestet.", variant: "destructive" });
+                toast({ title: 'Feil', description: 'Fant ikke manifestet.', variant: 'destructive' });
                 router.push('/dashboard/manifests');
             }
-            setIsLoading(false);
         });
 
-        return () => {
-            unsubscribeManifest();
-        };
-    }, [id, dbUser, route, vehicle, toast, router]);
+        return () => unsubManifest();
+    }, [manifestId, dbUser?.orgId]);
 
-        const handleScan = async (barcode: string) => {
-        if (!manifest || !dbUser) return;
+    const handleScan = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!scanInput.trim() || !manifest || isProcessing) return;
 
-        const cleanBarcode = barcode.trim();
-        if (!cleanBarcode) return;
-
+        setIsProcessing(true);
         try {
-            const result = await firebaseDB.processManifestScan(dbUser.orgId, manifest.id, cleanBarcode, dbUser.id);
+            const result = await firebaseDB.processManifestScan(manifest.id, scanInput.trim(), dbUser!.id);
             if (result.success) {
-                toast({
-                    title: "Scannet Suksess",
-                    description: result.message,
+                toast({ 
+                    title: 'Skannet!', 
+                    description: `${result.type === 'order' ? 'Ordre' : result.type} er lastet.`,
                 });
-                setManualBarcode('');
             } else {
-                toast({
-                    title: "Feil",
-                    description: result.message,
-                    variant: "destructive"
-                });
+                toast({ title: 'Feil ved skanning', description: result.error, variant: 'destructive' });
             }
         } catch (error: any) {
-            console.error("Error processing scan:", error);
-            toast({
-                title: "Feil ved scanning",
-                description: error.message || "Noe gikk galt.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const handleManualIncrement = async (orderId: string) => {
-        if (!manifest || !dbUser) return;
-        try {
-            await firebaseDB.incrementManifestItemLoadedCount(dbUser.orgId, manifest.id, orderId, dbUser.id);
-            toast({
-                title: "Vare lastet manuelt",
-                description: "Antall lastede varer er økt.",
-            });
-        } catch (error: any) {
-            console.error("Error manually incrementing item:", error);
-            toast({
-                title: "Feil",
-                description: error.message || "Kunne ikke øke antall lastede varer manuelt.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const handleManualDecrement = async (orderId: string) => {
-        if (!manifest || !dbUser) return;
-        try {
-            await firebaseDB.decrementManifestItemLoadedCount(dbUser.orgId, manifest.id, orderId);
-            toast({
-                title: "Vare avlastet manuelt",
-                description: "Antall lastede varer er redusert.",
-            });
-        } catch (error: any) {
-            console.error("Error manually decrementing item:", error);
-            toast({
-                title: "Feil",
-                description: error.message || "Kunne redusere antall lastede varer manuelt.",
-                variant: "destructive"
-            });
-        }
-    };
-
-    const handleSubmitNote = async () => {
-        if (!noteContent.trim() || !manifest || !dbUser) return;
-        
-        setIsSubmittingNote(true);
-        try {
-            await firebaseDB.addManifestNote(dbUser.orgId, manifest.id, {
-                content: noteContent,
-                createdBy: dbUser.id,
-                userName: dbUser.name,
-                type: noteType
-            });
-            setNoteContent('');
-            toast({
-                title: noteType === 'issue' ? "Avvik meldt" : "Notat lagt til",
-                description: "Informasjonen er lagret på manifestet.",
-            });
-        } catch (error) {
-            console.error("Error adding note:", error);
-            toast({
-                title: "Feil",
-                description: "Kunne ikke lagre notatet.",
-                variant: "destructive"
-            });
+            toast({ title: 'Systemfeil', description: error.message, variant: 'destructive' });
         } finally {
-            setIsSubmittingNote(false);
+            setScanInput('');
+            setIsProcessing(false);
+            scanInputRef.current?.focus();
+        }
+    };
+
+    const handleAddNote = async () => {
+        if (!newNote.trim() || !manifest) return;
+        try {
+            await firebaseDB.addManifestNote(manifest.id, {
+                authorId: dbUser!.id,
+                authorName: dbUser!.name || 'System',
+                text: newNote.trim(),
+                createdAt: new Date()
+            });
+            setNewNote('');
+            setIsNoteModalOpen(false);
+            toast({ title: 'Notat lagt til' });
+        } catch (error: any) {
+            toast({ title: 'Kunne ikke lagre notat', description: error.message, variant: 'destructive' });
         }
     };
 
     const handleFinalize = async () => {
-        if (!manifest || !dbUser) return;
+        if (!manifest) return;
+        const missingItems = manifest.items.filter(i => i.loadedCount < i.totalCount);
         
-        const allItemsLoaded = manifest.orders.every(item => (item.loadedItems || 0) === (item.totalItems || 0));
-
-        if (!allItemsLoaded) {
-            if (!confirm(`Ikke alle varer er registrert som lastet. Er du sikker på at du vil fullføre lasteplanen?`)) {
-                return;
-            }
+        if (missingItems.length > 0) {
+            if (!confirm(`Det mangler ${missingItems.length} varer. Vil du likevel ferdigstille manifestet?`)) return;
         }
 
         try {
-            setIsVerifying(true);
-            await firebaseDB.finalizeManifest(dbUser.orgId, manifest.id, dbUser.id);
-            toast({
-                title: "Vellykket",
-                description: "Lasteplanen er verifisert og fullført.",
-            });
+            await firebaseDB.finalizeManifest(manifest.id);
+            toast({ title: 'Manifest ferdigstilt', description: 'Ruten er nå klar for utkjøring.' });
             router.push('/dashboard/manifests');
-        } catch (error) {
-            console.error("Error finalizing manifest:", error);
-            toast({
-                title: "Feil",
-                description: "Kunne ikke fullføre lasteplanen.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsVerifying(false);
+        } catch (error: any) {
+            toast({ title: 'Feil', description: error.message, variant: 'destructive' });
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
+    if (isLoading) return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
 
     if (!manifest) return null;
 
-    const combinedOrderDetails = manifest.orders.map(manifestItem => {
-        const fullOrder = orders.find(o => o.id === manifestItem.orderId);
-        return {
-            ...manifestItem,
-            details: fullOrder?.details,
-            totalItems: manifestItem.totalItems || 0,
-            loadedItems: manifestItem.loadedItems || 0
-        };
-    });
-
-    const overallLoadedCount = combinedOrderDetails.reduce((sum, item) => sum + (item.loadedItems || 0), 0);
-    const overallTotalCount = combinedOrderDetails.reduce((sum, item) => sum + (item.totalItems || 0), 0);
-    const overallProgress = overallTotalCount > 0 ? (overallLoadedCount / overallTotalCount) * 100 : 0;
-    const isFullyLoaded = overallLoadedCount === overallTotalCount && overallTotalCount > 0;
-
-    const safeProgress = isNaN(overallProgress) ? 0 : overallProgress;
+    const totalItems = manifest.items.reduce((sum, i) => sum + i.totalCount, 0);
+    const loadedItems = manifest.items.reduce((sum, i) => sum + i.loadedCount, 0);
+    const progress = totalItems > 0 ? (loadedItems / totalItems) * 100 : 0;
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 max-w-3xl mx-auto w-full pb-24">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/manifests')}>
-                    <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{route?.name || 'Lasteplan'}</h1>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Truck className="h-3.5 w-3.5" />
-                        {vehicle?.registrationNumber || 'Ingen bil'} • {vehicle?.type || 'Ukjent'}
-                    </p>
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
+            {/* HEADER */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+                        <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 uppercase text-[10px] font-bold">
+                                Manifest #{manifestId.slice(0, 8)}
+                            </Badge>
+                            <Badge className={cn(
+                                "uppercase text-[10px] font-bold",
+                                manifest.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
+                            )}>
+                                {manifest.status === 'completed' ? 'Ferdigstilt' : 'Laster...'}
+                            </Badge>
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-900">{route?.name || 'Laster rute...'}</h1>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => setIsNoteModalOpen(true)}>
+                        <MessageSquare className="mr-2 h-4 w-4" /> Notat
+                    </Button>
+                    {manifest.status === 'active' && (
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-100" onClick={handleFinalize}>
+                            <CheckCircle2 className="mr-2 h-4 w-4" /> Ferdigstill Manifest
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            <Card className="bg-primary text-primary-foreground">
-                <CardContent className="pt-6">
-                    <div className="flex justify-between items-end mb-4">
-                        <div className="space-y-1">
-                            <span className="text-sm opacity-80 uppercase tracking-wider font-bold">Lastefremdrift</span>
-                            <div className="text-4xl font-black">{Math.round(safeProgress)}%</div>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-sm opacity-80 uppercase tracking-wider font-bold font-mono">
-                                {overallLoadedCount} / {overallTotalCount} KOLli
-                            </span>
-                        </div>
-                    </div>
-                    <div className="w-full bg-white/20 rounded-full h-3">
-                        <div 
-                            className="bg-white h-3 rounded-full transition-all duration-700" 
-                            style={{ width: `${safeProgress}%` }}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <div className="space-y-4">
-                <div className="flex gap-2">
-                    <div className="relative flex-1">
-                        <Scan className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            ref={barcodeInputRef}
-                            placeholder="Skann strekkode eller QR-kode..." 
-                            className="pl-10"
-                            value={manualBarcode}
-                            onChange={(e) => setManualBarcode(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleScan(manualBarcode);
-                                    setManualBarcode('');
-                                }
-                            }}
-                        />
-                    </div>
-                    <Button onClick={() => handleScan(manualBarcode)} disabled={!manualBarcode.trim()}>
-                        <Check className="h-4 w-4" />
-                    </Button>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Pakkeliste</h2>
-                    {combinedOrderDetails.length === 0 && !isLoading ? (
-                        <Card className="bg-slate-50/50 border-dashed">
-                            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                                <Info className="h-10 w-10 text-slate-300 mb-3" />
-                                <p className="text-slate-500 font-medium">Ingen ordre på denne lasteplanen.</p>
-                                <p className="text-sm text-slate-400">Tildel ordre til ruten for å legge dem til her.</p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        combinedOrderDetails.map((item) => (
-                            <div 
-                                key={item.orderId}
-                                className={cn(
-                                    "flex items-center justify-between p-4 rounded-xl border-2 transition-all",
-                                    item.loadedItems === item.totalItems && item.totalItems > 0
-                                        ? "bg-green-50 border-green-200 text-green-900" 
-                                        : "bg-white border-slate-100 shadow-sm"
-                                )}
-                            >
-                                <div className="flex items-start gap-4 flex-1">
-                                    <div className={cn(
-                                        "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                                        item.loadedItems === item.totalItems && item.totalItems > 0 ? "bg-green-200" : "bg-slate-100"
-                                    )}>
-                                        {item.loadedItems === item.totalItems && item.totalItems > 0 ? <Check className="h-5 w-5" /> : <Package className="h-5 w-5 text-slate-400" />}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="font-mono font-bold text-sm tracking-tighter">{item.barcode}</div>
-                                        <div className="text-sm text-slate-500 line-clamp-1">{item.details?.description || 'Ingen beskrivelse'}</div>
-                                        <div className="text-[10px] uppercase font-bold opacity-60 mt-1">
-                                            Status: {item.loadedItems === item.totalItems && item.totalItems > 0 ? 'Lastet' : `Laster (${item.loadedItems}/${item.totalItems})`}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1 shrink-0 ml-4">
-                                    <Button 
-                                        size="icon" 
-                                        variant="outline" 
-                                        className="h-8 w-8 text-slate-500 hover:bg-slate-100"
-                                        onClick={() => handleManualDecrement(item.orderId)}
-                                        disabled={item.loadedItems === 0}
-                                    >
-                                        <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                        size="icon" 
-                                        variant="outline" 
-                                        className="h-8 w-8 text-slate-500 hover:bg-slate-100"
-                                        onClick={() => handleManualIncrement(item.orderId)}
-                                        disabled={item.loadedItems === item.totalItems}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                <div className="pt-6 space-y-4">
-                    <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider px-1">Logg & Meldinger</h2>
-                    
-                    <Card className="bg-white border shadow-sm">
-                        <CardHeader className="pb-3 border-b bg-slate-50/50">
-                            <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                Notater fra Lasterampe
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* LEFT: PROGRESS & SCANNER */}
+                <div className="lg:col-span-1 space-y-6">
+                    <Card className="border-none shadow-xl shadow-slate-200/50 overflow-hidden">
+                        <CardHeader className="bg-slate-900 text-white p-6">
+                            <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-indigo-400" />
+                                Kjøretøy
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="max-h-[200px] overflow-y-auto p-4 space-y-3">
-                                {manifest.notes && manifest.notes.length > 0 ? (
-                                    manifest.notes.slice().reverse().map((note, idx) => (
-                                        <div key={idx} className={cn(
-                                            "p-3 rounded-lg text-sm",
-                                            note.type === 'issue' ? "bg-red-50 border border-red-100 text-red-900" : "bg-slate-100 text-slate-900"
-                                        )}>
-                                            <div className="flex justify-between items-start mb-1">
-                                                <span className="font-bold text-[10px] uppercase flex items-center gap-1">
-                                                    {note.type === 'issue' ? <AlertTriangle className="h-3 w-3" /> : <Info className="h-3 w-3" />}
-                                                    {note.userName}
-                                                </span>
-                                                <span className="text-[10px] opacity-50">
-                                                    {note.createdAt ? format(new Date(note.createdAt as string), 'HH:mm', { locale: nb }) : '--:--'}
-                                                </span>
-                                            </div>
-                                            <p className="leading-relaxed">{note.content}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-center text-slate-400 py-4 text-sm italic">Ingen notater lagt til ennå.</p>
-                                )}
-                            </div>
-
-                            <div className="p-4 border-t bg-slate-50/30">
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex gap-2">
-                                        <Button 
-                                            variant={noteType === 'note' ? 'default' : 'outline'} 
-                                            size="sm" 
-                                            className="flex-1 h-8 text-[10px] uppercase font-bold"
-                                            onClick={() => setNoteType('note')}
-                                        >
-                                            Notat
-                                        </Button>
-                                        <Button 
-                                            variant={noteType === 'issue' ? 'destructive' : 'outline'} 
-                                            size="sm" 
-                                            className="flex-1 h-8 text-[10px] uppercase font-bold"
-                                            onClick={() => setNoteType('issue')}
-                                        >
-                                            Meld Avvik
-                                        </Button>
-                                    </div>
-                                    <div className="relative">
-                                        <Textarea 
-                                            placeholder={noteType === 'issue' ? "Beskriv avviket her..." : "Skriv et notat..."} 
-                                            className="min-h-[80px] resize-none pr-12"
-                                            value={noteContent}
-                                            onChange={(e) => setNoteContent(e.target.value)}
-                                        />
-                                        <Button 
-                                            size="icon" 
-                                            className="absolute bottom-2 right-2 h-8 w-8 rounded-full"
-                                            disabled={!noteContent.trim() || isSubmittingNote}
-                                            onClick={handleSubmitNote}
-                                        >
-                                            {isSubmittingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                        </Button>
-                                    </div>
+                        <CardContent className="p-6">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                                    <Truck className="h-6 w-6 text-slate-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-slate-900">{vehicle?.name || 'Ingen bil tildelt'}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase">{vehicle?.plate || '-'}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
+
+                    <Card className="border-none shadow-xl shadow-slate-200/50 bg-indigo-600 text-white">
+                        <CardContent className="p-8">
+                            <div className="flex justify-between items-end mb-4">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Total Progresjon</p>
+                                    <h3 className="text-4xl font-black">{Math.round(progress)}%</h3>
+                                </div>
+                                <p className="text-sm font-bold text-indigo-100">{loadedItems} / {totalItems} kolli</p>
+                            </div>
+                            <div className="h-3 w-full bg-indigo-900/30 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-white transition-all duration-500 ease-out" 
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {manifest.status === 'active' && (
+                        <Card className="border-2 border-dashed border-slate-200 bg-white">
+                            <CardContent className="p-6">
+                                <form onSubmit={handleScan} className="space-y-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-2 bg-slate-100 rounded-lg">
+                                            <Scan className="h-4 w-4 text-slate-600" />
+                                        </div>
+                                        <p className="text-xs font-black text-slate-500 uppercase">Hurtigskanning</p>
+                                    </div>
+                                    <Input
+                                        ref={scanInputRef}
+                                        placeholder="Skann strekkode..."
+                                        value={scanInput}
+                                        onChange={(e) => setScanInput(e.target.value)}
+                                        disabled={isProcessing}
+                                        className="h-12 text-lg font-bold border-2 focus-visible:ring-indigo-500"
+                                        autoFocus
+                                    />
+                                    <Button type="submit" className="w-full h-12 bg-slate-900 font-bold" disabled={isProcessing}>
+                                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrer kolli'}
+                                    </Button>
+                                    <p className="text-[10px] text-center text-slate-400 font-medium italic">
+                                        Tips: Bruk en fysisk skanner eller tast inn ID manuelt
+                                    </p>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+
+                {/* RIGHT: LOADING LIST */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Lasteliste</h2>
+                        <div className="flex gap-2">
+                            <Badge variant="outline" className="bg-white">{orders.length} ordrer</Badge>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {manifest.items.map((item, idx) => {
+                            const order = orders.find(o => o.id === item.orderId);
+                            const isLoaded = item.loadedCount === item.totalCount;
+                            
+                            return (
+                                <Card key={idx} className={cn(
+                                    "overflow-hidden transition-all duration-300",
+                                    isLoaded ? "border-emerald-200 bg-emerald-50/30" : "border-slate-200 bg-white shadow-md"
+                                )}>
+                                    <CardContent className="p-0">
+                                        <div className="flex items-stretch">
+                                            <div className={cn(
+                                                "w-2 shrink-0",
+                                                isLoaded ? "bg-emerald-500" : "bg-slate-200"
+                                            )} />
+                                            <div className="flex-1 p-6">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <Badge className="bg-slate-100 text-slate-600 border-none font-mono text-[10px]">
+                                                                #{item.orderNumber}
+                                                            </Badge>
+                                                            {isLoaded && (
+                                                                <Badge className="bg-emerald-100 text-emerald-700 border-none text-[10px] font-bold">
+                                                                    <Check className="h-3 w-3 mr-1" /> LASTET
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <h3 className="text-lg font-black text-slate-900">{item.placeName}</h3>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Progresjon</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={cn(
+                                                                "text-2xl font-black",
+                                                                isLoaded ? "text-emerald-600" : "text-slate-900"
+                                                            )}>
+                                                                {item.loadedCount} <span className="text-slate-300">/</span> {item.totalCount}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
+                                                    <div className="flex items-center gap-2">
+                                                        <Package className="h-4 w-4 text-slate-400" />
+                                                        <span className="text-sm font-bold text-slate-600">{item.totalCount} {item.type}(er)</span>
+                                                    </div>
+                                                    {order?.totalWeight && (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                                            <span className="text-sm font-bold text-slate-600">{order.totalWeight} kg</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {/* MANUAL OVERRIDE CONTROLS (Only for admin/loader) */}
+                                            {manifest.status === 'active' && (
+                                                <div className="flex flex-col border-l">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        className="flex-1 rounded-none px-4 hover:bg-emerald-50 hover:text-emerald-600 border-b"
+                                                        onClick={() => firebaseDB.incrementManifestItemLoadedCount(manifest.id, item.id)}
+                                                        disabled={isLoaded}
+                                                    >
+                                                        <Plus className="h-5 w-5" />
+                                                    </Button>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        className="flex-1 rounded-none px-4 hover:bg-red-50 hover:text-red-600"
+                                                        onClick={() => firebaseDB.decrementManifestItemLoadedCount(manifest.id, item.id)}
+                                                        disabled={item.loadedCount === 0}
+                                                    >
+                                                        <Minus className="h-5 w-5" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* NOTES SECTION */}
+                    {manifest.notes && manifest.notes.length > 0 && (
+                        <div className="mt-10 space-y-4">
+                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest px-2">Siste Notater</h3>
+                            <div className="space-y-3">
+                                {manifest.notes.map((note, idx) => (
+                                    <div key={idx} className="bg-slate-50 border p-4 rounded-2xl">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <p className="text-xs font-black text-indigo-600 uppercase">{note.authorName}</p>
+                                            <p className="text-[10px] font-bold text-slate-400">
+                                                {format(note.createdAt instanceof Date ? note.createdAt : (note.createdAt as any).toDate(), 'HH:mm', { locale: nb })}
+                                            </p>
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-700">{note.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t sm:relative sm:bg-transparent sm:border-none sm:p-0">
-                <Button 
-                    className="w-full h-12 text-lg font-bold rounded-xl shadow-lg" 
-                    size="lg"
-                    disabled={isVerifying}
-                    onClick={handleFinalize}
-                >
-                    {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
-                    {isFullyLoaded ? 'Verifiser & Fullfør' : 'Fullfør lasting'}
-                </Button>
-            </div>
+            {/* NOTE DIALOG */}
+            {isNoteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <Card className="w-full max-w-md shadow-2xl">
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <CardTitle>Legg til notat</CardTitle>
+                                <Button variant="ghost" size="icon" onClick={() => setIsNoteModalOpen(false)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Textarea 
+                                placeholder="Skriv melding til sjåfør eller lager..."
+                                value={newNote}
+                                onChange={(e) => setNewNote(e.target.value)}
+                                className="min-h-[120px]"
+                            />
+                            <div className="flex gap-2 justify-end">
+                                <Button variant="ghost" onClick={() => setIsNoteModalOpen(false)}>Avbryt</Button>
+                                <Button className="bg-indigo-600" onClick={handleAddNote} disabled={!newNote.trim()}>
+                                    <Send className="mr-2 h-4 w-4" /> Send notat
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

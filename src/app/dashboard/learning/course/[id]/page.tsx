@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { getCourse, getUserAssignments, updateAssignmentStatus } from '@/lib/db/courses';
 import { Course, CourseAssignment } from '@/lib/types';
@@ -22,8 +22,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { SplashScreen } from '@/components/ui/splash-screen';
 import Link from 'next/link';
 
-export default function CoursePlayerPage() {
-  const { id } = useParams() as { id: string };
+export default function CoursePlayerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { dbUser } = useAuth();
   const router = useRouter();
   

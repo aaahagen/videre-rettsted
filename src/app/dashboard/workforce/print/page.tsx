@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
 import { DriverProfile } from '@/lib/types';
@@ -48,15 +48,15 @@ const getDriverStatus = (driver: DriverProfile, date: Date) => {
     return { status: 'Ingen plan satt', short: '-', type: 'unknown' };
 };
 
-function PrintContent() {
+function PrintContent({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { user: authUser, loading } = useAuth();
-    const searchParams = useSearchParams();
+    const resolvedSearchParams = use(searchParams);
     const router = useRouter();
     const [driver, setDriver] = useState<DriverProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const driverId = searchParams.get('driverId');
-    const dateParam = searchParams.get('date');
+    const driverId = resolvedSearchParams.driverId as string;
+    const dateParam = resolvedSearchParams.date as string;
     const startDate = dateParam ? new Date(dateParam) : new Date();
 
     useEffect(() => {
@@ -201,10 +201,10 @@ function PrintContent() {
     );
 }
 
-export default function PrintPage() {
+export default function PrintPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     return (
         <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
-            <PrintContent />
+            <PrintContent searchParams={searchParams} />
         </Suspense>
     );
 }
