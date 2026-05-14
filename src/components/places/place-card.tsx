@@ -17,19 +17,28 @@ import { FavoriteButton } from './favorite-button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useEffect, useState } from 'react';
 import { firebaseDB } from '@/lib/firebase/database';
+import { DangerReportModal } from '../reports/danger-report-modal';
 
 export function PlaceCard({ place, priority = false, orgSettings }: { place: DeliveryPlace; priority?: boolean; orgSettings?: Organization }) {
   const [hasOpenReport, setHasOpenReport] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     // Check for open danger reports
     const checkReports = async () => {
-      // Assuming a query exists or we fetch the list. For now, simulated.
-      // In reality, you'd need a real-time listener or query to the `reports` collection
-      // where placeId == place.id and status == 'open'.
+       if(!place.orgId) return;
+       try {
+           // We fetch all open reports for this org, then filter locally for speed,
+           // or we could add a specific query in db.ts. For now, since reports shouldn't be thousands, this is ok.
+           const reports = await firebaseDB.getReports(place.orgId);
+           const openForThisPlace = reports.some(r => r.placeId === place.id && r.status === 'open');
+           setHasOpenReport(openForThisPlace);
+       } catch (error) {
+           console.error("Failed to fetch reports", error);
+       }
     };
     checkReports();
-  }, [place.id]);
+  }, [place.id, place.orgId]);
 
   // Check if coordinates exist and are not the default (0,0)
   const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
@@ -52,6 +61,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
 
   return (
+    <>
     <Card 
       id={`place-${place.id}`} 
       className={`flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24 ${hasOpenReport ? 'border-2 border-red-500 shadow-red-500/20 shadow-lg' : ''}`}
@@ -135,11 +145,14 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
                     </Link>
                 </Button>
             )}
-            <Button variant="outline" size="sm" asChild className="w-full bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100">
-                <Link href={`/dashboard/reports?new=${place.id}`}>
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Meld Avvik
-                </Link>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                onClick={() => setIsReportModalOpen(true)}
+            >
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Meld Avvik
             </Button>
         </div>
         <div className="flex w-full gap-2">
@@ -162,5 +175,13 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
         </div>
       </CardFooter>
     </Card>
+
+    <DangerReportModal 
+        place={place} 
+        isOpen={isReportModalOpen} 
+        onClose={() => setIsReportModalOpen(false)} 
+        onSuccess={() => setHasOpenReport(true)} 
+    />
+    </>
   );
 }

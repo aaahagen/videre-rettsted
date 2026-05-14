@@ -17,6 +17,7 @@ import * as workLogsDb from '../db/workLogs';
 import * as usersOrdersDb from '../db/orders'; // Avoid naming conflict
 import * as manifestsDb from '../db/manifests';
 import * as inspectionsDb from '../db/inspections';
+import * as reportsDb from '../db/reports';
 
 export const firebaseDB: Database = {
   // Organization methods
@@ -94,4 +95,7 @@ export const firebaseDB: Database = {
   submitProofOfDelivery: inspectionsDb.submitProofOfDelivery,
   submitVehicleInspection: inspectionsDb.submitVehicleInspection,
   getVehicleInspections: inspectionsDb.getVehicleInspections,
+  getReports: reportsDb.getReports,
+  createReport: reportsDb.createReport,
+  resolveReport: reportsDb.resolveReport,
 };

@@ -76,4 +76,7 @@ export interface Database {
   // Inspections
   submitVehicleInspection(inspection: Omit<VehicleInspection, 'id'>): Promise<string>;
   getVehicleInspections(orgId: string, vehicleId: string): Promise<VehicleInspection[]>;
+  getReports(orgId: string): Promise<any[]>;
+  createReport(reportData: any): Promise<any>;
+  resolveReport(reportId: string, resolutionNote: string, resolutionImages: string[], resolvedBy: string): Promise<void>;
 }
