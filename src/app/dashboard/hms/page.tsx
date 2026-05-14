@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Organization } from "@/lib/types";
 import { firebaseDB } from "@/lib/firebase/database";
 import { HMSLog } from "./hms-log";
+import { HMSSettings } from "./hms-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
 
@@ -45,6 +46,7 @@ export default function HMSPage() {
                     <p className="text-muted-foreground px-1 mt-1 text-sm">Dokumentasjon og sjekklister for leveringssteder.</p>
                 </div>
 
+                <HMSSettings organization={organization} />
                 <HMSLog orgId={organization.id} organization={organization} />
             </div>
         </div>
