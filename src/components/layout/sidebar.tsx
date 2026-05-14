@@ -195,10 +195,10 @@ export default function AppSidebar() {
     },
     {
       label: 'HMS & Sikkerhet',
-      roles: ['admin', 'super_admin', 'owner', 'hms_responsible'],
+      roles: ['admin', 'super_admin', 'owner', 'hms_responsible', 'driver'],
       items: [
         { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter' },
-        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger' },
+        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver'] },
       ]
     },
     {
