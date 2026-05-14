@@ -13,6 +13,7 @@
 - [Contract](interfaces/Contract.md)
 - [Course](interfaces/Course.md)
 - [CourseAssignment](interfaces/CourseAssignment.md)
+- [DangerReport](interfaces/DangerReport.md)
 - [DriverProfile](interfaces/DriverProfile.md)
 - [HandlingUnit](interfaces/HandlingUnit.md)
 - [Invitation](interfaces/Invitation.md)

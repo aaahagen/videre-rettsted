@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import * as z from 'zod';
-import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed, Shield, FileText } from 'lucide-react';
+import { Camera, MapPin, UploadCloud, Loader2, Trash2, Plus, Save, Star, Clock, PhoneCall, Calendar, ChevronDown, ChevronUp, Copy, Leaf, Building2, Ruler, Weight, Search, CheckCircle2, Tag, Hash, LocateFixed, Shield, FileText, Megaphone } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase/firebase';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Place, Organization } from '@/lib/types';
@@ -51,6 +50,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { deleteField } from 'firebase/firestore';
+import { useAuth } from '../auth-provider';
 
 const openingHoursSchema = z.object({
   isOpen: z.boolean(),
@@ -108,6 +108,8 @@ const placeSchema = z.object({
     answers: z.record(z.boolean()).optional(),
     comment: z.string().optional(),
   }).optional(),
+  salesMessage: z.string().optional(),
+  salesMessageValidUntil: z.string().optional(), // Using string for HTML date input compatibility
 });
 
 type PlaceFormValues = z.infer<typeof placeSchema>;
@@ -125,7 +127,7 @@ const DAYS = [
 export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () => void }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [authUser] = useAuthState(auth);
+  const { user: authUser, dbUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -134,6 +136,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [isBasicOpen, setIsBasicOpen] = useState(true);
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
   const [isHmsOpen, setIsHmsOpen] = useState(true);
+  const [isSalesOpen, setIsSalesOpen] = useState(true);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
 
@@ -142,6 +145,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [pendingSubmitData, setPendingSubmitData] = useState<PlaceFormValues | null>(null);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const isSalesman = dbUser?.role === 'salesman';
+  const isHmsResponsible = dbUser?.role === 'hms_responsible';
 
   const initialMainImageIndex = place?.images && place.imageUrl 
     ? place.images.findIndex(img => img.url === place.imageUrl)
@@ -159,6 +165,12 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
     return val;
   };
+
+  const formatSalesDate = (date: any) => {
+    if (!date) return '';
+    const d = date.toDate ? date.toDate() : new Date(date);
+    return d.toISOString().split('T')[0];
+  }
 
   const form = useForm<PlaceFormValues>({
     resolver: zodResolver(placeSchema),
@@ -201,6 +213,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           answers: place?.hmsData?.answers || {},
           comment: place?.hmsData?.comment || ''
       },
+      salesMessage: place?.salesMessage || '',
+      salesMessageValidUntil: formatSalesDate(place?.salesMessageValidUntil),
     },
   });
 
@@ -239,7 +253,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           coordinates: value.coordinates,
           weeklySchedule: value.weeklySchedule,
           hasDeliveryWindow: value.hasDeliveryWindow,
-          hmsData: value.hmsData
+          hmsData: value.hmsData,
+          salesMessage: value.salesMessage,
+          salesMessageValidUntil: value.salesMessageValidUntil
         };
         localStorage.setItem('placeFormDraft', JSON.stringify(partialData));
       });
@@ -267,16 +283,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
   useEffect(() => {
     const fetchOrg = async () => {
-      if (authUser?.uid) {
-        const user = await firebaseDB.getUser(authUser.uid);
-        if (user?.orgId) {
-          const org = await firebaseDB.getOrganization(user.orgId);
+      if (dbUser?.orgId) {
+          const org = await firebaseDB.getOrganization(dbUser.orgId);
           setOrganization(org);
-        }
       }
     };
     fetchOrg();
-  }, [authUser]);
+  }, [dbUser]);
 
   const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
     const reader = new FileReader();
@@ -407,7 +420,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   };
 
   const onSubmit = async (data: PlaceFormValues) => {
-    if (!authUser) {
+    if (!authUser || !dbUser) {
         toast({
             title: 'Feil',
             description: 'Du må være logget inn for å utføre denne handlingen.',
@@ -426,17 +439,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             form.setValue('coordinates', coords);
         }
     }
-    
-    let userDocForCheck = null;
-    try {
-         userDocForCheck = await firebaseDB.getUser(authUser.uid);
-    } catch(e) {
-         console.error("Could not fetch user", e);
-    }
 
-    if (!place && userDocForCheck?.orgId && !showDuplicateAlert) {
+    if (!place && dbUser.orgId && !showDuplicateAlert) {
         try {
-            const existingPlaces = await firebaseDB.getPlaces(userDocForCheck.orgId);
+            const existingPlaces = await firebaseDB.getPlaces(dbUser.orgId);
             const isDuplicate = existingPlaces.find(p => 
                 p.name.toLowerCase() === data.name.toLowerCase() || 
                 p.address.toLowerCase() === data.address.toLowerCase()
@@ -472,15 +478,14 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     }
 
     try {
-        const userDoc = await firebaseDB.getUser(authUser!.uid);
-        if (!userDoc?.orgId) {
+        if (!dbUser?.orgId) {
             throw new Error('Fant ikke organisasjons-ID for brukeren.');
         }
 
         const finalImages = [];
         for (const item of data.images) {
             if (item.file instanceof File) {
-                const fileName = `places/${userDoc.orgId}/${uuidv4()}-${item.file.name}`;
+                const fileName = `places/${dbUser.orgId}/${uuidv4()}-${item.file.name}`;
                 const url = await firebaseStorage.uploadFile(fileName, item.file);
                 finalImages.push({
                     url,
@@ -520,8 +525,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const hmsDataToSave = hasHmsData ? {
             answers: data.hmsData?.answers || {},
             comment: data.hmsData?.comment || '',
-            completedBy: (place?.hmsData as any)?.completedBy || userDoc.id,
-            completedByName: (place?.hmsData as any)?.completedByName || (userDoc.name || 'Ukjent bruker'),
+            completedBy: (place?.hmsData as any)?.completedBy || dbUser.id,
+            completedByName: (place?.hmsData as any)?.completedByName || (dbUser.name || 'Ukjent bruker'),
             completedAt: (place?.hmsData as any)?.completedAt || new Date()
         } : ((place?.hmsData as any) || removeField());
 
@@ -545,16 +550,18 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             maxVehicleWeight: typeof data.maxVehicleWeight !== 'number' ? removeField() : data.maxVehicleWeight,
             weeklySchedule: data.hasDeliveryWindow ? data.weeklySchedule : removeField(),
             hmsData: hmsDataToSave,
+            salesMessage: data.salesMessage || removeField(),
+            salesMessageValidUntil: data.salesMessageValidUntil ? new Date(data.salesMessageValidUntil) : removeField(),
             imageUrl: finalImages[finalMainIndex]?.url || '', 
             imageHint: finalImages[finalMainIndex]?.description || '',
             images: finalImages,
-            orgId: userDoc.orgId,
+            orgId: dbUser.orgId,
             updatedAt: new Date(),
             coordinates: data.coordinates || { lat: 0, lng: 0 },
-            createdBy: place ? place.createdBy : userDoc.id,
-            authorName: place ? place.authorName : (userDoc.name || 'Ukjent bruker'),
-            updatedBy: userDoc.id,
-            updatedByName: userDoc.name || 'Ukjent bruker'
+            createdBy: place ? place.createdBy : dbUser.id,
+            authorName: place ? place.authorName : (dbUser.name || 'Ukjent bruker'),
+            updatedBy: dbUser.id,
+            updatedByName: dbUser.name || 'Ukjent bruker'
         };
 
         if (place) {
@@ -656,6 +663,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {/* LEFT COLUMN */}
           <div className="space-y-6">
+            {!isHmsResponsible && (
             <Collapsible
               open={isBasicOpen}
               onOpenChange={setIsBasicOpen}
@@ -681,7 +689,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             <FormItem>
                             <FormLabel>Stedsnavn</FormLabel>
                             <FormControl>
-                                <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} />
+                                <Input placeholder="f.eks. Sentrumslager rampe 5" {...field} disabled={isHmsResponsible} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
@@ -702,7 +710,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                 <Input 
                                     placeholder={autoGenEnabled && !place ? "Auto" : "Valgfritt"} 
                                     {...field} 
-                                    
+                                    disabled={isHmsResponsible}
                                 />
                             </FormControl>
                             <FormMessage />
@@ -727,8 +735,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </div>
                     <FormControl>
                         <div className="flex flex-col gap-3">
-                            <Input placeholder="Storgata 1, 0101 Oslo" {...field} />
+                            <Input placeholder="Storgata 1, 0101 Oslo" {...field} disabled={isHmsResponsible} />
                             
+                            {!isHmsResponsible && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <Button 
                                     type="button" 
@@ -751,6 +760,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     Bruk GPS
                                 </Button>
                             </div>
+                            )}
                         </div>
                     </FormControl>
                     <FormMessage />
@@ -768,7 +778,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         Hashtags
                     </FormLabel>
                     <FormControl>
-                        <Input placeholder="lager, prioritert" {...field} />
+                        <Input placeholder="lager, prioritert" {...field} disabled={isHmsResponsible} />
                     </FormControl>
                     <FormDescription className="text-[10px]">
                         Kommadelt liste med tagger.
@@ -793,7 +803,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     <FormDescription className="text-[10px]">Krever El/Gass kjøretøy.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
-                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    <Switch checked={field.value} onCheckedChange={field.onChange} disabled={isHmsResponsible || isSalesman} />
                                 </FormControl>
                             </FormItem>
                         )}
@@ -811,7 +821,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                     <FormDescription className="text-[10px]">Høye bomavgifter for Diesel.</FormDescription>
                                 </div>
                                 <FormControl className="shrink-0">
-                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    <Switch checked={field.value} onCheckedChange={field.onChange} disabled={isHmsResponsible || isSalesman} />
                                 </FormControl>
                             </FormItem>
                         )}
@@ -819,7 +829,68 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
               </CollapsibleContent>
             </Collapsible>
+            )}
 
+            {/* SALES MESSAGE */}
+            {!isHmsResponsible && (
+            <Collapsible
+              open={isSalesOpen}
+              onOpenChange={setIsSalesOpen}
+              className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+            >
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
+                    <div className="flex items-center gap-3">
+                        <Megaphone className="h-5 w-5 text-amber-500" />
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Midlertidig Salgsmelding</h3>
+                    </div>
+                    {isSalesOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="p-6 space-y-6 bg-amber-50/30">
+                <FormField
+                    control={form.control}
+                    name="salesMessage"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Melding til sjåfør</FormLabel>
+                        <FormControl>
+                            <Textarea
+                                placeholder="F.eks. Viktig: Kunden feirer jubileum, husk å overrekke gaven som ligger i bilen."
+                                className="min-h-[80px]"
+                                {...field}
+                                disabled={isHmsResponsible}
+                            />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                            Denne beskjeden vil vises ekstra tydelig for sjåføren frem til utløpsdatoen.
+                        </FormDescription>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="salesMessageValidUntil"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Gyldig til og med</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="date" 
+                                {...field}
+                                disabled={isHmsResponsible} 
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+            )}
+
+            {!isHmsResponsible && !isSalesman && (
             <Collapsible
               open={isDetailsOpen}
               onOpenChange={setIsDetailsOpen}
@@ -848,6 +919,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         <Select 
                         value={field.value?.toString() || "0"} 
                         onValueChange={(val) => field.onChange(Number(val))}
+                        disabled={isHmsResponsible || isSalesman}
                         >
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Velg tid" />
@@ -882,7 +954,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={descPlaceholder}
                             className="min-h-[120px]"
                             {...field}
-                           
+                            disabled={isHmsResponsible || isSalesman}
                             />
                         </FormControl>
                         <FormMessage />
@@ -903,7 +975,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={notesPlaceholder}
                             className="min-h-[120px]"
                             {...field}
-                           
+                            disabled={isHmsResponsible || isSalesman}
                             />
                         </FormControl>
                         <FormMessage />
@@ -924,7 +996,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={field3Placeholder}
                             className="min-h-[120px]"
                             {...field}
-                           
+                            disabled={isHmsResponsible || isSalesman}
                             />
                         </FormControl>
                         <FormMessage />
@@ -945,7 +1017,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                             placeholder={field4Placeholder}
                             className="min-h-[120px]"
                             {...field}
-                           
+                            disabled={isHmsResponsible || isSalesman}
                             />
                         </FormControl>
                         <FormMessage />
@@ -955,9 +1027,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 )}
               </CollapsibleContent>
             </Collapsible>
+            )}
 
             {/* HMS SECTION */}
-            {organization?.hmsSettings?.enabled && (
+            {organization?.hmsSettings?.enabled && !isSalesman && (
                 <Collapsible
                   open={isHmsOpen}
                   onOpenChange={setIsHmsOpen}
@@ -1040,6 +1113,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
           {/* RIGHT COLUMN */}
           <div className="space-y-6">
+            {!isHmsResponsible && (
             <div className="space-y-4">
               <FormLabel>Bilder (Maks 8)</FormLabel>
               <div className="grid grid-cols-2 gap-4">
@@ -1121,7 +1195,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 )}
               </div>
             </div>
+            )}
 
+            {!isHmsResponsible && (
             <Button 
                 type="button" 
                 variant="outline" 
@@ -1135,8 +1211,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               <Camera className="mr-2 h-4 w-4" />
               Bruk Kamera
             </Button>
+            )}
 
             {/* LEVERINGSVINDU COLLAPSIBLE CARD */}
+            {!isHmsResponsible && !isSalesman && (
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="p-6 border-b flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1242,8 +1320,10 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </Collapsible>
                 )}
             </div>
+            )}
 
             {/* BEGRENSNINGER COLLAPSIBLE CARD */}
+            {!isHmsResponsible && !isSalesman && (
             <Collapsible
               open={isConstraintsOpen}
               onOpenChange={setIsConstraintsOpen}
@@ -1338,7 +1418,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
               </CollapsibleContent>
             </Collapsible>
+            )}
 
+            {!isHmsResponsible && !isSalesman && (
             <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm space-y-6">
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Tilgang & Kontakt</h3>
                 {doorCodeEnabled && (
@@ -1497,6 +1579,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
                 )}
             </div>
+            )}
 
             <input
               type="file"

@@ -6,6 +6,8 @@ VIDERE RettSted solves the "last-meter" delivery problem by providing photos, de
 - **Owners (Eiere / Økonomi)**: The top executives and finance department. They need high-level, exclusive dashboards for subscription management, global statistics (API-ready), and core database manipulation without the clutter of daily operations.
 - **Admins (Hjelpefunksjonærer)**: Tech-savvy individuals setting up organizations and managing users, fleet, and routing.
 - **Drivers**: The primary users. The UI for them must be extremely intuitive and mobile-first.
+- **HMS Responsible (HMS Ansvarlig)**: A specialized role focused solely on safety. They have access only to the Places database and a dedicated HMS dashboard. Their editing rights are restricted to the safety checklists (HMS Sjekkliste) of a place.
+- **Salesman (Selger)**: A specialized role for account managers. They have access only to the Places database. Their editing rights are restricted to the place's core details (address, photos) and a dedicated "Sales Message" field designed for temporary notes to drivers.
 
 ## 2. Multi-Tenancy & Data Architecture
 The system is multi-tenant from the ground up to support commercialization. All top-level Firestore collections containing org-specific data **must** be sub-collections of a primary `organizations` collection or include strict `orgId` filtering.
@@ -31,6 +33,10 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   Hashtag categorization and a user-specific "Favorite" system.
 *   **Delivery Windows:** Places can have weekly schedules; if none are registered, 24/7 access is assumed.
 *   **Physical Firewalls:** Places can have max height/width/weight limits. If none are registered, open access is assumed.
+*   **Sales Messages:** Temporary, high-visibility notes added by salespeople to inform drivers about specific customer requirements. These messages have an expiration date.
+*   **Avvikshåndtering (Danger Reports):** An integrated loop for drivers to report physical hazards at delivery locations. 
+    *   Open reports flag the location visually (Red).
+    *   Reports require an explanation and optional photographic evidence to be marked as resolved (Green).
 
 ### C. Order & Manifest Operations
 *   **Dual Intake:** Orders must be created manually (for redundancy/ad-hoc) or via Bulk CSV/API.

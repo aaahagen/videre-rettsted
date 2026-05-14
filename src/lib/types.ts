@@ -4,7 +4,7 @@ export interface UserProfile {
   uid: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   organizationId: string;
   photoURL?: string;
   disabled?: boolean;
@@ -108,6 +108,10 @@ export interface Place {
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
   
+  // Sales specific fields
+  salesMessage?: string;
+  salesMessageValidUntil?: any; // Firestore Timestamp or Date
+
   // Custom HMS Answers (One-time occurrence per place)
   hmsData?: {
     answers: Record<string, boolean>;
@@ -227,7 +231,7 @@ export interface Invitation {
   id: string;
   email: string;
   organizationId: string;
-  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   expiresAt: FieldValue;
   organizationName?: string;
 }
@@ -238,7 +242,7 @@ export interface User {
   name: string;
   email: string;
   orgId: string;
-  role: 'super_admin' | 'owner' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner';
+  role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   favorites: string[];
   visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
   status?: 'active' | 'paused';
@@ -611,4 +615,21 @@ export interface CourseAssignment {
   assignedAt: FieldValue | Date;
   completedAt?: FieldValue | Date;
   expiresAt?: FieldValue | Date; // For certifications that need renewal
+}
+
+export interface DangerReport {
+  id: string;
+  orgId: string;
+  placeId: string;
+  placeName: string;
+  reportedBy: string; // userId
+  reportedByName: string;
+  description: string;
+  images?: string[];
+  status: 'open' | 'resolved';
+  createdAt: FieldValue | Date;
+  resolvedAt?: FieldValue | Date;
+  resolvedBy?: string; // userId
+  resolutionNote?: string;
+  resolutionImages?: string[];
 }

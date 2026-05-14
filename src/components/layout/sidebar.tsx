@@ -23,7 +23,8 @@ import {
   Package,
   GraduationCap,
   Sparkles,
-  Globe
+  Globe,
+  AlertTriangle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -158,10 +159,13 @@ export default function AppSidebar() {
   const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
   const isSuperAdmin = dbUser?.role === 'super_admin';
   const isOwner = dbUser?.role === 'owner';
+  const isHmsResponsible = dbUser?.role === 'hms_responsible';
+  const isSalesman = dbUser?.role === 'salesman';
 
   const navGroups = [
     {
       label: 'Daglig Drift',
+      hideFrom: ['hms_responsible', 'salesman'],
       items: [
         { href: '/dashboard', icon: Home, label: 'Oversikt' },
         { href: '/dashboard/messages', icon: MessageSquare, label: 'Meldinger', module: 'messages' },
@@ -172,13 +176,13 @@ export default function AppSidebar() {
       label: 'Logistikk',
       items: [
         { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
-        { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics' },
+        { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics', hideFrom: ['hms_responsible', 'salesman'] },
         { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin', 'owner'], module: 'logistics' },
-        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics' },
+        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics', hideFrom: ['hms_responsible', 'salesman'] },
         { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder', module: 'places' },
-        { href: '/dashboard/favorites', icon: Star, label: 'Favoritter' },
-        { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places' },
+        { href: '/dashboard/favorites', icon: Star, label: 'Favoritter', hideFrom: ['hms_responsible', 'salesman'] },
+        { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places', hideFrom: ['hms_responsible'] }, // HMS shouldn't create new
       ]
     },
     {
@@ -190,11 +194,19 @@ export default function AppSidebar() {
       ]
     },
     {
+      label: 'HMS & Sikkerhet',
+      roles: ['admin', 'super_admin', 'owner', 'hms_responsible'],
+      items: [
+        { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter' },
+        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger' },
+      ]
+    },
+    {
       label: 'Administrasjon',
       adminOnly: true,
       items: [
         { href: '/dashboard/owner', icon: Building2, label: 'Bedriftsoversikt', ownerOnly: true },
-        { href: '/dashboard/admin', icon: Shield, label: 'Innstillinger', adminOnly: true },
+        { href: '/dashboard/admin', icon: Settings, label: 'Innstillinger', adminOnly: true },
         { href: '/about', icon: Info, label: 'Om Siden', adminOnly: true },
       ]
     }
@@ -302,12 +314,15 @@ export default function AppSidebar() {
             <SidebarMenu>
             {navGroups.map((group: any, index) => {
               if (group.adminOnly && !isAdmin) return null;
+              if (group.roles && !group.roles.includes(dbUser?.role || '')) return null;
+              if (group.hideFrom && group.hideFrom.includes(dbUser?.role || '')) return null;
               
               // Filter items based on roles/admin status AND modules
               const visibleItems = group.items.filter((item: any) => {
                   if (item.adminOnly && !isAdmin) return false;
                   if (item.ownerOnly && !isOwner) return false;
                   if (item.roles && !item.roles.includes(dbUser?.role || '')) return false;
+                  if (item.hideFrom && item.hideFrom.includes(dbUser?.role || '')) return false;
                   
                   // Module Gating
                   if (item.module && org?.modules) {

@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **Avvikshåndtering (Danger Reports) Foundation:**
+    - Established the `reports` Firestore collection rules to track hazards at delivery locations.
+    - Added a dedicated `/dashboard/reports` page for admins and drivers to view and resolve issues.
+    - **Place Card UI Upgrades:**
+        - Cards now highlight in red if they have an open, unresolved danger report.
+        - Added a "Meld Avvik" button directly on the card for quick reporting.
+        - Restructured the footer into two rows, moving the estimated time up for better visibility.
+        - Added a "Fyll ut HMS" button if the organization requires it but the checklist is missing.
+- **Role System Expansion:**
+    - **HMS Responsible (`hms_responsible`):** A new role that has access only to Places and the new dedicated HMS page. When editing a Place, they are restricted to *only* modifying the HMS checklist section.
+    - **Salesman (`salesman`):** A new role that has access only to Places. They are restricted to editing basic info (Address, Photos) and a new temporary "Sales Message" field.
+- **Sales Messages on Places:**
+    - Added `salesMessage` and `salesMessageValidUntil` fields to the `Place` model.
+    - Salespeople can now leave temporary, high-visibility notes on specific places. These messages are displayed prominently in an alert box on the Place Card for drivers, and automatically hide once they expire.
+- **Dedicated HMS Navigation:**
+    - Extracted the HMS Log and HMS Settings out of the generic Admin Dashboard to prevent clutter.
+    - Created a new, dedicated `/dashboard/hms` page for managing safety protocols.
+    - Added a dedicated "HMS & Sikkerhet" link to the main sidebar navigation.
 - **TSDoc Standards:** Established a formal "TSDoc System Instruction" to guide AI-generated documentation. This ensures high-quality, architect-level comments with code examples, type intelligence, and professional vibe checks for the entire codebase.
 - **Owner Role Management:**
     - **Role Assignment:** Admins and Super Admins can now explicitly invite new users with the `owner` role.

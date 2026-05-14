@@ -52,7 +52,7 @@ Defined in: [types.ts:9](https://github.com/aaahagen/videre-rettsted/blob/main/s
 
 ### role
 
-> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"owner"` \| `"contractor"` \| `"planner"`
+> **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"owner"` \| `"hms_responsible"` \| `"salesman"` \| `"contractor"` \| `"planner"`
 
 Defined in: [types.ts:7](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L7)
 

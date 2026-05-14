@@ -2,6 +2,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as 
 import { doc, setDoc, addDoc, collection, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, functions } from './firebase';
 import { httpsCallable } from 'firebase/functions';
+import { UserProfile } from '../types'; 
 
 const deleteUserCallable = httpsCallable(functions, 'deleteUser');
 
@@ -44,7 +45,7 @@ export const firebaseAuth = {
     return { uid, orgId };
   },
 
-  async inviteUser(email: string, role: 'driver' | 'admin' | 'contractor' | 'loader' | 'planner', name?: string, explicitOrgId?: string) {
+  async inviteUser(email: string, role: string, name?: string, explicitOrgId?: string) {
     const user = auth.currentUser;
     if (!user) throw new Error('Du må være logget inn for å invitere brukere.');
 

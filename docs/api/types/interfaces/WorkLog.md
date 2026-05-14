@@ -6,7 +6,7 @@
 
 # Interface: WorkLog
 
-Defined in: [types.ts:311](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L311)
+Defined in: [types.ts:315](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L315)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:311](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **actualPunchIn?**: `string`
 
-Defined in: [types.ts:321](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L321)
+Defined in: [types.ts:325](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L325)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:321](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **actualPunchOut?**: `string`
 
-Defined in: [types.ts:322](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L322)
+Defined in: [types.ts:326](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L326)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:322](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:335](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L335)
+Defined in: [types.ts:339](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L339)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:335](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **driverId**: `string`
 
-Defined in: [types.ts:314](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L314)
+Defined in: [types.ts:318](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L318)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:314](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **entryMethod**: `"geofence"` \| `"gps_stamp"` \| `"manual_entry"`
 
-Defined in: [types.ts:325](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L325)
+Defined in: [types.ts:329](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L329)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:325](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:312](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L312)
+Defined in: [types.ts:316](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L316)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:312](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **notes?**: `string`
 
-Defined in: [types.ts:334](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L334)
+Defined in: [types.ts:338](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L338)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types.ts:334](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:313](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L313)
+Defined in: [types.ts:317](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L317)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:313](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **overtimeMinutes?**: `number`
 
-Defined in: [types.ts:331](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L331)
+Defined in: [types.ts:335](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L335)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [types.ts:331](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **plannedEnd?**: `string`
 
-Defined in: [types.ts:318](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L318)
+Defined in: [types.ts:322](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L322)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [types.ts:318](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **plannedStart?**: `string`
 
-Defined in: [types.ts:317](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L317)
+Defined in: [types.ts:321](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L321)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types.ts:317](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **punchInLocation?**: `object`
 
-Defined in: [types.ts:326](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L326)
+Defined in: [types.ts:330](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L330)
 
 #### lat
 
@@ -118,7 +118,7 @@ Defined in: [types.ts:326](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **punchOutLocation?**: `object`
 
-Defined in: [types.ts:327](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L327)
+Defined in: [types.ts:331](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L331)
 
 #### lat
 
@@ -134,7 +134,7 @@ Defined in: [types.ts:327](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"active"` \| `"pending_review"` \| `"needs_overtime_approval"` \| `"approved"` \| `"declined"`
 
-Defined in: [types.ts:330](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L330)
+Defined in: [types.ts:334](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L334)
 
 ***
 
@@ -142,4 +142,4 @@ Defined in: [types.ts:330](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **updatedAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:336](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L336)
+Defined in: [types.ts:340](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L340)

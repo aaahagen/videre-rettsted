@@ -6,7 +6,7 @@
 
 # Interface: VehicleInspection
 
-Defined in: [types.ts:544](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L544)
+Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L548)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:544](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **checks**: `object`
 
-Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L552)
+Defined in: [types.ts:556](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L556)
 
 #### bodywork
 
@@ -42,7 +42,7 @@ Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **damageDetails?**: `object`[]
 
-Defined in: [types.ts:560](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L560)
+Defined in: [types.ts:564](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L564)
 
 #### description
 
@@ -58,7 +58,7 @@ Defined in: [types.ts:560](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **damagesReported**: `boolean`
 
-Defined in: [types.ts:559](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L559)
+Defined in: [types.ts:563](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L563)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types.ts:559](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **driverId**: `string`
 
-Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L548)
+Defined in: [types.ts:552](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L552)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:545](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L545)
+Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L549)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [types.ts:545](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **mileage**: `number`
 
-Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L551)
+Defined in: [types.ts:555](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L555)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **notes?**: `string`
 
-Defined in: [types.ts:564](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L564)
+Defined in: [types.ts:568](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L568)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [types.ts:564](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:546](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L546)
+Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L550)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [types.ts:546](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **timestamp**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L549)
+Defined in: [types.ts:553](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L553)
 
 ***
 
@@ -114,7 +114,7 @@ Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"pre_trip"` \| `"post_trip"` \| `"ad_hoc"`
 
-Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L550)
+Defined in: [types.ts:554](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L554)
 
 ***
 
@@ -122,4 +122,4 @@ Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **vehicleId**: `string`
 
-Defined in: [types.ts:547](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L547)
+Defined in: [types.ts:551](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L551)

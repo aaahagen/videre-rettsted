@@ -58,7 +58,7 @@ import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { useAuth } from '@/components/auth-provider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { HMSLog } from '@/components/admin/hms-log';
+
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -106,7 +106,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   const { dbUser } = useAuth();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'driver' | 'admin' | 'contractor' | 'loader' | 'planner'>('driver');
+  const [role, setRole] = useState<'driver' | 'admin' | 'contractor' | 'loader' | 'planner' | 'hms_responsible' | 'salesman'>('driver');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -220,13 +220,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
     // Place Settings (Customer Numbers)
     autoGenerateCustomerNumbers: false,
     customerNumberPrefix: '',
-    nextCustomerNumber: 1000,
-    // HMS Settings
-    hmsEnabled: false,
-    hmsTitle: 'HMS Sjekkliste',
-    hmsRequireComment: false
+    nextCustomerNumber: 1000
   });
-  const [hmsQuestions, setHmsQuestions] = useState<{ id: string, text: string }[]>([]);
+
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
@@ -271,12 +267,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
               depotRadius: org.mainDepot?.radius || 500,
               autoGenerateCustomerNumbers: org.placeSettings?.autoGenerateCustomerNumbers ?? false,
               customerNumberPrefix: org.placeSettings?.customerNumberPrefix || '',
-              nextCustomerNumber: org.placeSettings?.nextCustomerNumber || 1000,
-              hmsEnabled: org.hmsSettings?.enabled ?? false,
-              hmsTitle: org.hmsSettings?.title || 'HMS Sjekkliste',
-              hmsRequireComment: org.hmsSettings?.requireComment ?? false
+              nextCustomerNumber: org.placeSettings?.nextCustomerNumber || 1000
             });
-            setHmsQuestions(org.hmsSettings?.questions || []);
           }
 
           const q = query(
@@ -493,12 +485,6 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             autoGenerateCustomerNumbers: orgSettings.autoGenerateCustomerNumbers,
             customerNumberPrefix: orgSettings.customerNumberPrefix,
             nextCustomerNumber: orgSettings.nextCustomerNumber
-        },
-        hmsSettings: {
-            enabled: orgSettings.hmsEnabled,
-            title: orgSettings.hmsTitle,
-            requireComment: orgSettings.hmsRequireComment,
-            questions: hmsQuestions
         }
       });
       toast({
@@ -620,6 +606,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
                             <SelectItem value="loader">Lager / Laster</SelectItem>
                             <SelectItem value="planner">Ruteplanlegger</SelectItem>
+                            <SelectItem value="salesman">Selger</SelectItem>
+                            <SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="owner">Eier</SelectItem>
                           </SelectContent>
@@ -712,6 +700,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                   <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
                                   <SelectItem value="loader">Lager / Laster</SelectItem>
                                   <SelectItem value="planner">Ruteplanlegger</SelectItem>
+                                  <SelectItem value="salesman">Selger</SelectItem>
+                                  <SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
                                   <SelectItem value="admin">Admin</SelectItem>
                                   <SelectItem value="owner">Eier</SelectItem>
                                 </SelectContent>
@@ -845,120 +835,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           </Card>
         )}
 
-        {/* HMS SETTINGS */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
-                    <Shield className="h-5 w-5 text-red-500" />
-                </div>
-                <div>
-                    <CardTitle className="font-headline text-xl">HMS Sjekkliste</CardTitle>
-                    <CardDescription className="text-xs">Konfigurer HMS-spørsmål for leveringssteder</CardDescription>
-                </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="space-y-0.5">
-                        <Label className="text-sm font-bold">Aktiver HMS Sjekkliste</Label>
-                        <p className="text-xs text-muted-foreground">Viser en sjekkliste som fylles ut når nye steder opprettes.</p>
-                    </div>
-                    <Switch 
-                        checked={orgSettings.hmsEnabled}
-                        onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, hmsEnabled: checked }))}
-                    />
-                </div>
-
-                {orgSettings.hmsEnabled && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-top-1">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="hmsTitle">Tittel på sjekkliste</Label>
-                                <Input 
-                                    id="hmsTitle"
-                                    value={orgSettings.hmsTitle}
-                                    onChange={(e) => setOrgSettings(s => ({ ...s, hmsTitle: e.target.value }))}
-                                    placeholder="F.eks. HMS Krav"
-                                />
-                            </div>
-                            <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200 mt-6">
-                                <div className="space-y-0.5">
-                                    <Label className="text-sm font-bold">Inkluder kommentar-felt</Label>
-                                    <p className="text-xs text-muted-foreground">Legger til et tekstfelt på slutten av listen.</p>
-                                </div>
-                                <Switch 
-                                    checked={orgSettings.hmsRequireComment}
-                                    onCheckedChange={(checked) => setOrgSettings(s => ({ ...s, hmsRequireComment: checked }))}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <Label className="text-sm font-bold">Sjekkpunkter (Store avkrysningsbokser)</Label>
-                            <div className="space-y-3">
-                                {hmsQuestions.map((q, idx) => (
-                                    <div key={q.id} className="flex gap-2 items-center bg-white p-2 rounded-lg border">
-                                        <div className="bg-slate-100 h-8 w-8 rounded flex items-center justify-center text-xs font-bold text-slate-500">
-                                            {idx + 1}
-                                        </div>
-                                        <div className="flex-1">
-                                            <Input 
-                                                value={q.text}
-                                                onChange={(e) => {
-                                                    const updated = [...hmsQuestions];
-                                                    updated[idx].text = e.target.value;
-                                                    setHmsQuestions(updated);
-                                                }}
-                                                className="border-none focus-visible:ring-0 h-8"
-                                                placeholder={`Skriv spørsmål her...`}
-                                            />
-                                        </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                            onClick={() => setHmsQuestions(hmsQuestions.filter((_, i) => i !== idx))}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))}
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="w-full border-dashed h-10"
-                                    onClick={() => setHmsQuestions([...hmsQuestions, { id: Date.now().toString(), text: '' }])}
-                                >
-                                    <Plus className="h-4 w-4 mr-2" /> Legg til nytt punkt
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                <div className="pt-4 border-t flex justify-end">
-                    <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="font-bold">
-                        {isSavingSettings ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Lagrer...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Lagre HMS Oppsett
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {organization && <HMSLog orgId={organization.id} organization={organization} />}
+        
 
         <Card className="border-slate-200 shadow-sm">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100">

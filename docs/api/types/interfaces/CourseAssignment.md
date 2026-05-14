@@ -6,7 +6,7 @@
 
 # Interface: CourseAssignment
 
-Defined in: [types.ts:604](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L604)
+Defined in: [types.ts:608](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L608)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:604](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **assignedAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:611](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L611)
+Defined in: [types.ts:615](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L615)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:611](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **completedAt?**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:612](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L612)
+Defined in: [types.ts:616](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L616)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:612](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **courseId**: `string`
 
-Defined in: [types.ts:607](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L607)
+Defined in: [types.ts:611](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L611)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:607](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **expiresAt?**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:613](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L613)
+Defined in: [types.ts:617](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L617)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:613](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:605](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L605)
+Defined in: [types.ts:609](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L609)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:605](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:606](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L606)
+Defined in: [types.ts:610](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L610)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:606](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **progress?**: `number`
 
-Defined in: [types.ts:610](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L610)
+Defined in: [types.ts:614](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L614)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types.ts:610](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"completed"` \| `"in_progress"` \| `"assigned"` \| `"expired"`
 
-Defined in: [types.ts:609](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L609)
+Defined in: [types.ts:613](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L613)
 
 ***
 
@@ -78,4 +78,4 @@ Defined in: [types.ts:609](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **userId**: `string`
 
-Defined in: [types.ts:608](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L608)
+Defined in: [types.ts:612](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L612)

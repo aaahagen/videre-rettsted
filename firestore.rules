@@ -2,169 +2,183 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    
+
     function isUserInOrg(orgId) {
-      return getUserData().orgId == orgId;
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId == orgId;
     }
-    
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
     function isAdmin() {
-      return getUserData().role == 'admin' || getUserData().role == 'owner';
+      let role = getUserRole();
+      return role == 'admin' || role == 'super_admin' || role == 'owner';
     }
 
     function isSuperAdmin() {
-      return getUserData().role == 'super_admin';
+      return getUserRole() == 'super_admin';
     }
 
-    // Organizations
+    function isHmsResponsible() {
+      return getUserRole() == 'hms_responsible';
+    }
+
+    function isSalesman() {
+      return getUserRole() == 'salesman';
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // === ORGANIZATIONS ===
     match /organizations/{orgId} {
-      allow read: if isAuthenticated() && (isUserInOrg(orgId) || isSuperAdmin());
-      allow create: if isSuperAdmin(); 
-      allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(orgId) && isAdmin()));
-      allow delete: if isAuthenticated() && isSuperAdmin();
-
-      // Allow read/write for manifests subcollection
-      match /manifests/{manifestId} {
-        allow read: if isAuthenticated() && (isUserInOrg(orgId) || isSuperAdmin());
-        allow write: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(orgId) && (isAdmin() || getUserData().role == 'loader')));
-      }
-      
-      // Allow read/write for orders subcollection
-      match /orders/{orderId} {
-        allow read: if isAuthenticated() && (isUserInOrg(orgId) || isSuperAdmin());
-        allow write: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(orgId) && (isAdmin() || getUserData().role == 'loader')));
-      }
+      allow read: if isUserInOrg(orgId) || isSuperAdmin();
+      allow create: if isSuperAdmin() || (isAuthenticated() && request.auth.uid == request.resource.data.ownerId);
+      allow update: if (isUserInOrg(orgId) && isAdmin()) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
     }
 
-    // Users
+    // === USERS ===
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
-      allow update: if isAuthenticated() && (
-        isSuperAdmin() ||
-        (request.auth.uid == userId && 
-         request.resource.data.role == resource.data.role && 
-         request.resource.data.orgId == resource.data.orgId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
-      );
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isAdmin() && isUserInOrg(resource.data.orgId)));
+      // A user can read their own profile, ANY user in their org can read other users in that org, and super_admins can read all.
+      allow read: if request.auth.uid == userId || isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      // Allow creation during sign-up process (requires checking invitation logic in Cloud Functions normally, but for now we allow if auth matches)
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Allow updates if it's their own profile OR they are an admin in the same org OR they are a super_admin
+      allow update: if (isAuthenticated() && request.auth.uid == userId) || 
+                       (isUserInOrg(resource.data.orgId) && isAdmin()) ||
+                       isSuperAdmin();
+      // Allow deletion if they are an admin in the same org OR they are a super_admin
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
-    // Invitations
-    match /invitations/{invitationId} {
-      allow get: if true;
-      allow list: if isAuthenticated() && (isAdmin() || isSuperAdmin());
-      allow create: if isAuthenticated() && (isAdmin() || isSuperAdmin()); 
-      allow update: if false;
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isAdmin() && (resource == null || isUserInOrg(resource.data.orgId))));
-    }
-
-    // Places
-    match /places/{placeId} {
-      allow read: if isAuthenticated(); 
-      allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-    }
-
-    // Routes
-    match /routes/{routeId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId) && (
-        isAdmin() || (request.auth.uid == resource.data.driverId)
-      ));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-    }
-
-    // Messages
-    match /messages/{messageId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow update: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && (isAdmin() || request.auth.uid == resource.data.senderId)));
-    }
-
-    // Vehicles
-    match /vehicles/{vehicleId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-    }
-
-    // Vehicle Damages & Maintenance
-    match /vehicleDamages/{reportId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(resource.data.orgId));
-      allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
-    }
-
-    // WorkLogs
-    match /workLogs/{logId} {
-      allow read: if isAuthenticated() && (
-        isSuperAdmin() ||
-        (resource == null) || 
-        (request.auth.uid == resource.data.driverId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
-      );
-      
+    // === INVITATIONS ===
+    match /invitations/{inviteId} {
+      // Anyone can read an invitation to accept it
+      allow read: if true;
+      // Only admins/owners/super_admins can create
       allow create: if isAuthenticated() && (
-        isSuperAdmin() || (
-            request.resource.data.driverId == request.auth.uid &&
-            isUserInOrg(request.resource.data.orgId)
-        )
+        (isUserInOrg(request.resource.data.organizationId) && isAdmin()) || 
+        isSuperAdmin()
       );
-        
-      allow update: if isAuthenticated() && (
-        isSuperAdmin() ||
-        (request.auth.uid == resource.data.driverId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
+      // Only admins/super_admins can delete (or cloud functions when accepted)
+      allow delete: if isAuthenticated() && (
+        (isUserInOrg(resource.data.organizationId) && isAdmin()) || 
+        isSuperAdmin()
       );
-      
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isAdmin() && isUserInOrg(resource.data.orgId)));
     }
 
-    // LMS - Courses
+    // === PLACES ===
+    match /places/{placeId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if (isUserInOrg(request.resource.data.orgId) && !isHmsResponsible()) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && !isHmsResponsible() && !isSalesman()) || isSuperAdmin();
+    }
+
+    // === REPORTS (AVVIK) ===
+    match /reports/{reportId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === ROUTES ===
+    match /routes/{routeId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+    }
+
+    // === ORDERS ===
+    match /orders/{orderId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+    }
+
+    // === MANIFESTS ===
+    match /manifests/{manifestId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+    }
+
+    // === VEHICLES ===
+    match /vehicles/{vehicleId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if (isUserInOrg(request.resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow update: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === VEHICLE INSPECTIONS ===
+    match /vehicleInspections/{inspectionId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === VEHICLE DAMAGES ===
+    match /vehicleDamages/{damageId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === WORK LOGS ===
+    match /workLogs/{logId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === MESSAGES ===
+    match /messages/{messageId} {
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+    }
+
+    // === COURSES ===
     match /courses/{courseId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(resource.data.orgId));
-      allow create: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow update: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if (isUserInOrg(request.resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow update: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
-    // LMS - Course Assignments
+    // === COURSE ASSIGNMENTS ===
     match /courseAssignments/{assignmentId} {
-      allow read: if isAuthenticated() && (
-        isSuperAdmin() ||
-        (resource == null) ||
-        (request.auth.uid == resource.data.userId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
-      );
-      allow create: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(request.resource.data.orgId) && isAdmin()));
-      allow update: if isAuthenticated() && (
-        isSuperAdmin() ||
-        (request.auth.uid == resource.data.userId) || 
-        (isAdmin() && isUserInOrg(resource.data.orgId))
-      );
-      allow delete: if isAuthenticated() && (isSuperAdmin() || (isUserInOrg(resource.data.orgId) && isAdmin()));
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if (isUserInOrg(request.resource.data.orgId) && isAdmin()) || isSuperAdmin();
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin(); // Users need to update their own progress
+      allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
-    // Audit Logs
+    // === SYSTEM LOGS ===
     match /logs/{logId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || (isAdmin() && isUserInOrg(resource.data.orgId)));
-      allow create: if isAuthenticated() && (isSuperAdmin() || isUserInOrg(request.resource.data.orgId));
-      allow update: if false;
-      allow delete: if false;
+      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow update: if false; // Logs should be immutable
+      allow delete: if isSuperAdmin();
     }
+
   }
 }
