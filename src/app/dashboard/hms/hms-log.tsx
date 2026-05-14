@@ -45,12 +45,12 @@ import {
 interface HMSLogProps {
     orgId: string;
     organization: Organization;
+    initialSearchQuery?: string;
 }
 
-export function HMSLog({ orgId, organization }: HMSLogProps) {
+export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogProps) {
     const [places, setPlaces] = useState<Place[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
     const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -133,9 +133,10 @@ export function HMSLog({ orgId, organization }: HMSLogProps) {
     };
 
     const filteredPlaces = places.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.customerNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.hmsData?.completedByName || '').toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+        (p.customerNumber || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+        (p.hmsData?.completedByName || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+        (p.hmsData?.comment || '').toLowerCase().includes(initialSearchQuery.toLowerCase())
     );
 
     if (isLoading) {
@@ -170,22 +171,10 @@ export function HMSLog({ orgId, organization }: HMSLogProps) {
                 </Button>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="p-4 border-b">
-                    <div className="relative max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input 
-                            placeholder="Søk i loggen..." 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-9"
-                        />
-                    </div>
-                </div>
-
                 {filteredPlaces.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         <Shield className="h-12 w-12 mx-auto mb-4 opacity-10" />
-                        <p>Ingen HMS-data funnet.</p>
+                        <p>{initialSearchQuery ? `Ingen HMS-data matchet "${initialSearchQuery}"` : "Ingen HMS-data funnet."}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">

@@ -136,7 +136,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const [isBasicOpen, setIsBasicOpen] = useState(true);
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
   const [isHmsOpen, setIsHmsOpen] = useState(true);
-  const [isSalesOpen, setIsSalesOpen] = useState(true);
+  const [isSalesOpen, setIsSalesOpen] = useState(false);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
 

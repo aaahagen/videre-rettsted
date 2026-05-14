@@ -611,7 +611,8 @@ export default function PlaceDetailsPage() {
               )}
             </div>
 
-            {/* ACTION BUTTONS (ALWAYS AT THE BOTTOM OF THE PAGE) */}
+            {/* ACTION BUTTONS (VISIBLE ONLY WHEN NOT EDITING) */}
+            {!isEditing && (
             <div className="pt-8 border-t flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-6 rounded-xl border shadow-sm mt-8">
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                 <Button 
@@ -620,30 +621,19 @@ export default function PlaceDetailsPage() {
                   onClick={() => setIsEditing(!isEditing)} 
                   className="h-12 text-lg font-semibold px-8"
                 >
-                  {isEditing ? (
-                    <>
-                      <Map className="mr-2 h-5 w-5" />
-                      Avbryt redigering
-                    </>
-                  ) : (
-                    <>
-                      <Edit3 className="mr-2 h-5 w-5" />
-                      Rediger Sted
-                    </>
-                  )}
+                  <Edit3 className="mr-2 h-5 w-5" />
+                  Rediger Sted
                 </Button>
                 
-                {!isEditing && (
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={handlePrint}
-                    className="h-12 text-lg font-semibold px-8"
-                  >
-                    <Printer className="mr-2 h-5 w-5" />
-                    Skriv ut PDF
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handlePrint}
+                  className="h-12 text-lg font-semibold px-8"
+                >
+                  <Printer className="mr-2 h-5 w-5" />
+                  Skriv ut PDF
+                </Button>
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
@@ -658,7 +648,7 @@ export default function PlaceDetailsPage() {
                   </Link>
                 </Button>
 
-                {userProfile?.role === 'admin' && !isEditing && (
+                {userProfile?.role === 'admin' && (
                   <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
@@ -715,6 +705,7 @@ export default function PlaceDetailsPage() {
                 )}
               </div>
             </div>
+            )}
         </div>
       </div>
       <PrintPlace place={place} organization={organization} />

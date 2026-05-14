@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Place Details UI Refactor:** Hidden the bottom action button bar when editing a place. This removes the redundant "Avbryt redigering" button, as the edit form (`PlaceForm`) already provides its own Cancel/Save controls.
+- **Place Form UI Improvements:** 
+    - The "Midlertidig Salgsmelding" card is now collapsed by default to reduce visual clutter on the creation and edit forms.
+    - Removed the small inline map pin icon from the address field.
+    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
+
 ### Added   
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
@@ -78,9 +85,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Super Admin Search Context:** Removed the top-level main navigation search bar from the Super Admin panel to keep the interface clean, as global search is handled within the panel itself.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact and readable. Moved the search bar to the header, compressed the organization statistics into a horizontal bar, and redesigned the module toggles as compact pill-shaped badges.
 - **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
-- **Place Form UI Improvements:** 
-    - Removed the small inline map pin icon from the address field.
-    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
 - **Admin Dashboard UI Refactor:**
     - Wrapped "Brukere & Tilganger" in a collapsible card to reduce vertical space.
     - Moved "Hoveddepot & Geofencing" into a new dedicated "Timelister / Ansatte" card.
