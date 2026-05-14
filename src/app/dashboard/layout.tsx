@@ -39,6 +39,8 @@ export default function DashboardLayout({
   const isMonitorPage = pathname === '/dashboard/monitor';
   const isPlacesPage = pathname === '/dashboard/places';
   const isOrdersPage = pathname === '/dashboard/orders';
+  const isReportsPage = pathname === '/dashboard/reports';
+  const isHmsPage = pathname === '/dashboard/hms';
 
   // Check if we are on a manifests page (e.g., /dashboard/manifests or /dashboard/manifests/[id])
   const isManifestsPage = pathname.startsWith('/dashboard/manifests');
@@ -46,7 +48,8 @@ export default function DashboardLayout({
   // Check if we are on the messages page
   const isMessagesPage = pathname === '/dashboard/messages';
 
-  // Define paths where search bar should NOT be shown
+  // Define paths where search bar should NOT be shown.
+  // Note: /dashboard/reports and /dashboard/hms are REMOVED from this list so the search bar shows.
   const hideSearchPaths = ['/dashboard', '/dashboard/admin', '/dashboard/new', '/dashboard/super', '/dashboard/owner'];
   const showSearch = !hideSearchPaths.includes(pathname);
 
@@ -56,13 +59,16 @@ export default function DashboardLayout({
     setQuery(value);
     
     // Only redirect to places if we are not already on a page that handles its own search
-    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && !isOrdersPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet' && !isManifestsPage && !isMessagesPage) {
+    if (value && pathname !== '/dashboard/places' && !isRoutesPage && !isMonitorPage && !isOrdersPage && pathname !== '/dashboard/workforce' && pathname !== '/dashboard/fleet' && !isManifestsPage && !isMessagesPage && !isReportsPage && !isHmsPage) {
         router.push('/dashboard/places');
     }
   };
 
   const searchPlaceholder = isManifestsPage ? "Søk etter ruter eller biler..." : isMessagesPage ? "Søk i meldinger..." : `Søk etter ${contextName.toLowerCase()}...`;
-  const showNewButton = !isManifestsPage && !isMessagesPage && ((isAdmin || contextName === 'Steder') && showSearch);
+  
+  // Only show the New button if user is an admin, OR if the context is 'Steder' (since drivers can add places)
+  // And specifically HIDE it on Reports and HMS pages
+  const showNewButton = !isManifestsPage && !isMessagesPage && !isReportsPage && !isHmsPage && ((isAdmin || contextName === 'Steder') && showSearch);
 
   return (
     <SidebarProvider>
@@ -108,7 +114,6 @@ export default function DashboardLayout({
               )}
             </div>
             
-            {/* Only show the New button if user is an admin, OR if the context is 'Steder' (since drivers can add places) */}
             {showNewButton && (
                 <div className="flex items-center gap-2">
                   <Button 
