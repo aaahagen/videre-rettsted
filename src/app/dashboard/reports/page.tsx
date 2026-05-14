@@ -10,12 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight, Search, SearchX } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUploader } from "@/components/reports/image-uploader";
+import { useSearch } from "@/hooks/use-search";
 
 // Formatting helper
 const formatDate = (timestamp: any) => {
@@ -40,7 +40,7 @@ export default function ReportsPage() {
     const [organization, setOrganization] = useState<Organization | null>(null);
     const [reports, setReports] = useState<DangerReport[]>([]);
     const [isLoadingReports, setIsLoadingReports] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
+    const { query: searchQuery, setContext } = useSearch();
 
     const { toast } = useToast();
     
@@ -49,6 +49,10 @@ export default function ReportsPage() {
     const [resolutionNote, setResolutionNote] = useState('');
     const [resolutionImages, setResolutionImages] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        setContext('Avviksrapporter', '');
+    }, [setContext]);
 
     useEffect(() => {
         if (dbUser?.orgId) {
@@ -133,30 +137,9 @@ export default function ReportsPage() {
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto overflow-x-hidden w-full">
             <div className="space-y-6 sm:space-y-8">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold font-headline px-1">Avviksrapporter</h1>
-                        <p className="text-muted-foreground px-1 mt-1 text-sm">Håndtering av rapporterte farer og avvik på leveringssteder.</p>
-                    </div>
-                    <div className="relative w-full sm:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Søk i rapporter..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 h-10 w-full"
-                        />
-                        {searchQuery && (
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 text-muted-foreground hover:text-slate-900"
-                                onClick={() => setSearchQuery("")}
-                            >
-                                <SearchX className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
+                <div>
+                    <h1 className="text-3xl font-bold font-headline px-1">Avviksrapporter</h1>
+                    <p className="text-muted-foreground px-1 mt-1 text-sm">Håndtering av rapporterte farer og avvik på leveringssteder.</p>
                 </div>
 
                 {isLoadingReports ? (
@@ -166,14 +149,11 @@ export default function ReportsPage() {
                 ) : displayedReports.length === 0 && searchQuery ? (
                      <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-dashed">
                         <div className="rounded-full bg-slate-100 p-6 mb-4">
-                            <SearchX className="h-12 w-12 text-slate-300" />
+                            <AlertTriangle className="h-12 w-12 text-slate-300" />
                         </div>
                         <h2 className="text-xl font-semibold text-slate-900">
                             Ingen rapporter matchet "{searchQuery}"
                         </h2>
-                        <Button variant="link" onClick={() => setSearchQuery('')} className="mt-4">
-                            Vis alle rapporter
-                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-12">

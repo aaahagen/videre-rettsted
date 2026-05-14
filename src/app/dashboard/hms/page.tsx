@@ -8,10 +8,16 @@ import { HMSLog } from "./hms-log";
 import { HMSSettings } from "./hms-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldAlert } from "lucide-react";
+import { useSearch } from "@/hooks/use-search";
 
 export default function HMSPage() {
     const { dbUser, loading } = useAuth();
     const [organization, setOrganization] = useState<Organization | null>(null);
+    const { query: searchQuery, setContext } = useSearch();
+
+    useEffect(() => {
+        setContext('HMS-Logg', '');
+    }, [setContext]);
 
     useEffect(() => {
         if (dbUser?.orgId) {
@@ -41,13 +47,15 @@ export default function HMSPage() {
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto overflow-x-hidden w-full">
             <div className="space-y-6 sm:space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold font-headline px-1">HMS & Sikkerhet</h1>
-                    <p className="text-muted-foreground px-1 mt-1 text-sm">Dokumentasjon og sjekklister for leveringssteder.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline px-1">HMS & Sikkerhet</h1>
+                        <p className="text-muted-foreground px-1 mt-1 text-sm">Dokumentasjon og sjekklister for leveringssteder.</p>
+                    </div>
                 </div>
 
                 <HMSSettings organization={organization} />
-                <HMSLog orgId={organization.id} organization={organization} />
+                <HMSLog orgId={organization.id} organization={organization} initialSearchQuery={searchQuery} />
             </div>
         </div>
     );
