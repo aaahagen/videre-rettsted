@@ -169,12 +169,22 @@ export default function ReportsPage() {
                                                 </div>
                                             </CardContent>
                                             <CardFooter className="pt-0 pb-4 px-4">
+                                                {(dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner') ? (
                                                 <Button 
                                                     className="w-full bg-orange-600 hover:bg-orange-700" 
                                                     onClick={() => setResolvingReport(report)}
                                                 >
                                                     Løs Saken
                                                 </Button>
+                                                ) : (
+                                                <Button 
+                                                    variant="outline"
+                                                    className="w-full" 
+                                                    disabled
+                                                >
+                                                    Venter på utbedring fra Admin
+                                                </Button>
+                                                )}
                                             </CardFooter>
                                         </Card>
                                     ))}
