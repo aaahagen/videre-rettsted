@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from "@/components/auth-provider";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Organization, DangerReport } from "@/lib/types";
 import { firebaseDB } from "@/lib/firebase/database";
 import { db } from "@/lib/firebase/firebase";
@@ -10,11 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight, Search, SearchX } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export default function ReportsPage() {
     const [organization, setOrganization] = useState<Organization | null>(null);
     const [reports, setReports] = useState<DangerReport[]>([]);
     const [isLoadingReports, setIsLoadingReports] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const { toast } = useToast();
     
@@ -97,6 +99,25 @@ export default function ReportsPage() {
         }
     };
 
+    const displayedReports = useMemo(() => {
+        let result = [...reports];
+        if (searchQuery.trim()) {
+            const lowerQuery = searchQuery.toLowerCase().trim();
+            result = result.filter(report => {
+                const searchString = `
+                    ${report.placeName} 
+                    ${report.description} 
+                    ${report.reportedByName} 
+                    ${report.resolutionNote || ''}
+                    ${formatDate(report.createdAt)}
+                    ${report.resolvedAt ? formatDate(report.resolvedAt) : ''}
+                `.toLowerCase();
+                return searchString.includes(lowerQuery);
+            });
+        }
+        return result;
+    }, [reports, searchQuery]);
+
     if (loading || !organization) {
         return (
             <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
@@ -106,20 +127,53 @@ export default function ReportsPage() {
         );
     }
 
-    const openReports = reports.filter(r => r.status === 'open');
-    const resolvedReports = reports.filter(r => r.status === 'resolved');
+    const openReports = displayedReports.filter(r => r.status === 'open');
+    const resolvedReports = displayedReports.filter(r => r.status === 'resolved');
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto overflow-x-hidden w-full">
             <div className="space-y-6 sm:space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold font-headline px-1">Avviksrapporter</h1>
-                    <p className="text-muted-foreground px-1 mt-1 text-sm">Håndtering av rapporterte farer og avvik på leveringssteder.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline px-1">Avviksrapporter</h1>
+                        <p className="text-muted-foreground px-1 mt-1 text-sm">Håndtering av rapporterte farer og avvik på leveringssteder.</p>
+                    </div>
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Søk i rapporter..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 h-10 w-full"
+                        />
+                        {searchQuery && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 text-muted-foreground hover:text-slate-900"
+                                onClick={() => setSearchQuery("")}
+                            >
+                                <SearchX className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {isLoadingReports ? (
                     <div className="flex justify-center p-12">
                         <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
+                    </div>
+                ) : displayedReports.length === 0 && searchQuery ? (
+                     <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-dashed">
+                        <div className="rounded-full bg-slate-100 p-6 mb-4">
+                            <SearchX className="h-12 w-12 text-slate-300" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Ingen rapporter matchet "{searchQuery}"
+                        </h2>
+                        <Button variant="link" onClick={() => setSearchQuery('')} className="mt-4">
+                            Vis alle rapporter
+                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-12">
@@ -131,7 +185,7 @@ export default function ReportsPage() {
                             </h2>
                             {openReports.length === 0 ? (
                                 <div className="p-8 text-center border border-dashed rounded-xl bg-slate-50 text-slate-500">
-                                    Ingen åpne avvik. Alt ser bra ut!
+                                    {searchQuery ? "Ingen åpne avvik matchet søket." : "Ingen åpne avvik. Alt ser bra ut!"}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,7 +223,7 @@ export default function ReportsPage() {
                                                 </div>
                                             </CardContent>
                                             <CardFooter className="pt-0 pb-4 px-4">
-                                                {(dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner') ? (
+                                                {(dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner' || dbUser?.role === 'hms_responsible') ? (
                                                 <Button 
                                                     className="w-full bg-orange-600 hover:bg-orange-700" 
                                                     onClick={() => setResolvingReport(report)}
@@ -200,7 +254,7 @@ export default function ReportsPage() {
                             </h2>
                             {resolvedReports.length === 0 ? (
                                 <div className="p-8 text-center border border-dashed rounded-xl bg-slate-50 text-slate-500">
-                                    Ingen historikk enda.
+                                    {searchQuery ? "Ingen løste avvik matchet søket." : "Ingen historikk enda."}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
