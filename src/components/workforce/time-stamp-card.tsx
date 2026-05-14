@@ -52,13 +52,21 @@ export function TimeStampCard({ user }: TimeStampCardProps) {
 
     useEffect(() => {
         loadData();
-    }, [user.id]);
+    }, [user.id, user.orgId]);
 
     const loadData = async () => {
+        if (!user.id || !user.orgId) return;
+        
         try {
             setIsLoading(true);
             const [logsSnap, profile, org] = await Promise.all([
-                getDocs(query(collection(db, 'workLogs'), where('driverId', '==', user.id), where('status', '==', 'active'), limit(1))),
+                getDocs(query(
+                    collection(db, 'workLogs'), 
+                    where('orgId', '==', user.orgId), // Added orgId filter for security rules
+                    where('driverId', '==', user.id), 
+                    where('status', '==', 'active'), 
+                    limit(1)
+                )),
                 firebaseDB.getUser(user.id) as Promise<DriverProfile>,
                 firebaseDB.getOrganization(user.orgId)
             ]);
