@@ -1,7 +1,7 @@
-import type { DeliveryPlace } from '@/lib/types';
+import type { DeliveryPlace, Organization } from '@/lib/types';
 import { PlaceCard } from './place-card';
 
-export function PlaceGrid({ places }: { places: DeliveryPlace[] }) {
+export function PlaceGrid({ places, orgSettings }: { places: DeliveryPlace[], orgSettings?: Organization }) {
   if (places.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed">
@@ -17,6 +17,7 @@ export function PlaceGrid({ places }: { places: DeliveryPlace[] }) {
             key={place.id} 
             place={place} 
             priority={index < 6} 
+            orgSettings={orgSettings}
         />
       ))}
     </div>

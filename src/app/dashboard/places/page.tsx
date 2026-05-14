@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
 import { Loader2, Star, SearchX, MapPin } from 'lucide-react';
-import { DeliveryPlace, User } from '@/lib/types';
+import { DeliveryPlace, User, Organization } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -17,6 +17,7 @@ import { useSearch } from '@/hooks/use-search';
 export default function PlacesPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
   const [userData, setUserData] = useState<User | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   const [places, setPlaces] = useState<DeliveryPlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(true);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
@@ -37,7 +38,11 @@ export default function PlacesPage() {
     if (!authUser) return;
     const unsub = onSnapshot(doc(db, 'users', authUser.uid), (doc) => {
       if (doc.exists()) {
-        setUserData({ ...doc.data(), id: doc.id } as User);
+        const uData = { ...doc.data(), id: doc.id } as User;
+        setUserData(uData);
+        if (uData.orgId) {
+            firebaseDB.getOrganization(uData.orgId).then(setOrganization);
+        }
       }
     });
     return () => unsub();
@@ -149,7 +154,7 @@ export default function PlacesPage() {
           )}
         </div>
       ) : (
-        <PlaceGrid places={displayedPlaces} />
+        <PlaceGrid places={displayedPlaces} orgSettings={organization || undefined} />
       )}
     </div>
   );
