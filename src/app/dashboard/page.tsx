@@ -85,7 +85,7 @@ export default function DashboardPage() {
         try {
           const q = query(
             collection(db, 'routes'),
-            where('orgId', '==', userData.orgId), // ADDED orgId filter to satisfy security rules
+            where('orgId', '==', userData.orgId), // Satisfies rules
             where('driverId', '==', userData.id),
             where('status', '==', 'active'),
             limit(1)
@@ -146,6 +146,7 @@ export default function DashboardPage() {
     // 2. Pending Courses
     const courseQ = query(
         collection(db, 'courseAssignments'), 
+        where('orgId', '==', userData.orgId), // Add orgId to satisfy rules
         where('userId', '==', userData.id),
         where('status', 'in', ['assigned', 'in_progress'])
     );
@@ -210,8 +211,9 @@ export default function DashboardPage() {
         setMonitorStats({ total, active, finished, totalPlaces, completedPlaces });
       });
 
-      
-      const unsubVehicles = onSnapshot(collection(db, 'vehicles'), (snapshot) => {
+      // Added OrgId filter to satisfy security rules
+      const qVehicles = query(collection(db, 'vehicles'), where('orgId', '==', userData.orgId));
+      const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
         const newStats = { ready: 0, pending_workshop: 0, workshop: 0, observation: 0, on_tour: 0, parked: 0 };
         snapshot.forEach((doc) => {
            const v = doc.data();
