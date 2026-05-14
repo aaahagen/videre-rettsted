@@ -81,10 +81,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchActiveRoute() {
-      if (userData?.id) {
+      if (userData?.id && userData?.orgId) {
         try {
           const q = query(
             collection(db, 'routes'),
+            where('orgId', '==', userData.orgId), // ADDED orgId filter to satisfy security rules
             where('driverId', '==', userData.id),
             where('status', '==', 'active'),
             limit(1)
@@ -92,18 +93,20 @@ export default function DashboardPage() {
           const snap = await getDocs(q);
           if (!snap.empty) {
             setActiveRoute({ id: snap.docs[0].id, ...snap.docs[0].data() } as Route);
+          } else {
+            setActiveRoute(null);
           }
         } catch (e) {
           console.error("Error fetching active route", e);
         } finally {
           setLoadingRoute(false);
         }
+      } else if (userData) {
+          setLoadingRoute(false);
       }
     }
-    if (userData?.id) {
-      fetchActiveRoute();
-    }
-  }, [userData?.id]);
+    fetchActiveRoute();
+  }, [userData?.id, userData?.orgId]);
 
   useEffect(() => {
     if (!userData?.orgId || !activeRoute?.id) return;

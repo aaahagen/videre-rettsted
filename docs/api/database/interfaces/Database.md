@@ -126,6 +126,24 @@ Defined in: [database.ts:17](https://github.com/aaahagen/videre-rettsted/blob/ma
 
 ***
 
+### createReport()
+
+> **createReport**(`reportData`): `Promise`\<`any`\>
+
+Defined in: [database.ts:80](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/database.ts#L80)
+
+#### Parameters
+
+##### reportData
+
+`any`
+
+#### Returns
+
+`Promise`\<`any`\>
+
+***
+
 ### createRoute()
 
 > **createRoute**(`route`): `Promise`\<[`Route`](../../types/interfaces/Route.md)\>
@@ -596,6 +614,24 @@ Defined in: [database.ts:19](https://github.com/aaahagen/videre-rettsted/blob/ma
 
 ***
 
+### getReports()
+
+> **getReports**(`orgId`): `Promise`\<`any`[]\>
+
+Defined in: [database.ts:79](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/database.ts#L79)
+
+#### Parameters
+
+##### orgId
+
+`string`
+
+#### Returns
+
+`Promise`\<`any`[]\>
+
+***
+
 ### getRoute()
 
 > **getRoute**(`id`): `Promise`\<[`Route`](../../types/interfaces/Route.md) \| `null`\>
@@ -923,6 +959,36 @@ Defined in: [database.ts:68](https://github.com/aaahagen/videre-rettsted/blob/ma
 #### Returns
 
 `Promise`\<\{ `message`: `string`; `success`: `boolean`; \}\>
+
+***
+
+### resolveReport()
+
+> **resolveReport**(`reportId`, `resolutionNote`, `resolutionImages`, `resolvedBy`): `Promise`\<`void`\>
+
+Defined in: [database.ts:81](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/database.ts#L81)
+
+#### Parameters
+
+##### reportId
+
+`string`
+
+##### resolutionNote
+
+`string`
+
+##### resolutionImages
+
+`string`[]
+
+##### resolvedBy
+
+`string`
+
+#### Returns
+
+`Promise`\<`void`\>
 
 ***
 

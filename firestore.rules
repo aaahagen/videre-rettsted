@@ -44,34 +44,43 @@ service cloud.firestore {
       allow create: if isSuperAdmin() || (isAuthenticated() && request.auth.uid == request.resource.data.ownerId);
       allow update: if (isUserInOrg(orgId) && isAdmin()) || isSuperAdmin();
       allow delete: if isSuperAdmin();
+
+      // Nested collection for Orders
+      match /orders/{orderId} {
+        allow read: if isUserInOrg(orgId) || isSuperAdmin();
+        allow create: if isUserInOrg(orgId) || isSuperAdmin();
+        allow update: if isUserInOrg(orgId) || isSuperAdmin();
+        allow delete: if isUserInOrg(orgId) || isSuperAdmin();
+      }
+
+      // Nested collection for Manifests
+      match /manifests/{manifestId} {
+        allow read: if isUserInOrg(orgId) || isSuperAdmin();
+        allow create: if isUserInOrg(orgId) || isSuperAdmin();
+        allow update: if isUserInOrg(orgId) || isSuperAdmin();
+        allow delete: if isUserInOrg(orgId) || isSuperAdmin();
+      }
     }
 
     // === USERS ===
     match /users/{userId} {
-      // A user can read their own profile, ANY user in their org can read other users in that org, and super_admins can read all.
       allow read: if request.auth.uid == userId || isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      // Allow creation during sign-up process (requires checking invitation logic in Cloud Functions normally, but for now we allow if auth matches)
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      // Allow updates if it's their own profile OR they are an admin in the same org OR they are a super_admin
       allow update: if (isAuthenticated() && request.auth.uid == userId) || 
                        (isUserInOrg(resource.data.orgId) && isAdmin()) ||
                        isSuperAdmin();
-      // Allow deletion if they are an admin in the same org OR they are a super_admin
       allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
     // === INVITATIONS ===
     match /invitations/{inviteId} {
-      // Anyone can read an invitation to accept it
       allow read: if true;
-      // Only admins/owners/super_admins can create
       allow create: if isAuthenticated() && (
         (isUserInOrg(request.resource.data.organizationId) && isAdmin()) || 
         isSuperAdmin()
       );
-      // Only admins/super_admins can delete (or cloud functions when accepted)
       allow delete: if isAuthenticated() && (
-        (isUserInOrg(resource.data.organizationId) && isAdmin()) || 
+        (isUserInOrg(request.resource.data.organizationId) && isAdmin()) || 
         isSuperAdmin()
       );
     }
@@ -94,23 +103,11 @@ service cloud.firestore {
 
     // === ROUTES ===
     match /routes/{routeId} {
-      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-    }
+      // Logic for reading routes: Must be in the organization
+      allow read: if (isAuthenticated() && isUserInOrg(resource.data.orgId)) || isSuperAdmin();
+      // Logic for querying routes: The query MUST include 'where("orgId", "==", userOrgId)'
+      allow list: if (isAuthenticated() && isUserInOrg(request.query.limit > 0 ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId : '')) || isSuperAdmin();
 
-    // === ORDERS ===
-    match /orders/{orderId} {
-      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-    }
-
-    // === MANIFESTS ===
-    match /manifests/{manifestId} {
-      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
       allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
@@ -168,7 +165,7 @@ service cloud.firestore {
     match /courseAssignments/{assignmentId} {
       allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow create: if (isUserInOrg(request.resource.data.orgId) && isAdmin()) || isSuperAdmin();
-      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin(); // Users need to update their own progress
+      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
@@ -176,9 +173,8 @@ service cloud.firestore {
     match /logs/{logId} {
       allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if false; // Logs should be immutable
+      allow update: if false;
       allow delete: if isSuperAdmin();
     }
-
   }
 }

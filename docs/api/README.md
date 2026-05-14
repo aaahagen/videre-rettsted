@@ -17,6 +17,7 @@
 - [db/orders](db/orders/README.md)
 - [db/organizations](db/organizations/README.md)
 - [db/places](db/places/README.md)
+- [db/reports](db/reports/README.md)
 - [db/routes](db/routes/README.md)
 - [db/users](db/users/README.md)
 - [db/vehicles](db/vehicles/README.md)
