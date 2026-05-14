@@ -21,6 +21,12 @@ service firebase.storage {
        allow write: if request.auth != null && isValidMedia();
     }
 
+    // Reports path matching (Avvikshåndtering)
+    match /reports/{orgId}/{allPaths=**} {
+       allow read: if request.auth != null;
+       allow write: if request.auth != null && isValidImage();
+    }
+
     // Legacy paths (keeping for compatibility)
     match /users/{userId}/profile/{allPaths=**} {
       allow read: if request.auth != null;
