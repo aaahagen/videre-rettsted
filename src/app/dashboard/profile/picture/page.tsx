@@ -48,11 +48,13 @@ export default function ProfilePicturePage() {
         throw new Error('User not authenticated');
       }
 
-      const path = `users/${currentUser.uid}/avatar_${Date.now()}`;
+      // Explicitly include /profile/ segment to match current storage rules
+      const path = `users/${currentUser.uid}/profile/avatar_${Date.now()}.jpg`;
       const url = await firebaseStorage.uploadFile(path, file);
 
+      // Update both Auth profile and Firestore user document
       await firebaseAuth.updateProfile({ photoURL: url });
-      await firebaseDB.updateUser(currentUser.uid, { photoURL: url } as any);
+      await firebaseDB.updateUser(currentUser.uid, { avatarUrl: url } as any);
 
       toast({
         title: 'Profilbilde oppdatert',

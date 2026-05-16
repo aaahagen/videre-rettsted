@@ -74,6 +74,11 @@ export interface Organization {
       placeholder: string;
       enabled?: boolean;
     };
+    salesMessage?: { // Added
+      label: string;
+      placeholder: string;
+      enabled?: boolean;
+    };
   };
   legal?: {
     dpaAcceptedAt?: {

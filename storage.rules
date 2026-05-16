@@ -9,14 +9,19 @@ service firebase.storage {
           && request.resource.size < 5 * 1024 * 1024);
     }
     
-    // Helper function for general documents under 20MB (increased for training videos)
+    // Helper function for general documents under 50MB
     function isValidMedia() {
        return request.resource == null || (request.resource.size < 50 * 1024 * 1024);
     }
 
+    // User-specific storage (Avatars, documents, etc.)
+    match /users/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId && isValidMedia();
+    }
+
     // Organizations path matching
     match /organizations/{orgId}/{allPaths=**} {
-       // Primary security logic for organization-specific data
        allow read: if request.auth != null;
        allow write: if request.auth != null && isValidMedia();
     }
@@ -27,17 +32,7 @@ service firebase.storage {
        allow write: if request.auth != null && isValidImage();
     }
 
-    // Legacy paths (keeping for compatibility)
-    match /users/{userId}/profile/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isValidImage();
-    }
-    
-    match /users/{userId}/documents/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isValidMedia();
-    }
-
+    // Legacy/Shared paths
     match /places/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && isValidImage();

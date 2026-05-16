@@ -5,11 +5,11 @@ import { useEffect, useState, use } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '../../../../lib/firebase/database';
-import { auth, db } from '../../../../lib/firebase/firebase';
+import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Save, Hash } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Hash, Megaphone } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -37,14 +37,13 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Place, Organization, UserProfile } from '@/lib/types';
-import { format, isValid } from 'date-fns';
+import { Place, Organization } from '@/lib/types';
+import { format, isValid, isAfter } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { PlaceForm } from '@/components/places/place-form';
 import { PrintPlace } from '@/components/places/print-place';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { cn } from '@/lib/utils';
-import { doc, onSnapshot } from 'firebase/firestore';
 
 const DAYS = [
     { key: 'monday', label: 'Mandag' },
@@ -56,6 +55,17 @@ const DAYS = [
     { key: 'sunday', label: 'Søndag' },
 ] as const;
 
+/**
+ * PlaceDetailsPage viser utfyllende informasjon om et spesifikt leveringssted.
+ * 
+ * Siden inkluderer:
+ * - Bildegalleri (Carousel) med zoom-funksjonalitet.
+ * - Dynamiske tekstfelter konfigurert på organisasjonsnivå.
+ * - Salgsmeldinger med utløpsdato.
+ * - Åpningstider og fysiske begrensninger.
+ * - Integrert kart og navigasjonslenke.
+ * - Redigeringsmodus og slettemulighet (for administratorer).
+ */
 export default function PlaceDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [user, loading, error] = useAuthState(auth);
@@ -181,6 +191,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   const embedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(place.address)}`;
   
+  // Field visibility settings
   const descEnabled = organization?.fieldSettings?.description?.enabled ?? true;
   const descLabel = organization?.fieldSettings?.description?.label || "Beskrivelse & Instruksjoner 1";
 
@@ -198,6 +209,13 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
 
   const contactPersonsEnabled = organization?.fieldSettings?.contactPersons?.enabled ?? false;
   const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
+
+  const salesMessageEnabled = organization?.fieldSettings?.salesMessage?.enabled ?? true;
+  const salesMessageLabel = organization?.fieldSettings?.salesMessage?.label || "Midlertidig Salgsmelding";
+
+  // Check if sales message is valid
+  const hasValidSalesMessage = place.salesMessage && 
+    (!place.salesMessageValidUntil || isAfter(place.salesMessageValidUntil instanceof Date ? place.salesMessageValidUntil : (place.salesMessageValidUntil as any).toDate(), new Date()));
 
   return (
     <>
@@ -255,6 +273,27 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                               </Badge>
                           )}
                       </div>
+                      
+                      {/* SALES MESSAGE ALERT */}
+                      {salesMessageEnabled && hasValidSalesMessage && (
+                          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 shadow-sm animate-in zoom-in-95 duration-500">
+                              <div className="flex items-center gap-3 mb-2">
+                                  <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                                      <Megaphone className="h-5 w-5" />
+                                  </div>
+                                  <span className="text-sm font-black uppercase tracking-widest text-amber-700">{salesMessageLabel}</span>
+                              </div>
+                              <p className="text-lg font-bold text-amber-900 leading-relaxed italic">
+                                  "{place.salesMessage}"
+                              </p>
+                              {place.salesMessageValidUntil && (
+                                  <div className="mt-4 pt-3 border-t border-amber-200/50 flex items-center gap-2 text-xs font-bold text-amber-600/70 uppercase">
+                                      <Clock className="h-3 w-3" />
+                                      Gjelder til: {formatDate(place.salesMessageValidUntil)}
+                                  </div>
+                              )}
+                          </div>
+                      )}
                       
                       <div className="relative group">
                         {place.images && place.images.length > 0 ? (
@@ -662,11 +701,9 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                     <DialogContent aria-describedby={undefined}>
                       <DialogHeader>
                         <DialogTitle>Er du sikker?</DialogTitle>
-                        <DialogHeader>
-                          <DialogDescription>
+                        <DialogDescription>
                             Dette vil permanent slette "{place.name}" og alle tilhørende data.
-                          </DialogDescription>
-                        </DialogHeader>
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <Label className="text-destructive font-bold">

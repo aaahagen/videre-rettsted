@@ -45,12 +45,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Documentation Pyramid Update:** Refreshed `engineering.md`, `domain.md`, and `strategy.md` to reflect Next.js 15 architecture, specialized roles, and new Phase 6 features.
+- **UI Specification:** Authored `docs/ui-specification.md` to serve as a mandatory reference for all page refactors, preventing accidental feature loss.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact.
 - **Place Form Redesign:** Converted creation form sections to collapsible cards.
 - **Responsive Message System:** Redesigned messages page for mobile with split-view layout.
+- **Admin Dashboard Mobile Optimization:** Refactored the user management list into a stacked layout for small screens to improve accessibility and readability.
 
 ### Fixed
 - **Next.js 15 Migration & Build Stability:** Resolved all Promise-based API issues and type mismatches across the application. Verified with successful production builds.
+- **Firestore Missing Index:** Added a composite index for the `audit_logs` collection to support high-performance filtering and ordering by orgId and timestamp.
+- **Admin Dashboard Feature Restoration:** Fixed a regression where several administrative controls (Place field settings, Pending invitations) were temporarily removed during a documentation pass.
 - **Admin Notification Overload:** Refactored unread message logic for administrative roles.
 - **Build Failure (React 19):** Resolved peer dependency conflicts between React 19 and Tremor.
 - **Place Form Draft Restoration:** Improved restoration of complex objects (GPS, HMS answers).
@@ -62,8 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!IMPORTANT]
 > **Manual Deployment Steps:**
 > 1.  **Firestore Rules:** Run `firebase deploy --only firestore:rules` to activate new security logic.
-> 2.  **Cloud Functions:** Run `firebase deploy --only functions` to apply updated `orgId` signature fixes.
-> 3.  **Firebase Console:** Enable "Identity Platform" and "Phone MFA" in the Authentication settings to support the new security features.
+> 2.  **Firestore Indexes:** Run `firebase deploy --only firestore:indexes` to support Audit Log queries.
+> 3.  **Cloud Functions:** Run `firebase deploy --only functions` to apply updated `orgId` signature fixes.
+> 4.  **Firebase Console:** Enable "Identity Platform" and "Phone MFA" in the Authentication settings to support the new security features.
 
 ## [0.1.0] - 2024-05-22
 
@@ -84,9 +89,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Future]
 
 ### Added
+- **Commercialization & SaaS Foundation (Phase 7):**
+    - **Stripe Subscription Sync:** Automated lifecycle management via Firebase Stripe Extension.
+    - **Feature Gating:** Strict access control based on subscription tier (Free, Pro, Enterprise).
+    - **Billing Portal:** Integrated customer billing portal for invoice management.
 - **Enhanced Sales Messaging Visibility:** Megaphone icon on PlaceCards.
 - **Geofence-based Delivery Alerts:** Automatic flagging of deliveries outside radius.
 - **API Intake:** Secure REST endpoint for external TMS/ERP order ingestion.
 - **Tachograph Analysis:** Detailed reporting on driving/rest time regulation breaches.
-- **Commercialization:** Stripe payment integration (Phase 7).
 - **Capacitor.js Integration:** True native mobile distribution (Phase 8).

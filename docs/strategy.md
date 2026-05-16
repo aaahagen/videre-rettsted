@@ -1,4 +1,4 @@
- # App Strategy & Vision: VIDERE RettSted
+# App Strategy & Vision: VIDERE RettSted
 
 ## 1. The Mission
 To build the definitive operational bridge between the terminal and the customer's door. We solve the "Last Meter" problem and eliminate loading errors.
@@ -60,13 +60,17 @@ Leveraged data structures from previous phases to manage incoming jobs.
 Closing open vulnerabilities and moving to a white-glove onboarding process.
 - **Completed:** Owner Role implementation, Executive Dashboard, Next.js 15 Migration & Build Verification, specialized roles (HMS/Sales), Closing public registration, locking organization creation to Super Admin only, MFA Planning.
 
-### Phase 6: Compliance & Risk Management (CURRENT)
+### Phase 6: Compliance & Risk Management (Completed)
 Introducing a suite of tools for Norwegian/EU transport regulations.
-- **Planned:** Tachograph Download Tracking, Tachograph & Driving Time Analysis, Vehicle Damage Reporting (Expanded).
+- **Completed:** Odometer Tracking (`kilometerstand`), Tachograph Download Monitoring (90 days), Driver Card Monitoring (28 days), Expanded Damage Reporting with image evidence.
 
-### Phase 7: Commercialization & Multi-Tenancy (Planned)
+### Phase 7: Commercialization & Multi-Tenancy (CURRENT)
 Transforming the application into a subscription-based SaaS.
-- Modular Feature Gating & Stripe Payment Integration.
+- **Planned:** 
+    - **Stripe Infrastructure:** Integration via "Run Payments with Stripe" Firebase Extension.
+    - **Subscription Tiers:** Mapping Stripe Price IDs to Free, Pro, and Enterprise modules.
+    - **Billing UI:** One-click access to Stripe Customer Portal from the Owner Dashboard.
+    - **Strict Gating:** Automated account suspension logic and feature blocking for unpaid tiers.
 
 ### Phase 8: Resilience & Native Mobile Distribution (Planned)
 - App Store & Google Play Distribution (Capacitor.js), Native Hardware Integration, Offline Storage.

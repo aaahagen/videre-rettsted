@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield, Settings2, Database, Trash2 } from 'lucide-react';
+import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield, Settings2, Database, Trash2, Megaphone, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -67,8 +67,8 @@ function UserActionsDropdown({ user, handleToggleStatus, handleDeleteUser, onEdi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          Endre
+        <Button variant="outline" size="sm" className="h-8">
+          Valg
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -123,6 +123,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
     field4Enabled: false, field4Label: '', field4Placeholder: '',
     doorCodeEnabled: false, doorCodeLabel: '', doorCodePlaceholder: '',
     contactPersonsEnabled: false, contactPersonsLabel: '', contactPersonsPlaceholder: '', 
+    salesMessageEnabled: true, salesMessageLabel: '', 
+    // New: Danger Reports (Avvik)
+    dangerReportsEnabled: true,
     // Depot
     depotAddress: '', depotLat: '', depotLng: '', depotRadius: 500,
     // Place numbering
@@ -162,6 +165,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             contactPersonsEnabled: org.fieldSettings?.contactPersons?.enabled ?? false,
             contactPersonsLabel: org.fieldSettings?.contactPersons?.label || '',
             contactPersonsPlaceholder: org.fieldSettings?.contactPersons?.placeholder || '', 
+            salesMessageEnabled: org.fieldSettings?.salesMessage?.enabled ?? true,
+            salesMessageLabel: org.fieldSettings?.salesMessage?.label || '',
+            dangerReportsEnabled: (org as any).dangerReportsEnabled ?? true, // New setting
             depotAddress: org.mainDepot?.address || '',
             depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
             depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
@@ -198,6 +204,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
       await firebaseDB.updateOrganization(organization.id, {
         name: orgSettings.name,
         orgNumber: orgSettings.orgNumber,
+        dangerReportsEnabled: orgSettings.dangerReportsEnabled, // Save new setting
         mainDepot: {
           address: orgSettings.depotAddress,
           coordinates: { lat: parseFloat(orgSettings.depotLat) || 0, lng: parseFloat(orgSettings.depotLng) || 0 },
@@ -209,14 +216,15 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           field3: { enabled: orgSettings.field3Enabled, label: orgSettings.field3Label, placeholder: orgSettings.field3Placeholder },
           field4: { enabled: orgSettings.field4Enabled, label: orgSettings.field4Label, placeholder: orgSettings.field4Placeholder },
           doorCode: { enabled: orgSettings.doorCodeEnabled, label: orgSettings.doorCodeLabel, placeholder: orgSettings.doorCodePlaceholder },
-          contactPersons: { enabled: orgSettings.contactPersonsEnabled, label: orgSettings.contactPersonsLabel, placeholder: orgSettings.contactPersonsPlaceholder }
+          contactPersons: { enabled: orgSettings.contactPersonsEnabled, label: orgSettings.contactPersonsLabel, placeholder: orgSettings.contactPersonsPlaceholder },
+          salesMessage: { enabled: orgSettings.salesMessageEnabled, label: orgSettings.salesMessageLabel, placeholder: 'Legg inn viktig melding til sjåfør' }
         },
         placeSettings: {
             autoGenerateCustomerNumbers: orgSettings.autoGenerateCustomerNumbers,
             customerNumberPrefix: orgSettings.customerNumberPrefix,
             nextCustomerNumber: orgSettings.nextCustomerNumber
         }
-      });
+      } as any);
       toast({ title: "Lagret", description: "Innstillinger er oppdatert." });
     } catch (error: any) {
       toast({ title: "Feil", description: error.message, variant: "destructive" });
@@ -274,7 +282,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
 
         {/* 1. USERS & ACCESS */}
         <Collapsible open={isUsersOpen} onOpenChange={setIsUsersOpen} className="space-y-2">
-            <Card className="overflow-hidden border-slate-200">
+            <Card className="overflow-hidden border-slate-200 shadow-sm">
                 <CardHeader className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 bg-slate-50/50">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setIsUsersOpen(!isUsersOpen)}>
                         <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 group-hover:border-primary/30 transition-colors">
@@ -282,7 +290,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                         </div>
                         <div>
                             <CardTitle className="font-headline text-xl">Brukere & Tilganger</CardTitle>
-                            {!isUsersOpen && <CardDescription className="text-xs">Administrer tilgang</CardDescription>}
+                            {!isUsersOpen && <CardDescription className="text-xs">Administrer hvem som har tilgang</CardDescription>}
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -296,8 +304,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                     <Select value={role} onValueChange={(v: any) => setRole(v)}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem>
-                                            <SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem>
+                                            <SelectItem value="driver">Fast Sjåfør</SelectItem><SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
+                                            <SelectItem value="loader">Lager / Laster</SelectItem><SelectItem value="planner">Ruteplanlegger</SelectItem>
                                             <SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
                                             <SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem>
                                         </SelectContent>
@@ -313,15 +321,45 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     <CardContent className="p-4 sm:p-6 space-y-4 border-t">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Søk brukere..." className="pl-10 h-10" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                            <Input placeholder="Søk brukere..." className="pl-10 h-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                         </div>
-                        <div className="rounded-xl border divide-y overflow-hidden">
+                        <div className="rounded-xl border divide-y overflow-hidden bg-white">
                             {filteredUsers.map(u => (
-                                <div key={u.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors">
-                                    <div className="col-span-4"><p className="font-bold text-sm">{u.name || 'Ufullført'}</p><p className="text-[10px] text-slate-500">{u.email}</p></div>
-                                    <div className="col-span-3"><Select disabled={u.id === dbUser?.id} value={u.role} onValueChange={v => handleUpdateRole(u.id, v)}><SelectTrigger className="h-8 text-[10px] bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem><SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem><SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem></SelectContent></Select></div>
-                                    <div className="col-span-3"><Badge className={u.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}>{u.status || 'Aktiv'}</Badge></div>
-                                    <div className="col-span-2 text-right"><UserActionsDropdown user={u} handleToggleStatus={handleToggleStatus} handleDeleteUser={handleDeleteUser} onEditName={() => { setEditingUser(u); setNewName(u.name || ''); }} /></div>
+                                <div key={u.id} className="flex flex-col sm:grid sm:grid-cols-12 gap-4 p-4 items-start sm:items-center hover:bg-slate-50 transition-colors">
+                                    <div className="w-full sm:col-span-4 flex justify-between items-center sm:block">
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-sm truncate">{u.name || 'Ufullført'}</p>
+                                            <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
+                                        </div>
+                                        <div className="sm:hidden flex items-center gap-2">
+                                            <div className={`h-2 w-2 rounded-full ${u.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}`} />
+                                            <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">{u.status === 'paused' ? 'Pauset' : 'Aktiv'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-full sm:col-span-3">
+                                        <div className="flex sm:block items-center gap-2">
+                                            <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Rolle:</span>
+                                            <Select disabled={u.id === dbUser?.id} value={u.role} onValueChange={v => handleUpdateRole(u.id, v)}>
+                                                <SelectTrigger className="h-8 text-[10px] bg-slate-50 border-none shadow-none"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem>
+                                                    <SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem>
+                                                    <SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
+                                                    <SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="hidden sm:block sm:col-span-3">
+                                        <Badge className={u.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}>{u.status || 'Aktiv'}</Badge>
+                                    </div>
+                                    <div className="w-full sm:col-span-2 text-right flex justify-between sm:justify-end items-center gap-2 pt-2 sm:pt-0 border-t sm:border-none border-slate-100">
+                                        <div className="sm:hidden flex items-center gap-2">
+                                            <Label className="text-[10px] font-bold text-slate-400 uppercase">Pause:</Label>
+                                            <Switch checked={u.status !== 'paused'} disabled={u.id === dbUser?.id} onCheckedChange={() => handleToggleStatus(u.id, u.status)} className="scale-75" />
+                                        </div>
+                                        <UserActionsDropdown user={u} handleToggleStatus={handleToggleStatus} handleDeleteUser={handleDeleteUser} onEditName={() => { setEditingUser(u); setNewName(u.name || ''); }} />
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -339,11 +377,12 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     <Settings2 className="h-5 w-5 text-blue-600" />
                     <div>
                         <CardTitle className="font-headline text-xl">Tilpasning av Leveringssteder</CardTitle>
-                        <CardDescription className="text-xs">Endre navn og synlighet for felt i appen</CardDescription>
+                        <CardDescription className="text-xs">Endre kundenummerering og feltvisning</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="p-6 space-y-8">
+                {/* Customer Numbering */}
                 <div className="space-y-4">
                   <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2"><Hash className="h-3.5 w-3.5" /> Kundenummerering</h3>
                   <div className="p-4 rounded-xl border bg-slate-50/50 space-y-6 max-w-3xl">
@@ -361,7 +400,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-slate-100">
-                    <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Felt i "Nytt Sted"-skjema</h3>
+                    <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Tilpass Skjema for "Nytt Sted"</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
                         <FieldConfig label="Felt 1" enabled={orgSettings.descEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, descEnabled: v }))} name={orgSettings.descLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, descLabel: v }))} placeholder={orgSettings.descPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, descPlaceholder: v }))} />
                         <FieldConfig label="Felt 2" enabled={orgSettings.notesEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, notesEnabled: v }))} name={orgSettings.notesLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, notesLabel: v }))} placeholder={orgSettings.notesPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, notesPlaceholder: v }))} />
@@ -369,12 +408,39 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                         <FieldConfig label="Felt 4" enabled={orgSettings.field4Enabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, field4Enabled: v }))} name={orgSettings.field4Label} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, field4Label: v }))} placeholder={orgSettings.field4Placeholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, field4Placeholder: v }))} />
                         <FieldConfig label="Dørkode" enabled={orgSettings.doorCodeEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, doorCodeEnabled: v }))} name={orgSettings.doorCodeLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodeLabel: v }))} placeholder={orgSettings.doorCodePlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodePlaceholder: v }))} />
                         <FieldConfig label="Kontaktpersoner" enabled={orgSettings.contactPersonsEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, contactPersonsEnabled: v }))} name={orgSettings.contactPersonsLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, contactPersonsLabel: v }))} />
+                        <div className="md:col-span-2 pt-4 border-t border-dashed">
+                            <FieldConfig icon={<Megaphone className="h-4 w-4 text-amber-500" />} label="Midlertidig Salgsmelding" enabled={orgSettings.salesMessageEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, salesMessageEnabled: v }))} name={orgSettings.salesMessageLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, salesMessageLabel: v }))} />
+                        </div>
                     </div>
                 </div>
             </CardContent>
         </Card>
 
-        {/* 3. DEPOT & GEOFENCING */}
+        {/* 3. SAFETY & DANGER REPORTS (Restored/Added) */}
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <ShieldAlert className="h-5 w-5 text-red-600" />
+                    <div>
+                        <CardTitle className="font-headline text-xl">Sikkerhet & Avvik</CardTitle>
+                        <CardDescription className="text-xs">Administrer systemet for faremeldinger og avvik</CardDescription>
+                    </div>
+                </div>
+                <Switch checked={orgSettings.dangerReportsEnabled} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, dangerReportsEnabled: v }))} />
+            </CardHeader>
+            {orgSettings.dangerReportsEnabled && (
+                <CardContent className="p-6">
+                    <div className="flex items-start gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-800">
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
+                        <p className="text-sm font-medium">
+                            Når avvikshåndtering er aktivert, kan sjåfører rapportere farlige forhold ved leveringssteder. Administratorer må gjennomgå og løse disse sakene i avvikspanelet.
+                        </p>
+                    </div>
+                </CardContent>
+            )}
+        </Card>
+
+        {/* 4. DEPOT & GEOFENCING */}
         <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b p-6">
                 <div className="flex items-center gap-3">
@@ -394,7 +460,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             </CardContent>
         </Card>
 
-        {/* 4. AUDIT & DATA */}
+        {/* 5. AUDIT & DATA */}
         {organization && (
             <Card className="border-slate-200 shadow-sm overflow-hidden">
                 <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center gap-3"><Shield className="h-5 w-5 text-amber-600" /><CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle></CardHeader>
@@ -445,10 +511,16 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   );
 }
 
-function FieldConfig({ label, enabled, onEnabledChange, name, onNameChange, placeholder, onPlaceholderChange }: any) {
+function FieldConfig({ icon, label, enabled, onEnabledChange, name, onNameChange, placeholder, onPlaceholderChange }: any) {
     return (
         <div className="space-y-4 p-4 rounded-xl border bg-white shadow-sm">
-            <div className="flex items-center justify-between"><Label className="text-sm font-bold uppercase text-slate-700">{label}</Label><Switch checked={enabled} onCheckedChange={onEnabledChange} /></div>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    {icon}
+                    <Label className="text-sm font-bold uppercase text-slate-700">{label}</Label>
+                </div>
+                <Switch checked={enabled} onCheckedChange={onEnabledChange} />
+            </div>
             <div className={cn("space-y-3", !enabled && "opacity-30 pointer-events-none")}>
                 <div className="space-y-1"><Label className="text-[10px] font-bold text-slate-400 uppercase">Navn i appen</Label><Input value={name} onChange={e => onNameChange(e.target.value)} className="h-9 text-xs bg-slate-50 border-none font-bold" /></div>
                 {onPlaceholderChange && <div className="space-y-1"><Label className="text-[10px] font-bold text-slate-400 uppercase">Hjelpetekst</Label><Input value={placeholder} onChange={e => onPlaceholderChange(e.target.value)} className="h-9 text-xs bg-slate-50 border-none" /></div>}
