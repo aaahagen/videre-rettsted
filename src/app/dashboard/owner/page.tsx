@@ -1,21 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Globe, TrendingUp, Users, MapPin, Truck, Building2, ExternalLink } from 'lucide-react';
+import { Loader2, Globe, TrendingUp, Users, MapPin, Truck, Building2, ExternalLink, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseDB } from '@/lib/firebase/database';
 import { superDB } from '@/lib/firebase/super'; 
-import { Organization, Order } from '@/lib/types';
+import { Organization, Order, Vehicle, User } from '@/lib/types';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card as TremorCard, Metric, Text, Flex, ProgressBar, AreaChart } from '@tremor/react';
-import { subMonths, format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { subMonths, format, startOfMonth, endOfMonth, isWithinInterval, differenceInDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
+/**
+ * Representasjon av månedsbasert statistikk for ordrevolum.
+ */
 interface MonthlyData {
     date: string;
     start: Date;
@@ -23,11 +27,30 @@ interface MonthlyData {
     count: number;
 }
 
+/**
+ * OwnerDashboard er hovedvisningen for organisasjonens eiere og ledelse.
+ * 
+ * Dashbordet gir en høynivå oversikt over:
+ * - Kjerne-beregninger (Brukere, Adressedatabase, Flåte)
+ * - Veksttrender (Ordrevolum over tid)
+ * - Samsvarsstatus (Compliance for fartsskriver og sjåførkort)
+ * - Abonnement og API-integrasjoner
+ * 
+ * Kompononentet håndterer automatisk autorisasjonssjekk (kun 'owner' eller 'super_admin')
+ * og henter sanntidsdata fra organisasjonens samlinger.
+ * 
+ * @example
+ * ```tsx
+ * <OwnerDashboard />
+ * ```
+ */
 export default function OwnerDashboard() {
   const { dbUser, loading } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [stats, setStats] = useState({ users: 0, places: 0, vehicles: 0, orders: 0 });
   const [chartData, setChartData] = useState<{ date: string; Ordrer: number }[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
@@ -42,18 +65,27 @@ export default function OwnerDashboard() {
     }
   }, [dbUser, loading, router]);
 
+  /**
+   * Henter alle nødvendige data for organisasjonen.
+   * 
+   * @param orgId - ID-en til organisasjonen som skal lastes.
+   */
   const loadData = async (orgId: string) => {
     setIsLoading(true);
     try {
-      const org = await firebaseDB.getOrganization(orgId);
-      setOrganization(org);
-      
-      const orgStats = await superDB.getOrgStats(orgId);
-      setStats(orgStats);
+      const [org, orgStats, allOrders, allVehicles, allUsers] = await Promise.all([
+        firebaseDB.getOrganization(orgId),
+        superDB.getOrgStats(orgId),
+        firebaseDB.getOrders(orgId),
+        firebaseDB.getVehicles(orgId),
+        firebaseDB.getUsers(orgId)
+      ]);
 
-      // Fetch orders to populate chart
-      const orders = await firebaseDB.getOrders(orgId);
-      processChartData(orders);
+      setOrganization(org);
+      setStats(orgStats);
+      setVehicles(allVehicles);
+      setDrivers(allUsers.filter(u => u.role === 'driver' || u.role === 'contractor'));
+      processChartData(allOrders);
       
     } catch (error: any) {
       console.error("Error loading owner data:", error);
@@ -67,6 +99,11 @@ export default function OwnerDashboard() {
     }
   };
 
+  /**
+   * Beregner månedlig ordrevolum for de siste 6 månedene.
+   * 
+   * @param orders - Listen over alle ordrer i organisasjonen.
+   */
   const processChartData = (orders: Order[]) => {
       const last6Months: MonthlyData[] = [];
       for (let i = 5; i >= 0; i--) {
@@ -104,6 +141,34 @@ export default function OwnerDashboard() {
       })));
   };
 
+  /**
+   * Beregner samsvarsstatus (Compliance) for flåte og sjåfører.
+   * Returnerer prosentsatser for nedlastinger som er innenfor fristen.
+   */
+  const complianceStats = useMemo(() => {
+    const today = new Date();
+    
+    // Fleet: 90 days requirement
+    const heavyVehicles = vehicles.filter(v => v.type === 'truck' || v.type === 'tractor');
+    const fleetCompliant = heavyVehicles.filter(v => {
+        if (!v.lastTachoDownloadDate) return false;
+        return differenceInDays(today, parseISO(v.lastTachoDownloadDate)) <= 90;
+    }).length;
+    
+    // Drivers: 28 days requirement
+    const driversCompliant = drivers.filter(d => {
+        if (!d.lastTachoDownloadDate) return false;
+        return differenceInDays(today, parseISO(d.lastTachoDownloadDate)) <= 28;
+    }).length;
+
+    return {
+        fleet: heavyVehicles.length > 0 ? (fleetCompliant / heavyVehicles.length) * 100 : 100,
+        drivers: drivers.length > 0 ? (driversCompliant / drivers.length) * 100 : 100,
+        fleetTotal: heavyVehicles.length,
+        driversTotal: drivers.length
+    };
+  }, [vehicles, drivers]);
+
   if (loading || isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -121,7 +186,7 @@ export default function OwnerDashboard() {
             {organization?.name || 'Executive'} <span className="text-slate-400">Oversikt</span>
           </h1>
           <p className="text-sm text-slate-500 font-medium mt-1">
-            Overordnet statistikk og abonnement for bedriften.
+            Overordnet statistikk og samsvarsstatus for bedriften.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -164,7 +229,6 @@ export default function OwnerDashboard() {
             </CardContent>
         </Card>
         
-        {/* PILOT: Tremor Metric Card */}
         <TremorCard className="shadow-sm border-slate-200 ring-0 border" decoration="top" decorationColor="indigo">
             <Flex alignItems="start">
                 <div className="truncate">
@@ -179,6 +243,43 @@ export default function OwnerDashboard() {
             </Flex>
             <ProgressBar value={(stats.orders / 1000 * 100)} color="indigo" className="mt-2" />
         </TremorCard>
+      </div>
+
+      {/* COMPLIANCE DASHBOARD */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <TremorCard className="shadow-sm border-slate-200 ring-0 border" decoration="left" decorationColor={complianceStats.fleet >= 95 ? "emerald" : "orange"}>
+              <Flex alignItems="center" className="gap-3">
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <ShieldCheck className={cn("h-6 w-6", complianceStats.fleet >= 95 ? "text-emerald-500" : "text-orange-500")} />
+                  </div>
+                  <div className="flex-1">
+                      <Text className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Samsvar Flåte (90 dager)</Text>
+                      <Metric className="text-xl font-black text-slate-800 mt-1">{complianceStats.fleet.toFixed(0)}%</Metric>
+                  </div>
+                  {complianceStats.fleet < 100 && <AlertCircle className="h-4 w-4 text-orange-400" />}
+              </Flex>
+              <ProgressBar value={complianceStats.fleet} color={complianceStats.fleet >= 95 ? "emerald" : "orange"} className="mt-4" />
+              <Text className="mt-2 text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
+                  {complianceStats.fleetTotal} enheter under overvåkning
+              </Text>
+          </TremorCard>
+
+          <TremorCard className="shadow-sm border-slate-200 ring-0 border" decoration="left" decorationColor={complianceStats.drivers >= 95 ? "emerald" : "orange"}>
+              <Flex alignItems="center" className="gap-3">
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <Users className={cn("h-6 w-6", complianceStats.drivers >= 95 ? "text-emerald-500" : "text-orange-500")} />
+                  </div>
+                  <div className="flex-1">
+                      <Text className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Samsvar Sjåførkort (28 dager)</Text>
+                      <Metric className="text-xl font-black text-slate-800 mt-1">{complianceStats.drivers.toFixed(0)}%</Metric>
+                  </div>
+                  {complianceStats.drivers < 100 && <AlertCircle className="h-4 w-4 text-orange-400" />}
+              </Flex>
+              <ProgressBar value={complianceStats.drivers} color={complianceStats.drivers >= 95 ? "emerald" : "orange"} className="mt-4" />
+              <Text className="mt-2 text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
+                  {complianceStats.driversTotal} sjåfører under overvåkning
+              </Text>
+          </TremorCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
