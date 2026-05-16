@@ -78,6 +78,14 @@ Defined in: [types.ts:255](https://github.com/aaahagen/videre-rettsted/blob/main
 
 ***
 
+### lastTachoDownloadDate?
+
+> `optional` **lastTachoDownloadDate?**: `string`
+
+Defined in: [types.ts:258](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L258)
+
+***
+
 ### name
 
 > **name**: `string`

@@ -31,7 +31,7 @@ ID-en til brukeren som utførte handlingen.
 
 ### action
 
-`"create_place"` \| `"delete_place"` \| `"login"` \| `"admin_view_worklog"` \| `"export_hr_data"`
+`"create_place"` \| `"delete_place"` \| `"login"` \| `"admin_view_worklog"` \| `"export_hr_data"` \| `"view_sensitive_personnel_data"`
 
 Type handling som ble utført.
 
@@ -39,7 +39,7 @@ Type handling som ble utført.
 
 `any`
 
-Valgfri metadata knyttet til hendelsen.
+Valgfri metadata knyttet til hendelsen (f.eks. hvilken ansatt som ble sett).
 
 ## Returns
 
@@ -48,5 +48,5 @@ Valgfri metadata knyttet til hendelsen.
 ## Example
 
 ```typescript
-await logEvent("org_123", "user_abc", "delete_place", { placeId: "p_99", name: "Gammelt lager" });
+await logEvent("org_123", "user_abc", "view_sensitive_personnel_data", { targetUserId: "driver_99", targetUserName: "Ola" });
 ```

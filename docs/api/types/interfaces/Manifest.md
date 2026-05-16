@@ -6,7 +6,7 @@
 
 # Interface: Manifest
 
-Defined in: [types.ts:530](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L530)
+Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L538)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:530](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L549)
+Defined in: [types.ts:557](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L557)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:549](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:531](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L531)
+Defined in: [types.ts:539](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L539)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:531](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **notes?**: [`ManifestNote`](ManifestNote.md)[]
 
-Defined in: [types.ts:546](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L546)
+Defined in: [types.ts:554](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L554)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:546](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orders**: `object`[]
 
-Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L536)
+Defined in: [types.ts:544](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L544)
 
 #### barcode
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:533](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L533)
+Defined in: [types.ts:541](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L541)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [types.ts:533](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **routeId**: `string`
 
-Defined in: [types.ts:532](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L532)
+Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L540)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [types.ts:532](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"loading"` \| `"pending"` \| `"verified"` \| `"departed"`
 
-Defined in: [types.ts:535](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L535)
+Defined in: [types.ts:543](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L543)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types.ts:535](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **updatedAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L550)
+Defined in: [types.ts:558](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L558)
 
 ***
 
@@ -110,7 +110,7 @@ Defined in: [types.ts:550](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **vehicleId**: `string`
 
-Defined in: [types.ts:534](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L534)
+Defined in: [types.ts:542](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L542)
 
 ***
 
@@ -118,7 +118,7 @@ Defined in: [types.ts:534](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **verifiedAt?**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:547](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L547)
+Defined in: [types.ts:555](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L555)
 
 ***
 
@@ -126,4 +126,4 @@ Defined in: [types.ts:547](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **verifiedBy?**: `string`
 
-Defined in: [types.ts:548](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L548)
+Defined in: [types.ts:556](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L556)

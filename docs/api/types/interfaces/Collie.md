@@ -6,7 +6,7 @@
 
 # Interface: Collie
 
-Defined in: [types.ts:483](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L483)
+Defined in: [types.ts:491](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L491)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:483](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **handlingUnitId?**: `string`
 
-Defined in: [types.ts:486](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L486)
+Defined in: [types.ts:494](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L494)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:486](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:484](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L484)
+Defined in: [types.ts:492](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L492)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:484](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **lineItemId**: `string`
 
-Defined in: [types.ts:485](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L485)
+Defined in: [types.ts:493](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L493)
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: [types.ts:485](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"pending"` \| `"loaded"` \| `"delivered"` \| `"failed"`
 
-Defined in: [types.ts:487](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L487)
+Defined in: [types.ts:495](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L495)

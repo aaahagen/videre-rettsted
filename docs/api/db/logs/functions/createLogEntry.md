@@ -8,7 +8,7 @@
 
 > **createLogEntry**(`logEntry`): `Promise`\<`string`\>
 
-Defined in: [db/logs.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/logs.ts#L60)
+Defined in: [db/logs.ts:64](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/logs.ts#L64)
 
 Oppretter en rå loggføring i systemloggen.
 

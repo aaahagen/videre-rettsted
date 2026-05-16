@@ -6,7 +6,7 @@
 
 # Interface: Contract
 
-Defined in: [types.ts:311](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L311)
+Defined in: [types.ts:319](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L319)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:311](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **contractedHours**: `number`
 
-Defined in: [types.ts:315](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L315)
+Defined in: [types.ts:323](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L323)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:315](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **endDate?**: `string`
 
-Defined in: [types.ts:314](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L314)
+Defined in: [types.ts:322](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L322)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:314](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:312](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L312)
+Defined in: [types.ts:320](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L320)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:312](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **role**: `string`
 
-Defined in: [types.ts:316](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L316)
+Defined in: [types.ts:324](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L324)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:316](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **salary?**: `number`
 
-Defined in: [types.ts:317](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L317)
+Defined in: [types.ts:325](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L325)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [types.ts:317](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **startDate**: `string`
 
-Defined in: [types.ts:313](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L313)
+Defined in: [types.ts:321](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L321)
