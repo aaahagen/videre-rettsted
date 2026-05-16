@@ -24,7 +24,8 @@ import {
   GraduationCap,
   Sparkles,
   Globe,
-  AlertTriangle
+  AlertTriangle,
+  BookOpen
 } from 'lucide-react';
 import {
   Sidebar,
@@ -197,6 +198,12 @@ export default function AppSidebar() {
       items: [
         { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter' },
         { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver'] },
+      ]
+    },
+    {
+      label: 'Hjelp & Støtte',
+      items: [
+        { href: '/dashboard/manual', icon: BookOpen, label: 'Brukermanual' }
       ]
     },
     {
