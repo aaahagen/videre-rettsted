@@ -37,6 +37,11 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   **Avvikshåndtering (Danger Reports):** An integrated loop for drivers to report physical hazards at delivery locations. 
     *   Open reports flag the location visually (Red).
     *   Reports require an explanation and optional photographic evidence to be marked as resolved (Green).
+    *   Dedicated dashboard at `/dashboard/reports` for global oversight of hazards.
+*   **HMS Checklists:** Places can require a safety checklist to be completed. 
+    *   Admins define questions at the organization level.
+    *   Drivers/HMS Responsibles complete the checklists at the place level.
+    *   A full audit log and CSV export are available at `/dashboard/hms`.
 
 ### C. Order & Manifest Operations
 *   **Dual Intake:** Orders must be created manually (for redundancy/ad-hoc) or via Bulk CSV/API.

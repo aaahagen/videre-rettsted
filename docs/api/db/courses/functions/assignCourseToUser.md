@@ -16,7 +16,7 @@ Tildeler et kurs til en spesifikk bruker.
 
 ### assignment
 
-`Omit`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md), `"id"` \| `"assignedAt"`\>
+`Omit`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md), `"id"` \| `"assignedAt"` \| `"updatedAt"`\>
 
 Tildelingsdata (uten ID).
 

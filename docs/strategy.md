@@ -58,7 +58,7 @@ Leveraged data structures from previous phases to manage incoming jobs.
 
 ### Phase 5: Managed Onboarding & Hardened Security (CURRENT)
 Closing open vulnerabilities and moving to a white-glove onboarding process.
-- **Completed:** Owner Role implementation, Executive Dashboard.
+- **Completed:** Owner Role implementation, Executive Dashboard, Next.js 15 Migration & Build Verification, specialized roles (HMS/Sales).
 - **In Progress:** Closing public registration, locking organization creation to Super Admin only, MFA Planning.
 - **Planned:** API-First Design (Exposing KPIs via secure endpoints).
 

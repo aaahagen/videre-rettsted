@@ -1,45 +1,27 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo, use } from 'react';
-import { useGeolocation } from '@/hooks/use-geolocation';
+import { useEffect, useState, use } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { 
     Loader2, 
-    Trash2, 
     GripVertical, 
     Wand2, 
-    Save, 
     Route as RouteIcon, 
     MapPin, 
     ChevronLeft, 
-    Clock, 
-    Key, 
-    Car, 
     Truck, 
-    ExternalLink, 
-    CheckCircle2, 
-    Circle, 
-    Coffee, 
-    Wrench, 
     Home, 
-    Flag, 
     Info, 
     FileText, 
     Edit2, 
-    Plus,
     X,
-    Maximize2,
-    Star,
-    LayoutDashboard,
     ClipboardList,
-    Camera,
-    Map,
-    ChevronDown,
-    ChevronUp,
     Navigation,
-    Scan
+    Scan,
+    Car
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -62,12 +44,12 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth, db } from '@/lib/firebase/firebase';
-import { Route, DeliveryPlace, User, Vehicle, Order, Manifest } from '@/lib/types';
+import { Route, DeliveryPlace, Vehicle, Order, Manifest } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
     Dialog, 
@@ -79,16 +61,12 @@ import {
     DialogDescription
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { useAuth } from '@/components/auth-provider';
-import { PODModal } from '@/components/routes/pod-modal';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 interface SortableItemProps {
     id: string;
@@ -161,6 +139,13 @@ function SortablePlaceItem({ id, place, index, isOptimizing, onViewPlace, isComp
     );
 }
 
+// Minimal icons used in the simplified version
+const CheckCircle2 = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
 export default function RouteDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: routeId } = use(params);
   const [authUser, loadingAuth] = useAuthState(auth);
@@ -176,8 +161,6 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<DeliveryPlace | null>(null);
   
-  const [podModalOpen, setPodModalOpen] = useState(false);
-
   const [manifest, setManifest] = useState<Manifest | null>(null);
 
   const router = useRouter();
@@ -253,8 +236,8 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
       if (route && availablePlaces.length > 0) {
-          const routePlaces = route.stops
-              .map(stop => availablePlaces.find(p => p.id === stop.placeId))
+          const routePlaces = route.places
+              .map(placeId => availablePlaces.find(p => p.id === placeId))
               .filter((p): p is DeliveryPlace => !!p);
           setPlaces(routePlaces);
       }
@@ -270,14 +253,10 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
         const newPlacesOrder = arrayMove(places, oldIndex, newIndex);
         setPlaces(newPlacesOrder);
 
-        const newStops = newPlacesOrder.map((p, idx) => ({
-            placeId: p.id,
-            order: idx,
-            estimatedArrival: null
-        }));
+        const newPlaceIds = newPlacesOrder.map(p => p.id);
 
         try {
-            await firebaseDB.updateRoute(routeId, { stops: newStops });
+            await firebaseDB.updateRoute(routeId, { places: newPlaceIds });
         } catch (error) {
             toast({ title: 'Feil', description: 'Kunne ikke oppdatere rekkefølgen.', variant: 'destructive' });
         }
@@ -295,9 +274,10 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   };
 
   const handleDeleteRoute = async () => {
+    if (!dbUser?.orgId) return;
     if (!confirm('Er du sikker på at du vil slette denne ruten?')) return;
     try {
-        await firebaseDB.deleteRoute(routeId);
+        await firebaseDB.deleteRoute(dbUser.orgId, routeId);
         router.push('/dashboard/routes');
     } catch (error) {
         toast({ title: 'Feil', description: 'Kunne ikke slette ruten.', variant: 'destructive' });
@@ -320,7 +300,6 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   };
 
   const vehicle = route ? vehicles.find(v => v.id === route.vehicleId) : null;
-  const driver = route ? route.driverName : 'Ufordelt';
 
   if (isLoading || !route) return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -333,9 +312,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   };
 
   const routeOrders = orders.filter(o => o.routeId === routeId);
-  const totalWeight = routeOrders.reduce((sum, o) => sum + (o.totalWeight || 0), 0);
-  const totalVolume = routeOrders.reduce((sum, o) => sum + (o.totalVolume || 0), 0);
-  const totalPallets = routeOrders.reduce((sum, o) => sum + (o.palletCount || 0), 0);
+  const totalPallets = routeOrders.reduce((sum, o) => sum + (o.handlingUnits?.length || 0), 0);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -383,7 +360,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Sjåfør</span>
                             <div className="flex items-center gap-2">
                                 <Home className="h-4 w-4 text-indigo-500" />
-                                <span className="font-bold text-slate-700 truncate">{driver}</span>
+                                <span className="font-bold text-slate-700 truncate">{route.driverName || 'Ikke tildelt'}</span>
                             </div>
                         </div>
                         <div className="space-y-1">
@@ -506,9 +483,9 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                                         <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2">
                                             <FileText className="h-3 w-3" /> Instruksjoner
                                         </h3>
-                                        <p className="text-slate-600 leading-relaxed font-medium">
+                                        <div className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
                                             {selectedPlace.description || "Ingen spesifikke instruksjoner registrert for dette stedet."}
-                                        </p>
+                                        </div>
                                     </div>
 
                                     {selectedPlace.notes && (
@@ -516,9 +493,9 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                                             <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
                                                 <Info className="h-3 w-3" /> Viktige Notater
                                             </h3>
-                                            <p className="text-slate-600 leading-relaxed font-medium bg-amber-50 p-4 rounded-2xl border border-amber-100 italic">
+                                            <div className="text-slate-600 leading-relaxed font-medium bg-amber-50 p-4 rounded-2xl border border-amber-100 italic whitespace-pre-wrap">
                                                 "{selectedPlace.notes}"
-                                            </p>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -588,7 +565,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                       <Label>Kjøretøy</Label>
                       <Select 
                           value={route.vehicleId || 'none'} 
-                          onValueChange={(val) => setRoute({ ...route, vehicleId: val === 'none' ? null : val })}
+                          onValueChange={(val) => setRoute({ ...route, vehicleId: val === 'none' ? undefined : val })}
                       >
                           <SelectTrigger>
                               <SelectValue placeholder="Velg kjøretøy" />
@@ -596,7 +573,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                           <SelectContent>
                               <SelectItem value="none">Uten kjøretøy</SelectItem>
                               {vehicles.map(v => (
-                                  <SelectItem key={v.id} value={v.id}>{v.name} ({v.plate})</SelectItem>
+                                  <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
                               ))}
                           </SelectContent>
                       </Select>

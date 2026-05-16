@@ -14,6 +14,11 @@ This document outlines the technical architecture, design philosophy, and qualit
 *   **State Management**: React Context API (Session), Zustand (Local UI state)
 *   **Deployment**: Firebase App Hosting
 
+#### Next.js 15 Migration Notes (Async APIs)
+Starting with Next.js 15, certain APIs that were previously synchronous are now asynchronous. When writing or refactoring Page components:
+- **`params` and `searchParams`:** These are now Promises. You MUST unwrap them using `await` (in Server Components) or the `use()` hook (in Client Components).
+- **Layouts:** `params` in Layouts are also Promises and must be unwrapped.
+
 ### Future Mobile Architecture (Phase 8)
 To support App Store/Google Play distribution, the frontend will eventually be split:
 1.  **Admin Console:** Remains a robust Next.js web application utilizing Server Components.
@@ -30,6 +35,9 @@ All interactions with the backend are encapsulated within domain-specific reposi
 *   `src/lib/database.ts`: The main interface aggregator.
 *   `src/lib/db/`: Contains domain files (`users.ts`, `orders.ts`, `manifests.ts`, etc.).
 *   `src/lib/auth.ts` & `src/lib/storage.ts`: Interfaces for Auth and Storage.
+
+**Consistency Rules for DB Functions:**
+- Functions that modify or fetch data specific to an organization MUST accept `orgId` as a parameter to ensure strict multi-tenancy and compatibility with security rules.
 
 ### External Integrations
 *   **Fail-Safe Geocoding (`src/lib/geocoding.ts`):** Google Maps Geocoding API is primary; OpenStreetMap (Nominatim) is the automatic fallback to prevent rate-limit failures.

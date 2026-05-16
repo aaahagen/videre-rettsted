@@ -8,7 +8,7 @@
 
 > **getOrganizationAssignments**(`orgId`): `Promise`\<[`CourseAssignment`](../../../types/interfaces/CourseAssignment.md)[]\>
 
-Defined in: [db/courses.ts:151](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L151)
+Defined in: [db/courses.ts:152](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L152)
 
 Henter alle kurstildelinger for en hel organisasjon (for lederoversikt).
 

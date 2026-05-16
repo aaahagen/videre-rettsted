@@ -6,7 +6,7 @@
 
 # Interface: LogEntry
 
-Defined in: [types.ts:253](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L253)
+Defined in: [types.ts:258](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L258)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:253](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **action**: `"create_place"` \| `"delete_place"` \| `"login"` \| `"admin_view_worklog"`
 
-Defined in: [types.ts:257](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L257)
+Defined in: [types.ts:262](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L262)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:257](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **details?**: `any`
 
-Defined in: [types.ts:259](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L259)
+Defined in: [types.ts:264](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L264)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:259](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:254](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L254)
+Defined in: [types.ts:259](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L259)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:254](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:255](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L255)
+Defined in: [types.ts:260](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L260)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:255](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **timestamp**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:258](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L258)
+Defined in: [types.ts:263](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L263)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [types.ts:258](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **userId**: `string`
 
-Defined in: [types.ts:256](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L256)
+Defined in: [types.ts:261](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L261)

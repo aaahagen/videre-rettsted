@@ -7,16 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Next.js 15 Async APIs:** Resolved warnings regarding direct access to `params` and `searchParams` by unwrapping them with `React.use()` in all relevant page components. This ensures compatibility with Next.js 15's asynchronous routing model.
-
-### Changed
-- **Place Details UI Refactor:** Hidden the bottom action button bar when editing a place. This removes the redundant "Avbryt redigering" button, as the edit form (`PlaceForm`) already provides its own Cancel/Save controls.
-- **Place Form UI Improvements:** 
-    - The "Midlertidig Salgsmelding" card is now collapsed by default to reduce visual clutter on the creation and edit forms.
-    - Removed the small inline map pin icon from the address field.
-    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
-
 ### Added   
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
@@ -82,10 +72,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Driver Dashboard Gating:** The main dashboard for drivers now conditionally hides Logistics and Message sections based on organization setup.
     - **Workforce Gating:** The "Arbeidstid" punch-in card is now hidden if the workforce module is disabled.
     - **Global Statistics:** Super Admins can see total user counts across the entire platform.
-- **New `super_admin` Role:** Introduced a high-level administrative role with cross-organization visibility and system-wide configuration rights.
+- **New `super_admin` role:** Introduced a high-level administrative role with cross-organization visibility and system-wide configuration rights.
 - **Organization Status Management:** Super Admins can now toggle organization states between "Aktiv", "Prøveperiode" (Trial), and "Suspendert".
 
 ### Changed
+- **Documentation Pyramid Update:** Refreshed `engineering.md`, `domain.md`, and `strategy.md` to reflect Next.js 15 architecture, new specialized roles (`owner`, `hms_responsible`, `salesman`), and enhanced feature specs for Danger Reports and HMS checklists.
 - **Super Admin Search Context:** Removed the top-level main navigation search bar from the Super Admin panel to keep the interface clean, as global search is handled within the panel itself.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact and readable. Moved the search bar to the header, compressed the organization statistics into a horizontal bar, and redesigned the module toggles as compact pill-shaped badges.
 - **Place Form Redesign:** Converted the "Grunnleggende informasjon", "Leveringsdetaljer", and "HMS Sjekkliste" sections in the place creation form to collapsible cards for better organization and consistency with the rest of the form.
@@ -101,8 +92,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar Architecture:** Refactored the sidebar to support dynamic module checks and enhanced role-based filtering for `super_admin`.
 - **Logistics Menu Order:** Reorganized the Logistikk sidebar group into a more logical operational flow (Ordrer -> Ruter -> Auto-plan -> Lasterampe -> Overvåkning).
 - **Organization Data Model:** Expanded the `Organization` interface to include `status` and `modules` configuration.
+- **Place Details UI Refactor:** Hidden the bottom action button bar when editing a place. This removes the redundant "Avbryt redigering" button, as the edit form (`PlaceForm`) already provides its own Cancel/Save controls.
+- **Place Form UI Improvements:** 
+    - The "Midlertidig Salgsmelding" card is now collapsed by default to reduce visual clutter on the creation and edit forms.
+    - Removed the small inline map pin icon from the address field.
+    - Added a dedicated full-width (on mobile) "Hent min posisjon via GPS" button below the address field, placed alongside the geocoding button for better accessibility and touch targets.
 
 ### Fixed
+- **Next.js 15 Migration & Build Stability:** 
+    - Completed full verification of Next.js 15 migration with a successful production build (`npm run build`).
+    - Resolved remaining type errors in `RouteDetailsPage` and `InvitePage`.
+    - Fixed missing `Image` import and corrected `vehicleId` nullability in Route details.
+    - Standardized `Invitation` and `Route` interfaces in `src/lib/types.ts` to include previously missing denormalized fields (`driverName`, `status`, `orgId`).
+    - Fixed database call signatures to consistently pass `orgId` where required (e.g., `deleteRoute`).
 - **Admin Notification Overload:** Refactored the unread message logic for administrative roles (`super_admin`, `admin`, `owner`). Admins are no longer alerted to private direct messages between other users, reducing notification clutter while still allowing monitoring.
 - **Build Failure (Dependencies):** Resolved a production build failure by adding missing `@types` for `file-saver`, `jszip`, and `bwip-js`.
 - **Build Failure (React 19):** Added dependency overrides for `react` and `react-dom` to resolve peer dependency conflicts between React 19 and older UI libraries like Tremor.
@@ -128,6 +130,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Fixed `.toDate()` type errors by implementing a safe date conversion helper.
     - Added safe array checks for `readBy` and name fields to prevent crashes.
 - **Role Propagation:** Updated message count and permission logic to correctly account for the new `super_admin` role across the entire application.
+- **Next.js 15 Async APIs & Cleanup (Completed):** 
+    - Resolved architectural shift issues in Next.js 15 where `params` and `searchParams` are now Promises.
+    - Fixed hidden type mismatches in `Course` and `Manifest` models.
+    - Corrected database function signatures (e.g., `deleteCourse`, `getOrder`, `processManifestScan`) to include mandatory `orgId` parameters.
 
 ## [0.1.0] - 2024-05-22
 

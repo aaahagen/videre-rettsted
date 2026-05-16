@@ -6,7 +6,7 @@
 
 # Interface: Vehicle
 
-Defined in: [types.ts:262](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L262)
+Defined in: [types.ts:267](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L267)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:262](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **capabilities**: `object`
 
-Defined in: [types.ts:282](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L282)
+Defined in: [types.ts:287](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L287)
 
 #### adr
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:282](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **capacity**: `object`
 
-Defined in: [types.ts:276](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L276)
+Defined in: [types.ts:281](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L281)
 
 #### notes?
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:276](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **config?**: `"tractor"` \| `"rigid"` \| `"drawbar"` \| `"semi"` \| `"box_swap"` \| `"fixed_box"`
 
-Defined in: [types.ts:268](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L268)
+Defined in: [types.ts:273](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L273)
 
 ***
 
@@ -86,7 +86,7 @@ Defined in: [types.ts:268](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:300](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L300)
+Defined in: [types.ts:305](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L305)
 
 ***
 
@@ -94,7 +94,7 @@ Defined in: [types.ts:300](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **currentStatuses**: (`"ready"` \| `"pending_workshop"` \| `"workshop"` \| `"observation"` \| `"on_tour"` \| `"parked"`)[]
 
-Defined in: [types.ts:299](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L299)
+Defined in: [types.ts:304](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L304)
 
 ***
 
@@ -102,7 +102,7 @@ Defined in: [types.ts:299](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **dimensions?**: `object`
 
-Defined in: [types.ts:271](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L271)
+Defined in: [types.ts:276](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L276)
 
 #### height?
 
@@ -122,7 +122,7 @@ Defined in: [types.ts:271](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **documents?**: `object`[]
 
-Defined in: [types.ts:303](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L303)
+Defined in: [types.ts:308](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L308)
 
 #### name
 
@@ -146,7 +146,7 @@ Defined in: [types.ts:303](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **euControl?**: `string`
 
-Defined in: [types.ts:294](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L294)
+Defined in: [types.ts:299](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L299)
 
 ***
 
@@ -154,7 +154,7 @@ Defined in: [types.ts:294](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **fuelType?**: `"diesel"` \| `"electric"` \| `"gas"` \| `"hybrid"`
 
-Defined in: [types.ts:269](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L269)
+Defined in: [types.ts:274](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L274)
 
 ***
 
@@ -162,7 +162,7 @@ Defined in: [types.ts:269](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:263](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L263)
+Defined in: [types.ts:268](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L268)
 
 ***
 
@@ -170,7 +170,7 @@ Defined in: [types.ts:263](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **images?**: `object`[]
 
-Defined in: [types.ts:302](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L302)
+Defined in: [types.ts:307](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L307)
 
 #### description?
 
@@ -194,7 +194,7 @@ Defined in: [types.ts:302](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **maxRange?**: `number`
 
-Defined in: [types.ts:270](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L270)
+Defined in: [types.ts:275](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L275)
 
 ***
 
@@ -202,7 +202,7 @@ Defined in: [types.ts:270](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **name**: `string`
 
-Defined in: [types.ts:265](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L265)
+Defined in: [types.ts:270](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L270)
 
 ***
 
@@ -210,7 +210,7 @@ Defined in: [types.ts:265](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **nextService?**: `string`
 
-Defined in: [types.ts:295](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L295)
+Defined in: [types.ts:300](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L300)
 
 ***
 
@@ -218,7 +218,7 @@ Defined in: [types.ts:295](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:264](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L264)
+Defined in: [types.ts:269](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L269)
 
 ***
 
@@ -226,7 +226,7 @@ Defined in: [types.ts:264](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **registrationNumber**: `string`
 
-Defined in: [types.ts:266](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L266)
+Defined in: [types.ts:271](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L271)
 
 ***
 
@@ -234,7 +234,7 @@ Defined in: [types.ts:266](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"active"` \| `"maintenance"` \| `"inactive"`
 
-Defined in: [types.ts:298](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L298)
+Defined in: [types.ts:303](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L303)
 
 ***
 
@@ -242,7 +242,7 @@ Defined in: [types.ts:298](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **tachographCalibration?**: `string`
 
-Defined in: [types.ts:296](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L296)
+Defined in: [types.ts:301](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L301)
 
 ***
 
@@ -250,7 +250,7 @@ Defined in: [types.ts:296](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"truck"` \| `"van"` \| `"car"` \| `"trailer"` \| `"tractor"`
 
-Defined in: [types.ts:267](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L267)
+Defined in: [types.ts:272](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L272)
 
 ***
 
@@ -258,4 +258,4 @@ Defined in: [types.ts:267](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **updatedAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:301](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L301)
+Defined in: [types.ts:306](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L306)

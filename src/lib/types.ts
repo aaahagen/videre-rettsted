@@ -211,6 +211,7 @@ export interface Route {
   endAddress?: string; // The ending address of the route
   notes?: string; // Crucial information about the route
   driverId?: string;
+  driverName?: string; // Added: Name of the driver (denormalized for display)
   isThirdParty?: boolean;
   thirdPartySupplier?: string; // Name of the 3PS company
   vehicleId?: string;
@@ -230,10 +231,14 @@ export interface Route {
 export interface Invitation {
   id: string;
   email: string;
-  organizationId: string;
+  orgId: string;
+  organizationId?: string;
   role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
+  status: 'pending' | 'accepted' | 'expired';
   expiresAt: FieldValue;
   organizationName?: string;
+  acceptedAt?: FieldValue;
+  acceptedBy?: string;
 }
 
 export interface User {
@@ -613,6 +618,7 @@ export interface CourseAssignment {
   status: 'assigned' | 'in_progress' | 'completed' | 'expired';
   progress?: number; // 0-100
   assignedAt: FieldValue | Date;
+  updatedAt: FieldValue | Date; // Added missing field
   completedAt?: FieldValue | Date;
   expiresAt?: FieldValue | Date; // For certifications that need renewal
 }

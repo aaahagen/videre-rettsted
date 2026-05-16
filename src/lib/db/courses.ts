@@ -117,11 +117,12 @@ export const deleteCourse = async (courseId: string, orgId: string): Promise<voi
  * });
  * ```
  */
-export const assignCourseToUser = async (assignment: Omit<CourseAssignment, 'id' | 'assignedAt'>): Promise<string> => {
+export const assignCourseToUser = async (assignment: Omit<CourseAssignment, 'id' | 'assignedAt' | 'updatedAt'>): Promise<string> => {
   const docRef = await addDoc(collection(db, 'courseAssignments'), {
     ...assignment,
     status: 'assigned',
     assignedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
   return docRef.id;
 };
@@ -169,7 +170,7 @@ export const getOrganizationAssignments = async (orgId: string): Promise<CourseA
  * @param progress - Valgfri prosentvis fremdrift (0-100).
  */
 export const updateAssignmentStatus = async (id: string, status: CourseAssignment['status'], progress?: number): Promise<void> => {
-  const updates: any = { status };
+  const updates: any = { status, updatedAt: serverTimestamp() };
   if (progress !== undefined) updates.progress = progress;
   if (status === 'completed') {
       updates.completedAt = serverTimestamp();

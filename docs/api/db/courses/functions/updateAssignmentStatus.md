@@ -8,7 +8,7 @@
 
 > **updateAssignmentStatus**(`id`, `status`, `progress?`): `Promise`\<`void`\>
 
-Defined in: [db/courses.ts:171](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L171)
+Defined in: [db/courses.ts:172](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/courses.ts#L172)
 
 Oppdaterer status og fremdrift for en kurstildeling.
 
@@ -25,7 +25,7 @@ Identifikatoren til tildelingen.
 
 ### status
 
-`"completed"` \| `"in_progress"` \| `"assigned"` \| `"expired"`
+`"completed"` \| `"expired"` \| `"in_progress"` \| `"assigned"`
 
 Den nye statusen (f.eks. 'in_progress', 'completed').
 

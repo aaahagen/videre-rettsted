@@ -6,7 +6,7 @@
 
 # Interface: ManifestNote
 
-Defined in: [types.ts:517](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L517)
+Defined in: [types.ts:522](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L522)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:517](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **content**: `string`
 
-Defined in: [types.ts:518](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L518)
+Defined in: [types.ts:523](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L523)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:518](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:519](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L519)
+Defined in: [types.ts:524](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L524)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:519](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdBy**: `string`
 
-Defined in: [types.ts:520](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L520)
+Defined in: [types.ts:525](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L525)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:520](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"note"` \| `"issue"`
 
-Defined in: [types.ts:522](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L522)
+Defined in: [types.ts:527](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L527)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [types.ts:522](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **userName?**: `string`
 
-Defined in: [types.ts:521](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L521)
+Defined in: [types.ts:526](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L526)

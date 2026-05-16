@@ -14,10 +14,12 @@ import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { BarcodeGenerator } from '@/components/orders/barcode-generator';
 import Link from 'next/link';
+import { useAuth } from '@/components/auth-provider';
 
 export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: orderId } = use(params);
   const [user, loading, error] = useAuthState(auth);
+  const { dbUser } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [place, setPlace] = useState<Place | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,9 +33,9 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     async function fetchOrder() {
-      if (orderId) {
+      if (orderId && dbUser?.orgId) {
         try {
-          const orderData = await firebaseDB.getOrder(orderId);
+          const orderData = await firebaseDB.getOrder(dbUser.orgId, orderId);
           if (orderData) {
             setOrder(orderData as Order);
             if (orderData.placeId) {
@@ -49,10 +51,10 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
       }
     }
 
-    if (user && orderId) {
+    if (user && orderId && dbUser?.orgId) {
       fetchOrder();
     }
-  }, [user, orderId]);
+  }, [user, orderId, dbUser?.orgId]);
 
   if (loading || isLoading) {
     return (
@@ -93,16 +95,15 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">
-                      Ordrenr: {order.orderNumber}
+                      Ordrenr: {order.barcode}
                     </Badge>
                     <Badge className={
                       order.status === 'delivered' ? 'bg-emerald-500' :
-                      order.status === 'in_transit' ? 'bg-amber-500' :
+                      order.status === 'loaded' ? 'bg-amber-500' :
                       'bg-slate-500'
                     }>
                       {order.status === 'pending' ? 'Venter' : 
-                       order.status === 'assigned' ? 'Tildelt rute' :
-                       order.status === 'in_transit' ? 'På vei' :
+                       order.status === 'loaded' ? 'Lastet' :
                        order.status === 'delivered' ? 'Levert' : 'Kansellert'}
                     </Badge>
                   </div>
@@ -117,23 +118,23 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Vekt</span>
-                    <p className="font-bold text-slate-700">{order.totalWeight || 0} kg</p>
+                    <p className="font-bold text-slate-700">{order.details?.weight || 0} kg</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Volum</span>
-                    <p className="font-bold text-slate-700">{order.totalVolume || 0} m³</p>
+                    <p className="font-bold text-slate-700">{order.details?.volume || 0} m³</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Paller</span>
-                    <p className="font-bold text-slate-700">{order.palletCount || 0}</p>
+                    <p className="font-bold text-slate-700">{order.handlingUnits?.length || 0}</p>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Kolli</span>
-                    <p className="font-bold text-slate-700">{order.collieCount || 0}</p>
+                    <p className="font-bold text-slate-700">{order.collies?.length || 0}</p>
                   </div>
                </div>
 
-               {order.items && order.items.length > 0 && (
+               {order.lineItems && order.lineItems.length > 0 && (
                  <div className="mt-8">
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">Varelinjer</h3>
                     <div className="border rounded-lg overflow-hidden">
@@ -146,11 +147,11 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
                           </tr>
                         </thead>
                         <tbody className="divide-y">
-                          {order.items.map((item, idx) => (
+                          {order.lineItems.map((item, idx) => (
                             <tr key={idx}>
                               <td className="px-4 py-3 font-medium">{item.description}</td>
                               <td className="px-4 py-3 text-right font-bold">{item.quantity}</td>
-                              <td className="px-4 py-3 text-slate-500">{item.unit}</td>
+                              <td className="px-4 py-3 text-slate-500">{item.type || 'kolli'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -182,16 +183,16 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
         <div className="space-y-6">
            <Card className="bg-white border-2 border-slate-900 shadow-xl">
               <CardHeader className="p-6 pb-2 text-center">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Hovedkolli Strekkode</CardTitle>
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Ordreetiketter</CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0 flex flex-col items-center">
-                 <div className="bg-white p-4 rounded-xl border-2 border-slate-100 mb-4">
-                    <BarcodeGenerator value={order.id} width={2} height={80} />
+                 <div className="mb-4">
+                    <Package className="h-12 w-12 text-slate-200" />
                  </div>
-                 <p className="text-[10px] font-mono font-bold text-slate-400 mb-4">{order.id}</p>
-                 <Button className="w-full bg-slate-900 hover:bg-slate-800" onClick={() => window.print()}>
-                    Skriv ut etikett
-                 </Button>
+                 <p className="text-[10px] font-mono font-bold text-slate-400 mb-4 text-center">
+                    Klikk under for å generere og skrive ut etiketter for alle kolli i denne ordren.
+                 </p>
+                 <BarcodeGenerator order={order} place={place} />
               </CardContent>
            </Card>
 

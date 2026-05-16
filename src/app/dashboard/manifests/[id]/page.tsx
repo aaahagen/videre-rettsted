@@ -37,10 +37,10 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     const scanInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (!manifestId) return;
+        if (!manifestId || !dbUser?.orgId) return;
 
         // 1. Listen to manifest
-        const unsubManifest = onSnapshot(doc(db, 'manifests', manifestId), async (docSnap) => {
+        const unsubManifest = onSnapshot(doc(db, `organizations/${dbUser.orgId}/manifests`, manifestId), async (docSnap) => {
             if (docSnap.exists()) {
                 const mData = { ...docSnap.data(), id: docSnap.id } as Manifest;
                 setManifest(mData);
@@ -57,10 +57,8 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                     }
 
                     // 4. Load orders for this route
-                    if (dbUser?.orgId) {
-                        const allOrders = await firebaseDB.getOrders(dbUser.orgId);
-                        setOrders(allOrders.filter(o => o.routeId === mData.routeId));
-                    }
+                    const allOrders = await firebaseDB.getOrders(dbUser.orgId);
+                    setOrders(allOrders.filter(o => o.routeId === mData.routeId));
                 }
                 setIsLoading(false);
             } else {
@@ -74,18 +72,18 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
 
     const handleScan = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!scanInput.trim() || !manifest || isProcessing) return;
+        if (!scanInput.trim() || !manifest || !dbUser?.orgId || isProcessing) return;
 
         setIsProcessing(true);
         try {
-            const result = await firebaseDB.processManifestScan(manifest.id, scanInput.trim(), dbUser!.id);
+            const result = await firebaseDB.processManifestScan(dbUser.orgId, manifest.id, scanInput.trim(), dbUser.id);
             if (result.success) {
                 toast({ 
                     title: 'Skannet!', 
-                    description: `${result.type === 'order' ? 'Ordre' : result.type} er lastet.`,
+                    description: result.message,
                 });
             } else {
-                toast({ title: 'Feil ved skanning', description: result.error, variant: 'destructive' });
+                toast({ title: 'Feil ved skanning', description: result.message, variant: 'destructive' });
             }
         } catch (error: any) {
             toast({ title: 'Systemfeil', description: error.message, variant: 'destructive' });
@@ -97,13 +95,13 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     };
 
     const handleAddNote = async () => {
-        if (!newNote.trim() || !manifest) return;
+        if (!newNote.trim() || !manifest || !dbUser?.orgId) return;
         try {
-            await firebaseDB.addManifestNote(manifest.id, {
-                authorId: dbUser!.id,
-                authorName: dbUser!.name || 'System',
-                text: newNote.trim(),
-                createdAt: new Date()
+            await firebaseDB.addManifestNote(dbUser.orgId, manifest.id, {
+                createdBy: dbUser.id,
+                userName: dbUser.name || 'System',
+                content: newNote.trim(),
+                type: 'note'
             });
             setNewNote('');
             setIsNoteModalOpen(false);
@@ -114,15 +112,15 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     };
 
     const handleFinalize = async () => {
-        if (!manifest) return;
-        const missingItems = manifest.items.filter(i => i.loadedCount < i.totalCount);
+        if (!manifest || !dbUser?.orgId) return;
+        const missingItems = manifest.orders.filter(i => i.loadedItems < i.totalItems);
         
         if (missingItems.length > 0) {
-            if (!confirm(`Det mangler ${missingItems.length} varer. Vil du likevel ferdigstille manifestet?`)) return;
+            if (!confirm(`Det mangler varer i ${missingItems.length} ordrer. Vil du likevel ferdigstille manifestet?`)) return;
         }
 
         try {
-            await firebaseDB.finalizeManifest(manifest.id);
+            await firebaseDB.finalizeManifest(dbUser.orgId, manifest.id, dbUser.id);
             toast({ title: 'Manifest ferdigstilt', description: 'Ruten er nå klar for utkjøring.' });
             router.push('/dashboard/manifests');
         } catch (error: any) {
@@ -138,8 +136,8 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
 
     if (!manifest) return null;
 
-    const totalItems = manifest.items.reduce((sum, i) => sum + i.totalCount, 0);
-    const loadedItems = manifest.items.reduce((sum, i) => sum + i.loadedCount, 0);
+    const totalItems = manifest.orders.reduce((sum, i) => sum + i.totalItems, 0);
+    const loadedItems = manifest.orders.reduce((sum, i) => sum + i.loadedItems, 0);
     const progress = totalItems > 0 ? (loadedItems / totalItems) * 100 : 0;
 
     return (
@@ -157,9 +155,9 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                             </Badge>
                             <Badge className={cn(
                                 "uppercase text-[10px] font-bold",
-                                manifest.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
+                                manifest.status === 'verified' ? 'bg-emerald-500' : 'bg-amber-500'
                             )}>
-                                {manifest.status === 'completed' ? 'Ferdigstilt' : 'Laster...'}
+                                {manifest.status === 'verified' ? 'Ferdigstilt' : 'Laster...'}
                             </Badge>
                         </div>
                         <h1 className="text-3xl font-black text-slate-900">{route?.name || 'Laster rute...'}</h1>
@@ -170,7 +168,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                     <Button variant="outline" onClick={() => setIsNoteModalOpen(true)}>
                         <MessageSquare className="mr-2 h-4 w-4" /> Notat
                     </Button>
-                    {manifest.status === 'active' && (
+                    {manifest.status !== 'verified' && (
                         <Button className="bg-emerald-600 hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-100" onClick={handleFinalize}>
                             <CheckCircle2 className="mr-2 h-4 w-4" /> Ferdigstill Manifest
                         </Button>
@@ -195,7 +193,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-slate-900">{vehicle?.name || 'Ingen bil tildelt'}</p>
-                                    <p className="text-xs font-bold text-slate-400 uppercase">{vehicle?.plate || '-'}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase">{vehicle?.registrationNumber || '-'}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -219,7 +217,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                         </CardContent>
                     </Card>
 
-                    {manifest.status === 'active' && (
+                    {manifest.status !== 'verified' && (
                         <Card className="border-2 border-dashed border-slate-200 bg-white">
                             <CardContent className="p-6">
                                 <form onSubmit={handleScan} className="space-y-4">
@@ -260,9 +258,9 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                     </div>
 
                     <div className="space-y-4">
-                        {manifest.items.map((item, idx) => {
+                        {manifest.orders.map((item, idx) => {
                             const order = orders.find(o => o.id === item.orderId);
-                            const isLoaded = item.loadedCount === item.totalCount;
+                            const isLoaded = item.loadedItems === item.totalItems;
                             
                             return (
                                 <Card key={idx} className={cn(
@@ -280,7 +278,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <Badge className="bg-slate-100 text-slate-600 border-none font-mono text-[10px]">
-                                                                #{item.orderNumber}
+                                                                #{item.barcode}
                                                             </Badge>
                                                             {isLoaded && (
                                                                 <Badge className="bg-emerald-100 text-emerald-700 border-none text-[10px] font-bold">
@@ -288,7 +286,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                                                 </Badge>
                                                             )}
                                                         </div>
-                                                        <h3 className="text-lg font-black text-slate-900">{item.placeName}</h3>
+                                                        <h3 className="text-lg font-black text-slate-900">{order?.details?.description || 'Ordre'}</h3>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-xs font-bold text-slate-400 uppercase mb-1">Progresjon</p>
@@ -297,7 +295,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                                                 "text-2xl font-black",
                                                                 isLoaded ? "text-emerald-600" : "text-slate-900"
                                                             )}>
-                                                                {item.loadedCount} <span className="text-slate-300">/</span> {item.totalCount}
+                                                                {item.loadedItems} <span className="text-slate-300">/</span> {item.totalItems}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -306,24 +304,24 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                                 <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
                                                     <div className="flex items-center gap-2">
                                                         <Package className="h-4 w-4 text-slate-400" />
-                                                        <span className="text-sm font-bold text-slate-600">{item.totalCount} {item.type}(er)</span>
+                                                        <span className="text-sm font-bold text-slate-600">{item.totalItems} kolli</span>
                                                     </div>
-                                                    {order?.totalWeight && (
+                                                    {order?.details?.weight && (
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                                            <span className="text-sm font-bold text-slate-600">{order.totalWeight} kg</span>
+                                                            <span className="text-sm font-bold text-slate-600">{order.details.weight} kg</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
                                             
                                             {/* MANUAL OVERRIDE CONTROLS (Only for admin/loader) */}
-                                            {manifest.status === 'active' && (
+                                            {manifest.status !== 'verified' && (
                                                 <div className="flex flex-col border-l">
                                                     <Button 
                                                         variant="ghost" 
                                                         className="flex-1 rounded-none px-4 hover:bg-emerald-50 hover:text-emerald-600 border-b"
-                                                        onClick={() => firebaseDB.incrementManifestItemLoadedCount(manifest.id, item.id)}
+                                                        onClick={() => firebaseDB.incrementManifestItemLoadedCount(dbUser!.orgId, manifest.id, item.orderId, dbUser!.id)}
                                                         disabled={isLoaded}
                                                     >
                                                         <Plus className="h-5 w-5" />
@@ -331,8 +329,8 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                                     <Button 
                                                         variant="ghost" 
                                                         className="flex-1 rounded-none px-4 hover:bg-red-50 hover:text-red-600"
-                                                        onClick={() => firebaseDB.decrementManifestItemLoadedCount(manifest.id, item.id)}
-                                                        disabled={item.loadedCount === 0}
+                                                        onClick={() => firebaseDB.decrementManifestItemLoadedCount(dbUser!.orgId, manifest.id, item.orderId)}
+                                                        disabled={item.loadedItems === 0}
                                                     >
                                                         <Minus className="h-5 w-5" />
                                                     </Button>
@@ -353,12 +351,12 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                 {manifest.notes.map((note, idx) => (
                                     <div key={idx} className="bg-slate-50 border p-4 rounded-2xl">
                                         <div className="flex justify-between items-start mb-2">
-                                            <p className="text-xs font-black text-indigo-600 uppercase">{note.authorName}</p>
+                                            <p className="text-xs font-black text-indigo-600 uppercase">{note.userName}</p>
                                             <p className="text-[10px] font-bold text-slate-400">
-                                                {format(note.createdAt instanceof Date ? note.createdAt : (note.createdAt as any).toDate(), 'HH:mm', { locale: nb })}
+                                                {format(note.createdAt instanceof Date ? note.createdAt : new Date(note.createdAt as string), 'HH:mm', { locale: nb })}
                                             </p>
                                         </div>
-                                        <p className="text-sm font-medium text-slate-700">{note.text}</p>
+                                        <p className="text-sm font-medium text-slate-700">{note.content}</p>
                                     </div>
                                 ))}
                             </div>

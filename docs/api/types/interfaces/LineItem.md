@@ -6,7 +6,7 @@
 
 # Interface: LineItem
 
-Defined in: [types.ts:467](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L467)
+Defined in: [types.ts:472](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L472)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:467](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **description**: `string`
 
-Defined in: [types.ts:469](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L469)
+Defined in: [types.ts:474](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L474)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:469](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **height?**: `number`
 
-Defined in: [types.ts:474](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L474)
+Defined in: [types.ts:479](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L479)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:474](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:468](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L468)
+Defined in: [types.ts:473](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L473)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:468](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **length?**: `number`
 
-Defined in: [types.ts:472](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L472)
+Defined in: [types.ts:477](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L477)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:472](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **quantity**: `number`
 
-Defined in: [types.ts:470](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L470)
+Defined in: [types.ts:475](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L475)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:470](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **type?**: `"other"` \| `"keg"` \| `"case"` \| `"box"`
 
-Defined in: [types.ts:475](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L475)
+Defined in: [types.ts:480](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L480)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:475](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **weightPerItem?**: `number`
 
-Defined in: [types.ts:471](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L471)
+Defined in: [types.ts:476](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L476)
 
 ***
 
@@ -70,4 +70,4 @@ Defined in: [types.ts:471](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **width?**: `number`
 
-Defined in: [types.ts:473](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L473)
+Defined in: [types.ts:478](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L478)
