@@ -1,4 +1,4 @@
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { LogEntry } from '../types';
 
@@ -11,14 +11,14 @@ import { LogEntry } from '../types';
  * @param orgId - Organisasjonens ID.
  * @param userId - ID-en til brukeren som utførte handlingen.
  * @param action - Type handling som ble utført.
- * @param details - Valgfri metadata knyttet til hendelsen.
+ * @param details - Valgfri metadata knyttet til hendelsen (f.eks. hvilken ansatt som ble sett).
  * 
  * @example
  * ```typescript
- * await logEvent("org_123", "user_abc", "delete_place", { placeId: "p_99", name: "Gammelt lager" });
+ * await logEvent("org_123", "user_abc", "view_sensitive_personnel_data", { targetUserId: "driver_99", targetUserName: "Ola" });
  * ```
  */
-export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data', details?: any) => {
+export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data' | 'view_sensitive_personnel_data', details?: any) => {
     try {
         await addDoc(collection(db, 'audit_logs'), {
             orgId,
@@ -39,7 +39,11 @@ export const logEvent = async (orgId: string, userId: string, action: 'create_pl
  * @returns En Promise med en liste over loggføringer (`LogEntry`).
  */
 export const getLogs = async (orgId: string): Promise<LogEntry[]> => {
-    const q = query(collection(db, 'audit_logs'), where('orgId', '==', orgId));
+    const q = query(
+        collection(db, 'audit_logs'), 
+        where('orgId', '==', orgId),
+        orderBy('timestamp', 'desc')
+    );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => {
         const data = doc.data();

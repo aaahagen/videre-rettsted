@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download, Shield, Landmark, Banknote, BookOpenCheck } from 'lucide-react';
-import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay, differenceInDays, parseISO } from 'date-fns';
+import { format, isValid, differenceInDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,6 @@ export default function WorkforcePage() {
     
     const [editingDriverProfile, setEditingDriverProfile] = useState<DriverProfile | null>(null);
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
-    const toggleCard = (id: string) => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
     
     useEffect(() => {
         setContext('Personell', '/dashboard/admin'); 
@@ -81,14 +80,37 @@ export default function WorkforcePage() {
         }
     };
 
-    const handleRegisterDownload = async (driverId: string) => {
+    const handleRegisterDownload = async (driver: DriverProfile) => {
         try {
             const today = format(new Date(), 'yyyy-MM-dd');
-            await firebaseDB.updateUser(driverId, { lastTachoDownloadDate: today });
+            await firebaseDB.updateUser(driver.id, { lastTachoDownloadDate: today });
+            
+            // Log the compliance action
+            if (dbUser) {
+                await logEvent(dbUser.orgId, dbUser.id, 'admin_view_worklog', {
+                    action: 'register_tacho_download',
+                    targetUserId: driver.id,
+                    targetUserName: driver.name
+                });
+            }
+
             toast({ title: "Nedlasting registrert", description: "Sjåførkort-nedlasting er oppdatert til i dag." });
             loadDrivers();
         } catch (error) {
             toast({ title: "Feil", description: "Kunne ikke registrere nedlasting.", variant: "destructive" });
+        }
+    };
+
+    const handleToggleCard = async (driver: DriverProfile) => {
+        const isExpanding = !expandedCards[driver.id];
+        setExpandedCards(prev => ({ ...prev, [driver.id]: isExpanding }));
+        
+        // GDPR LOGGING: Log when an admin views sensitive personnel data
+        if (isExpanding && dbUser && (dbUser.role === 'admin' || dbUser.role === 'owner' || dbUser.role === 'super_admin')) {
+            await logEvent(dbUser.orgId, dbUser.id, 'view_sensitive_personnel_data', {
+                targetUserId: driver.id,
+                targetUserName: driver.name
+            });
         }
     };
 
@@ -441,7 +463,7 @@ export default function WorkforcePage() {
                                                 <div className="space-y-4">
                                                     <div 
                                                         className="bg-slate-50 hover:bg-slate-100 transition-colors p-2.5 rounded-lg border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer relative"
-                                                        onClick={() => toggleCard(driver.id)}
+                                                        onClick={() => handleToggleCard(driver)}
                                                     >
                                                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Status {format(searchDate, 'dd.MM')}</span>
                                                         <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
@@ -473,7 +495,7 @@ export default function WorkforcePage() {
                                                                             size="sm" 
                                                                             variant="outline" 
                                                                             className="h-8 text-[10px] font-bold bg-white"
-                                                                            onClick={() => handleRegisterDownload(driver.id)}
+                                                                            onClick={(e) => { e.stopPropagation(); handleRegisterDownload(driver); }}
                                                                         >
                                                                             <Download className="h-3 w-3 mr-1" />
                                                                             Registrer i dag
