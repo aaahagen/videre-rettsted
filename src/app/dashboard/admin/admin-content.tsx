@@ -324,9 +324,16 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                             <Input placeholder="Søk brukere..." className="pl-10 h-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                         </div>
                         <div className="rounded-xl border divide-y overflow-hidden bg-white">
+                            {/* HEADER FOR TABLE ON DESKTOP */}
+                            <div className="hidden sm:grid sm:grid-cols-12 gap-4 p-4 font-bold bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500">
+                                <div className="col-span-5">Bruker</div>
+                                <div className="col-span-3">Rolle</div>
+                                <div className="col-span-2">Status</div>
+                                <div className="col-span-2 text-right">Valg</div>
+                            </div>
                             {filteredUsers.map(u => (
                                 <div key={u.id} className="flex flex-col sm:grid sm:grid-cols-12 gap-4 p-4 items-start sm:items-center hover:bg-slate-50 transition-colors">
-                                    <div className="w-full sm:col-span-4 flex justify-between items-center sm:block">
+                                    <div className="w-full sm:col-span-5 flex justify-between items-center sm:block">
                                         <div className="min-w-0">
                                             <p className="font-bold text-sm truncate">{u.name || 'Ufullført'}</p>
                                             <p className="text-[10px] text-slate-500 truncate">{u.email}</p>
@@ -340,7 +347,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                         <div className="flex sm:block items-center gap-2">
                                             <span className="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Rolle:</span>
                                             <Select disabled={u.id === dbUser?.id} value={u.role} onValueChange={v => handleUpdateRole(u.id, v)}>
-                                                <SelectTrigger className="h-8 text-[10px] bg-slate-50 border-none shadow-none"><SelectValue /></SelectTrigger>
+                                                <SelectTrigger className="h-8 text-[10px] bg-slate-50 border-none shadow-none w-full sm:max-w-[120px]"><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem>
                                                     <SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem>
@@ -350,14 +357,10 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                             </Select>
                                         </div>
                                     </div>
-                                    <div className="hidden sm:block sm:col-span-3">
-                                        <Badge className={u.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}>{u.status || 'Aktiv'}</Badge>
+                                    <div className="hidden sm:block sm:col-span-2">
+                                        <Badge className={cn("text-[10px] uppercase font-black", u.status === 'paused' ? 'bg-amber-500 text-white' : 'bg-green-500 text-white')}>{u.status === 'paused' ? 'Pauset' : 'Aktiv'}</Badge>
                                     </div>
-                                    <div className="w-full sm:col-span-2 text-right flex justify-between sm:justify-end items-center gap-2 pt-2 sm:pt-0 border-t sm:border-none border-slate-100">
-                                        <div className="sm:hidden flex items-center gap-2">
-                                            <Label className="text-[10px] font-bold text-slate-400 uppercase">Pause:</Label>
-                                            <Switch checked={u.status !== 'paused'} disabled={u.id === dbUser?.id} onCheckedChange={() => handleToggleStatus(u.id, u.status)} className="scale-75" />
-                                        </div>
+                                    <div className="w-full sm:col-span-2 text-right flex justify-end items-center gap-2 pt-2 sm:pt-0 border-t sm:border-none border-slate-100">
                                         <UserActionsDropdown user={u} handleToggleStatus={handleToggleStatus} handleDeleteUser={handleDeleteUser} onEditName={() => { setEditingUser(u); setNewName(u.name || ''); }} />
                                     </div>
                                 </div>
