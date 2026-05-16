@@ -112,6 +112,22 @@ Defined in: [types.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > **placeholder**: `string`
 
+#### salesMessage?
+
+> `optional` **salesMessage?**: `object`
+
+##### salesMessage.enabled?
+
+> `optional` **enabled?**: `boolean`
+
+##### salesMessage.label
+
+> **label**: `string`
+
+##### salesMessage.placeholder
+
+> **placeholder**: `string`
+
 ***
 
 ### hmsSettings?
@@ -150,7 +166,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:78](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L78)
+Defined in: [types.ts:83](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L83)
 
 #### dpaAcceptedAt?
 

@@ -6,7 +6,7 @@
 
 # Interface: Message
 
-Defined in: [types.ts:430](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L430)
+Defined in: [types.ts:435](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L435)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:430](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **content**: `string`
 
-Defined in: [types.ts:435](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L435)
+Defined in: [types.ts:440](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L440)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:435](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `Date` \| `FieldValue`
 
-Defined in: [types.ts:436](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L436)
+Defined in: [types.ts:441](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L441)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:436](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:431](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L431)
+Defined in: [types.ts:436](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L436)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:431](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:432](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L432)
+Defined in: [types.ts:437](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L437)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:432](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **readBy**: `string`[]
 
-Defined in: [types.ts:437](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L437)
+Defined in: [types.ts:442](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L442)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:437](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **recipientId**: `string`
 
-Defined in: [types.ts:434](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L434)
+Defined in: [types.ts:439](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L439)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:434](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **senderId**: `string`
 
-Defined in: [types.ts:433](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L433)
+Defined in: [types.ts:438](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L438)
 
 ***
 
@@ -70,4 +70,4 @@ Defined in: [types.ts:433](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"direct"` \| `"broadcast"`
 
-Defined in: [types.ts:438](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L438)
+Defined in: [types.ts:443](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L443)

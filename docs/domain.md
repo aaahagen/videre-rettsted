@@ -61,7 +61,7 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   Registry tracking dimensions, capacities, and capabilities (tail-lift, ADR).
 *   **Digital Inspections:** Drivers perform pre/post-trip safety checks.
 *   **Damage Triage Workflow:** Reported damages automatically flag the vehicle as "Observasjon" and create a structured report. Admins track workshop orders and repair receipts to return vehicles to "Klar" status.
-*   *(Future: Odometer tracking via driver prompts).*
+*   **Odometer Tracking:** Real-time tracking of vehicle mileage updated during driver inspections.
 
 ### F. Workforce Management & HR
 *   **Driver Profiles:** Store contact info, emergency contacts, legal info (SSN, Tax Code), and private admin notes.
