@@ -80,6 +80,7 @@ export interface Organization {
       enabled?: boolean;
     };
   };
+  dangerReportsEnabled?: boolean; // Added
   legal?: {
     dpaAcceptedAt?: {
       toDate: () => Date;

@@ -463,7 +463,15 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         {/* 5. AUDIT & DATA */}
         {organization && (
             <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center gap-3"><Shield className="h-5 w-5 text-amber-600" /><CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle></CardHeader>
+                <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center gap-3">
+                    <Shield className="h-5 w-5 text-amber-600" />
+                    <div>
+                        <CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle>
+                        <CardDescription className="text-xs">
+                            Logger viktige handlinger som innlogging, opprettelse og sletting av steder, uavhengig av hvilke moduler som er aktivert.
+                        </CardDescription>
+                    </div>
+                </CardHeader>
                 <AuditLogViewer orgId={organization.id} />
             </Card>
         )}

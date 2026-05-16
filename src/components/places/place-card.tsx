@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Map, Edit, Clock, Hash, MapPin, Shield, ShieldAlert, AlertTriangle } from 'lucide-react';
+import { Map, Edit, Clock, Hash, MapPin, Shield, ShieldAlert, AlertTriangle, Leaf, Building2 } from 'lucide-react';
 import type { DeliveryPlace, Organization } from '@/lib/types';
 import {
   Card,
@@ -100,7 +100,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
           {place.address}
         </CardDescription>
 
-        <div className="mt-2 flex items-center gap-1.5">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {place.customerNumber && (
                 <Badge className="bg-slate-100 text-slate-700 border-slate-200 shadow-sm hover:bg-slate-200 flex items-center gap-1 font-mono text-[10px] px-2 py-0.5">
                     <Hash className="h-3 w-3" />
@@ -115,6 +115,16 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
             {hasCoordinates && (
                 <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100 shadow-sm flex items-center justify-center font-bold text-[10px] w-6 h-6 p-0 rounded-md" title="Koordinater registrert - Klar for ruteplanlegging">
                     <MapPin className="h-3.5 w-3.5" />
+                </Badge>
+            )}
+            {place.isCityCenter && (
+                <Badge className="bg-blue-50 text-blue-600 border-blue-100 shadow-sm flex items-center justify-center font-bold text-[10px] w-6 h-6 p-0 rounded-md" title="Sentrumskjerne">
+                    <Building2 className="h-3.5 w-3.5" />
+                </Badge>
+            )}
+            {place.isZeroEmissionZone && (
+                <Badge className="bg-green-50 text-green-600 border-green-100 shadow-sm flex items-center justify-center font-bold text-[10px] w-6 h-6 p-0 rounded-md" title="Nullutslippssone">
+                    <Leaf className="h-3.5 w-3.5" />
                 </Badge>
             )}
         </div>
@@ -145,15 +155,17 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
                     </Link>
                 </Button>
             )}
-            <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
-                onClick={() => setIsReportModalOpen(true)}
-            >
-                <AlertTriangle className="mr-2 h-4 w-4" />
-                Meld Avvik
-            </Button>
+            {orgSettings?.dangerReportsEnabled !== false && (
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                    onClick={() => setIsReportModalOpen(true)}
+                >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Meld Avvik
+                </Button>
+            )}
         </div>
         <div className="flex w-full gap-2">
             <Button variant="outline" size="sm" asChild className="flex-1">

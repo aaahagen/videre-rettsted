@@ -117,7 +117,7 @@ type PlaceFormValues = z.infer<typeof placeSchema>;
 const DAYS = [
     { key: 'monday', label: 'Mandag' },
     { key: 'tuesday', label: 'Tirsdag' },
-    { key: 'wednesday', label: 'Onsdag' },
+    { key: 'wednesday', label: 'Wednesdag' },
     { key: 'thursday', label: 'Torsdag' },
     { key: 'friday', label: 'Fredag' },
     { key: 'saturday', label: 'Lørdag' },
@@ -619,6 +619,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   const contactPersonsLabel = organization?.fieldSettings?.contactPersons?.label || "Kontaktpersoner";
   const contactPersonsPlaceholder = organization?.fieldSettings?.contactPersons?.placeholder || "Kontaktpersoner...";
 
+  const salesMessageEnabled = organization?.fieldSettings?.salesMessage?.enabled ?? true;
+  const salesMessageLabel = organization?.fieldSettings?.salesMessage?.label || "Midlertidig Salgsmelding";
+
   const autoGenEnabled = organization?.placeSettings?.autoGenerateCustomerNumbers ?? false;
 
   const hmsAnswers = form.watch('hmsData.answers') || {};
@@ -832,7 +835,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             )}
 
             {/* SALES MESSAGE */}
-            {!isHmsResponsible && (
+            {!isHmsResponsible && salesMessageEnabled && (
             <Collapsible
               open={isSalesOpen}
               onOpenChange={setIsSalesOpen}
@@ -842,7 +845,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
                     <div className="flex items-center gap-3">
                         <Megaphone className="h-5 w-5 text-amber-500" />
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Midlertidig Salgsmelding</h3>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">{salesMessageLabel}</h3>
                     </div>
                     {isSalesOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </Button>

@@ -6,7 +6,7 @@
 
 # Interface: ManifestNote
 
-Defined in: [types.ts:535](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L535)
+Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L536)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:535](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **content**: `string`
 
-Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L536)
+Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L537)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:536](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdAt**: `string` \| `Date` \| `FieldValue`
 
-Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L537)
+Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L538)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:537](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **createdBy**: `string`
 
-Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L538)
+Defined in: [types.ts:539](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L539)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:538](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"note"` \| `"issue"`
 
-Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L540)
+Defined in: [types.ts:541](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L541)
 
 ***
 
@@ -46,4 +46,4 @@ Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **userName?**: `string`
 
-Defined in: [types.ts:539](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L539)
+Defined in: [types.ts:540](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L540)

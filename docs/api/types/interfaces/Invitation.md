@@ -6,7 +6,7 @@
 
 # Interface: Invitation
 
-Defined in: [types.ts:236](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L236)
+Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L237)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:236](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **acceptedAt?**: `FieldValue`
 
-Defined in: [types.ts:245](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L245)
+Defined in: [types.ts:246](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L246)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:245](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **acceptedBy?**: `string`
 
-Defined in: [types.ts:246](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L246)
+Defined in: [types.ts:247](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L247)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [types.ts:246](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **email**: `string`
 
-Defined in: [types.ts:238](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L238)
+Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L239)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [types.ts:238](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **expiresAt**: `FieldValue`
 
-Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L243)
+Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L244)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L237)
+Defined in: [types.ts:238](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L238)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [types.ts:237](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **organizationId?**: `string`
 
-Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L240)
+Defined in: [types.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L241)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **organizationName?**: `string`
 
-Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L244)
+Defined in: [types.ts:245](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L245)
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [types.ts:244](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **orgId**: `string`
 
-Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L239)
+Defined in: [types.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L240)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [types.ts:239](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **role**: `"loader"` \| `"admin"` \| `"driver"` \| `"super_admin"` \| `"owner"` \| `"hms_responsible"` \| `"salesman"` \| `"contractor"` \| `"planner"`
 
-Defined in: [types.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L241)
+Defined in: [types.ts:242](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L242)
 
 ***
 
@@ -86,4 +86,4 @@ Defined in: [types.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"pending"` \| `"accepted"` \| `"expired"`
 
-Defined in: [types.ts:242](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L242)
+Defined in: [types.ts:243](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L243)

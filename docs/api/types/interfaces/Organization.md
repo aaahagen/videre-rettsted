@@ -10,6 +10,14 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 ## Properties
 
+### dangerReportsEnabled?
+
+> `optional` **dangerReportsEnabled?**: `boolean`
+
+Defined in: [types.ts:83](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L83)
+
+***
+
 ### fieldSettings?
 
 > `optional` **fieldSettings?**: `object`
@@ -166,7 +174,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:83](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L83)
+Defined in: [types.ts:84](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L84)
 
 #### dpaAcceptedAt?
 
