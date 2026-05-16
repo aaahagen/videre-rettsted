@@ -159,8 +159,6 @@ export default function AppSidebar() {
   const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
   const isSuperAdmin = dbUser?.role === 'super_admin';
   const isOwner = dbUser?.role === 'owner';
-  const isHmsResponsible = dbUser?.role === 'hms_responsible';
-  const isSalesman = dbUser?.role === 'salesman';
 
   const navGroups = [
     {
@@ -298,6 +296,12 @@ export default function AppSidebar() {
                             </p>
                         </div>
                     )}
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/profile">
+                        <UserIcon className="mr-2 h-4 w-4" />
+                        <span>Min Profil</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive mt-1">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logg ut</span>

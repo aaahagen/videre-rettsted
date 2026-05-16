@@ -36,12 +36,18 @@ To enhance the security of the VIDERE RettSted platform by implementing Multi-Fa
 1.  **Recovery Codes:** Explore generating and storing one-time recovery codes.
 2.  **Admin Reset:** Allow Super Admins to "reset" MFA for a user if they lose access to their device (requiring manual identity verification).
 
-## 5. UI/UX Considerations
+## 5. Safety & Emergency Access (Anti-Lockout)
+To prevent the platform owner from being locked out, the following safeguards are mandatory:
+- **Firebase Console Bypass:** The project owner can always disable MFA for a specific user via the Firebase Console (Auth tab) or modify Firestore flags to bypass application-level enforcement.
+- **Dual Super Admins:** At least two distinct identities should hold the `super_admin` role to allow for mutual recovery.
+- **Break-Glass Environment Variable:** Implement a server-side (or build-time) toggle `NEXT_PUBLIC_DISABLE_MFA_ENFORCEMENT` that can be set to `true` in emergencies to temporarily allow password-only access.
+
+## 6. UI/UX Considerations
 - **Clear Instructions:** Explain *why* MFA is required (GDPR, security).
 - **Success Feedback:** Clear confirmation when MFA is active.
 - **Login Flow:** Smooth transition from password entry to MFA code entry.
 
-## 6. Next Steps
+## 7. Next Steps
 - [ ] Evaluate costs associated with Google Cloud Identity Platform and SMS segments.
 - [ ] Implement Phase A enrollment UI.
 - [ ] Update `firebaseAuth.signIn` to handle MFA challenges.
