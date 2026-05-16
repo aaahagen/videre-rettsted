@@ -41,7 +41,7 @@ service cloud.firestore {
     // === ORGANIZATIONS ===
     match /organizations/{orgId} {
       allow read: if isUserInOrg(orgId) || isSuperAdmin();
-      allow create: if isSuperAdmin() || (isAuthenticated() && request.auth.uid == request.resource.data.ownerId);
+      allow create: if isSuperAdmin();
       allow update: if (isUserInOrg(orgId) && isAdmin()) || isSuperAdmin();
       allow delete: if isSuperAdmin();
 
@@ -109,8 +109,8 @@ service cloud.firestore {
       allow list: if (isAuthenticated() && isUserInOrg(request.query.limit > 0 ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId : '')) || isSuperAdmin();
 
       allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
-      allow delete: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow update: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow delete: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
     }
 
     // === VEHICLES ===

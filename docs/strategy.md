@@ -1,4 +1,4 @@
-# App Strategy & Vision: VIDERE RettSted
+ # App Strategy & Vision: VIDERE RettSted
 
 ## 1. The Mission
 To build the definitive operational bridge between the terminal and the customer's door. We solve the "Last Meter" problem and eliminate loading errors.
@@ -56,13 +56,11 @@ Leveraged data structures from previous phases to manage incoming jobs.
 - Multi-Modal Order Intake & Management (Manual & Bulk CSV).
 - Constraint-Based Routing Engine (Weight/Volume/Capability, Opening Hours, Physical Firewalls).
 
-### Phase 5: Managed Onboarding & Hardened Security (CURRENT)
+### Phase 5: Managed Onboarding & Hardened Security (Completed)
 Closing open vulnerabilities and moving to a white-glove onboarding process.
-- **Completed:** Owner Role implementation, Executive Dashboard, Next.js 15 Migration & Build Verification, specialized roles (HMS/Sales).
-- **In Progress:** Closing public registration, locking organization creation to Super Admin only, MFA Planning.
-- **Planned:** API-First Design (Exposing KPIs via secure endpoints).
+- **Completed:** Owner Role implementation, Executive Dashboard, Next.js 15 Migration & Build Verification, specialized roles (HMS/Sales), Closing public registration, locking organization creation to Super Admin only, MFA Planning.
 
-### Phase 6: Compliance & Risk Management (Planned)
+### Phase 6: Compliance & Risk Management (CURRENT)
 Introducing a suite of tools for Norwegian/EU transport regulations.
 - **Planned:** Tachograph Download Tracking, Tachograph & Driving Time Analysis, Vehicle Damage Reporting (Expanded).
 

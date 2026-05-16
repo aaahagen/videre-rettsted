@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **Hardened Security & Managed Onboarding (Phase 5 Completion):**
+    - **Closed Public Registration:** Replaced the `/register` form with a "Manual Onboarding" notice, directing users to contact support for organization setup.
+    - **Restricted Organization Creation:** Updated Firestore security rules to strictly allow only `super_admin` to create new top-level `organizations` documents.
+    - **Super Admin Creation Logic:** Enhanced the Super Admin dashboard to properly initialize new organizations with default modules, timestamps, and legal versioning.
+    - **MFA Implementation Plan:** Created a comprehensive roadmap (`docs/mfa-plan.md`) for introducing Multi-Factor Authentication across the platform.
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
     - Added a dedicated `/dashboard/reports` page for admins and drivers to view and resolve issues.

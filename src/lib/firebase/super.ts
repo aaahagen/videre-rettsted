@@ -1,6 +1,6 @@
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer, writeBatch, serverTimestamp, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { Organization, User } from '../types';
+import { Organization } from '../types';
 
 export const superDB = {
   // Organizations
@@ -85,12 +85,25 @@ export const superDB = {
   },
 
   createOrganization: async (name: string): Promise<string> => {
-    const { addDoc } = await import("firebase/firestore");
     const docRef = await addDoc(collection(db, "organizations"), {
       name,
       status: "trial",
       plan: "free",
-      modules: { places: true, logistics: true }
+      modules: { 
+        places: true, 
+        logistics: true,
+        fleet: false,
+        workforce: false,
+        learning: false,
+        messages: true,
+        analytics: false
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      legal: {
+        dpaVersion: '1.0',
+        termsVersion: '1.0'
+      }
     });
     return docRef.id;
   },
