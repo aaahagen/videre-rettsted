@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield } from 'lucide-react';
+import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield, Settings2, Database, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -58,14 +58,10 @@ import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
 import { AuditLogViewer } from '@/components/admin/audit-log-viewer';
 import { useAuth } from '@/components/auth-provider';
+import { cn } from '@/lib/utils';
 
 /**
  * Dropdown-meny for administrative handlinger på en spesifikk bruker.
- * 
- * Tillater:
- * - Endring av visningsnavn
- * - Aktivering/deaktivering (pause) av brukeren
- * - Permanent sletting av brukeren
  */
 function UserActionsDropdown({ user, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -77,33 +73,12 @@ function UserActionsDropdown({ user, handleToggleStatus, handleDeleteUser, onEdi
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>Handlinger</DropdownMenuLabel>
-        
-        <DropdownMenuItem onClick={onEditName}>
-          <Edit2 className="mr-2 h-4 w-4" />
-          Endre Navn
-        </DropdownMenuItem>
-        
+        <DropdownMenuItem onClick={onEditName}><Edit2 className="mr-2 h-4 w-4" />Endre Navn</DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.status)}>
-          {user.status === 'paused' ? (
-            <>
-              <Play className="mr-2 h-4 w-4" />
-              Aktiver
-            </>
-          ) : (
-            <>
-              <Pause className="mr-2 h-4 w-4" />
-              Sett på pause
-            </>
-          )}
+          {user.status === 'paused' ? <><Play className="mr-2 h-4 w-4" />Aktiver</> : <><Pause className="mr-2 h-4 w-4" />Sett på pause</>}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          className="text-destructive focus:text-destructive focus:bg-destructive/10"
-          onClick={() => handleDeleteUser(user.id)}
-        >
-          <UserX className="mr-2 h-4 w-4" />
-          Slett Bruker
-        </DropdownMenuItem>
+        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleDeleteUser(user.id)}><UserX className="mr-2 h-4 w-4" />Slett Bruker</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -111,19 +86,12 @@ function UserActionsDropdown({ user, handleToggleStatus, handleDeleteUser, onEdi
 
 /**
  * AdminDashboardContent er kontrollpanelet for organisasjonsadministratorer.
- * 
- * Kompononentet gir tilgang til:
- * - **Brukerhåndtering:** Invitasjoner, rolletildeling og statuskontroll.
- * - **Geofencing:** Konfigurasjon av hoveddepot og stemplingsradius.
- * - **Kundenummerering:** Oppsett av automatiske sekvenser for leveringssteder.
- * - **Skjematilpasning:** Mulighet for å endre feltnavn og synlighet i appen.
- * - **Sikkerhetslogg:** Innsyn i audit trail for GDPR-samsvar.
- * - **Datahåndtering:** Eksport og import av organisasjonens data.
- * 
- * @param authUser - Det gjeldende Firebase Auth-objektet for den innloggede administratoren.
  */
 export default function AdminDashboardContent({ authUser }: { authUser?: FirebaseUser }) {
   const { dbUser } = useAuth();
+  const { toast } = useToast();
+  
+  // Basic State
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<'driver' | 'admin' | 'contractor' | 'loader' | 'planner' | 'hms_responsible' | 'salesman'>('driver');
@@ -136,307 +104,95 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newName, setNewName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isUsersOpen, setIsUsersOpen] = useState(true);
-  const { toast } = useToast();
-
+  
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-
-  /**
-   * Henter koordinater via enhetens GPS.
-   */
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Ikke støttet",
-        description: "Nettleseren din støtter ikke geolokasjon.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGettingLocation(true);
-    toast({
-      title: "Henter posisjon...",
-      description: "Vennligst vent mens vi finner koordinatene dine.",
-    });
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setOrgSettings(s => ({ 
-            ...s, 
-            depotLat: position.coords.latitude.toString(), 
-            depotLng: position.coords.longitude.toString() 
-        }));
-        toast({
-          title: "Posisjon hentet",
-          description: "Koordinater er registrert.",
-        });
-        setIsGettingLocation(false);
-      },
-      (error) => {
-        toast({
-          title: "Feil ved henting av posisjon",
-          description: error.message,
-          variant: "destructive",
-        });
-        setIsGettingLocation(false);
-      }
-    );
-  };
-
-  /**
-   * Bruker geokoding-tjenesten for å oversette tekst-adresse til koordinater.
-   */
-  const handleGeocode = async () => {
-    if (!orgSettings.depotAddress || orgSettings.depotAddress.length < 5) {
-      toast({ title: "Mangler adresse", description: "Vennligst skriv inn en gyldig adresse først.", variant: "destructive" });
-      return;
-    }
-
-    setIsGeocoding(true);
-    try {
-      const coords = await geocodeAddress(orgSettings.depotAddress);
-      if (coords) {
-        setOrgSettings(s => ({
-            ...s,
-            depotLat: coords.lat.toString(),
-            depotLng: coords.lng.toString()
-        }));
-        toast({ title: "Adresse funnet", description: `Koordinater satt til ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
-      } else {
-        toast({ title: "Fant ikke adressen", description: "Kunne ikke finne koordinater for denne adressen. Sjekk skrivemåten.", variant: "destructive" });
-      }
-    } catch (e) {
-      console.error(e);
-      toast({ title: "Feil ved søk", description: "Noe gikk galt under adresseoppslag.", variant: "destructive" });
-    } finally {
-      setIsGeocoding(false);
-    }
-  };
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const [orgSettings, setOrgSettings] = useState({
     name: '',
     orgNumber: '',
-    descEnabled: true,
-    descLabel: '',
-    descPlaceholder: '',
-    notesEnabled: true,
-    notesLabel: '',
-    notesPlaceholder: '',
-    field3Enabled: false,
-    field3Label: '',
-    field3Placeholder: '',
-    field4Enabled: false,
-    field4Label: '',
-    field4Placeholder: '',
-    doorCodeEnabled: false,
-    doorCodeLabel: '',
-    doorCodePlaceholder: '',
-    contactPersonsEnabled: false,
-    contactPersonsLabel: '',
-    contactPersonsPlaceholder: '', 
-    depotAddress: '',
-    depotLat: '',
-    depotLng: '',
-    depotRadius: 500,
-    autoGenerateCustomerNumbers: false,
-    customerNumberPrefix: '',
-    nextCustomerNumber: 1000
+    // Field settings
+    descEnabled: true, descLabel: '', descPlaceholder: '',
+    notesEnabled: true, notesLabel: '', notesPlaceholder: '',
+    field3Enabled: false, field3Label: '', field3Placeholder: '',
+    field4Enabled: false, field4Label: '', field4Placeholder: '',
+    doorCodeEnabled: false, doorCodeLabel: '', doorCodePlaceholder: '',
+    contactPersonsEnabled: false, contactPersonsLabel: '', contactPersonsPlaceholder: '', 
+    // Depot
+    depotAddress: '', depotLat: '', depotLng: '', depotRadius: 500,
+    // Place numbering
+    autoGenerateCustomerNumbers: false, customerNumberPrefix: '', nextCustomerNumber: 1000
   });
 
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-
-  /**
-   * Setter opp realtids-lyttere for organisasjonsdata og brukerliste.
-   */
   useEffect(() => {
     let unsubscribe: () => void;
-
-    const setupRealtimeUsers = async () => {
+    const setupData = async () => {
       setIsLoadingUsers(true);
-      try {
-        const currentUserId = authUser?.uid || dbUser?.id;
-        if (!currentUserId) return;
-        
-        const userDoc = await firebaseDB.getUser(currentUserId);
-        if (userDoc && userDoc.orgId) {
-          // Hent organisasjonsdetaljer
-          const org = await firebaseDB.getOrganization(userDoc.orgId);
-          setOrganization(org);
-          if (org) {
-            setOrgSettings({
-              name: org.name || '',
-              orgNumber: org.orgNumber || '',
-              descEnabled: org.fieldSettings?.description?.enabled ?? true,
-              descLabel: org.fieldSettings?.description?.label || '',
-              descPlaceholder: org.fieldSettings?.description?.placeholder || '',
-              notesEnabled: org.fieldSettings?.notes?.enabled ?? true,
-              notesLabel: org.fieldSettings?.notes?.label || '',
-              notesPlaceholder: org.fieldSettings?.notes?.placeholder || '',
-              field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
-              field3Label: org.fieldSettings?.field3?.label || '',
-              field3Placeholder: org.fieldSettings?.field3?.placeholder || '',
-              field4Enabled: org.fieldSettings?.field4?.enabled ?? false,
-              field4Label: org.fieldSettings?.field4?.label || '',
-              field4Placeholder: org.fieldSettings?.field4?.placeholder || '',
-              doorCodeEnabled: org.fieldSettings?.doorCode?.enabled ?? false,
-              doorCodeLabel: org.fieldSettings?.doorCode?.label || '',
-              doorCodePlaceholder: org.fieldSettings?.doorCode?.placeholder || '', 
-              contactPersonsEnabled: org.fieldSettings?.contactPersons?.enabled ?? false,
-              contactPersonsLabel: org.fieldSettings?.contactPersons?.label || '',
-              contactPersonsPlaceholder: org.fieldSettings?.contactPersons?.placeholder || '', 
-              depotAddress: org.mainDepot?.address || '',
-              depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
-              depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
-              depotRadius: org.mainDepot?.radius || 500,
-              autoGenerateCustomerNumbers: org.placeSettings?.autoGenerateCustomerNumbers ?? false,
-              customerNumberPrefix: org.placeSettings?.customerNumberPrefix || '',
-              nextCustomerNumber: org.placeSettings?.nextCustomerNumber || 1000
-            });
-          }
+      const uid = authUser?.uid || dbUser?.id;
+      if (!uid) return;
 
-          const q = query(
-            collection(db, 'users'),
-            where('orgId', '==', userDoc.orgId)
-          );
-          
-          unsubscribe = onSnapshot(q, (snapshot) => {
-            const orgUsers = snapshot.docs.map(doc => ({
-              ...doc.data(),
-              id: doc.id
-            } as User));
-            // Sorter A-Z
-            orgUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            setUsers(orgUsers);
-            setFilteredUsers(orgUsers);
-            setIsLoadingUsers(false);
-          }, (error) => {
-            console.error("Realtime fetch error:", error);
-            setIsLoadingUsers(false);
-            toast({
-              title: "Kunne ikke hente brukere",
-              description: "Du har kanskje ikke tilgang eller det oppstod en feil.",
-              variant: "destructive"
-            });
+      const userDoc = await firebaseDB.getUser(uid);
+      if (userDoc?.orgId) {
+        const org = await firebaseDB.getOrganization(userDoc.orgId);
+        setOrganization(org);
+        if (org) {
+          setOrgSettings({
+            name: org.name || '',
+            orgNumber: org.orgNumber || '',
+            descEnabled: org.fieldSettings?.description?.enabled ?? true,
+            descLabel: org.fieldSettings?.description?.label || '',
+            descPlaceholder: org.fieldSettings?.description?.placeholder || '',
+            notesEnabled: org.fieldSettings?.notes?.enabled ?? true,
+            notesLabel: org.fieldSettings?.notes?.label || '',
+            notesPlaceholder: org.fieldSettings?.notes?.placeholder || '',
+            field3Enabled: org.fieldSettings?.field3?.enabled ?? false,
+            field3Label: org.fieldSettings?.field3?.label || '',
+            field3Placeholder: org.fieldSettings?.field3?.placeholder || '',
+            field4Enabled: org.fieldSettings?.field4?.enabled ?? false,
+            field4Label: org.fieldSettings?.field4?.label || '',
+            field4Placeholder: org.fieldSettings?.field4?.placeholder || '',
+            doorCodeEnabled: org.fieldSettings?.doorCode?.enabled ?? false,
+            doorCodeLabel: org.fieldSettings?.doorCode?.label || '',
+            doorCodePlaceholder: org.fieldSettings?.doorCode?.placeholder || '', 
+            contactPersonsEnabled: org.fieldSettings?.contactPersons?.enabled ?? false,
+            contactPersonsLabel: org.fieldSettings?.contactPersons?.label || '',
+            contactPersonsPlaceholder: org.fieldSettings?.contactPersons?.placeholder || '', 
+            depotAddress: org.mainDepot?.address || '',
+            depotLat: org.mainDepot?.coordinates?.lat?.toString() || '',
+            depotLng: org.mainDepot?.coordinates?.lng?.toString() || '',
+            depotRadius: org.mainDepot?.radius || 500,
+            autoGenerateCustomerNumbers: org.placeSettings?.autoGenerateCustomerNumbers ?? false,
+            customerNumberPrefix: org.placeSettings?.customerNumberPrefix || '',
+            nextCustomerNumber: org.placeSettings?.nextCustomerNumber || 1000
           });
-        } else {
-            setIsLoadingUsers(false);
         }
-      } catch (error) {
-        console.error("Error setting up users listener:", error);
-        setIsLoadingUsers(false);
+
+        const q = query(collection(db, 'users'), where('orgId', '==', userDoc.orgId));
+        unsubscribe = onSnapshot(q, (snap) => {
+          const orgUsers = snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+          orgUsers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          setUsers(orgUsers);
+          setIsLoadingUsers(false);
+        });
       }
     };
+    setupData();
+    return () => unsubscribe?.();
+  }, [authUser, dbUser]);
 
-    setupRealtimeUsers();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [authUser, dbUser, toast]);
-
-  /**
-   * Filtrerer brukerlisten basert på søkefrase.
-   */
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-    } else {
-      const queryText = searchQuery.toLowerCase();
-      const filtered = users.filter(user => 
-        (user.name?.toLowerCase().includes(queryText) || '') ||
-        (user.email?.toLowerCase().includes(queryText) || '')
-      );
-      setFilteredUsers(filtered);
-    }
+    const q = searchQuery.toLowerCase();
+    setFilteredUsers(users.filter(u => (u.name?.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))));
   }, [searchQuery, users]);
 
-  /**
-   * Oppretter en ny invitasjon og returnerer en lenke.
-   */
-  const handleInviteUser = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!email || !role) {
-      toast({
-        title: 'Feil',
-        description: 'Vennligst fyll ut alle feltene.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const link = await firebaseAuth.inviteUser(email, role, name, organization?.id);
-      setInviteLink(link);
-      toast({
-        title: 'Invitasjon opprettet',
-        description: `En invitasjonslenke er generert for ${email}.`,
-      });
-      setEmail('');
-      setName('');
-      setRole('driver');
-      setIsInviteOpen(false);
-    } catch (error: any) {
-      console.error('Kunne ikke invitere bruker:', error);
-      toast({
-        title: 'Invitasjon Mislyktes',
-        description: error.message || 'En uventet feil oppstod.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  /**
-   * Kopierer invitasjonslenken til utklippstavlen.
-   */
-  const copyToClipboard = async () => {
-    if (inviteLink) {
-      try {
-        await navigator.clipboard.writeText(inviteLink);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-        toast({
-          title: "Kopiert!",
-          description: "Invitasjonslenken er kopiert til utklippstavlen.",
-        });
-      } catch (err) {
-         console.error("Clipboard API failed");
-      }
-    }
-  };
-
-  /**
-   * Oppdaterer rollen til en eksisterende bruker.
-   */
-  const handleUpdateRole = async (userId: string, newRole: string) => {
-    try {
-      await updateDoc(doc(db, 'users', userId), { role: newRole });
-      toast({
-        title: "Rolle oppdatert",
-        description: `Brukerens rolle ble endret.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Feil ved oppdatering",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  /**
-   * Lagrer oppdaterte organisasjonsinnstillinger i Firestore.
-   */
-  const handleSaveSettings = async (e: React.FormEvent) => {
+  const handleSaveSettings = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!organization) return;
-
     setIsSavingSettings(true);
     try {
       await firebaseDB.updateOrganization(organization.id, {
@@ -461,253 +217,242 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
             nextCustomerNumber: orgSettings.nextCustomerNumber
         }
       });
-      toast({
-        title: "Innstillinger lagret",
-        description: "Organisasjonsinnstillinger er oppdatert.",
-      });
+      toast({ title: "Lagret", description: "Innstillinger er oppdatert." });
     } catch (error: any) {
-      toast({
-        title: "Feil ved lagring",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Feil", description: error.message, variant: "destructive" });
     } finally {
       setIsSavingSettings(false);
     }
   };
 
+  const handleInviteUser = async () => {
+    if (!email || !role) return;
+    setIsSubmitting(true);
+    try {
+      const link = await firebaseAuth.inviteUser(email, role, name, organization?.id);
+      setInviteLink(link);
+      toast({ title: 'Invitasjon opprettet' });
+      setEmail(''); setName(''); setRole('driver'); setIsInviteOpen(false);
+    } catch (e: any) {
+      toast({ title: 'Feil', description: e.message, variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateRole = async (uid: string, newRole: any) => {
+      try { await updateDoc(doc(db, 'users', uid), { role: newRole }); toast({ title: "Oppdatert" }); } 
+      catch (e: any) { toast({ title: "Feil", variant: "destructive" }); }
+  };
+
+  const handleToggleStatus = async (uid: string, current: any) => {
+      try { await updateDoc(doc(db, 'users', uid), { status: current === 'paused' ? 'active' : 'paused' }); toast({ title: "Status endret" }); }
+      catch (e: any) { toast({ title: "Feil", variant: "destructive" }); }
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+      if (!confirm("Slette permanent?")) return;
+      try { await firebaseAuth.deleteUser(uid); toast({ title: "Slettet" }); }
+      catch (e: any) { toast({ title: "Feil", variant: "destructive" }); }
+  };
+
+  const handleGetLocation = () => {
+    navigator.geolocation.getCurrentPosition(pos => {
+        setOrgSettings(s => ({ ...s, depotLat: pos.coords.latitude.toString(), depotLng: pos.coords.longitude.toString() }));
+        toast({ title: "Posisjon hentet" });
+    });
+  };
+
+  const handleGeocode = async () => {
+      const coords = await geocodeAddress(orgSettings.depotAddress);
+      if (coords) setOrgSettings(s => ({ ...s, depotLat: coords.lat.toString(), depotLng: coords.lng.toString() }));
+  };
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto overflow-x-hidden w-full">
-      <div className="space-y-6 sm:space-y-8">
-        
-        <h1 className="text-3xl font-bold font-headline px-1">Adminpanel</h1>
-        
-        {/* USER MANAGEMENT (Collapsible) */}
-        <Collapsible
-          open={isUsersOpen}
-          onOpenChange={setIsUsersOpen}
-          className="space-y-2"
-        >
-          <Card className="overflow-hidden border-slate-200 shadow-sm">
-            <CardHeader className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 bg-slate-50/50">
-              <div 
-                className="flex items-center gap-3 cursor-pointer group" 
-                onClick={() => setIsUsersOpen(!isUsersOpen)}
-              >
-                <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 group-hover:border-primary/30 transition-colors">
-                    <Users className="h-5 w-5 text-slate-600 group-hover:text-primary transition-colors" />
-                </div>
-                <div>
-                  <CardTitle className="font-headline text-xl">Brukere & Tilganger</CardTitle>
-                  {!isUsersOpen && (
-                    <CardDescription className="text-xs">Administrer hvem som har tilgang til systemet</CardDescription>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-                <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="h-9 font-bold">
-                        <Plus className="mr-1.5 h-4 w-4" /> 
-                        Ny bruker
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Inviter ny bruker</DialogTitle>
-                      <DialogDescription>
-                        Opprett en invitasjon for en ny ansatt. De vil få en lenke for å opprette sin konto.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="inviteName">Navn eller internnummer</Label>
-                        <Input 
-                          id="inviteName" 
-                          placeholder="Ola Nordmann" 
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="inviteEmail">E-postadresse</Label>
-                        <Input 
-                          id="inviteEmail" 
-                          type="email" 
-                          placeholder="navn@bedrift.no" 
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="inviteRole">Rolle</Label>
-                        <Select value={role} onValueChange={(val: any) => setRole(val)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="driver">Fast Sjåfør</SelectItem>
-                            <SelectItem value="contractor">Innleid (Ekstern)</SelectItem>
-                            <SelectItem value="loader">Lager / Laster</SelectItem>
-                            <SelectItem value="planner">Ruteplanlegger</SelectItem>
-                            <SelectItem value="salesman">Selger</SelectItem>
-                            <SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="owner">Eier</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 w-full">
+        <h1 className="text-3xl font-bold font-headline">Adminpanel</h1>
+
+        {/* 1. USERS & ACCESS */}
+        <Collapsible open={isUsersOpen} onOpenChange={setIsUsersOpen} className="space-y-2">
+            <Card className="overflow-hidden border-slate-200">
+                <CardHeader className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 bg-slate-50/50">
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setIsUsersOpen(!isUsersOpen)}>
+                        <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 group-hover:border-primary/30 transition-colors">
+                            <Users className="h-5 w-5 text-slate-600 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div>
+                            <CardTitle className="font-headline text-xl">Brukere & Tilganger</CardTitle>
+                            {!isUsersOpen && <CardDescription className="text-xs">Administrer tilgang</CardDescription>}
+                        </div>
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Avbryt</Button>
-                      <Button onClick={() => handleInviteUser()} disabled={!email || isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Opprett Invitasjon
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-                
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-white border">
-                    {isUsersOpen ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="p-4 sm:p-6 border-t border-slate-100">
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Søk brukere..." className="pl-10 h-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                  </div>
-                  
-                  <div className="rounded-xl border divide-y">
-                    {filteredUsers.map((user) => (
-                      <div key={user.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50/50 transition-colors">
-                        <div className="col-span-1 sm:col-span-4">
-                          <p className="font-bold text-slate-900 truncate">{user.name || 'Ufullført'}</p>
-                          <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    <div className="flex items-center gap-2">
+                        <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                            <DialogTrigger asChild><Button size="sm" className="h-9 font-bold"><Plus className="mr-1 h-4 w-4" />Ny bruker</Button></DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader><DialogTitle>Inviter ny bruker</DialogTitle></DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <Input placeholder="Navn" value={name} onChange={e => setName(e.target.value)} />
+                                    <Input placeholder="E-post" value={email} onChange={e => setEmail(e.target.value)} />
+                                    <Select value={role} onValueChange={(v: any) => setRole(v)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem>
+                                            <SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem>
+                                            <SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
+                                            <SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <DialogFooter><Button onClick={handleInviteUser} disabled={isSubmitting}>Opprett Invitasjon</Button></DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                        <CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="h-9 w-9 p-0 border hover:bg-white">{isUsersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</Button></CollapsibleTrigger>
+                    </div>
+                </CardHeader>
+                <CollapsibleContent>
+                    <CardContent className="p-4 sm:p-6 space-y-4 border-t">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Søk brukere..." className="pl-10 h-10" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                         </div>
-                        <div className="col-span-1 sm:col-span-3">
-                          <Select 
-                            disabled={user.id === dbUser?.id}
-                            value={user.role} 
-                            onValueChange={(val) => handleUpdateRole(user.id, val)}
-                          >
-                            <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="driver">Sjåfør</SelectItem>
-                                <SelectItem value="contractor">Innleid</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="owner">Eier</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <div className="rounded-xl border divide-y overflow-hidden">
+                            {filteredUsers.map(u => (
+                                <div key={u.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors">
+                                    <div className="col-span-4"><p className="font-bold text-sm">{u.name || 'Ufullført'}</p><p className="text-[10px] text-slate-500">{u.email}</p></div>
+                                    <div className="col-span-3"><Select disabled={u.id === dbUser?.id} value={u.role} onValueChange={v => handleUpdateRole(u.id, v)}><SelectTrigger className="h-8 text-[10px] bg-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="driver">Sjåfør</SelectItem><SelectItem value="contractor">Innleid</SelectItem><SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem><SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem><SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem></SelectContent></Select></div>
+                                    <div className="col-span-3"><Badge className={u.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}>{u.status || 'Aktiv'}</Badge></div>
+                                    <div className="col-span-2 text-right"><UserActionsDropdown user={u} handleToggleStatus={handleToggleStatus} handleDeleteUser={handleDeleteUser} onEditName={() => { setEditingUser(u); setNewName(u.name || ''); }} /></div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="col-span-1 sm:col-span-3">
-                           <Badge className={user.status === 'paused' ? 'bg-amber-500' : 'bg-green-500'}>{user.status || 'Aktiv'}</Badge>
-                        </div>
-                        <div className="col-span-1 sm:col-span-2 text-right">
-                            <UserActionsDropdown user={user} handleToggleStatus={() => {}} handleDeleteUser={() => {}} onEditName={() => {}} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
+                    </CardContent>
+                </CollapsibleContent>
+            </Card>
         </Collapsible>
 
-        {/* TIMELISTER MODULE */}
-        {organization?.modules?.workforce && (
-          <Card className="border-slate-200 shadow-sm">
+        {organization && <PendingInvitations orgId={organization.id} />}
+
+        {/* 2. PLACE CARD SETTINGS */}
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b p-6">
-                <CardTitle className="font-headline text-xl flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-indigo-500" /> Timelister & Geofencing
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                    <Settings2 className="h-5 w-5 text-blue-600" />
+                    <div>
+                        <CardTitle className="font-headline text-xl">Tilpasning av Leveringssteder</CardTitle>
+                        <CardDescription className="text-xs">Endre navn og synlighet for felt i appen</CardDescription>
+                    </div>
+                </div>
             </CardHeader>
-            <CardContent className="p-6">
-               <form onSubmit={handleSaveSettings} className="space-y-6 max-w-3xl">
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label>Depot Adresse</Label>
-                      <div className="flex flex-col gap-3">
-                          <Input placeholder="Adresse for innstempling" value={orgSettings.depotAddress} onChange={(e) => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} />
-                          <div className="grid grid-cols-2 gap-2">
-                              <Button type="button" variant="outline" onClick={handleGeocode} disabled={isGeocoding} className="h-10 font-bold border-indigo-200">
-                                  {isGeocoding ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Search className="h-4 w-4 mr-2" />} Søk adresse
-                              </Button>
-                              <Button type="button" variant="outline" onClick={handleGetLocation} className="h-10 font-bold border-emerald-200">
-                                  <LocateFixed className="h-4 w-4 mr-2" /> Bruk GPS
-                              </Button>
-                          </div>
-                      </div>
+            <CardContent className="p-6 space-y-8">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2"><Hash className="h-3.5 w-3.5" /> Kundenummerering</h3>
+                  <div className="p-4 rounded-xl border bg-slate-50/50 space-y-6 max-w-3xl">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5"><Label className="text-sm font-bold">Auto-generer kundenummer</Label><p className="text-xs text-muted-foreground">Nye steder får tildelt nummer automatisk.</p></div>
+                        <Switch checked={orgSettings.autoGenerateCustomerNumbers} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, autoGenerateCustomerNumbers: v }))} />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Lat</Label><Input value={orgSettings.depotLat} onChange={(e) => setOrgSettings(s => ({ ...s, depotLat: e.target.value }))} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Lng</Label><Input value={orgSettings.depotLng} onChange={(e) => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))} />
-                    </div>
-                    <div className="space-y-2 md:col-span-2 p-4 bg-slate-50 rounded-xl">
-                        <Label>Stemplingsradius: {orgSettings.depotRadius}m</Label>
-                        <input type="range" min="100" max="5000" step="100" value={orgSettings.depotRadius} onChange={(e) => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))} className="w-full mt-2" />
-                    </div>
+                    {orgSettings.autoGenerateCustomerNumbers && (
+                        <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-top-1">
+                            <div className="space-y-2"><Label>Prefix (f.eks. K-)</Label><Input value={orgSettings.customerNumberPrefix} onChange={e => setOrgSettings(s => ({ ...s, customerNumberPrefix: e.target.value }))} /></div>
+                            <div className="space-y-2"><Label>Neste nummer</Label><Input type="number" value={orgSettings.nextCustomerNumber} onChange={e => setOrgSettings(s => ({ ...s, nextCustomerNumber: parseInt(e.target.value) || 1000 }))} /></div>
+                        </div>
+                    )}
                   </div>
-                  <Button type="submit" disabled={isSavingSettings} className="font-bold">
-                    {isSavingSettings ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />} Lagre Depot
-                  </Button>
-               </form>
-            </CardContent>
-          </Card>
-        )}
+                </div>
 
-        {/* AUDIT LOGS */}
-        {organization && (
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b p-6">
-                <CardTitle className="font-headline text-xl flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-amber-600" /> Sikkerhetslogg (Audit Trail)
-                </CardTitle>
-                <CardDescription>Overvåk kritiske hendelser og GDPR-samsvar.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-                <AuditLogViewer orgId={organization.id} />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* DATA & BACKUP */}
-        <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-slate-50/50 border-b p-6">
-                <CardTitle className="font-headline text-xl">Datahåndtering & Eksport</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
-                        <h4 className="font-bold text-slate-900 flex items-center gap-2"><Download className="h-4 w-4" /> Eksport (JSON)</h4>
-                        <DataExport orgId={organization?.id || ''} />
-                    </div>
-                    <div className="space-y-4 border rounded-xl p-4 bg-slate-50">
-                        <h4 className="font-bold text-slate-900 flex items-center gap-2"><Upload className="h-4 w-4" /> Import (Gjenopprett)</h4>
-                        <DataImport orgId={organization?.id || ''} />
+                <div className="space-y-4 pt-6 border-t border-slate-100">
+                    <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Felt i "Nytt Sted"-skjema</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+                        <FieldConfig label="Felt 1" enabled={orgSettings.descEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, descEnabled: v }))} name={orgSettings.descLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, descLabel: v }))} placeholder={orgSettings.descPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, descPlaceholder: v }))} />
+                        <FieldConfig label="Felt 2" enabled={orgSettings.notesEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, notesEnabled: v }))} name={orgSettings.notesLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, notesLabel: v }))} placeholder={orgSettings.notesPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, notesPlaceholder: v }))} />
+                        <FieldConfig label="Felt 3" enabled={orgSettings.field3Enabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, field3Enabled: v }))} name={orgSettings.field3Label} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, field3Label: v }))} placeholder={orgSettings.field3Placeholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, field3Placeholder: v }))} />
+                        <FieldConfig label="Felt 4" enabled={orgSettings.field4Enabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, field4Enabled: v }))} name={orgSettings.field4Label} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, field4Label: v }))} placeholder={orgSettings.field4Placeholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, field4Placeholder: v }))} />
+                        <FieldConfig label="Dørkode" enabled={orgSettings.doorCodeEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, doorCodeEnabled: v }))} name={orgSettings.doorCodeLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodeLabel: v }))} placeholder={orgSettings.doorCodePlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodePlaceholder: v }))} />
+                        <FieldConfig label="Kontaktpersoner" enabled={orgSettings.contactPersonsEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, contactPersonsEnabled: v }))} name={orgSettings.contactPersonsLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, contactPersonsLabel: v }))} />
                     </div>
                 </div>
             </CardContent>
         </Card>
 
+        {/* 3. DEPOT & GEOFENCING */}
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b p-6">
+                <div className="flex items-center gap-3">
+                    <MapPin className="h-5 w-5 text-indigo-500" />
+                    <CardTitle className="font-headline text-xl">Hoveddepot & Geofencing</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6 max-w-2xl">
+                <div className="space-y-4">
+                    <div className="space-y-2"><Label>Adresse</Label><Input value={orgSettings.depotAddress} onChange={e => setOrgSettings(s => ({ ...s, depotAddress: e.target.value }))} /><div className="grid grid-cols-2 gap-2 mt-2"><Button variant="outline" onClick={handleGeocode} className="font-bold border-indigo-100"><Search className="h-4 w-4 mr-2" />Hent koordinater</Button><Button variant="outline" onClick={handleGetLocation} className="font-bold border-emerald-100"><LocateFixed className="h-4 w-4 mr-2" />Bruk GPS</Button></div></div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2"><Label>Lat</Label><Input value={orgSettings.depotLat} onChange={e => setOrgSettings(s => ({ ...s, depotLat: e.target.value }))} /></div>
+                        <div className="space-y-2"><Label>Lng</Label><Input value={orgSettings.depotLng} onChange={e => setOrgSettings(s => ({ ...s, depotLng: e.target.value }))} /></div>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-xl border space-y-2"><div className="flex justify-between"><Label>Stemplingsradius</Label><Badge variant="secondary">{orgSettings.depotRadius}m</Badge></div><input type="range" min="100" max="5000" step="100" value={orgSettings.depotRadius} onChange={e => setOrgSettings(s => ({ ...s, depotRadius: parseInt(e.target.value) }))} className="w-full h-2 bg-slate-200 rounded-lg accent-primary" /></div>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* 4. AUDIT & DATA */}
+        {organization && (
+            <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center gap-3"><Shield className="h-5 w-5 text-amber-600" /><CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle></CardHeader>
+                <AuditLogViewer orgId={organization.id} />
+            </Card>
+        )}
+
+        <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b p-6">
+                <div className="flex items-center gap-3">
+                    <Database className="h-5 w-5 text-slate-600" />
+                    <CardTitle className="font-headline text-xl">Datahåndtering</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-4 border rounded-xl bg-slate-50 space-y-3"><h4 className="font-bold flex items-center gap-2"><Download className="h-4 w-4" />Eksport (JSON)</h4><DataExport orgId={organization?.id || ''} /></div>
+                    <div className="p-4 border rounded-xl bg-slate-50 space-y-3"><h4 className="font-bold flex items-center gap-2"><Upload className="h-4 w-4" />Import (JSON)</h4><DataImport orgId={organization?.id || ''} /></div>
+                </div>
+            </CardContent>
+        </Card>
+
         {organization && <DeleteOrganization orgId={organization.id} />}
-      </div>
+
+        <div className="sticky bottom-6 flex justify-center z-50">
+            <Button size="lg" className="px-12 font-black shadow-2xl h-14 text-lg bg-indigo-600 hover:bg-indigo-700" onClick={() => handleSaveSettings()} disabled={isSavingSettings}>
+                {isSavingSettings ? <Loader2 className="animate-spin mr-2 h-6 w-6" /> : <Save className="mr-2 h-6 w-6" />}Lagre Alle Endringer
+            </Button>
+        </div>
+
+        {/* User Name Dialog */}
+        <Dialog open={!!editingUser} onOpenChange={o => !o && setEditingUser(null)}>
+            <DialogContent>
+                <DialogHeader><DialogTitle>Endre Navn</DialogTitle></DialogHeader>
+                <Input value={newName} onChange={e => setNewName(e.target.value)} />
+                <DialogFooter><Button onClick={async () => { if(!editingUser) return; await updateDoc(doc(db, 'users', editingUser.id), { name: newName }); setEditingUser(null); toast({ title: "Navn oppdatert" }); }}>Lagre</Button></DialogFooter>
+            </DialogContent>
+        </Dialog>
+        
+        {/* Link Dialog */}
+        <Dialog open={!!inviteLink} onOpenChange={o => !o && setInviteLink(null)}>
+            <DialogContent className="rounded-2xl">
+                <DialogHeader><DialogTitle>Invitasjonslenke Klar</DialogTitle></DialogHeader>
+                <div className="flex gap-2 items-center"><Input value={inviteLink || ''} readOnly className="h-11 font-mono text-xs" /><Button className="h-11 px-6 font-bold" onClick={() => { navigator.clipboard.writeText(inviteLink!); setIsCopied(true); setTimeout(() => setIsCopied(false), 2000); toast({ title: "Kopiert til utklippstavle" }); }}>{isCopied ? <Check className="h-5 w-5" /> : 'Kopier'}</Button></div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
 
-function DatabaseIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5V19A9 3 0 0 0 21 19V5" /><path d="M3 12A9 3 0 0 0 21 12" />
-    </svg>
-  );
+function FieldConfig({ label, enabled, onEnabledChange, name, onNameChange, placeholder, onPlaceholderChange }: any) {
+    return (
+        <div className="space-y-4 p-4 rounded-xl border bg-white shadow-sm">
+            <div className="flex items-center justify-between"><Label className="text-sm font-bold uppercase text-slate-700">{label}</Label><Switch checked={enabled} onCheckedChange={onEnabledChange} /></div>
+            <div className={cn("space-y-3", !enabled && "opacity-30 pointer-events-none")}>
+                <div className="space-y-1"><Label className="text-[10px] font-bold text-slate-400 uppercase">Navn i appen</Label><Input value={name} onChange={e => onNameChange(e.target.value)} className="h-9 text-xs bg-slate-50 border-none font-bold" /></div>
+                {onPlaceholderChange && <div className="space-y-1"><Label className="text-[10px] font-bold text-slate-400 uppercase">Hjelpetekst</Label><Input value={placeholder} onChange={e => onPlaceholderChange(e.target.value)} className="h-9 text-xs bg-slate-50 border-none" /></div>}
+            </div>
+        </div>
+    );
 }
