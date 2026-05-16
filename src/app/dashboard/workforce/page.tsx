@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download, Shield, Landmark, Banknote, BookOpenCheck } from 'lucide-react';
-import { format, isValid, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,21 @@ import { getDriverStatus } from "@/lib/workforce-utils";
 import { saveAs } from 'file-saver';
 import { logEvent } from '@/lib/db/logs';
 
+/**
+ * WorkforcePage er den sentrale modulen for HR og personellhåndtering.
+ * 
+ * Siden tillater administratorer å:
+ * - Få oversikt over ansattes status (På jobb, Sykemeldt, Ferie, etc.) for en gitt dato.
+ * - Administrere ansattprofiler (Kontrakter, kompetanse, personopplysninger).
+ * - Overvåke samsvar (Compliance) for sjåførkort-nedlastinger.
+ * - Godkjenne timelister og overtid (TimeApprovals).
+ * - Se visuell tidslinje over vakter (WorkforceTimeline).
+ * - Eksportere GDPR-sensitive personopplysninger til CSV (Audit-logget).
+ * 
+ * Sikkerhet:
+ * - All tilgang til utvidede ansattkort logges automatisk i audit-trail.
+ * - Eksport av data logges med hendelsestype 'export_hr_data'.
+ */
 export default function WorkforcePage() {
     const { dbUser } = useAuth();
     const { toast } = useToast();
@@ -48,6 +63,9 @@ export default function WorkforcePage() {
         }
     }, [dbUser]);
 
+    /**
+     * Henter alle brukere i organisasjonen og filtrerer ut operasjonelt personell.
+     */
     const loadDrivers = async () => {
         try {
             setIsLoading(true);
@@ -60,6 +78,11 @@ export default function WorkforcePage() {
         }
     };
 
+    /**
+     * Lagrer endringer i en ansattprofil.
+     * 
+     * @param data - De oppdaterte profilfeltene.
+     */
     const handleUpdateDriverProfile = async (data: Partial<DriverProfile>) => {
         if (!editingDriverProfile) return;
         try {
@@ -80,12 +103,16 @@ export default function WorkforcePage() {
         }
     };
 
+    /**
+     * Registrerer at en fysisk nedlasting av sjåførkort har funnet sted i dag.
+     * 
+     * @param driver - Den ansatte det gjelder.
+     */
     const handleRegisterDownload = async (driver: DriverProfile) => {
         try {
             const today = format(new Date(), 'yyyy-MM-dd');
             await firebaseDB.updateUser(driver.id, { lastTachoDownloadDate: today });
             
-            // Log the compliance action
             if (dbUser) {
                 await logEvent(dbUser.orgId, dbUser.id, 'admin_view_worklog', {
                     action: 'register_tacho_download',
@@ -101,11 +128,16 @@ export default function WorkforcePage() {
         }
     };
 
+    /**
+     * Håndterer utvidelse av personellkort og logger innsyn i sensitive data.
+     * 
+     * @param driver - Den ansatte som vises.
+     */
     const handleToggleCard = async (driver: DriverProfile) => {
         const isExpanding = !expandedCards[driver.id];
         setExpandedCards(prev => ({ ...prev, [driver.id]: isExpanding }));
         
-        // GDPR LOGGING: Log when an admin views sensitive personnel data
+        // GDPR LOGGING: Logg innsyn i sensitive personopplysninger
         if (isExpanding && dbUser && (dbUser.role === 'admin' || dbUser.role === 'owner' || dbUser.role === 'super_admin')) {
             await logEvent(dbUser.orgId, dbUser.id, 'view_sensitive_personnel_data', {
                 targetUserId: driver.id,
@@ -114,6 +146,10 @@ export default function WorkforcePage() {
         }
     };
 
+    /**
+     * Eksporterer hele personell-listen til CSV-format.
+     * Handlingen loggføres som en kritisk GDPR-hendelse.
+     */
     const handleExportCSV = async () => {
         if (!dbUser || (dbUser.role !== 'admin' && dbUser.role !== 'owner' && dbUser.role !== 'super_admin')) return;
         
@@ -201,6 +237,9 @@ export default function WorkforcePage() {
         }
     }
 
+    /**
+     * Beregner aggregerte personell-statistikker for dashbordet.
+     */
     const stats = useMemo(() => {
         let working = 0;
         let sick = 0;
@@ -225,6 +264,9 @@ export default function WorkforcePage() {
         return { working, sick, vacation, off, contractors, other, total: drivers.length };
     }, [drivers, searchDate]);
 
+    /**
+     * Hjelpefunksjon for å bestemme visuell status for sjåførkort-nedlasting.
+     */
     const getCardDownloadStatus = (dateStr?: string) => {
         if (!dateStr) return 'missing';
         try {
@@ -259,93 +301,32 @@ export default function WorkforcePage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
-                        <Button 
-                            variant={viewMode === "cards" ? "default" : "ghost"} 
-                            size="sm" 
-                            onClick={() => setViewMode('cards')}
-                            className={cn("h-8 px-3 text-xs font-medium", viewMode === 'cards' && "shadow-sm")}
-                        >
-                            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
-                            Kort
+                        <Button variant={viewMode === "cards" ? "default" : "ghost"} size="sm" onClick={() => setViewMode('cards')} className={cn("h-8 px-3 text-xs font-medium", viewMode === 'cards' && "shadow-sm")}>
+                            <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />Kort
                         </Button>
-                        <Button 
-                            variant={viewMode === "timeline" ? "default" : "ghost"} 
-                            size="sm" 
-                            onClick={() => setViewMode('timeline')}
-                            className={cn("h-8 px-3 text-xs font-medium", viewMode === 'timeline' && "shadow-sm")}
-                        >
-                            <List className="h-3.5 w-3.5 mr-1.5" />
-                            Tidslinje
+                        <Button variant={viewMode === "timeline" ? "default" : "ghost"} size="sm" onClick={() => setViewMode('timeline')} className={cn("h-8 px-3 text-xs font-medium", viewMode === 'timeline' && "shadow-sm")}>
+                            <List className="h-3.5 w-3.5 mr-1.5" />Tidslinje
                         </Button>
                         {dbUser?.role === 'admin' && (
                             <>
-                                <Button 
-                                    variant={viewMode === "approvals" ? "default" : "ghost"} 
-                                    size="sm" 
-                                    onClick={() => setViewMode('approvals')}
-                                    className={cn("h-8 px-3 text-xs font-medium", viewMode === 'approvals' && "shadow-sm")}
-                                >
-                                    <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />
-                                    Godkjenninger
+                                <Button variant={viewMode === "approvals" ? "default" : "ghost"} size="sm" onClick={() => setViewMode('approvals')} className={cn("h-8 px-3 text-xs font-medium", viewMode === 'approvals' && "shadow-sm")}>
+                                    <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" />Godkjenninger
                                 </Button>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={handleExportCSV}
-                                    disabled={isExporting || drivers.length === 0}
-                                    className="h-8 px-3 text-xs font-medium ml-2 bg-white"
-                                >
-                                    {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
-                                    Eksport (CSV)
+                                <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isExporting || drivers.length === 0} className="h-8 px-3 text-xs font-medium ml-2 bg-white">
+                                    {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}Eksport (CSV)
                                 </Button>
                             </>
                         )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2 sm:gap-4">
-                    <Card className="bg-blue-50 border-blue-100 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-blue-900">{stats.working}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-blue-700 uppercase tracking-tighter sm:tracking-wider">På jobb</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-red-50 border-red-100 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-red-900">{stats.sick}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-red-700 uppercase tracking-tighter sm:tracking-wider">Syk</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-green-50 border-green-100 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <Palmtree className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-green-900">{stats.vacation}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-green-700 uppercase tracking-tighter sm:tracking-wider">Ferie</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-50 border-slate-200 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <Coffee className="h-5 w-5 sm:h-6 sm:w-6 text-slate-500 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-slate-700">{stats.off}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-slate-500 uppercase tracking-tighter sm:tracking-wider">Fridag</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-purple-50 border-purple-100 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-purple-900">{stats.other}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-purple-700 uppercase tracking-tighter sm:tracking-wider">Annet</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-amber-50 border-amber-100 shadow-sm">
-                        <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
-                            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 mb-1 sm:mb-2" />
-                            <p className="text-lg sm:text-2xl font-bold text-amber-900">{stats.contractors}</p>
-                            <p className="text-[9px] sm:text-xs font-medium text-amber-700 uppercase tracking-tighter sm:tracking-wider">Innleid (Totalt)</p>
-                        </CardContent>
-                    </Card>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
+                    <StatusStatCard icon={<UserCheck className="h-5 w-5 text-blue-600"/>} value={stats.working} label="På jobb" color="blue" />
+                    <StatusStatCard icon={<Activity className="h-5 w-5 text-red-600"/>} value={stats.sick} label="Syk" color="red" />
+                    <StatusStatCard icon={<Palmtree className="h-5 w-5 text-green-600"/>} value={stats.vacation} label="Ferie" color="green" />
+                    <StatusStatCard icon={<Coffee className="h-5 w-5 text-slate-500"/>} value={stats.off} label="Fridag" color="slate" />
+                    <StatusStatCard icon={<Shield className="h-5 w-5 text-purple-600"/>} value={stats.other} label="Annet" color="purple" />
+                    <StatusStatCard icon={<Briefcase className="h-5 w-5 text-amber-600"/>} value={stats.contractors} label="Innleid" color="amber" />
                 </div>
 
 
@@ -356,509 +337,98 @@ export default function WorkforcePage() {
                         <div className="flex flex-col sm:flex-row gap-4 items-end justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                             <div className="space-y-2 w-full sm:w-auto max-w-full">
                                 <Label className="text-sm font-semibold text-slate-700">Velg dato for oversikt</Label>
-                                <Input 
-                                    type="date"
-                                    value={searchDateStr}
-                                    onChange={(e) => setSearchDateStr(e.target.value)}
-                                    className="w-full max-w-full sm:w-[240px] bg-slate-50 border-slate-300"
-                                />
+                                <Input type="date" value={searchDateStr} onChange={(e) => setSearchDateStr(e.target.value)} className="w-full sm:w-[240px] bg-slate-50 border-slate-300" />
                             </div>
                         </div>
 
-                        {filteredDrivers.length === 0 ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-slate-200">
-                                <div className="rounded-full bg-slate-100 p-6 mb-4">
-                                    <Search className="h-12 w-12 text-slate-300" />
-                                </div>
-                                <h2 className="text-xl font-semibold text-slate-900">Ingen funnet.</h2>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredDrivers.map(driver => {
-                                    const statusInfo = getDriverStatus(driver, searchDate);
-                                    const cardStatus = getCardDownloadStatus(driver.lastTachoDownloadDate);
-                                    
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    
-                                    const allUpcomingOverrides = driver.scheduleOverrides 
-                                        ? Object.entries(driver.scheduleOverrides)
-                                            .filter(([dateStr]) => {
-                                                const [year, month, day] = dateStr.split('-');
-                                                const overrideDate = new Date(Number(year), Number(month) - 1, Number(day));
-                                                return overrideDate >= today;
-                                            })
-                                            .sort(([a], [b]) => a.localeCompare(b))
-                                        : [];
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredDrivers.map(driver => {
+                                const statusInfo = getDriverStatus(driver, searchDate);
+                                const cardStatus = getCardDownloadStatus(driver.lastTachoDownloadDate);
+                                const isExpanded = !!expandedCards[driver.id];
+
+                                return (
+                                    <Card key={driver.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden group">
+                                        <div className={`h-1.5 w-full ${statusInfo.type === 'working' ? 'bg-blue-500' : statusInfo.type === 'sick' ? 'bg-red-500' : statusInfo.type === 'vacation' ? 'bg-green-500' : 'bg-slate-300'}`} />
                                         
+                                        <CardHeader className="pb-3 flex flex-row items-start gap-4">
+                                            <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-100 flex items-center justify-center">
+                                                {(driver.images && driver.images.length > 0) ? (
+                                                    <Image src={driver.images[0].url} alt={driver.name} fill sizes="56px" className="object-cover" />
+                                                ) : <UserIcon className="h-6 w-6 text-slate-400" />}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <CardTitle className="text-lg font-bold truncate">{driver.name}</CardTitle>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge variant="outline" className={driver.employmentType === 'external' ? "bg-amber-50" : "bg-slate-50"}>{driver.role === 'contractor' ? 'Innleid' : 'Fast'}</Badge>
+                                                    {cardStatus !== 'ok' && <Badge variant="destructive" className="text-[8px] uppercase">Sjåførkort</Badge>}
+                                                </div>
+                                            </div>
+                                        </CardHeader>
 
-                                    const isExpanded = !!expandedCards[driver.id];
+                                        <CardContent className="pt-0 flex-grow">
+                                            <div className="bg-slate-50 hover:bg-slate-100 transition-colors p-2.5 rounded-lg border flex flex-col items-center justify-center text-center cursor-pointer relative" onClick={() => handleToggleCard(driver)}>
+                                                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Status {format(searchDate, 'dd.MM')}</span>
+                                                <Badge variant="outline" className={cn("text-sm py-1 font-medium mt-1", statusInfo.color)}>{statusInfo.status}</Badge>
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                                                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                                </div>
+                                            </div>
 
-                                    return (
-                                        <Card key={driver.id} className="flex flex-col h-full hover:shadow-md transition-shadow relative overflow-hidden group">
-                                            {dbUser?.role === 'admin' && (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="absolute top-2 right-2 text-slate-400 hover:text-slate-900 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                    onClick={() => setEditingDriverProfile(driver)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
+                                            {isExpanded && (
+                                                <div className="mt-4 space-y-4 animate-in fade-in duration-300">
+                                                    {/* Compliance Section */}
+                                                    <div className="p-3 rounded-lg border-2 border-indigo-50 bg-indigo-50/20 flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-[10px] font-bold text-slate-500 uppercase">Sjåførkort</p>
+                                                            <p className={cn("text-xs font-black", cardStatus === 'expired' ? "text-red-600" : "text-slate-700")}>
+                                                                {driver.lastTachoDownloadDate ? format(parseISO(driver.lastTachoDownloadDate), 'dd. MMM yy', { locale: nb }) : 'Aldri'}
+                                                            </p>
+                                                        </div>
+                                                        <Button size="sm" variant="outline" className="h-8 text-[10px] font-bold bg-white" onClick={() => handleRegisterDownload(driver)}>
+                                                            <Download className="h-3 w-3 mr-1" />Registrer
+                                                        </Button>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {driver.phone && <div className="flex items-center gap-2 text-xs"><Phone className="h-3 w-3 text-slate-400" />{driver.phone}</div>}
+                                                        {driver.employeeId && <div className="flex items-center gap-2 text-xs"><Hash className="h-3 w-3 text-slate-400" />ID: {driver.employeeId}</div>}
+                                                    </div>
+                                                </div>
                                             )}
-                                            <div className={`h-1.5 w-full ${statusInfo.type === 'working' ? 'bg-blue-500' : statusInfo.type === 'sick' ? 'bg-red-500' : statusInfo.type === 'vacation' ? 'bg-green-500' : statusInfo.type === 'other' ? 'bg-purple-500' : 'bg-slate-300'}`} />
-                                            
-                                            <CardHeader className="pb-3 flex flex-row items-start gap-4">
-                                                <div className="relative h-14 w-14 shrink-0 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-100 flex items-center justify-center">
-                                                    {(driver.images && driver.images.length > 0 && driver.images[0].url) ? (
-                                                        <Image
-                                                            src={driver.images[0].url}
-                                                            alt={driver.name || driver.email}
-                                                            fill
-                                                            sizes="56px"
-                                                            className="object-cover"
-                                                        />
-                                                    ) : (
-                                                        <UserIcon className="h-6 w-6 text-slate-400" />
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0 pr-6">
-                                                    <CardTitle className="text-lg font-bold truncate" title={driver.name || driver.email}>
-                                                        {driver.name || driver.email}
-                                                    </CardTitle>
-                                                    <div className="flex flex-col gap-1 mt-1">
-                                                        <div className="flex items-center gap-2">
-                                                            {driver.employmentType === 'external' ? (
-                                                                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">
-                                                                    Innleid
-                                                                </Badge>
-                                                            ) : (
-                                                                <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-[10px] px-1.5 py-0">
-                                                                    Fast
-                                                                </Badge>
-                                                            )}
-                                                            
-                                                            {cardStatus !== 'ok' && (
-                                                                <Badge variant="destructive" className={cn("text-[8px] h-4 px-1 uppercase", cardStatus === 'warning' ? "bg-orange-500" : "bg-red-600")}>
-                                                                    Sjåførkort
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                        {driver.employmentType === 'external' && driver.agencyInfo && (
-                                                            <div className="text-xs text-muted-foreground flex flex-col mt-0.5 border-t border-slate-100 pt-1">
-                                                                <span className="font-medium truncate">{driver.agencyInfo.name}</span>
-                                                                {driver.agencyInfo.phone && (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <Phone className="h-3 w-3 shrink-0" />
-                                                                        <a href={`tel:${driver.agencyInfo.phone}`} className="truncate hover:text-primary">{driver.agencyInfo.phone}</a>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-
-                                            <CardContent className="pt-0 flex-grow flex flex-col justify-start gap-4">
-                                                <div className="space-y-4">
-                                                    <div 
-                                                        className="bg-slate-50 hover:bg-slate-100 transition-colors p-2.5 rounded-lg border border-slate-200 flex flex-col items-center justify-center text-center cursor-pointer relative"
-                                                        onClick={() => handleToggleCard(driver)}
-                                                    >
-                                                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 mb-1">Status {format(searchDate, 'dd.MM')}</span>
-                                                        <Badge variant="outline" className={cn("text-sm py-1 font-medium", statusInfo.color)}>
-                                                            {statusInfo.status}
-                                                        </Badge>
-                                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-                                                            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                                                        </div>
-                                                    </div>
-
-                                                    {isExpanded && (
-                                                        <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
-                                                            
-                                                            {/* COMPLIANCE / SAMSVAR SECTION */}
-                                                            <div className="space-y-2 p-3 rounded-lg border-2 border-indigo-50 bg-indigo-50/20">
-                                                                <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
-                                                                    <ShieldCheck className="h-3 w-3" />
-                                                                    Samsvar & Kontroll
-                                                                </h4>
-                                                                <div className="flex items-center justify-between">
-                                                                    <div className="space-y-0.5">
-                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Sjåførkort nedlasting</p>
-                                                                        <p className={cn("text-xs font-black", cardStatus === 'expired' ? "text-red-600" : cardStatus === 'warning' ? "text-orange-600" : "text-slate-700")}>
-                                                                            {driver.lastTachoDownloadDate ? format(parseISO(driver.lastTachoDownloadDate), 'dd. MMM yyyy', { locale: nb }) : 'Aldri nedlastet'}
-                                                                        </p>
-                                                                    </div>
-                                                                    {dbUser?.role === 'admin' && (
-                                                                        <Button 
-                                                                            size="sm" 
-                                                                            variant="outline" 
-                                                                            className="h-8 text-[10px] font-bold bg-white"
-                                                                            onClick={(e) => { e.stopPropagation(); handleRegisterDownload(driver); }}
-                                                                        >
-                                                                            <Download className="h-3 w-3 mr-1" />
-                                                                            Registrer i dag
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                                {cardStatus !== 'ok' && (
-                                                                    <p className="text-[9px] font-medium text-red-500 italic">
-                                                                        {cardStatus === 'expired' ? 'Krav om nedlasting hver 28. dag er overskredet!' : 'Frist for nedlasting nærmer seg.'}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-
-
-                                                            {(driver.certifications?.length || driver.skills?.length) ? (
-                                                                <div className="flex flex-wrap gap-1.5">
-                                                                    {driver.certifications?.map((c, i) => (
-                                                                        <span key={i} className="bg-slate-100 px-2 py-0.5 rounded-md border text-xs font-medium text-slate-700">{c}</span>
-                                                                    ))}
-                                                                    {driver.skills?.map((s, i) => (
-                                                                        <span key={i} className="bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 text-xs font-medium text-blue-700">{s}</span>
-                                                                    ))}
-                                                                </div>
-                                                            ) : null}
-
-                                                            {allUpcomingOverrides.length > 0 && (
-                                                                <div className="space-y-1.5 bg-rose-50/50 p-2 rounded border border-rose-100">
-                                                                    <span className="flex items-center text-[10px] uppercase font-bold tracking-wider text-rose-600">
-                                                                        <CalendarDays className="h-3 w-3 mr-1" />
-                                                                        Kommende fravær
-                                                                    </span>
-                                                                    <div className="flex flex-col gap-1 mt-1 max-h-[120px] overflow-y-auto pr-1 no-scrollbar">
-                                                                        {allUpcomingOverrides.map(([dateStr, details]) => {
-                                                                            let typeLabel = ''; 
-                                                                            switch(details.type) { 
-                                                                                case 'off': typeLabel = 'Fridag'; break; 
-                                                                                case 'vacation': typeLabel = 'Ferie'; break; 
-                                                                                case 'sick': typeLabel = 'Sykemelding'; break; 
-                                                                                case 'other': typeLabel = 'Annet'; break; 
-                                                                                case 'custom': typeLabel = `${details.start}-${details.end}`; break; 
-                                                                            }
-                                                                            const [year, month, day] = dateStr.split('-');
-                                                                            const localDate = new Date(Number(year), Number(month) - 1, Number(day));
-                                                                            
-                                                                            return (
-                                                                                <div key={dateStr} className="flex justify-between items-center text-xs">
-                                                                                    <span className="font-medium text-slate-700">{format(localDate, 'dd.MM')}</span>
-                                                                                    <span className="text-slate-500">{typeLabel}</span>
-                                                                                </div>
-                                                                            );
-                                                                        })}
-                                                                        
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            
-                                                            {dbUser?.role === 'admin' && (
-                                                            <div className="space-y-4 bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-                                                                
-                                                                {/* Kontaktinformasjon */}
-                                                                {(driver.phone || driver.address) && (
-                                                                    <div className="space-y-2">
-                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Kontaktinformasjon</h4>
-                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                                                                            {driver.phone && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Phone className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telefon</p>
-                                                                                        <a href={`tel:${driver.phone}`} className="text-sm font-medium text-slate-900 hover:text-primary transition-colors">{driver.phone}</a>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.address && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <MapPin className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Adresse</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.address}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Ansettelsesforhold */}
-                                                                {(driver.employeeId || driver.jobTitle || driver.department || driver.supervisor || driver.employmentStatus || driver.seniorityDate) && (
-                                                                    <div className="space-y-2">
-                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Ansettelsesforhold</h4>
-                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                                                                            {driver.employeeId && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansattnr</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.employeeId}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.jobTitle && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Briefcase className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stilling</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.jobTitle}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.department && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Building2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avdeling</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.department}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.supervisor && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <UserCircle2 className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nærmeste Leder</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.supervisor}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.employmentStatus && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <UserCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">
-                                                                                            {driver.employmentStatus === 'full-time' ? 'Heltid' : driver.employmentStatus === 'part-time' ? 'Deltid' : driver.employmentStatus === 'temporary' ? 'Midlertidig' : 'Tilkalling'}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.seniorityDate && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Ansatt Siden</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.seniorityDate), 'dd.MM.yyyy')}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Lønn & Personalia */}
-                                                                {(driver.socialSecurityNumber || driver.dateOfBirth || driver.hourlyRate || driver.bankAccountNumber || driver.taxCode) && (
-                                                                    <div className="space-y-2">
-                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Lønn & Personalia</h4>
-                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                                                                            {driver.dateOfBirth && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Baby className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fødselsdato</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.dateOfBirth), 'dd.MM.yyyy')}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.socialSecurityNumber && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Hash className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personnummer</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.socialSecurityNumber}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.hourlyRate && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Banknote className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Lønn</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.hourlyRate} kr</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.bankAccountNumber && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Landmark className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bankkonto</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.bankAccountNumber}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.taxCode && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <FileText className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Skattekort</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.taxCode}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Sikkerhet & Beredskap */}
-                                                                {(driver.emergencyContact || driver.nextOfKin || driver.probationEndDate || driver.backgroundCheckDate || driver.staffHandbookAcknowledged !== undefined) && (
-                                                                    <div className="space-y-2">
-                                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 pb-1">Sikkerhet & Beredskap</h4>
-                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                                                                            {driver.emergencyContact && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <AlertCircle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Nødkontakt</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.emergencyContact}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.nextOfKin && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <Heart className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Pårørende</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.nextOfKin}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.probationEndDate && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <CalendarClock className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prøvetid Utløper</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.probationEndDate), 'dd.MM.yyyy')}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.backgroundCheckDate && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <ShieldCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bakgrunnssjekk</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{format(new Date(driver.backgroundCheckDate), 'dd.MM.yyyy')}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {driver.staffHandbookAcknowledged !== undefined && (
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <BookOpenCheck className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                                                                                    <div>
-                                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Personalhåndbok</p>
-                                                                                        <p className="text-sm font-medium text-slate-900 leading-tight">{driver.staffHandbookAcknowledged ? 'Akseptert' : 'Ikke Akseptert'}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Admin Notat */}
-                                                                {driver.adminNotes && (
-                                                                    <div className="space-y-2 pt-1">
-                                                                        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 p-2.5 rounded-lg">
-                                                                            <StickyNote className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                                                                            <div>
-                                                                                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Admin Notat (Privat)</p>
-                                                                                <p className="text-sm font-medium text-amber-900 leading-snug whitespace-pre-wrap">{driver.adminNotes}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-
-                                                            </div>
-                                                            )}
-                                                            {dbUser?.role === 'admin' && driver.contracts && driver.contracts.length > 0 && (
-                                                                <div className="space-y-1.5 bg-slate-50 p-2 rounded-lg border border-slate-200 mb-3">
-                                                                    <span className="flex items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
-                                                                        <FileText className="h-3 w-3 mr-1" />
-                                                                        Kontrakter ({driver.contracts.length})
-                                                                    </span>
-                                                                    <div className="flex flex-col gap-1.5 mt-1">
-                                                                        {[...driver.contracts].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(contract => (
-                                                                            <div key={contract.id} className="flex justify-between items-center text-xs bg-white p-2 rounded border border-slate-100">
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="font-bold text-slate-700">{contract.role}</span>
-                                                                                    <span className="text-slate-500">{format(new Date(contract.startDate), 'dd.MM.yy')} - {contract.endDate ? format(new Date(contract.endDate), 'dd.MM.yy') : 'Pågående'}</span>
-                                                                                </div>
-                                                                                <div className="text-right">
-                                                                                    <span className="font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">{contract.contractedHours} t/uke</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {isExpanded && (
-                                                    <div className="flex items-center justify-between pt-2 border-t mt-auto animate-in fade-in duration-200">
-                                                        <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
-                                                            {driver.documents?.map((doc, i) => (
-                                                                <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors px-2 py-1 rounded text-[10px] font-medium shrink-0" title={doc.name}>
-                                                                    <FileText className="h-3 w-3 shrink-0" />
-                                                                    <span className="truncate max-w-[60px]">{doc.name.split('.')[0]}</span>
-                                                                </a>
-                                                            ))}
-                                                        </div>
-
-                                                        {driver.rotation && driver.rotation.startDate && driver.rotation.weeks?.length > 0 && (
-                                                            <Button variant="secondary" size="sm" asChild className="h-7 text-xs px-2 shrink-0 ml-2">
-                                                                <a href={`/dashboard/workforce/print?driverId=${driver.id}&date=${searchDate.toISOString()}`} target="_blank" rel="noopener noreferrer">
-                                                                    <Printer className="mr-1 h-3 w-3" />
-                                                                    Plan
-                                                                </a>
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
                     </>
                 ) : (
                     <WorkforceTimeline drivers={filteredDrivers} onEditDriver={setEditingDriverProfile} />
                 )}
 
-                <Dialog open={!!editingDriverProfile} onOpenChange={(open) => {
-                    if (!open) {
-                        setEditingDriverProfile(null);
-                        setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
-                    }
-                }}>
-                <DialogContent className="max-w-6xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+                <Dialog open={!!editingDriverProfile} onOpenChange={(open) => !open && setEditingDriverProfile(null)}>
+                <DialogContent className="max-w-6xl w-[95vw] rounded-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Rediger profil</DialogTitle>
-                        <DialogDescription>
-                          Oppdater arbeidstid, kompetanse og personlig informasjon.
-                        </DialogDescription>
+                        <DialogDescription>Oppdater arbeidstid og personalia.</DialogDescription>
                     </DialogHeader>
-                     <div className="py-4">
-                        {editingDriverProfile && (
-                            <DriverProfileForm 
-                                user={editingDriverProfile} 
-                                onSubmit={handleUpdateDriverProfile} 
-                                onCancel={() => {
-                                    setEditingDriverProfile(null);
-                                    setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
-                                }} 
-                            />
-                        )}
-                    </div>
+                    {editingDriverProfile && <DriverProfileForm user={editingDriverProfile} onSubmit={handleUpdateDriverProfile} onCancel={() => setEditingDriverProfile(null)} />}
                 </DialogContent>
                 </Dialog>
-                
             </div>
-
-            
         </>
+    );
+}
+
+function StatusStatCard({ icon, value, label, color }: { icon: any, value: number, label: string, color: string }) {
+    const bgClasses: any = { blue: "bg-blue-50", red: "bg-red-50", green: "bg-green-50", slate: "bg-slate-50", purple: "bg-purple-50", amber: "bg-amber-50" };
+    return (
+        <Card className={cn("shadow-sm border-none", bgClasses[color])}>
+            <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                {icon}
+                <p className="text-2xl font-black mt-1">{value}</p>
+                <p className="text-[10px] font-bold uppercase tracking-tighter opacity-70">{label}</p>
+            </CardContent>
+        </Card>
     );
 }
