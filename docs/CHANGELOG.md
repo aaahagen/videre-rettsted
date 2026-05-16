@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Restricted Organization Creation:** Updated Firestore security rules to strictly allow only `super_admin` to create new top-level `organizations` documents.
     - **Super Admin Creation Logic:** Enhanced the Super Admin dashboard to properly initialize new organizations with default modules, timestamps, and legal versioning.
     - **MFA Implementation Plan:** Created a comprehensive roadmap (`docs/mfa-plan.md`) for introducing Multi-Factor Authentication across the platform.
+    - **Voluntary MFA Enrollment:** Added a new Security section to the User Profile (`/dashboard/profile`) allowing users to link a phone number for SMS-based two-factor authentication.
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
     - Added a dedicated `/dashboard/reports` page for admins and drivers to view and resolve issues.
@@ -139,6 +140,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Resolved architectural shift issues in Next.js 15 where `params` and `searchParams` are now Promises.
     - Fixed hidden type mismatches in `Course` and `Manifest` models.
     - Corrected database function signatures (e.g., `deleteCourse`, `getOrder`, `processManifestScan`) to include mandatory `orgId` parameters.
+
+### Deployment Note (REQUIRED)
+> [!IMPORTANT]
+> **Manual Deployment Steps:**
+> 1.  **Firestore Rules:** Run `firebase deploy --only firestore:rules` to activate new security logic.
+> 2.  **Cloud Functions:** Run `firebase deploy --only functions` to apply updated `orgId` signature fixes.
+> 3.  **Firebase Console:** Enable "Identity Platform" and "Phone MFA" in the Authentication settings to support the new security features.
 
 ## [0.1.0] - 2024-05-22
 

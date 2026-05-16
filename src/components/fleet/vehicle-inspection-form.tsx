@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle, VehicleInspection } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,10 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
+import { serverTimestamp } from 'firebase/firestore';
+import { firebaseStorage } from '@/lib/firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
+import Image from 'next/image';
 
 interface VehicleInspectionFormProps {
     vehicle: Vehicle;
@@ -33,6 +37,7 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
     const { toast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Form State
     const [mileage, setMileage] = useState('');
@@ -45,6 +50,7 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
     });
     const [damagesReported, setDamagesReported] = useState(false);
     const [damageDescription, setDamageDescription] = useState('');
+    const [damageImages, setDamageImages] = useState<Array<{ preview: string, file: File }>>([]);
     const [notes, setNotes] = useState('');
 
     const resetForm = () => {
@@ -58,7 +64,57 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
         });
         setDamagesReported(false);
         setDamageDescription('');
+        setDamageImages([]);
         setNotes('');
+    };
+
+    const processFile = (file: File, callback: (preview: string, resizedFile: File) => void) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = document.createElement('img');
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const scale = Math.min(1, MAX_WIDTH / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              const preview = canvas.toDataURL('image/jpeg', 0.8);
+              canvas.toBlob((blob) => {
+                if (blob) {
+                    const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                    callback(preview, resizedFile);
+                }
+              }, 'image/jpeg', 0.8);
+            }
+          };
+          if (event.target?.result) {
+            img.src = event.target.result as string;
+          }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        const remainingSlots = 4 - damageImages.length;
+        const filesToProcess = files.slice(0, remainingSlots);
+
+        filesToProcess.forEach(file => {
+            processFile(file, (preview, resizedFile) => {
+                setDamageImages(prev => [...prev, { preview, file: resizedFile }]);
+            });
+        });
+        
+        if (e.target) e.target.value = '';
+    };
+
+    const removeImage = (index: number) => {
+        setDamageImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async () => {
@@ -71,26 +127,46 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
             return;
         }
 
+        const newMileage = parseInt(mileage);
+        if (vehicle.lastOdometerReading && newMileage < vehicle.lastOdometerReading) {
+            if (!confirm(`Kilometerstanden du oppga (${newMileage}) er lavere enn sist registrerte (${vehicle.lastOdometerReading}). Er du sikker?`)) {
+                return;
+            }
+        }
+
         setIsSubmitting(true);
         try {
+            const uploadedUrls: string[] = [];
+            for (const img of damageImages) {
+                const path = `vehicles/${vehicle.id}/damages/${uuidv4()}.jpg`;
+                const url = await firebaseStorage.uploadFile(path, img.file);
+                uploadedUrls.push(url);
+            }
+
             const inspectionData: Omit<VehicleInspection, 'id'> = {
                 orgId: dbUser.orgId,
                 vehicleId: vehicle.id,
                 driverId: dbUser.id,
                 timestamp: new Date(),
                 type: type,
-                mileage: parseInt(mileage),
+                mileage: newMileage,
                 checks: checks,
                 damagesReported: damagesReported,
                 notes: notes,
                 damageDetails: damagesReported ? [{
                     description: damageDescription,
-                    photos: [] // Future: Add photo upload logic
+                    photos: uploadedUrls.map(url => ({ url, uploadedAt: new Date() }))
                 }] : undefined
             };
 
             await firebaseDB.submitVehicleInspection(inspectionData);
             
+            // UPDATE VEHICLE ODOMETER
+            await firebaseDB.updateVehicle(vehicle.id, {
+                lastOdometerReading: newMileage,
+                lastOdometerDate: serverTimestamp()
+            });
+
             // AUTOMATIC STATUS UPDATE: If damage is reported, mark vehicle as "observation"
             if (damagesReported) {
                 const currentStatuses = vehicle.currentStatuses || [];
@@ -107,7 +183,7 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
                     reportedBy: dbUser.id,
                     reportedByName: dbUser.name || 'Ukjent fører',
                     description: damageDescription,
-                    images: [],
+                    images: uploadedUrls,
                     status: 'reported',
                     createdAt: new Date()
                 } as any);
@@ -167,10 +243,17 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Mileage */}
                     <div className="space-y-2">
-                        <Label htmlFor="mileage" className="text-base font-bold flex items-center gap-2">
-                            <Gauge className="h-4 w-4 text-slate-500" />
-                            Kilometerstand
-                        </Label>
+                        <div className="flex justify-between items-end">
+                            <Label htmlFor="mileage" className="text-base font-bold flex items-center gap-2">
+                                <Gauge className="h-4 w-4 text-slate-500" />
+                                Kilometerstand
+                            </Label>
+                            {vehicle.lastOdometerReading && (
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                    Sist: {vehicle.lastOdometerReading.toLocaleString('no-NO')} km
+                                </span>
+                            )}
+                        </div>
                         <Input 
                             id="mileage"
                             type="number"
@@ -231,10 +314,46 @@ export function VehicleInspectionForm({ vehicle, type, onSuccess }: VehicleInspe
                                     onChange={(e) => setDamageDescription(e.target.value)}
                                     className="bg-white border-red-200 focus-visible:ring-red-500"
                                 />
-                                <Button variant="outline" className="w-full gap-2 bg-white border-red-200 text-red-700 hover:bg-red-100 hover:text-red-800">
-                                    <Camera className="h-4 w-4" />
-                                    Last opp bildebevis
-                                </Button>
+                                
+                                <div className="space-y-3">
+                                    <Label className="text-xs font-bold uppercase text-slate-500">Bildebevis (maks 4)</Label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        {damageImages.map((img, index) => (
+                                            <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-slate-200 bg-white">
+                                                <Image src={img.preview} alt="Skade" fill className="object-cover" />
+                                                <Button 
+                                                    type="button" 
+                                                    variant="destructive" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 absolute top-1 right-1" 
+                                                    onClick={() => removeImage(index)}
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        {damageImages.length < 4 && (
+                                            <>
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    multiple 
+                                                    className="hidden" 
+                                                    ref={fileInputRef} 
+                                                    onChange={handleAddImages} 
+                                                />
+                                                <Button 
+                                                    variant="outline" 
+                                                    className="aspect-square flex flex-col items-center justify-center gap-1 border-dashed border-red-200 text-red-700 bg-red-50/50 hover:bg-red-50 h-full"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                >
+                                                    <Camera className="h-6 w-6" />
+                                                    <span className="text-[10px] font-bold uppercase">Legg til</span>
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

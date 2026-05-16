@@ -7,7 +7,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Vehicle } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Truck, SearchX, Plus, Loader2, Edit, Trash2, FileText, Weight, Box, ShieldCheck, AlertTriangle, Info } from 'lucide-react';
+import { Truck, SearchX, Loader2, Edit, Trash2, ShieldCheck, AlertTriangle, Info, Gauge, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { VehicleForm } from '@/components/fleet/vehicle-form';
@@ -23,12 +23,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { format, isBefore, addDays, parseISO } from 'date-fns';
+import { format, isBefore, addDays, parseISO, differenceInDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -168,6 +165,21 @@ export default function FleetPage() {
             return 'ok';
         } catch (e) {
             return null;
+        }
+    };
+
+    const getTachoStatus = (dateStr?: string) => {
+        if (!dateStr) return 'missing';
+        try {
+            const date = parseISO(dateStr);
+            const today = new Date();
+            const daysSince = differenceInDays(today, date);
+            
+            if (daysSince > 90) return 'expired';
+            if (daysSince > 80) return 'warning';
+            return 'ok';
+        } catch (e) {
+            return 'missing';
         }
     };
 
@@ -340,9 +352,17 @@ export default function FleetPage() {
                                 </CardHeader>
                                 <CardContent className="pt-0 flex-grow flex flex-col justify-between gap-4">
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-                                            <Truck className="h-4 w-4 text-indigo-500" />
-                                            <span>{getVehicleTypeLabel(v.type)}</span>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+                                                <Truck className="h-4 w-4 text-indigo-500" />
+                                                <span>{getVehicleTypeLabel(v.type)}</span>
+                                            </div>
+                                            {v.lastOdometerReading && (
+                                                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                                                    <Gauge className="h-3 w-3 text-slate-400" />
+                                                    <span className="text-[10px] font-black">{v.lastOdometerReading.toLocaleString('no-NO')} km</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* COMPLIANCE MINI DASHBOARD */}
@@ -370,22 +390,37 @@ export default function FleetPage() {
                                             </div>
 
                                             {(v.type === 'truck' || v.type === 'tractor') && (
-                                                <div className="flex items-center justify-between text-[11px]">
-                                                    <span className="text-slate-500 font-bold uppercase tracking-tight">Fartsskriver:</span>
-                                                    <div className="flex items-center gap-1.5 font-black">
-                                                        {v.tachographCalibration ? (
-                                                            <>
-                                                                <span className={cn(
-                                                                    getDeadlineStatus(v.tachographCalibration) === 'expired' ? "text-red-600" : 
-                                                                    getDeadlineStatus(v.tachographCalibration) === 'warning' ? "text-orange-600" : "text-emerald-600"
-                                                                )}>
-                                                                    {format(parseISO(v.tachographCalibration), 'dd.MM.yy')}
-                                                                </span>
-                                                                {getDeadlineStatus(v.tachographCalibration) !== 'ok' && <AlertTriangle className="h-3 w-3 text-orange-500" />}
-                                                            </>
-                                                        ) : <span className="text-slate-300 italic">Ikke satt</span>}
+                                                <>
+                                                    <div className="flex items-center justify-between text-[11px]">
+                                                        <span className="text-slate-500 font-bold uppercase tracking-tight">Fartsskriver:</span>
+                                                        <div className="flex items-center gap-1.5 font-black">
+                                                            {v.tachographCalibration ? (
+                                                                <>
+                                                                    <span className={cn(
+                                                                        getDeadlineStatus(v.tachographCalibration) === 'expired' ? "text-red-600" : 
+                                                                        getDeadlineStatus(v.tachographCalibration) === 'warning' ? "text-orange-600" : "text-emerald-600"
+                                                                    )}>
+                                                                        {format(parseISO(v.tachographCalibration), 'dd.MM.yy')}
+                                                                    </span>
+                                                                    {getDeadlineStatus(v.tachographCalibration) !== 'ok' && <AlertTriangle className="h-3 w-3 text-orange-500" />}
+                                                                </>
+                                                            ) : <span className="text-slate-300 italic">Ikke satt</span>}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200 mt-1">
+                                                        <span className="text-slate-500 font-bold uppercase tracking-tight">Sist nedlastet:</span>
+                                                        <div className="flex items-center gap-1.5 font-black">
+                                                            {v.lastTachoDownloadDate ? (
+                                                                <span className={cn(
+                                                                    getTachoStatus(v.lastTachoDownloadDate) === 'expired' ? "text-red-600" : 
+                                                                    getTachoStatus(v.lastTachoDownloadDate) === 'warning' ? "text-orange-600" : "text-slate-700"
+                                                                )}>
+                                                                    {format(parseISO(v.lastTachoDownloadDate), 'dd.MM.yy')}
+                                                                </span>
+                                                            ) : <span className="text-red-400 font-bold flex items-center gap-1"><Download className="h-3 w-3"/> Mangler</span>}
+                                                        </div>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
 

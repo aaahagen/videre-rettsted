@@ -4,18 +4,17 @@ import { useState, useRef, useEffect } from 'react';
 import { Vehicle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star, Info, Settings2, Construction, ShieldCheck } from 'lucide-react';
+import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star, Info, Settings2, Construction, ShieldCheck, Gauge } from 'lucide-react';
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { firebaseDB } from '@/lib/firebase/database';
 import { cn } from '@/lib/utils';
-import { deleteField } from 'firebase/firestore';
+import { deleteField, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface VehicleFormProps {
@@ -53,6 +52,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
             euControl: '',
             nextService: '',
             tachographCalibration: '',
+            lastOdometerReading: undefined,
         }
     );
 
@@ -203,7 +203,13 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 euControl: getVal(formData.euControl),
                 nextService: getVal(formData.nextService),
                 tachographCalibration: getVal(formData.tachographCalibration),
+                lastOdometerReading: getVal(formData.lastOdometerReading),
             };
+
+            // If odometer changed, update the timestamp
+            if (formData.lastOdometerReading !== initialData?.lastOdometerReading) {
+                (finalFormData as any).lastOdometerDate = serverTimestamp();
+            }
 
             // If creating a new vehicle, create it first to get an ID for storage paths
             if (!currentVehicleId) {
@@ -272,7 +278,6 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
     };
 
     const isTrailer = formData.type === 'trailer';
-    const isTractor = formData.type === 'tractor';
 
     const safeNumberValue = (val: any) => {
         if (val === undefined || val === null || (typeof val === 'number' && isNaN(val))) {
@@ -347,6 +352,20 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                                 </Select>
                             </div>
                         )}
+
+                        <div className="space-y-2">
+                            <Label className="font-bold text-slate-700">Kilometerstand (km)</Label>
+                            <div className="relative">
+                                <Gauge className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <Input 
+                                    type="number" 
+                                    placeholder="Gjeldende kilometerstand" 
+                                    className="pl-9"
+                                    value={safeNumberValue(formData.lastOdometerReading)} 
+                                    onChange={e => handleChange('lastOdometerReading', e.target.value ? Number(e.target.value) : undefined)} 
+                                />
+                            </div>
+                        </div>
 
                          <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Operasjonell Status</Label>

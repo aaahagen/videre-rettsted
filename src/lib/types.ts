@@ -253,6 +253,9 @@ export interface User {
   status?: 'active' | 'paused';
   disabled?: boolean;
   images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
+  
+  // Compliance
+  lastTachoDownloadDate?: string; // ISO Date YYYY-MM-DD
 }
 
 export interface LogEntry {
@@ -299,6 +302,11 @@ export interface Vehicle {
   euControl?: string; // ISO date (YYYY-MM-DD)
   nextService?: string; // ISO date or descriptive string
   tachographCalibration?: string; // ISO date (YYYY-MM-DD)
+  lastTachoDownloadDate?: string; // ISO date (YYYY-MM-DD)
+
+  // Odometer tracking
+  lastOdometerReading?: number;
+  lastOdometerDate?: any; // Date or Timestamp
 
   status: 'active' | 'maintenance' | 'inactive'; // DEPRECATED: Use currentStatuses array instead.
   currentStatuses: ("ready" | "pending_workshop" | "workshop" | "observation" | "on_tour" | "parked")[];

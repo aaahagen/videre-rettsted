@@ -9,15 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, GraduationCap, Banknote, Landmark, BookOpenCheck, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download, Shield } from 'lucide-react';
-import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay } from 'date-fns';
+import { Users, Loader2, Search, Printer, User as UserIcon, FileText, Edit, CalendarDays, UserCheck, Activity, Palmtree, Coffee, Briefcase , ChevronDown, ChevronUp, MapPin, Phone, AlertCircle, Heart, Baby, CalendarClock, StickyNote, Hash, Building2, UserCircle2, ShieldCheck, LayoutGrid, List, ClipboardCheck, Download, Shield, Landmark, Banknote, BookOpenCheck } from 'lucide-react';
+import { format, differenceInWeeks, isValid, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, startOfMonth, endOfMonth, isSameDay, differenceInDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { DriverProfileForm } from '@/components/workforce/driver-profile-form';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useSearch } from '@/hooks/use-search';
 import { WorkforceTimeline } from "@/components/workforce/workforce-timeline";
@@ -25,8 +23,6 @@ import { TimeApprovals } from "@/components/workforce/time-approvals";
 import { getDriverStatus } from "@/lib/workforce-utils";
 import { saveAs } from 'file-saver';
 import { logEvent } from '@/lib/db/logs';
-
-// --- Core Logic for computing a driver's status on a specific date ---
 
 export default function WorkforcePage() {
     const { dbUser } = useAuth();
@@ -43,7 +39,7 @@ export default function WorkforcePage() {
     const toggleCard = (id: string) => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
     
     useEffect(() => {
-        setContext('Personell', '/dashboard/admin'); // Redirects to admin page where invitations are sent
+        setContext('Personell', '/dashboard/admin'); 
         return () => setContext('Steder', '/dashboard/new');
     }, [setContext]);
 
@@ -57,7 +53,6 @@ export default function WorkforcePage() {
         try {
             setIsLoading(true);
             const users = await firebaseDB.getUsers(dbUser!.orgId);
-            // Show drivers, contractors, and potentially other operational roles in the future
             setDrivers(users.filter(u => u.role === 'driver' || u.role === 'contractor') as DriverProfile[]);
         } catch (error) {
             console.error("Failed to load drivers", error);
@@ -75,7 +70,7 @@ export default function WorkforcePage() {
                 description: "Profilen ble lagret.",
             });
             setEditingDriverProfile(null);
-            loadDrivers(); // Reload to show new data
+            loadDrivers(); 
             setTimeout(() => { document.body.style.pointerEvents = ''; }, 300);
         } catch (error: any) {
             toast({
@@ -86,31 +81,39 @@ export default function WorkforcePage() {
         }
     };
 
+    const handleRegisterDownload = async (driverId: string) => {
+        try {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            await firebaseDB.updateUser(driverId, { lastTachoDownloadDate: today });
+            toast({ title: "Nedlasting registrert", description: "Sjåførkort-nedlasting er oppdatert til i dag." });
+            loadDrivers();
+        } catch (error) {
+            toast({ title: "Feil", description: "Kunne ikke registrere nedlasting.", variant: "destructive" });
+        }
+    };
+
     const handleExportCSV = async () => {
-        if (!dbUser || dbUser.role !== 'admin') return;
+        if (!dbUser || (dbUser.role !== 'admin' && dbUser.role !== 'owner' && dbUser.role !== 'super_admin')) return;
         
         setIsExporting(true);
         try {
-            // Log the export action for GDPR compliance
             await logEvent(dbUser.orgId, dbUser.id, 'export_hr_data');
 
             const headers = [
                 "Navn", "E-post", "Telefon", "Rolle", "Ansatt Type", "Status",
                 "Ansattnummer", "Stilling", "Avdeling", "Nærmeste Leder", "Ansatt Siden",
                 "Fødselsdato", "Personnummer", "Timelønn", "Bankkonto", "Skattekort",
-                "Adresse", "Nødkontakt", "Pårørende", "Kompetanse"
+                "Adresse", "Nødkontakt", "Pårørende", "Kompetanse", "Sist nedlasting sjåførkort"
             ];
 
             const escapeField = (field: string | number | undefined | null) => {
                 if (field === null || field === undefined) return '';
                 const str = String(field);
-                // ALWAYS wrap in double quotes for robust CSV parsing,
-                // and escape any internal double quotes by doubling them.
                 return `"${str.replace(/"/g, '""')}"`;
             };
 
             const csvContent = [
-                headers.join(";"), // Header row
+                headers.join(";"),
                 ...drivers.map(d => [
                     escapeField(d.name),
                     escapeField(d.email),
@@ -131,11 +134,11 @@ export default function WorkforcePage() {
                     escapeField(d.address),
                     escapeField(d.emergencyContact),
                     escapeField(d.nextOfKin),
-                    escapeField([...(d.certifications || []), ...(d.skills || [])].join(', '))
+                    escapeField([...(d.certifications || []), ...(d.skills || [])].join(', ')),
+                    escapeField(d.lastTachoDownloadDate || 'Aldri')
                 ].join(";"))
             ].join("\n");
 
-            // BOM to support UTF-8 in Excel
             const BOM = "\uFEFF";
             const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
             saveAs(blob, `personell-eksport-${format(new Date(), 'yyyy-MM-dd')}.csv`);
@@ -168,7 +171,6 @@ export default function WorkforcePage() {
         return matchesName || matchesEmail || matchesPhone || matchesCert || matchesSkill;
     });
 
-    // Parse the search date securely
     let searchDate = new Date();
     if (searchDateStr) {
         const [year, month, day] = searchDateStr.split('-');
@@ -177,7 +179,7 @@ export default function WorkforcePage() {
         }
     }
 
-const stats = useMemo(() => {
+    const stats = useMemo(() => {
         let working = 0;
         let sick = 0;
         let vacation = 0;
@@ -201,18 +203,27 @@ const stats = useMemo(() => {
         return { working, sick, vacation, off, contractors, other, total: drivers.length };
     }, [drivers, searchDate]);
 
+    const getCardDownloadStatus = (dateStr?: string) => {
+        if (!dateStr) return 'missing';
+        try {
+            const date = parseISO(dateStr);
+            const today = new Date();
+            const daysSince = differenceInDays(today, date);
+            
+            if (daysSince > 28) return 'expired';
+            if (daysSince > 21) return 'warning';
+            return 'ok';
+        } catch (e) {
+            return 'missing';
+        }
+    };
+
     if (isLoading && drivers.length === 0) {
         return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
-
-
-    
-
-
     return (
         <>
-            {/* MAIN APP CONTENT - Hidden during print */}
             <div className="print:hidden mx-auto w-full max-w-7xl px-4 py-8 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
@@ -270,7 +281,6 @@ const stats = useMemo(() => {
                     </div>
                 </div>
 
-                {/* Stats Grid */}
                 <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2 sm:gap-4">
                     <Card className="bg-blue-50 border-blue-100 shadow-sm">
                         <CardContent className="p-2 sm:p-4 flex flex-col items-center justify-center text-center">
@@ -344,6 +354,7 @@ const stats = useMemo(() => {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredDrivers.map(driver => {
                                     const statusInfo = getDriverStatus(driver, searchDate);
+                                    const cardStatus = getCardDownloadStatus(driver.lastTachoDownloadDate);
                                     
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
@@ -394,7 +405,7 @@ const stats = useMemo(() => {
                                                         {driver.name || driver.email}
                                                     </CardTitle>
                                                     <div className="flex flex-col gap-1 mt-1">
-                                                        <div className="flex items-center">
+                                                        <div className="flex items-center gap-2">
                                                             {driver.employmentType === 'external' ? (
                                                                 <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] px-1.5 py-0">
                                                                     Innleid
@@ -404,16 +415,16 @@ const stats = useMemo(() => {
                                                                     Fast
                                                                 </Badge>
                                                             )}
+                                                            
+                                                            {cardStatus !== 'ok' && (
+                                                                <Badge variant="destructive" className={cn("text-[8px] h-4 px-1 uppercase", cardStatus === 'warning' ? "bg-orange-500" : "bg-red-600")}>
+                                                                    Sjåførkort
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                         {driver.employmentType === 'external' && driver.agencyInfo && (
                                                             <div className="text-xs text-muted-foreground flex flex-col mt-0.5 border-t border-slate-100 pt-1">
                                                                 <span className="font-medium truncate">{driver.agencyInfo.name}</span>
-                                                                {driver.agencyInfo.contactPerson && (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <UserIcon className="h-3 w-3 shrink-0" />
-                                                                        <span className="truncate">{driver.agencyInfo.contactPerson}</span>
-                                                                    </div>
-                                                                )}
                                                                 {driver.agencyInfo.phone && (
                                                                     <div className="flex items-center gap-1">
                                                                         <Phone className="h-3 w-3 shrink-0" />
@@ -443,6 +454,40 @@ const stats = useMemo(() => {
 
                                                     {isExpanded && (
                                                         <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                            
+                                                            {/* COMPLIANCE / SAMSVAR SECTION */}
+                                                            <div className="space-y-2 p-3 rounded-lg border-2 border-indigo-50 bg-indigo-50/20">
+                                                                <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+                                                                    <ShieldCheck className="h-3 w-3" />
+                                                                    Samsvar & Kontroll
+                                                                </h4>
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="space-y-0.5">
+                                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Sjåførkort nedlasting</p>
+                                                                        <p className={cn("text-xs font-black", cardStatus === 'expired' ? "text-red-600" : cardStatus === 'warning' ? "text-orange-600" : "text-slate-700")}>
+                                                                            {driver.lastTachoDownloadDate ? format(parseISO(driver.lastTachoDownloadDate), 'dd. MMM yyyy', { locale: nb }) : 'Aldri nedlastet'}
+                                                                        </p>
+                                                                    </div>
+                                                                    {dbUser?.role === 'admin' && (
+                                                                        <Button 
+                                                                            size="sm" 
+                                                                            variant="outline" 
+                                                                            className="h-8 text-[10px] font-bold bg-white"
+                                                                            onClick={() => handleRegisterDownload(driver.id)}
+                                                                        >
+                                                                            <Download className="h-3 w-3 mr-1" />
+                                                                            Registrer i dag
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                                {cardStatus !== 'ok' && (
+                                                                    <p className="text-[9px] font-medium text-red-500 italic">
+                                                                        {cardStatus === 'expired' ? 'Krav om nedlasting hver 28. dag er overskredet!' : 'Frist for nedlasting nærmer seg.'}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+
                                                             {(driver.certifications?.length || driver.skills?.length) ? (
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {driver.certifications?.map((c, i) => (
@@ -725,15 +770,6 @@ const stats = useMemo(() => {
                                                                     </div>
                                                                 </div>
                                                             )}
-                                                            {driver.employmentType === 'external' && driver.agencyInfo && (
-                                                                <div className="flex flex-col gap-1 bg-amber-50 text-amber-800 p-2 rounded border border-amber-200 text-xs">
-                                                                    <span className="font-bold text-[10px] uppercase tracking-wider text-amber-600/80">Byrå Info</span>
-                                                                    <div className="flex justify-between font-medium">
-                                                                        <span>{driver.agencyInfo.name}</span>
-                                                                        {driver.agencyInfo.phone && <span>{driver.agencyInfo.phone}</span>}
-                                                                    </div>
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -770,7 +806,6 @@ const stats = useMemo(() => {
                     <WorkforceTimeline drivers={filteredDrivers} onEditDriver={setEditingDriverProfile} />
                 )}
 
-                {/* Edit Driver Profile Dialog */}
                 <Dialog open={!!editingDriverProfile} onOpenChange={(open) => {
                     if (!open) {
                         setEditingDriverProfile(null);

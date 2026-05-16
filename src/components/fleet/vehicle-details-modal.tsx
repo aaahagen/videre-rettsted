@@ -17,11 +17,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { 
     Truck, 
-    AlertTriangle, 
     Wrench, 
     CheckCircle2, 
     Clock, 
@@ -34,7 +32,13 @@ import {
     Hammer,
     MapPin,
     Plus,
-    X
+    X,
+    Gauge,
+    Box,
+    Maximize2,
+    Settings2,
+    Construction,
+    Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -43,6 +47,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Separator } from '@/components/ui/separator';
 import { onSnapshot, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface VehicleDetailsModalProps {
     vehicle: Vehicle | null;
@@ -163,7 +168,6 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
             toast({ title: "Sak registrert" });
             setNewReportDescription('');
             setShowNewReportForm(false);
-            // loadDamageReports(); // No longer needed thanks to onSnapshot
         } catch (error) {
             toast({ title: "Feil ved lagring", variant: "destructive" });
         } finally {
@@ -203,7 +207,6 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
 
             await firebaseDB.updateVehicleDamageReport(reportId, updateData);
             toast({ title: "Dokument lastet opp" });
-            // loadDamageReports(); // No longer needed thanks to onSnapshot
         } catch (error) {
             toast({ title: "Feil ved opplasting", variant: "destructive" });
         } finally {
@@ -211,9 +214,25 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
         }
     };
 
+    const handleRegisterTachoDownload = async () => {
+        if (!vehicle) return;
+        setIsLoading(true);
+        try {
+            const today = format(new Date(), 'yyyy-MM-dd');
+            await firebaseDB.updateVehicle(vehicle.id, { lastTachoDownloadDate: today });
+            toast({ title: "Nedlasting registrert", description: "Siste nedlasting av fartsskriver er oppdatert til i dag." });
+            onUpdate();
+        } catch (error) {
+            toast({ title: "Feil", description: "Kunne ikke registrere nedlasting.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     if (!vehicle) return null;
 
     const currentStatuses = vehicle.currentStatuses || [];
+    const isHeavyVehicle = vehicle.type === 'truck' || vehicle.type === 'tractor';
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -293,6 +312,81 @@ export function VehicleDetailsModal({ vehicle, isOpen, onClose, onUpdate }: Vehi
                             />
                         </div>
                     </section>
+
+                    <Separator />
+
+                    {/* TECHNICAL DETAILS */}
+                    <section className="space-y-4">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <Construction className="h-4 w-4" />
+                            Tekniske Detaljer
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <DetailCard 
+                                icon={<Gauge className="h-4 w-4 text-indigo-500" />} 
+                                label="Kilometerstand" 
+                                value={vehicle.lastOdometerReading ? `${vehicle.lastOdometerReading.toLocaleString('no-NO')} km` : 'Ikke registrert'} 
+                                subValue={vehicle.lastOdometerDate ? `Sist oppdatert: ${format(vehicle.lastOdometerDate instanceof Date ? vehicle.lastOdometerDate : (vehicle.lastOdometerDate as any).toDate(), 'dd.MM.yy')}` : undefined}
+                            />
+                            <DetailCard 
+                                icon={<Box className="h-4 w-4 text-indigo-500" />} 
+                                label="Kapasitet" 
+                                value={`${vehicle.capacity?.weight || 0} kg / ${vehicle.capacity?.volume || 0} m³`} 
+                                subValue={`${vehicle.capacity?.pallets || 0} pallplasser`}
+                            />
+                            <DetailCard 
+                                icon={<Maximize2 className="h-4 w-4 text-indigo-500" />} 
+                                label="Dimensjoner" 
+                                value={`${vehicle.dimensions?.length || 0}m x ${vehicle.dimensions?.width || 0}m`} 
+                                subValue={`Høyde: ${vehicle.dimensions?.height || 0}m`}
+                            />
+                            <DetailCard 
+                                icon={<Settings2 className="h-4 w-4 text-indigo-500" />} 
+                                label="Drivstoff" 
+                                value={vehicle.fuelType?.toUpperCase() || 'DIESEL'} 
+                            />
+                        </div>
+                    </section>
+
+                    {isHeavyVehicle && (
+                        <>
+                            <Separator />
+                            {/* COMPLIANCE SECTION */}
+                            <section className="space-y-4">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <FileText className="h-4 w-4" />
+                                    Lovpålagt Dokumentasjon
+                                </h3>
+                                <Card className="bg-white border-slate-200 shadow-sm">
+                                    <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="p-3 bg-indigo-50 rounded-2xl">
+                                                <Download className="h-6 w-6 text-indigo-600" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900">Nedlasting av fartsskriver</h4>
+                                                <p className="text-xs text-slate-500 font-medium">Data må lastes ned minimum hver 90. dag.</p>
+                                                <div className="mt-2 flex items-center gap-2">
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Siste nedlasting:</span>
+                                                    <Badge variant="outline" className="bg-slate-50 border-slate-200">
+                                                        {vehicle.lastTachoDownloadDate ? format(parseISO(vehicle.lastTachoDownloadDate), 'PPP', { locale: nb }) : 'Ingen data'}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            onClick={handleRegisterTachoDownload} 
+                                            disabled={isLoading}
+                                            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 font-bold h-11 px-6 shadow-lg shadow-indigo-100"
+                                        >
+                                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                                            Registrer nedlasting i dag
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </section>
+                        </>
+                    )}
 
                     <Separator />
 
@@ -473,6 +567,22 @@ function StatusButton({ icon, label, active, onClick, color }: { icon: React.Rea
     );
 }
 
-function Card({ children, className }: { children: React.ReactNode, className?: string }) {
-    return <div className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}>{children}</div>;
+function DetailCard({ icon, label, value, subValue }: { icon: React.ReactNode, label: string, value: string, subValue?: string }) {
+    return (
+        <Card className="bg-white border-slate-200 shadow-none">
+            <CardContent className="p-4 space-y-1">
+                <div className="flex items-center gap-2 text-slate-400">
+                    {icon}
+                    <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
+                </div>
+                <p className="text-sm font-black text-slate-800">{value}</p>
+                {subValue && <p className="text-[9px] text-slate-400 font-medium">{subValue}</p>}
+            </CardContent>
+        </Card>
+    );
+}
+
+function parseISO(dateStr: string): Date {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
 }
