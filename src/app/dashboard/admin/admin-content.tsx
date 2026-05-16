@@ -56,9 +56,8 @@ import { DataExport } from '@/components/admin/data-export';
 import { DataImport } from '@/components/admin/data-import';
 import { DeleteOrganization } from '@/components/admin/delete-org';
 import { PendingInvitations } from '@/components/admin/pending-invitations';
+import { AuditLogViewer } from '@/components/admin/audit-log-viewer';
 import { useAuth } from '@/components/auth-provider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 
 function UserActionsDropdown({ user, handleUpdateRole, handleToggleStatus, handleDeleteUser, onEditName }: any) {
   return (
@@ -1165,6 +1164,26 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         </Card>
 
         {organization && <PendingInvitations orgId={organization.id} />}
+
+        {/* AUDIT LOGS (GDPR) */}
+        {organization && (
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <Shield className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                        <CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle>
+                        <CardDescription className="text-xs">Sporing av tilgang til sensitive data og kritiske handlinger</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-0">
+                <AuditLogViewer orgId={organization.id} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* DATA MANAGEMENT */}
         <Card className="border-slate-200 shadow-sm">

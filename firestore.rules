@@ -169,12 +169,12 @@ service cloud.firestore {
       allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 
-    // === SYSTEM LOGS ===
-    match /logs/{logId} {
-      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+    // === AUDIT LOGS (GDPR) ===
+    match /audit_logs/{logId} {
+      allow read: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
       allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if false;
-      allow delete: if isSuperAdmin();
+      allow update: if false; // Audit logs are immutable
+      allow delete: if isSuperAdmin(); // Only global owner can purge old logs
     }
   }
 }
