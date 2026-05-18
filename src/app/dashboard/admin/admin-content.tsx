@@ -30,7 +30,7 @@ import {
   DialogFooter,
   DialogClose,
   DialogTrigger
-} from "@/dialog";
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
