@@ -348,8 +348,8 @@ export default function AppSidebar() {
                     return false;
                   }
                   
-                  // HMS is hidden for everyone EXCEPT admins/owners if disabled, so they can re-enable it in /dashboard/hms
-                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false && !isAdmin) {
+                  // HMS is hidden for everyone EXCEPT admins/owners/hms_responsible if disabled, so they can re-enable it in /dashboard/hms
+                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false && !isAdmin && dbUser?.role !== 'hms_responsible') {
                     return false;
                   }
 
