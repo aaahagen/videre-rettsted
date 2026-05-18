@@ -343,11 +343,13 @@ export default function AppSidebar() {
                   }
 
                   // Specific feature flags for HMS and Reports
+                  // Reports are hidden for everyone if disabled (admins can re-enable in /dashboard/admin)
                   if (item.href === '/dashboard/reports' && org && org.dangerReportsEnabled === false) {
                     return false;
                   }
                   
-                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false) {
+                  // HMS is hidden for everyone EXCEPT admins/owners if disabled, so they can re-enable it in /dashboard/hms
+                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false && !isAdmin) {
                     return false;
                   }
 
