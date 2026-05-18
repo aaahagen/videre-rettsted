@@ -342,6 +342,15 @@ export default function AppSidebar() {
                     if (moduleEnabled === false) return false;
                   }
 
+                  // Specific feature flags for HMS and Reports
+                  if (item.href === '/dashboard/reports' && org && org.dangerReportsEnabled === false) {
+                    return false;
+                  }
+                  
+                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false) {
+                    return false;
+                  }
+
                   return true;
               });
 
