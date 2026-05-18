@@ -196,8 +196,8 @@ export default function AppSidebar() {
       label: 'HMS & Sikkerhet',
       roles: ['admin', 'super_admin', 'owner', 'hms_responsible', 'driver'],
       items: [
-        { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter' },
-        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver'] },
+        { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter', module: 'danger_reports' },
+        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver'], module: 'hms' },
       ]
     },
     {
@@ -335,20 +335,22 @@ export default function AppSidebar() {
                   if (item.roles && !item.roles.includes(dbUser?.role || '')) return false;
                   if (item.hideFrom && item.hideFrom.includes(dbUser?.role || '')) return false;
                   
-                  // Module Gating
+                  // Module Gating (Super Admin Level)
                   if (item.module && org?.modules) {
                     const moduleEnabled = (org.modules as any)[item.module];
-                    // If module setting exists and is false, hide it
+                    // If module setting exists and is false, hide it for EVERYONE
                     if (moduleEnabled === false) return false;
                   }
 
-                  // Specific feature flags for HMS and Reports
-                  // Reports are hidden for everyone if disabled (admins can re-enable in /dashboard/admin)
-                  if (item.href === '/dashboard/reports' && org && org.dangerReportsEnabled === false) {
+                  // Internal toggles (Admin level)
+                  // These respect the isAdmin / hms_responsible exceptions
+                  
+                  // Reports: hidden for drivers/etc if disabled, but visible for admins
+                  if (item.href === '/dashboard/reports' && org && org.dangerReportsEnabled === false && !isAdmin) {
                     return false;
                   }
                   
-                  // HMS is hidden for everyone EXCEPT admins/owners/hms_responsible if disabled, so they can re-enable it in /dashboard/hms
+                  // HMS: hidden for everyone EXCEPT admins/owners/hms_responsible if disabled
                   if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false && !isAdmin && dbUser?.role !== 'hms_responsible') {
                     return false;
                   }

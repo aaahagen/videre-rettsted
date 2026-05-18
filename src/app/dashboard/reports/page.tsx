@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MapPin, Clock, User as UserIcon, Loader2, ArrowRight, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import Image from "next/image";
@@ -127,6 +127,19 @@ export default function ReportsPage() {
             <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
                 <Skeleton className="h-10 w-48 mb-6" />
                 <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
+        );
+    }
+
+    // Module Gating: If danger_reports module is disabled, show "Module Locked" state
+    if (organization.modules?.danger_reports === false) {
+        return (
+            <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
+                <div className="p-4 bg-slate-50 rounded-full mb-4">
+                    <Lock className="h-12 w-12 text-slate-400" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">Modulen er utilgjengelig</h2>
+                <p className="max-w-md mx-auto">Avviksmodulen er ikke aktivert for din organisasjon. Ta kontakt med administrator for å oppgradere din plan.</p>
             </div>
         );
     }

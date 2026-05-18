@@ -122,7 +122,9 @@ export default function SuperAdminPage() {
         fleet: false,
         workforce: false,
         logistics: false,
-        analytics: false
+        analytics: false,
+        hms: false,
+        danger_reports: false
       }),
       [module]: !currentVal
     };
@@ -140,11 +142,11 @@ export default function SuperAdminPage() {
     try {
       let newModules = undefined;
       if (plan === 'enterprise') {
-          newModules = { places: true, learning: true, messages: true, fleet: true, workforce: true, logistics: true, analytics: true };
+          newModules = { places: true, learning: true, messages: true, fleet: true, workforce: true, logistics: true, analytics: true, hms: true, danger_reports: true };
       } else if (plan === 'pro') {
-          newModules = { places: true, learning: false, messages: true, fleet: true, workforce: true, logistics: true, analytics: false };
+          newModules = { places: true, learning: false, messages: true, fleet: true, workforce: true, logistics: true, analytics: false, hms: true, danger_reports: true };
       } else if (plan === 'free') {
-          newModules = { places: true, learning: false, messages: false, fleet: false, workforce: false, logistics: true, analytics: false };
+          newModules = { places: true, learning: false, messages: false, fleet: false, workforce: false, logistics: true, analytics: false, hms: false, danger_reports: false };
       }
 
       const updates: Partial<Organization> = { plan };
@@ -483,6 +485,8 @@ export default function SuperAdminPage() {
                       { id: 'workforce', label: 'Ansatte' },
                       { id: 'learning', label: 'Læring' },
                       { id: 'messages', label: 'Meldinger' },
+                      { id: 'hms', label: 'HMS' },
+                      { id: 'danger_reports', label: 'Avvik' },
                       { id: 'analytics', label: 'Statistikk' },
                   ].map((mod) => (
                       <div key={mod.id} className={`flex items-center pr-3 py-1 rounded-full border ${mod.core || (org.modules as any)?.[mod.id] ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-200'}`}>

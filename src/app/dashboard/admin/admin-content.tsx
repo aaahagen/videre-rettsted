@@ -30,7 +30,7 @@ import {
   DialogFooter,
   DialogClose,
   DialogTrigger
-} from "@/components/ui/dialog";
+} from "@/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -420,28 +420,30 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         </Card>
 
         {/* 3. SAFETY & DANGER REPORTS (Restored/Added) */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <ShieldAlert className="h-5 w-5 text-red-600" />
-                    <div>
-                        <CardTitle className="font-headline text-xl">Sikkerhet & Avvik</CardTitle>
-                        <CardDescription className="text-xs">Administrer systemet for faremeldinger og avvik</CardDescription>
+        {organization?.modules?.danger_reports !== false && (
+            <Card className="border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <ShieldAlert className="h-5 w-5 text-red-600" />
+                        <div>
+                            <CardTitle className="font-headline text-xl">Sikkerhet & Avvik</CardTitle>
+                            <CardDescription className="text-xs">Administrer systemet for faremeldinger og avvik</CardDescription>
+                        </div>
                     </div>
-                </div>
-                <Switch checked={orgSettings.dangerReportsEnabled} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, dangerReportsEnabled: v }))} />
-            </CardHeader>
-            {orgSettings.dangerReportsEnabled && (
-                <CardContent className="p-6">
-                    <div className="flex items-start gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-800">
-                        <AlertTriangle className="h-5 w-5 shrink-0" />
-                        <p className="text-sm font-medium">
-                            Når avvikshåndtering er aktivert, kan sjåfører rapportere farlige forhold ved leveringssteder. Administratorer må gjennomgå og løse disse sakene i avvikspanelet.
-                        </p>
-                    </div>
-                </CardContent>
-            )}
-        </Card>
+                    <Switch checked={orgSettings.dangerReportsEnabled} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, dangerReportsEnabled: v }))} />
+                </CardHeader>
+                {orgSettings.dangerReportsEnabled && (
+                    <CardContent className="p-6">
+                        <div className="flex items-start gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-800">
+                            <AlertTriangle className="h-5 w-5 shrink-0" />
+                            <p className="text-sm font-medium">
+                                Når avvikshåndtering er aktivert, kan sjåfører rapportere farlige forhold ved leveringssteder. Administratorer må gjennomgå og løse disse sakene i avvikspanelet.
+                            </p>
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
+        )}
 
         {/* 4. DEPOT & GEOFENCING */}
         <Card className="border-slate-200 shadow-sm overflow-hidden">

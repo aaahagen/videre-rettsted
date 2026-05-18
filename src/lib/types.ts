@@ -26,6 +26,8 @@ export interface Organization {
     workforce?: boolean;
     logistics?: boolean;
     analytics?: boolean;
+    hms?: boolean; // Added
+    danger_reports?: boolean; // Added
   };
   mainDepot?: {
     address: string;
@@ -38,7 +40,7 @@ export interface Organization {
     nextCustomerNumber?: number;
   };
   hmsSettings?: {
-    enabled: boolean;
+    enabled: boolean; // Keep for internal toggle if needed, or deprecate
     title?: string;
     questions: { id: string; text: string }[];
     requireComment?: boolean;
@@ -80,7 +82,7 @@ export interface Organization {
       enabled?: boolean;
     };
   };
-  dangerReportsEnabled?: boolean; // Added
+  dangerReportsEnabled?: boolean; // Keep for internal toggle if needed, or deprecate
   legal?: {
     dpaAcceptedAt?: {
       toDate: () => Date;

@@ -7,13 +7,15 @@ import { firebaseDB } from "@/lib/firebase/database";
 import { HMSLog } from "./hms-log";
 import { HMSSettings } from "./hms-settings";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, Lock } from "lucide-react";
 import { useSearch } from "@/hooks/use-search";
+import { useRouter } from "next/navigation";
 
 export default function HMSPage() {
     const { dbUser, loading } = useAuth();
     const [organization, setOrganization] = useState<Organization | null>(null);
     const { query: searchQuery, setContext } = useSearch();
+    const router = useRouter();
 
     useEffect(() => {
         setContext('HMS-Logg', '');
@@ -30,6 +32,19 @@ export default function HMSPage() {
             <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
                 <Skeleton className="h-10 w-48 mb-6" />
                 <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
+        );
+    }
+
+    // Module Gating: If HMS module is disabled, show "Module Locked" state
+    if (organization.modules?.hms === false) {
+        return (
+            <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
+                <div className="p-4 bg-slate-50 rounded-full mb-4">
+                    <Lock className="h-12 w-12 text-slate-400" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">Modulen er utilgjengelig</h2>
+                <p className="max-w-md mx-auto">HMS-modulen er ikke aktivert for din organisasjon. Ta kontakt med administrator for å oppgradere din plan.</p>
             </div>
         );
     }
