@@ -48,7 +48,11 @@ import {
     CalendarDays,
     History,
     Wrench,
-    Gauge
+    Gauge,
+    ShieldAlert as ShieldAlertIcon,
+    Database,
+    Hash,
+    Settings2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,7 +61,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ordrer' | 'lasterampe' | 'ruter' | 'fleet' | 'workforce' | 'owner';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ordrer' | 'lasterampe' | 'ruter' | 'fleet' | 'workforce' | 'admin' | 'owner';
 
 interface ChapterDef {
     id: Chapter;
@@ -83,6 +87,7 @@ export default function ManualPage() {
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
         { id: 'fleet', title: 'Kjøretøy & Vedlikehold', icon: Truck, adminOnly: true },
         { id: 'workforce', title: 'Ansatte & HR', icon: Users, adminOnly: true },
+        { id: 'admin', title: 'Systeminnstillinger', icon: Settings, adminOnly: true },
         { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
     ];
 
@@ -975,6 +980,79 @@ export default function ManualPage() {
                                         Bruk **Arbeids-tidslinjen** for å se hvem som er på jobb, hvem som har pause, og hvem som har ferie eller er syke. Dette gir deg et øyeblikksbilde av bedriftens kapasitet i dag og fremover.
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: ADMIN */}
+                    {activeChapter === 'admin' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Settings className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Systeminnstillinger (Admin)</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Adminpanelet er der du konfigurerer RettSted for å passe nøyaktig til din bedrifts behov.
+                            </p>
+
+                            <div className="space-y-10">
+                                <section className="space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <Users className="h-5 w-5 text-blue-600" />
+                                        Brukere & Tilganger
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Inviter nye ansatte ved å sende en unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som helst pause eller slette en bruker hvis de slutter.
+                                    </p>
+                                </section>
+
+                                <section className="space-y-4 border-t pt-6">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <Settings2 className="h-5 w-5 text-indigo-600" />
+                                        Tilpasning av Leveringssteder
+                                    </h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                            <p className="font-black text-xs uppercase text-slate-400 mb-2">Kundenummerering</p>
+                                            <p className="text-xs text-slate-600 font-medium">Velg om nye steder skal få kundenummer automatisk (f.eks. K-1001, K-1002) eller om du vil skrive dem inn manuelt.</p>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                            <p className="font-black text-xs uppercase text-slate-400 mb-2">Felt-tilpasning</p>
+                                            <p className="text-xs text-slate-600 font-medium">Endre navn på felter i skjemaet slik at de gir mening for dine sjåfører (f.eks. endre "Notater" til "Nøkkelskap").</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="space-y-4 border-t pt-6">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-emerald-600" />
+                                        Hoveddepot & Geofencing
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Sett bedriftens baseadresse og definer en "stemplings-radius". Dette sikrer at ansatte bare kan stemple seg inn på jobb når de faktisk befinner seg fysisk på terminalen.
+                                    </p>
+                                </section>
+
+                                <section className="space-y-4 border-t pt-6">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <ShieldAlertIcon className="h-5 w-5 text-red-600" />
+                                        Sikkerhetslogg (Audit Trail)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Av personvernshensyn logges alle kritiske handlinger. Du kan se hvem som har sett på sensitive personalopplysninger, hvem som har slettet data, og når viktige endringer ble gjort.
+                                    </p>
+                                </section>
+
+                                <section className="space-y-4 border-t pt-6">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <Database className="h-5 w-5 text-amber-600" />
+                                        Datahåndtering
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Ta full backup av bedriftens data ved å eksportere hele databasen til JSON. Du kan også importere data hvis dere bytter system eller skal flytte store mengder steder mellom organisasjoner.
+                                    </p>
+                                </section>
                             </div>
                         </div>
                     )}
