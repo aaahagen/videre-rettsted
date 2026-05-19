@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
     BookOpen, 
     Users, 
@@ -52,7 +52,8 @@ import {
     ShieldAlert as ShieldAlertIcon,
     Database,
     Hash,
-    Settings2
+    Settings2,
+    Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,7 +62,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ordrer' | 'lasterampe' | 'ruter' | 'fleet' | 'workforce' | 'admin' | 'owner';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'lasterampe' | 'ordrer' | 'ruter' | 'fleet' | 'workforce' | 'admin' | 'owner';
 
 interface ChapterDef {
     id: Chapter;
@@ -70,26 +71,31 @@ interface ChapterDef {
     adminOnly?: boolean;
 }
 
+const ALL_CHAPTERS: ChapterDef[] = [
+    { id: 'intro', title: 'Introduksjon', icon: BookOpen },
+    { id: 'roller', title: 'Roller & Tilganger', icon: Lock },
+    { id: 'steder', title: 'Leveringssteder', icon: MapPin },
+    { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
+    { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
+    { id: 'hms', title: 'HMS-Systemet', icon: Shield },
+    { id: 'lasterampe', title: 'Lasterampe (Manifest)', icon: ScanBarcode },
+    // Admin/Specialized chapters
+    { id: 'ordrer', title: 'Ordrehåndtering', icon: Package, adminOnly: true },
+    { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
+    { id: 'fleet', title: 'Kjøretøy & Vedlikehold', icon: Truck, adminOnly: true },
+    { id: 'workforce', title: 'Ansatte & HR', icon: Users, adminOnly: true },
+    { id: 'admin', title: 'Systeminnstillinger', icon: Settings, adminOnly: true },
+    { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
+];
+
 export default function ManualPage() {
     const [activeChapter, setActiveChapter] = useState<Chapter>('intro');
-    const { dbUser } = useAuth();
-    const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'owner' || dbUser?.role === 'super_admin';
+    const { isAdmin } = useAuth();
 
-    const chapters: ChapterDef[] = [
-        { id: 'intro', title: 'Introduksjon', icon: BookOpen },
-        { id: 'roller', title: 'Roller & Tilganger', icon: Users },
-        { id: 'steder', title: 'Leveringssteder', icon: MapPin },
-        { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
-        { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
-        { id: 'hms', title: 'HMS-Systemet', icon: Shield },
-        { id: 'ordrer', title: 'Ordrehåndtering', icon: Package, adminOnly: true },
-        { id: 'lasterampe', title: 'Lasterampe (Manifest)', icon: ScanBarcode },
-        { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
-        { id: 'fleet', title: 'Kjøretøy & Vedlikehold', icon: Truck, adminOnly: true },
-        { id: 'workforce', title: 'Ansatte & HR', icon: Users, adminOnly: true },
-        { id: 'admin', title: 'Systeminnstillinger', icon: Settings, adminOnly: true },
-        { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
-    ];
+    // Memoize the visible chapters to ensure stability and correct order
+    const visibleChapters = useMemo(() => {
+        return ALL_CHAPTERS.filter(c => !c.adminOnly || isAdmin);
+    }, [isAdmin]);
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 w-full">
@@ -104,19 +110,19 @@ export default function ManualPage() {
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start relative">
-                {/* Navigation Sidebar */}
-                <div className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 space-y-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                {/* Navigation Sidebar - Fixed width and sticky to prevent shifting */}
+                <div className="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-fit">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-3">Kapitler</h3>
                     <div className="space-y-1.5">
-                        {chapters.filter(c => !c.adminOnly || isAdmin).map(chapter => (
+                        {visibleChapters.map(chapter => (
                             <button
                                 key={chapter.id}
                                 onClick={() => setActiveChapter(chapter.id)}
                                 className={cn(
-                                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group",
+                                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group border",
                                     activeChapter === chapter.id 
-                                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" 
-                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:border-slate-200"
+                                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-200 border-indigo-600" 
+                                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent hover:border-slate-200"
                                 )}
                             >
                                 <div className="flex items-center gap-3">
@@ -135,12 +141,12 @@ export default function ManualPage() {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-2xl p-6 md:p-10 w-full min-h-[600px]">
+                {/* Main Content Area - min-h-[700px] to stabilize the sticky sidebar track */}
+                <div className="flex-1 bg-white border border-slate-200 shadow-sm rounded-2xl p-6 md:p-10 w-full min-h-[700px]">
                     
-                    {/* CHAPTER 1: INTRO */}
+                    {/* CHAPTER: INTRO */}
                     {activeChapter === 'intro' && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><BookOpen className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Velkommen til VIDERE RettSted</h2>
@@ -207,11 +213,11 @@ export default function ManualPage() {
                         </div>
                     )}
 
-                    {/* CHAPTER 2: ROLES */}
+                    {/* CHAPTER: ROLES */}
                     {activeChapter === 'roller' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-8 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
-                                <div className="p-2 bg-slate-100 rounded-lg"><Users className="h-5 w-5 text-slate-700" /></div>
+                                <div className="p-2 bg-slate-100 rounded-lg"><Lock className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Roller og Tilganger</h2>
                             </div>
                             
@@ -295,9 +301,9 @@ export default function ManualPage() {
                         </div>
                     )}
 
-                    {/* CHAPTER 3: PLACES */}
+                    {/* CHAPTER: PLACES */}
                     {activeChapter === 'steder' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><MapPin className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Forstå Leveringssteder</h2>
@@ -329,7 +335,7 @@ export default function ManualPage() {
                                         </Badge>
                                         <div>
                                             <p className="font-black text-sm text-slate-800">HMS Utfylt</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Risikovurdering er gjennomført.</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">Risikovurdering er gjennomført.</p>
                                         </div>
                                     </div>
 
@@ -339,7 +345,7 @@ export default function ManualPage() {
                                         </Badge>
                                         <div>
                                             <p className="font-black text-sm text-slate-800">Nullutslippssone</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Krever elektrisk/gass.</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">Krever elektrisk/gass.</p>
                                         </div>
                                     </div>
 
@@ -349,7 +355,7 @@ export default function ManualPage() {
                                         </Badge>
                                         <div>
                                             <p className="font-black text-sm text-slate-800">Sentrumskjerne</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Varsler om høye bomavgifter.</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">Varsler om høye bomavgifter.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -485,9 +491,9 @@ export default function ManualPage() {
                         </div>
                     )}
 
-                    {/* CHAPTER 4: AVVIK */}
+                    {/* CHAPTER: AVVIK */}
                     {activeChapter === 'avvik' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-8 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><ShieldAlert className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Sikkerhet & Avvik</h2>
@@ -501,7 +507,7 @@ export default function ManualPage() {
                                 <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4 border-l-4 border-l-orange-500">
                                     <h3 className="font-black text-slate-800 flex items-center gap-2">
                                         <MapPin className="h-5 w-5 text-orange-500" />
-                                        Avvik på Steder
+                                        Avvik on Steder
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
                                         Bruk "Meld Avvik"-knappen på et steds-kort hvis du opplever f.eks. is, farlige hunder, manglende belysning eller blokkerte ramper.
@@ -576,7 +582,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: POD */}
                     {activeChapter === 'pod' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><CheckCircle2 className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Leveringsbevis (POD)</h2>
@@ -621,7 +627,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: HMS */}
                     {activeChapter === 'hms' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Shield className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">HMS-Systemet</h2>
@@ -710,55 +716,9 @@ export default function ManualPage() {
                         </div>
                     )}
 
-                    {/* CHAPTER: ORDRER */}
-                    {activeChapter === 'ordrer' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 border-b pb-4">
-                                <div className="p-2 bg-slate-100 rounded-lg"><Package className="h-5 w-5 text-slate-700" /></div>
-                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ordrehåndtering</h2>
-                            </div>
-                            
-                            <p className="text-slate-700 text-lg font-medium">
-                                Alle oppdrag i RettSted starter som en ordre. Her lærer du hvordan du importerer, oppretter og administrerer dem.
-                            </p>
-
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
-                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                        <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                                        Masseimport (CSV)
-                                    </h3>
-                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Den mest effektive metoden. Last opp en Excel/CSV-fil fra ditt TMS-system. RettSted vil:
-                                    </p>
-                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
-                                        <li>Koble ordrene til riktige leveringssteder i databasen.</li>
-                                        <li>Validere kolli-informasjon og vekt.</li>
-                                        <li>Gjøre dem umiddelbart tilgjengelige for ruteplanlegging.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
-                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                        <PlusCircle className="h-5 w-5 text-blue-600" />
-                                        Manuell Opprettelse
-                                    </h3>
-                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        For hasteoppdrag eller ad-hoc leveringer. Trykk på "Ny Ordre" og fyll ut:
-                                    </p>
-                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
-                                        <li>Kunde/Mottaker (Velg fra databasen).</li>
-                                        <li>Beskrivelse av last (f.eks "2 Paller Dagligvarer").</li>
-                                        <li>Vekt og volum for automatisk kapasitetsberegning.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {/* CHAPTER: LASTERAMPE */}
                     {activeChapter === 'lasterampe' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><ScanBarcode className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Lasterampe (Manifest)</h2>
@@ -818,9 +778,55 @@ export default function ManualPage() {
                         </div>
                     )}
 
-                    {/* CHAPTER 5: RUTER */}
+                    {/* CHAPTER: ORDRER */}
+                    {activeChapter === 'ordrer' && (
+                        <div className="space-y-12 animate-in fade-in duration-300">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Package className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ordrehåndtering</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Alle oppdrag i RettSted starter som en ordre. Her lærer du hvordan du importerer, oppretter og administrerer dem.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                                        Masseimport (CSV)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Den mest effektive metoden. Last opp en Excel/CSV-fil fra ditt TMS-system. RettSted vil:
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
+                                        <li>Koble ordrene til riktige leveringssteder i databasen.</li>
+                                        <li>Validere kolli-informasjon og vekt.</li>
+                                        <li>Gjøre dem umiddelbart tilgjengelige for ruteplanlegging.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <PlusCircle className="h-5 w-5 text-blue-600" />
+                                        Manuell Opprettelse
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        For hasteoppdrag eller ad-hoc leveringer. Trykk på "Ny Ordre" og fyll ut:
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
+                                        <li>Kunde/Mottaker (Velg fra databasen).</li>
+                                        <li>Beskrivelse av last (f.eks "2 Paller Dagligvarer").</li>
+                                        <li>Vekt og volum for automatisk kapasitetsberegning.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: RUTER */}
                     {activeChapter === 'ruter' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Route className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ruteplanlegging</h2>
@@ -881,7 +887,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: FLEET */}
                     {activeChapter === 'fleet' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Truck className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Kjøretøy & Vedlikehold</h2>
@@ -931,7 +937,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: WORKFORCE */}
                     {activeChapter === 'workforce' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Users className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ansatte & HR</h2>
@@ -986,7 +992,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: ADMIN */}
                     {activeChapter === 'admin' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Settings className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Systeminnstillinger (Admin)</h2>
@@ -1059,7 +1065,7 @@ export default function ManualPage() {
 
                     {/* CHAPTER: OWNER */}
                     {activeChapter === 'owner' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><Building2 className="h-5 w-5 text-slate-700" /></div>
                                 <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Bedriftsoversikt (Eier)</h2>

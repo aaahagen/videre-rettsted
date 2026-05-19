@@ -7,8 +7,9 @@
 > 1. **`docs/strategy.md`**: The Product Vision & Roadmap. Check here to understand the *Why* and the *When*.
 > 2. **`docs/domain.md`**: Business Logic & Feature Specs. Read this to understand the *What*.
 > 3. **`docs/ui-specification.md`**: **UI SOURCE OF TRUTH.** Consult this before refactoring any page to ensure no components or role-based features are accidentally removed.
-> 4. **`docs/engineering.md`**: Architecture, UI & Testing rules. Read this to understand the *How*.
-> 5. **`docs/CHANGELOG.md`**: The absolute Ground Truth of what has *already been built*. 
+> 4. **`docs/roles-and-permissions.md`**: **RBAC SOURCE OF TRUTH.** Consult this to understand user roles and permissions.
+> 5. **`docs/engineering.md`**: Architecture, UI & Testing rules. Read this to understand the *How*.
+> 6. **`docs/CHANGELOG.md`**: The absolute Ground Truth of what has *already been built*. 
 > 
 > **Core Developer Rules:**
 > - **Primary Tooling:** ALWAYS use the `write_file` tool for all code modifications. DO NOT use `sed`, `awk`, or other terminal commands to patch files.
