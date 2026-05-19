@@ -96,7 +96,9 @@ export const superDB = {
         workforce: false,
         learning: false,
         messages: true,
-        analytics: false
+        analytics: false,
+        hms: false,
+        danger_reports: false
       },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

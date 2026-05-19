@@ -37,7 +37,7 @@ export default function HMSPage() {
     }
 
     // Module Gating: If HMS module is disabled, show "Module Locked" state
-    if (organization.modules?.hms === false) {
+    if (organization.modules?.hms !== true) {
         return (
             <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
                 <div className="p-4 bg-slate-50 rounded-full mb-4">

@@ -132,7 +132,7 @@ export default function ReportsPage() {
     }
 
     // Module Gating: If danger_reports module is disabled, show "Module Locked" state
-    if (organization.modules?.danger_reports === false) {
+    if (organization.modules?.danger_reports !== true) {
         return (
             <div className="p-12 text-center text-muted-foreground flex flex-col items-center">
                 <div className="p-4 bg-slate-50 rounded-full mb-4">
