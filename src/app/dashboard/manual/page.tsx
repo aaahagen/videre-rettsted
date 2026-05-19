@@ -32,7 +32,10 @@ import {
     PhoneCall,
     Download,
     CheckCircle2,
-    ListChecks
+    ListChecks,
+    Truck,
+    CameraIcon,
+    Signature
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +44,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'hms' | 'ruter';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ruter';
 
 interface ChapterDef {
     id: Chapter;
@@ -60,6 +63,7 @@ export default function ManualPage() {
         { id: 'roller', title: 'Roller & Tilganger', icon: Users },
         { id: 'steder', title: 'Leveringssteder', icon: MapPin },
         { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
+        { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
         { id: 'hms', title: 'HMS-Systemet', icon: Shield },
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
     ];
@@ -189,18 +193,19 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Systemet tilpasser seg hvem du er. Her er og en oversikt over de ulike rollene og hva de har tilgang til:
+                                Systemet tilpasser seg hvem du er. Her er en oversikt over de ulike rollene og hva de har tilgang til:
                             </p>
 
                             <div className="space-y-4 mt-6">
                                 <div className="p-5 border rounded-xl border-l-4 border-l-blue-500 bg-white shadow-sm hover:shadow-md transition-shadow">
                                     <h3 className="font-black text-lg mb-2 flex items-center gap-2 text-slate-800 tracking-tight">
                                         <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md"><Users className="h-4 w-4" /></div> 
-                                        Sjåfør & Innleid
+                                        Sjåfør & Innleid (Ekstern)
                                     </h3>
                                     <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                                        Har tilgang til å se leveringssteder, kjøre ruter, og rapportere avvik. De kan ikke redigere steder permanent, 
-                                        men kan legge til bilder og kommentarer fra veien.
+                                        Hverdagens helter. Sjåfører har tilgang til å se og <strong className="text-slate-800">redigere leveringssteder</strong> for å holde databasen oppdatert. 
+                                        De kan <strong className="text-slate-800">opprette nye steder</strong> direkte fra veien, bruke <strong className="text-slate-800">Leveringsbevis (POD)</strong>, 
+                                        utføre <strong className="text-slate-800">kjøretøykontroller</strong>, og rapportere avvik på både steder og biler. De tildeles ruter av planleggere.
                                     </p>
                                 </div>
 
@@ -358,7 +363,7 @@ export default function ManualPage() {
                                         <div className="text-center sm:text-left">
                                             <p className="font-black text-sm text-slate-800">Se Detaljer & Rediger</p>
                                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                                                Åpner den fulle oversikten. Her ser du store bilder med zoom, åpningstider, dørkoder og detaljerte instruksjoner.
+                                                Åpner den fulle oversikten. Som sjåfør kan du redigere her hvis du oppdager feil eller vil legge til informasjon.
                                             </p>
                                         </div>
                                     </div>
@@ -397,7 +402,7 @@ export default function ManualPage() {
                                     Opprette og Redigere Steder
                                 </h3>
                                 <p className="text-slate-600 font-medium mb-4 leading-relaxed">
-                                    Når du trykker på <strong>"Nytt sted"</strong> i menyen, eller trykker <strong>"Rediger Sted"</strong> inne på en steds-side, åpnes redigeringsskjemaet. Her er de viktigste funksjonene for å sikre at stedet blir lagret riktig:
+                                    Som sjåfør har du makten til å forbedre databasen vår. Når du trykker på <strong>"Nytt sted"</strong> i menyen, eller trykker <strong>"Rediger Sted"</strong> inne på en steds-side, åpnes redigeringsskjemaet.
                                 </p>
 
                                 <div className="grid md:grid-cols-2 gap-6">
@@ -520,6 +525,37 @@ export default function ManualPage() {
                                 En trygg arbeidsdag er det aller viktigste. RettSted gjør det enkelt å rapportere farlige forhold før en ulykke skjer, og varsler deretter kollegaer automatisk.
                             </p>
 
+                            <div className="grid md:grid-cols-2 gap-6 mt-8">
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4 border-l-4 border-l-orange-500">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-orange-500" />
+                                        Avvik på Steder
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Bruk "Meld Avvik"-knappen på et steds-kort hvis du opplever f.eks. is, farlige hunder, manglende belysning eller blokkerte ramper.
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                                        <li>Stedet får en rød glødende ramme i appen for alle sjåfører.</li>
+                                        <li>Admins får beskjed og må løse saken for å fjerne advarselen.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4 border-l-4 border-l-red-500">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <Truck className="h-5 w-5 text-red-500" />
+                                        Avvik på Kjøretøy
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Under den daglige kjøretøykontrollen (pre-trip/post-trip) kan du rapportere skader eller feil på bilen.
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                                        <li>Last opp inntil 4 bilder av skaden.</li>
+                                        <li>Bilen merkes med "Observasjon" eller settes ut av drift av admin.</li>
+                                        <li>Verkstedordre og historikk logges sentralt.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent mt-12">
                                 <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-orange-500 text-white font-black shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
@@ -530,7 +566,7 @@ export default function ManualPage() {
                                             <h3 className="font-black text-slate-800 text-lg">Oppdage og Rapportere</h3>
                                         </div>
                                         <p className="text-slate-600 font-medium text-sm leading-relaxed">
-                                            På hvert leveringssted vil du se en knapp merket "Meld Avvik". Trykk på denne hvis du opplever isete ramper, farlige hunder, eller manglende sikring. Ta et bilde og send inn.
+                                            På hvert leveringssted vil du se en knapp merket "Meld Avvik". Trykk på denne hvis noe er galt. Ta et bilde og send inn.
                                         </p>
                                     </div>
                                 </div>
@@ -544,7 +580,7 @@ export default function ManualPage() {
                                             <h3 className="font-black text-red-700 text-lg">Advarsel til kollegaer</h3>
                                         </div>
                                         <p className="text-slate-700 font-medium text-sm leading-relaxed">
-                                            Når et avvik er meldt, vil kortet til dette stedet umiddelbart få en rød, glødende ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
+                                            Når et avvik er meldt, vil kortet til dette stedet umiddelbart få en rød ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
                                         </p>
                                     </div>
                                 </div>
@@ -558,11 +594,56 @@ export default function ManualPage() {
                                             <h3 className="font-black text-slate-800 text-lg">Lukking av Avvik</h3>
                                         </div>
                                         <p className="text-slate-600 font-medium text-sm leading-relaxed">
-                                            Administrator eller HMS-ansvarlig vil behandle saken. Når problemet er løst (f.eks. snøen er ryddet bort), kan de "Lukke" avviket i adminpanelet, og advarselen forsvinner.
+                                            Administrator eller HMS-ansvarlig behandler saken. Når problemet er løst, "Lukker" de avviket i panelet, og advarselen forsvinner.
                                         </p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: POD */}
+                    {activeChapter === 'pod' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><CheckCircle2 className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Leveringsbevis (POD)</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Proof of Delivery (POD) sikrer fullstendig sporbarhet og beskytter både sjåfør og bedrift mot tvister.
+                            </p>
+
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div className="p-5 border rounded-2xl bg-white shadow-sm space-y-3">
+                                    <div className="p-2 bg-blue-50 text-blue-600 w-fit rounded-lg"><CameraIcon className="h-5 w-5" /></div>
+                                    <h3 className="font-black text-slate-800 text-sm uppercase tracking-tight">Foto-bevis</h3>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                        Krav om bilde ved utlevering, spesielt hvis varen settes igjen uten signatur ("Satt igjen ved dør").
+                                    </p>
+                                </div>
+                                <div className="p-5 border rounded-2xl bg-white shadow-sm space-y-3">
+                                    <div className="p-2 bg-purple-50 text-purple-600 w-fit rounded-lg"><Signature className="h-5 w-5" /></div>
+                                    <h3 className="font-black text-slate-800 text-sm uppercase tracking-tight">Digital Signatur</h3>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                        Kunden signerer direkte på sjåførens mobilskjerm ved mottak.
+                                    </p>
+                                </div>
+                                <div className="p-5 border rounded-2xl bg-white shadow-sm space-y-3">
+                                    <div className="p-2 bg-emerald-50 text-emerald-600 w-fit rounded-lg"><LocateFixed className="h-5 w-5" /></div>
+                                    <h3 className="font-black text-slate-800 text-sm uppercase tracking-tight">GPS Stempel</h3>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                        Hver levering logges automatisk med nøyaktige koordinater for hvor beviset ble fanget.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Alert className="bg-slate-50 border-slate-200 rounded-xl">
+                                <Info className="h-5 w-5 text-slate-600" />
+                                <AlertDescription className="text-slate-600 font-medium">
+                                    Dersom en levering ikke lar seg gjennomføre (f.eks. stengt vei eller feil adresse), krever systemet at sjåføren velger en årsak og dokumenterer situasjonen med bilde før saken kan avsluttes.
+                                </AlertDescription>
+                            </Alert>
                         </div>
                     )}
 
