@@ -29,7 +29,10 @@ import {
     Ruler,
     Weight,
     Key,
-    PhoneCall
+    PhoneCall,
+    Download,
+    CheckCircle2,
+    ListChecks
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +41,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'ruter';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'hms' | 'ruter';
 
 interface ChapterDef {
     id: Chapter;
@@ -57,6 +60,7 @@ export default function ManualPage() {
         { id: 'roller', title: 'Roller & Tilganger', icon: Users },
         { id: 'steder', title: 'Leveringssteder', icon: MapPin },
         { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
+        { id: 'hms', title: 'HMS-Systemet', icon: Shield },
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
     ];
 
@@ -185,7 +189,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Systemet tilpasser seg hvem du er. Her er en oversikt over de ulike rollene og hva de har tilgang til:
+                                Systemet tilpasser seg hvem du er. Her er og en oversikt over de ulike rollene og hva de har tilgang til:
                             </p>
 
                             <div className="space-y-4 mt-6">
@@ -556,6 +560,97 @@ export default function ManualPage() {
                                         <p className="text-slate-600 font-medium text-sm leading-relaxed">
                                             Administrator eller HMS-ansvarlig vil behandle saken. Når problemet er løst (f.eks. snøen er ryddet bort), kan de "Lukke" avviket i adminpanelet, og advarselen forsvinner.
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: HMS */}
+                    {activeChapter === 'hms' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Shield className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">HMS-Systemet</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                HMS-modulen sikrer at alle leveringssteder blir risikovurdert før eller under besøk, og gir bedriften full dokumentasjon på utførte sikkerhetssjekker.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <Card className="border-2 border-indigo-100 bg-indigo-50/30">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg font-black flex items-center gap-2">
+                                            <Settings className="h-5 w-5 text-indigo-600" />
+                                            Administrasjon (Admins)
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 text-sm font-medium text-slate-600">
+                                        <p>Som administrator eller HMS-ansvarlig bruker du <strong className="text-slate-800">HMS Logger & Innstillinger</strong> i menyen for å:</p>
+                                        <ul className="space-y-2 list-disc list-inside">
+                                            <li>Aktivere/deaktivere sjekklister globalt.</li>
+                                            <li>Definere spørsmålene som skal stilles (f.eks. "Er det trygg belysning?", "Er rampen sikret?").</li>
+                                            <li>Se en fullstendig logg over hvem som har sjekket hvilke steder og når.</li>
+                                        </ul>
+                                        <div className="pt-2">
+                                            <Button variant="outline" className="w-full font-bold border-indigo-200 text-indigo-700 pointer-events-none">
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Eksporter Logg (CSV)
+                                            </Button>
+                                            <p className="text-xs text-slate-500 mt-2">Du kan laste ned hele historikken til Excel for revisjon eller HMS-rapportering.</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-2 border-emerald-100 bg-emerald-50/30">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg font-black flex items-center gap-2">
+                                            <ListChecks className="h-5 w-5 text-emerald-600" />
+                                            Utførelse (Sjåfører)
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 text-sm font-medium text-slate-600">
+                                        <p>Sjåfører og HMS-ansvarlige ser HMS-behovet direkte på steds-kortet:</p>
+                                        <ul className="space-y-2 list-disc list-inside">
+                                            <li>En <strong className="text-red-600">Rød HMS-knapp</strong> betyr at stedet krever sjekk.</li>
+                                            <li>Når knappen trykkes, åpnes sjekklisten med de spørsmålene admin har valgt.</li>
+                                            <li>Man kan legge til en utfyllende kommentar til sjekken.</li>
+                                            <li>Når sjekken er lagret, blir knappen <strong className="text-emerald-600">Grønn</strong> og viser når den sist ble utført.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            <div className="space-y-6 pt-6 border-t border-slate-100">
+                                <h3 className="font-black text-slate-800 text-xl tracking-tight">Hvem ser hva?</h3>
+                                <div className="grid gap-4">
+                                    <div className="p-4 bg-white border rounded-xl shadow-sm flex items-start gap-4">
+                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0"><Users className="h-5 w-5" /></div>
+                                        <div>
+                                            <p className="font-black text-sm text-slate-800">Sjåfører</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                                                Ser kun HMS-knappen inne på hvert enkelt sted. De har ikke tilgang til den sentrale loggen eller innstillinger.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-white border rounded-xl shadow-sm flex items-start gap-4 border-l-4 border-l-orange-500">
+                                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg shrink-0"><Shield className="h-5 w-5" /></div>
+                                        <div>
+                                            <p className="font-black text-sm text-slate-800">HMS Ansvarlig</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                                                Har full tilgang til HMS-panelet, kan endre sjekklister og se/laste ned loggen, i tillegg til å utføre sjekker ute på steder.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-white border rounded-xl shadow-sm flex items-start gap-4 border-l-4 border-l-red-500">
+                                        <div className="p-2 bg-red-50 text-red-600 rounded-lg shrink-0"><Settings className="h-5 w-5" /></div>
+                                        <div>
+                                            <p className="font-black text-sm text-slate-800">Administrator</p>
+                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                                                Har samme tilgang som HMS-ansvarlig, men kan i tillegg styre selve modultilgangen for hele bedriften.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
