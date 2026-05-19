@@ -38,7 +38,11 @@ import {
     Signature,
     CreditCard,
     BarChart3,
-    ShieldCheck
+    ShieldCheck,
+    ScanBarcode,
+    ListTree,
+    ArrowRightLeft,
+    CheckCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +51,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'owner' | 'ruter';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'lasterampe' | 'ruter' | 'owner';
 
 interface ChapterDef {
     id: Chapter;
@@ -68,8 +72,9 @@ export default function ManualPage() {
         { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
         { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
         { id: 'hms', title: 'HMS-Systemet', icon: Shield },
-        { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
+        { id: 'lasterampe', title: 'Lasterampe (Manifest)', icon: ScanBarcode },
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
+        { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
     ];
 
     return (
@@ -349,67 +354,6 @@ export default function ManualPage() {
                                 </Alert>
                             </div>
 
-                            <div className="space-y-6 pt-6 border-t border-slate-100">
-                                <h3 className="font-black text-slate-800 text-xl tracking-tight">Knapper og Handlinger</h3>
-                                <p className="text-slate-600 font-medium mb-4">
-                                    Nederst på hvert leveringsstedskort finner du knapper for å utføre handlinger. Hvilke knapper du ser avhenger av situasjonen og bedriftens innstillinger.
-                                </p>
-
-                                <div className="grid gap-4">
-                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-accent text-accent-foreground border-accent-foreground/20 pointer-events-none">
-                                            <Map className="mr-2 h-4 w-4" />
-                                            Naviger
-                                        </Button>
-                                        <div>
-                                            <p className="font-black text-sm text-slate-800">Start Navigasjon</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                                                Åpner Google Maps på telefonen din og starter navigering direkte til de lagrede koordinatene.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-48 shrink-0 pointer-events-none">
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Se mer
-                                        </Button>
-                                        <div>
-                                            <p className="font-black text-sm text-slate-800">Se Detaljer & Rediger</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                                                Åpner den fulle oversikten. Som sjåfør kan du redigere her hvis du oppdager feil eller vil legge til informasjon.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-red-50/30 border-red-100 shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-red-50 text-red-600 border-red-200 pointer-events-none">
-                                            <ShieldAlert className="mr-2 h-4 w-4" />
-                                            Fyll ut HMS
-                                        </Button>
-                                        <div>
-                                            <p className="font-black text-sm text-slate-800">HMS Sjekkliste</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                                                Dersom bedriften din krever en HMS-sjekkliste og den ikke er fylt ut ennå, vil denne knappen lyse rødt og be deg gjennomføre sjekken.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-orange-50/30 border-orange-100 shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-orange-50 text-orange-600 border-orange-200 pointer-events-none">
-                                            <AlertTriangle className="mr-2 h-4 w-4" />
-                                            Meld Avvik
-                                        </Button>
-                                        <div>
-                                            <p className="font-black text-sm text-slate-800">Meld ifra om fare</p>
-                                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                                                Bruk denne knappen hvis noe er galt på stedet (f.eks is, hund, dårlig rampe). Du kan laste opp bilde og advare neste sjåfør umiddelbart.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <div className="space-y-6 pt-6 border-t border-slate-100">
                                 <h3 className="font-black text-slate-800 text-xl tracking-tight flex items-center gap-2">
                                     <PlusCircle className="h-6 w-6 text-indigo-500" />
@@ -752,6 +696,129 @@ export default function ManualPage() {
                         </div>
                     )}
 
+                    {/* CHAPTER: LASTERAMPE */}
+                    {activeChapter === 'lasterampe' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><ScanBarcode className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Lasterampe (Manifest)</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Lasterampen er terminalarbeiderens viktigste verktøy for å sikre at riktig pakke havner på riktig bil.
+                            </p>
+
+                            <div className="space-y-8">
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <ListTree className="h-5 w-5 text-indigo-500" />
+                                        Hva er et Manifest?
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Et manifest er en digital pakkseddel for en hel rute. Den viser nøyaktig hvilke ordrer og kolli som skal være med bilen.
+                                    </p>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <Card className="border-2 border-slate-100">
+                                        <CardHeader>
+                                            <CardTitle className="text-base font-black flex items-center gap-2">
+                                                <ScanBarcode className="h-5 w-5 text-blue-600" />
+                                                Skanning av Varer
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                            <p>Bruk en håndskanner eller mobilkamera for å skanne strekkoder på pakkene:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Systemet gir umiddelbar lyd- og visuell respons.</li>
+                                                <li>Telleren oppdateres (f.eks. <strong className="text-slate-900">4/10 kolli lastet</strong>).</li>
+                                                <li>Varsler hvis du skanner en vare som <strong className="text-red-600">ikke</strong> tilhører denne ruten.</li>
+                                            </ul>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-2 border-slate-100">
+                                        <CardHeader>
+                                            <CardTitle className="text-base font-black flex items-center gap-2">
+                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                                Verifisering
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                            <p>Når alle varer er skannet inn:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Trykk på "Fullfør Manifest".</li>
+                                                <li>Systemet sjekker om alt er med.</li>
+                                                <li>Hvis noe mangler, må du bekrefte avviket før bilen kan kjøre.</li>
+                                            </ul>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER 5: RUTER */}
+                    {activeChapter === 'ruter' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Route className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ruteplanlegging</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Planlegging i RettSted kombinerer kraftig automatisering med menneskelig kontroll ("Cyborg Planning").
+                            </p>
+
+                            <div className="space-y-8">
+                                <div className="p-6 border rounded-2xl bg-indigo-50/50 border-indigo-100 space-y-4">
+                                    <h3 className="font-black text-indigo-900 flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-indigo-600" />
+                                        Auto-planlegging (Constraint Engine)
+                                    </h3>
+                                    <p className="text-sm text-indigo-800 font-medium leading-relaxed">
+                                        Vår motor beregner automatisk den mest effektive rekkefølgen basert på:
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-bold text-indigo-700">
+                                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-indigo-100"><Clock className="h-3 w-3" /> Åpningstider</div>
+                                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-indigo-100"><Users className="h-3 w-3" /> Sjåførens arbeidstid</div>
+                                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-indigo-100"><Weight className="h-3 w-3" /> Vektbegrensninger</div>
+                                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-indigo-100"><Truck className="h-3 w-3" /> Bilens kapasitet</div>
+                                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-indigo-100"><MapPin className="h-3 w-3" /> Geografi</div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-6">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <ArrowRightLeft className="h-5 w-5 text-blue-500" />
+                                        Manuel Justering
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Du har alltid siste ord. Bruk <strong className="text-slate-900">Drag-and-Drop</strong> for å endre rekkefølge eller flytte ordrer mellom ruter. 
+                                        Systemet vil umiddelbart varsle deg hvis en manuell endring fører til:
+                                    </p>
+                                    <ul className="grid sm:grid-cols-2 gap-3">
+                                        <li className="flex items-center gap-2 text-xs font-bold p-2 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                                            <AlertTriangle className="h-3 w-3" /> Tidsbrudd (Stengt kunde)
+                                        </li>
+                                        <li className="flex items-center gap-2 text-xs font-bold p-2 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                                            <AlertTriangle className="h-3 w-3" /> Sjåfør overtid (Arbeidstid)
+                                        </li>
+                                        <li className="flex items-center gap-2 text-xs font-bold p-2 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                                            <AlertTriangle className="h-3 w-3" /> Overvekt på kjøretøy
+                                        </li>
+                                        <li className="flex items-center gap-2 text-xs font-bold p-2 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                                            <AlertTriangle className="h-3 w-3" /> Fysisk sperre (For stor bil)
+                                        </li>
+                                        <li className="flex items-center gap-2 text-xs font-bold p-2 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                                            <AlertTriangle className="h-3 w-3" /> Manglende ADR-sertifisering
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* CHAPTER: OWNER */}
                     {activeChapter === 'owner' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -794,7 +861,7 @@ export default function ManualPage() {
                                         <p>Hold kontroll på lovpålagte frister og dokumentasjon:</p>
                                         <ul className="space-y-2 list-disc list-inside">
                                             <li><strong className="text-slate-800">Fartsskriver (90 dager):</strong> Se hvor mange prosent av flåten som har godkjent nedlasting innenfor tidsfristen.</li>
-                                            <li><strong className="text-slate-800">Sjåførkort (28 dager):</strong> Overvåk at sjåførene tømmer kortene sine regelmessig.</li>
+                                            <li><strong className="text-slate-800">Sjåførkort (28 dager):</strong> Overvåkat at sjåførene tømmer kortene sine regelmessig.</li>
                                             <li><strong className="text-slate-800">EU-kontroll:</strong> Få varsler om kommende frister for kjøretøyene.</li>
                                         </ul>
                                     </CardContent>
@@ -827,28 +894,6 @@ export default function ManualPage() {
                                     Selv om Eier-dashboardet er "minimalistisk", har du tilgang til alle Administrator-funksjoner. Vi anbefaler likevel at du utnevner en dedikert <strong className="text-amber-900">Administrator</strong> for den daglige oppfølgingen av sjåfører og steder, slik at du kan fokusere på de store linjene.
                                 </p>
                             </div>
-                        </div>
-                    )}
-
-                    {/* CHAPTER 5: RUTER */}
-                    {activeChapter === 'ruter' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 border-b pb-4">
-                                <div className="p-2 bg-slate-100 rounded-lg"><Route className="h-5 w-5 text-slate-700" /></div>
-                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ruteplanlegging</h2>
-                            </div>
-                            
-                            <p className="text-slate-700 text-lg font-medium">
-                                RettSted håndterer planlegging og tildeling av ruter til sjåfører.
-                            </p>
-                            
-                            <Alert className="bg-indigo-50 border-indigo-200">
-                                <Info className="h-5 w-5 text-indigo-600" />
-                                <AlertTitle className="text-indigo-900 font-bold ml-2">Modul under utvikling</AlertTitle>
-                                <AlertDescription className="text-indigo-800 ml-2 mt-1">
-                                    Auto-planlegging (Constraint Engine) og drag-and-drop rutebygging testes for øyeblikket. Instrukser og visuelle guider for planleggere vil publiseres her når funksjonaliteten lanseres i stabil versjon.
-                                </AlertDescription>
-                            </Alert>
                         </div>
                     )}
 
