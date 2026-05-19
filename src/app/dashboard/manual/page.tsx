@@ -42,7 +42,13 @@ import {
     ScanBarcode,
     ListTree,
     ArrowRightLeft,
-    CheckCircle
+    CheckCircle,
+    FileSpreadsheet,
+    UserPlus,
+    CalendarDays,
+    History,
+    Wrench,
+    Gauge
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,7 +57,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'lasterampe' | 'ruter' | 'owner';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ordrer' | 'lasterampe' | 'ruter' | 'fleet' | 'workforce' | 'owner';
 
 interface ChapterDef {
     id: Chapter;
@@ -72,8 +78,11 @@ export default function ManualPage() {
         { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
         { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
         { id: 'hms', title: 'HMS-Systemet', icon: Shield },
+        { id: 'ordrer', title: 'Ordrehåndtering', icon: Package, adminOnly: true },
         { id: 'lasterampe', title: 'Lasterampe (Manifest)', icon: ScanBarcode },
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
+        { id: 'fleet', title: 'Kjøretøy & Vedlikehold', icon: Truck, adminOnly: true },
+        { id: 'workforce', title: 'Ansatte & HR', icon: Users, adminOnly: true },
         { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
     ];
 
@@ -696,6 +705,52 @@ export default function ManualPage() {
                         </div>
                     )}
 
+                    {/* CHAPTER: ORDRER */}
+                    {activeChapter === 'ordrer' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Package className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ordrehåndtering</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Alle oppdrag i RettSted starter som en ordre. Her lærer du hvordan du importerer, oppretter og administrerer dem.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                                        Masseimport (CSV)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Den mest effektive metoden. Last opp en Excel/CSV-fil fra ditt TMS-system. RettSted vil:
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
+                                        <li>Koble ordrene til riktige leveringssteder i databasen.</li>
+                                        <li>Validere kolli-informasjon og vekt.</li>
+                                        <li>Gjøre dem umiddelbart tilgjengelige for ruteplanlegging.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <PlusCircle className="h-5 w-5 text-blue-600" />
+                                        Manuell Opprettelse
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        For hasteoppdrag eller ad-hoc leveringer. Trykk på "Ny Ordre" og fyll ut:
+                                    </p>
+                                    <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
+                                        <li>Kunde/Mottaker (Velg fra databasen).</li>
+                                        <li>Beskrivelse av last (f.eks "2 Paller Dagligvarer").</li>
+                                        <li>Vekt og volum for automatisk kapasitetsberegning.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* CHAPTER: LASTERAMPE */}
                     {activeChapter === 'lasterampe' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -814,6 +869,111 @@ export default function ManualPage() {
                                             <AlertTriangle className="h-3 w-3" /> Manglende ADR-sertifisering
                                         </li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: FLEET */}
+                    {activeChapter === 'fleet' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Truck className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Kjøretøy & Vedlikehold</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Administrer bedriftens bilflåte, overvåk vedlikehold og sørg for at alle kjøretøy er lovlige og trygge.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <Card className="border-2 border-blue-100">
+                                    <CardHeader>
+                                        <CardTitle className="text-base font-black flex items-center gap-2">
+                                            <Gauge className="h-5 w-5 text-blue-600" />
+                                            Flåteovervåkning
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                        <p>Få full oversikt over bilene dine i sanntid:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                            <li><strong className="text-slate-900">Status:</strong> Klar, På tur, Parkert eller På verksted.</li>
+                                            <li><strong className="text-slate-900">Kilometerstand:</strong> Oppdateres automatisk ved hver inspeksjon.</li>
+                                            <li><strong className="text-slate-900">Fristovervåkning:</strong> EU-kontroll, service og fartsskriver-kalibrering.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-2 border-orange-100">
+                                    <CardHeader>
+                                        <CardTitle className="text-base font-black flex items-center gap-2">
+                                            <Wrench className="h-5 w-5 text-orange-600" />
+                                            Skadehåndtering
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                        <p>Når en sjåfør melder skade, havner den i triagesystemet:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                            <li>Se bilder og beskrivelse av skaden.</li>
+                                            <li>Planlegg verkstedbesøk.</li>
+                                            <li>Last opp verkstedordre og reparasjonskvitteringer for full historikk.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: WORKFORCE */}
+                    {activeChapter === 'workforce' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Users className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Ansatte & HR</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Full kontroll på personell, arbeidstid og sertifiseringer.
+                            </p>
+
+                            <div className="space-y-8">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                        <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                            <UserPlus className="h-5 w-5 text-indigo-600" />
+                                            Sjåførprofiler
+                                        </h3>
+                                        <p className="text-sm text-slate-600 font-medium">Lagre kritiske data på ett sted:</p>
+                                        <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                                            <li>Kontaktinfo og pårørende.</li>
+                                            <li>Kontrakter og ansettelsesforhold.</li>
+                                            <li>Sertifiseringer (ADR, Truck, etc).</li>
+                                            <li>Nedlasting av sjåførkort (28-dagers regel).</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                        <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                            <CalendarDays className="h-5 w-5 text-emerald-600" />
+                                            Arbeidstid & Stempling
+                                        </h3>
+                                        <p className="text-sm text-slate-600 font-medium">Overvåk og godkjenn timer:</p>
+                                        <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                                            <li>Geofence-stempling (Stempler kun når sjåføren er på terminalen).</li>
+                                            <li>GPS-stempling for fleksible lokasjoner.</li>
+                                            <li>Eget godkjennings-workflow for overtid.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-slate-50 border-slate-200">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2 mb-4">
+                                        <History className="h-5 w-5 text-slate-500" />
+                                        Tidslinje
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Bruk **Arbeids-tidslinjen** for å se hvem som er på jobb, hvem som har pause, og hvem som har ferie eller er syke. Dette gir deg et øyeblikksbilde av bedriftens kapasitet i dag og fremover.
+                                    </p>
                                 </div>
                             </div>
                         </div>
