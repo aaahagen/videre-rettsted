@@ -508,7 +508,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         <Dialog open={!!editingUser} onOpenChange={o => !o && setEditingUser(null)}>
             <DialogContent>
                 <DialogHeader><DialogTitle>Endre Navn</DialogTitle></DialogHeader>
-                <Input value={newName} onChange={setNewName} />
+                <Input value={newName} onChange={e => setNewName(e.target.value)} />
                 <DialogFooter><Button onClick={async () => { if(!editingUser) return; await updateDoc(doc(db, 'users', editingUser.id), { name: newName }); setEditingUser(null); toast({ title: "Navn oppdatert" }); }}>Lagre</Button></DialogFooter>
             </DialogContent>
         </Dialog>
