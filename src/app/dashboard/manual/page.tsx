@@ -35,7 +35,10 @@ import {
     ListChecks,
     Truck,
     CameraIcon,
-    Signature
+    Signature,
+    CreditCard,
+    BarChart3,
+    ShieldCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +47,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'ruter';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'owner' | 'ruter';
 
 interface ChapterDef {
     id: Chapter;
@@ -65,6 +68,7 @@ export default function ManualPage() {
         { id: 'avvik', title: 'Sikkerhet & Avvik', icon: ShieldAlert },
         { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
         { id: 'hms', title: 'HMS-Systemet', icon: Shield },
+        { id: 'owner', title: 'Bedriftsoversikt (Eier)', icon: Building2, adminOnly: true },
         { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
     ];
 
@@ -249,13 +253,23 @@ export default function ManualPage() {
                                     </p>
                                 </div>
 
-                                <div className="p-5 border rounded-xl border-l-4 border-l-red-500 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div className="p-5 border rounded-xl border-l-4 border-l-slate-400 bg-white shadow-sm hover:shadow-md transition-shadow">
                                     <h3 className="font-black text-lg mb-2 flex items-center gap-2 text-slate-800 tracking-tight">
-                                        <div className="p-1.5 bg-red-100 text-red-600 rounded-md"><Settings className="h-4 w-4" /></div> 
-                                        Administrator & Eier
+                                        <div className="p-1.5 bg-slate-100 text-slate-600 rounded-md"><Settings className="h-4 w-4" /></div> 
+                                        Administrator
                                     </h3>
                                     <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                                        Full kontroll. Kan invitere brukere, slette steder, endre systeminnstillinger, tilpasse skjemaer og eksportere data. Eier har i tillegg juridisk kontroll.
+                                        Driftsansvarlig. Kan invitere brukere, slette steder, endre systeminnstillinger, tilpasse skjemaer og eksportere data. Sørger for at den daglige operasjonen flyter teknisk sett.
+                                    </p>
+                                </div>
+
+                                <div className="p-5 border rounded-xl border-l-4 border-l-red-500 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                    <h3 className="font-black text-lg mb-2 flex items-center gap-2 text-slate-800 tracking-tight">
+                                        <div className="p-1.5 bg-red-100 text-red-600 rounded-md"><Building2 className="h-4 w-4" /></div> 
+                                        Bedriftseier (Owner)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                                        Øverste myndighet. Har alt av tilgang som administrator, men er i tillegg ansvarlig for <strong className="text-slate-800">betaling og abonnement</strong>. Eieren har tilgang til en eksklusiv <strong className="text-slate-800">Bedriftsoversikt</strong> med statistikk på toppnivå.
                                     </p>
                                 </div>
                             </div>
@@ -342,12 +356,12 @@ export default function ManualPage() {
                                 </p>
 
                                 <div className="grid gap-4">
-                                    <div className="flex flex-col sm:flex-row items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-full sm:w-48 shrink-0 bg-accent text-accent-foreground border-accent-foreground/20 pointer-events-none">
+                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
+                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-accent text-accent-foreground border-accent-foreground/20 pointer-events-none">
                                             <Map className="mr-2 h-4 w-4" />
                                             Naviger
                                         </Button>
-                                        <div className="text-center sm:text-left">
+                                        <div>
                                             <p className="font-black text-sm text-slate-800">Start Navigasjon</p>
                                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                                                 Åpner Google Maps på telefonen din og starter navigering direkte til de lagrede koordinatene.
@@ -355,12 +369,12 @@ export default function ManualPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-full sm:w-48 shrink-0 pointer-events-none">
+                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-white shadow-sm">
+                                        <Button variant="outline" size="sm" className="w-48 shrink-0 pointer-events-none">
                                             <Edit className="mr-2 h-4 w-4" />
                                             Se mer
                                         </Button>
-                                        <div className="text-center sm:text-left">
+                                        <div>
                                             <p className="font-black text-sm text-slate-800">Se Detaljer & Rediger</p>
                                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                                                 Åpner den fulle oversikten. Som sjåfør kan du redigere her hvis du oppdager feil eller vil legge til informasjon.
@@ -368,12 +382,12 @@ export default function ManualPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row items-center gap-6 p-5 border rounded-xl bg-red-50/30 border-red-100 shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-full sm:w-48 shrink-0 bg-red-50 text-red-600 border-red-200 pointer-events-none">
+                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-red-50/30 border-red-100 shadow-sm">
+                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-red-50 text-red-600 border-red-200 pointer-events-none">
                                             <ShieldAlert className="mr-2 h-4 w-4" />
                                             Fyll ut HMS
                                         </Button>
-                                        <div className="text-center sm:text-left">
+                                        <div>
                                             <p className="font-black text-sm text-slate-800">HMS Sjekkliste</p>
                                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                                                 Dersom bedriften din krever en HMS-sjekkliste og den ikke er fylt ut ennå, vil denne knappen lyse rødt og be deg gjennomføre sjekken.
@@ -381,12 +395,12 @@ export default function ManualPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col sm:flex-row items-center gap-6 p-5 border rounded-xl bg-orange-50/30 border-orange-100 shadow-sm">
-                                        <Button variant="outline" size="sm" className="w-full sm:w-48 shrink-0 bg-orange-50 text-orange-600 border-orange-200 pointer-events-none">
+                                    <div className="flex items-center gap-6 p-5 border rounded-xl bg-orange-50/30 border-orange-100 shadow-sm">
+                                        <Button variant="outline" size="sm" className="w-48 shrink-0 bg-orange-50 text-orange-600 border-orange-200 pointer-events-none">
                                             <AlertTriangle className="mr-2 h-4 w-4" />
                                             Meld Avvik
                                         </Button>
-                                        <div className="text-center sm:text-left">
+                                        <div>
                                             <p className="font-black text-sm text-slate-800">Meld ifra om fare</p>
                                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                                                 Bruk denne knappen hvis noe er galt på stedet (f.eks is, hund, dårlig rampe). Du kan laste opp bilde og advare neste sjåfør umiddelbart.
@@ -535,7 +549,7 @@ export default function ManualPage() {
                                         Bruk "Meld Avvik"-knappen på et steds-kort hvis du opplever f.eks. is, farlige hunder, manglende belysning eller blokkerte ramper.
                                     </p>
                                     <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
-                                        <li>Stedet får en rød glødende ramme i appen for alle sjåfører.</li>
+                                        <li>Stedet får en rød ramme i appen for alle sjåfører.</li>
                                         <li>Admins får beskjed og må løse saken for å fjerne advarselen.</li>
                                     </ul>
                                 </div>
@@ -734,6 +748,84 @@ export default function ManualPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: OWNER */}
+                    {activeChapter === 'owner' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Building2 className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Bedriftsoversikt (Eier)</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium">
+                                Rollen som "Eier" (Owner) er designet for ledelsen. Her får man oversikt over hele organisasjonen på et strategisk nivå uten å bli overveldet av den daglige logistikkdriften.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <Card className="border-2 border-slate-200 bg-slate-50 shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg font-black flex items-center gap-2">
+                                            <BarChart3 className="h-5 w-5 text-indigo-600" />
+                                            Eksklusiv Statistikk
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 text-sm font-medium text-slate-600 leading-relaxed">
+                                        <p>Bedriftseiere har tilgang til et eget dashboard som viser <strong className="text-slate-800">Key Performance Indicators (KPIs)</strong>:</p>
+                                        <ul className="space-y-2 list-disc list-inside">
+                                            <li>Totalt antall fullførte ruter historisk.</li>
+                                            <li>Vekst i antall adresser og leveringssteder i databasen.</li>
+                                            <li>Status på bilflåtens helse og vedlikehold.</li>
+                                            <li>Antall aktive brukere fordelt på roller.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-2 border-slate-200 bg-slate-50 shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg font-black flex items-center gap-2">
+                                            <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                                            Samsvar & Compliance
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4 text-sm font-medium text-slate-600 leading-relaxed">
+                                        <p>Hold kontroll på lovpålagte frister og dokumentasjon:</p>
+                                        <ul className="space-y-2 list-disc list-inside">
+                                            <li><strong className="text-slate-800">Fartsskriver (90 dager):</strong> Se hvor mange prosent av flåten som har godkjent nedlasting innenfor tidsfristen.</li>
+                                            <li><strong className="text-slate-800">Sjåførkort (28 dager):</strong> Overvåk at sjåførene tømmer kortene sine regelmessig.</li>
+                                            <li><strong className="text-slate-800">EU-kontroll:</strong> Få varsler om kommende frister for kjøretøyene.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            <div className="space-y-6 pt-6 border-t border-slate-100">
+                                <h3 className="font-black text-slate-800 text-xl tracking-tight flex items-center gap-2">
+                                    <CreditCard className="h-6 w-6 text-blue-600" />
+                                    Abonnement og Betaling
+                                </h3>
+                                <div className="p-6 bg-blue-50 border border-blue-200 rounded-2xl">
+                                    <p className="text-blue-900 font-medium leading-relaxed">
+                                        Eieren er den eneste i organisasjonen som kan administrere betaling. Fra Bedriftsoversikten kan man:
+                                    </p>
+                                    <ul className="mt-4 space-y-2 list-disc list-inside text-blue-800 font-bold">
+                                        <li>Oppgradere eller nedgradere abonnement (Free/Pro/Enterprise).</li>
+                                        <li>Se betalingshistorikk og laste ned fakturaer (via Stripe).</li>
+                                        <li>Administrere betalingsmetoder (Kredittkort/EHF).</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-l-4 border-l-amber-500 bg-amber-50 rounded-r-2xl">
+                                <h3 className="font-black text-amber-900 text-lg mb-2 flex items-center gap-2">
+                                    <Info className="h-5 w-5 text-amber-600" />
+                                    Tips til Eiere
+                                </h3>
+                                <p className="text-amber-800/80 font-medium leading-relaxed">
+                                    Selv om Eier-dashboardet er "minimalistisk", har du tilgang til alle Administrator-funksjoner. Vi anbefaler likevel at du utnevner en dedikert <strong className="text-amber-900">Administrator</strong> for den daglige oppfølgingen av sjåfører og steder, slik at du kan fokusere på de store linjene.
+                                </p>
                             </div>
                         </div>
                     )}
