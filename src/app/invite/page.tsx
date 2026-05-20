@@ -29,9 +29,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { auth, db, functions } from '@/lib/firebase/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { Invitation } from '@/lib/types';
 import Link from 'next/link';
 
@@ -56,41 +57,28 @@ function InviteContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Try to get 'id' from search params. 
-  // We check both 'id' and 'invitation' just in case.
   const inviteId = searchParams.get('id') || searchParams.get('invitation');
 
   useEffect(() => {
     async function verifyInvite() {
-      console.log("Verifying invite with ID:", inviteId);
+      const finalId = inviteId || new URLSearchParams(window.location.search).get('id');
       
-      if (!inviteId) {
-        // If we still don't have it, maybe it's in the hash or we should check the raw URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const backupId = urlParams.get('id');
-        
-        if (!backupId) {
-            console.error("No ID found in searchParams or window.location.search. URL:", window.location.href);
-            setError('Ugyldig eller manglende invitasjonslenke (ID mangler).');
-            setLoading(false);
-            return;
-        }
+      if (!finalId) {
+        setError('Ugyldig eller manglende invitasjonslenke.');
+        setLoading(false);
+        return;
       }
 
-      const finalId = inviteId || new URLSearchParams(window.location.search).get('id');
-
       try {
-        const inviteDoc = await getDoc(doc(db, 'invitations', finalId!));
+        const inviteDoc = await getDoc(doc(db, 'invitations', finalId));
         
         if (!inviteDoc.exists()) {
-          console.error("Invitation document does not exist in Firestore for ID:", finalId);
           setError('Invitasjonen finnes ikke eller har blitt slettet.');
           setLoading(false);
           return;
         }
 
         const data = inviteDoc.data() as any;
-        console.log("Invitation data found:", data);
         
         if (data.status !== 'pending') {
           setError('Denne invitasjonen har allerede blitt brukt.');
@@ -98,7 +86,6 @@ function InviteContent() {
           return;
         }
 
-        // Handle both JS Date and Firestore Timestamp for expiresAt
         let expiryDate: Date | null = null;
         if (data.expiresAt) {
             if (data.expiresAt instanceof Timestamp) {
@@ -107,19 +94,11 @@ function InviteContent() {
                 expiryDate = data.expiresAt.toDate();
             } else if (data.expiresAt instanceof Date) {
                 expiryDate = data.expiresAt;
-            } else if (typeof data.expiresAt === 'number') {
-                expiryDate = new Date(data.expiresAt);
             }
         }
 
         if (expiryDate && expiryDate < new Date()) {
-            setError('Denne invitasjonen er utløpt. Kontakt din administrator for en ny lenke.');
-            setLoading(false);
-            return;
-        }
-
-        if (!data.email) {
-            setError('Invitasjonen mangler e-postadresse.');
+            setError('Denne invitasjonen er utløpt.');
             setLoading(false);
             return;
         }
@@ -127,7 +106,7 @@ function InviteContent() {
         setInvitation({ ...data, id: inviteDoc.id });
       } catch (err: any) {
         console.error("Error verifying invite:", err);
-        setError(`Det oppstod en feil under verifisering: ${err.message}`);
+        setError('Det oppstod en feil under verifisering av invitasjonen.');
       } finally {
         setLoading(false);
       }
@@ -150,31 +129,19 @@ function InviteContent() {
 
     setIsSubmitting(true);
     try {
-      // 1. Create User in Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, invitation.email, values.password);
-      const user = userCredential.user;
-
-      // 2. Update Auth Profile
-      await updateProfile(user, { displayName: values.name });
-
-      // 3. Create User Document
-      await setDoc(doc(db, 'users', user.uid), {
-        email: invitation.email,
+      // Use Cloud Function for atomic user creation and invitation cleanup
+      const acceptInvitationCallable = httpsCallable(functions, 'acceptInvitation');
+      
+      const result = await acceptInvitationCallable({
+        inviteId: invitation.id,
         name: values.name,
-        role: invitation.role,
-        orgId: invitation.orgId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        status: 'active',
-        favorites: []
+        password: values.password
       });
 
-      // 4. Mark Invitation as accepted
-      await updateDoc(doc(db, 'invitations', invitation.id), {
-        status: 'accepted',
-        acceptedAt: serverTimestamp(),
-        acceptedBy: user.uid
-      });
+      console.log("Account created successfully via Cloud Function", result.data);
+
+      // 2. Sign in the user immediately
+      await signInWithEmailAndPassword(auth, invitation.email, values.password);
 
       setSuccess(true);
       toast({
@@ -182,17 +149,21 @@ function InviteContent() {
         description: "Din konto er nå opprettet.",
       });
 
-      // Wait a bit then redirect
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
 
     } catch (err: any) {
-      console.error(err);
+      console.error("Error accepting invitation:", err);
       let message = 'Kunne ikke opprette konto. Prøv igjen senere.';
-      if (err.code === 'auth/email-already-in-use') {
+      
+      // Handle specific error messages from Cloud Functions
+      if (err.message?.includes('already-exists') || err.code === 'functions/already-exists') {
         message = 'Denne e-postadressen er allerede i bruk.';
+      } else if (err.message?.includes('invalid-argument')) {
+        message = 'Passordet må være minst 6 tegn.';
       }
+
       toast({
         title: "Feil",
         description: message,
