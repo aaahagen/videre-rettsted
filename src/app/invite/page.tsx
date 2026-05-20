@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -46,9 +46,9 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const resolvedSearchParams = use(searchParams);
+function InviteContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,22 +56,34 @@ function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const inviteId = resolvedSearchParams.id as string;
+  // Try to get 'id' from search params. 
+  // We check both 'id' and 'invitation' just in case.
+  const inviteId = searchParams.get('id') || searchParams.get('invitation');
 
   useEffect(() => {
     async function verifyInvite() {
       console.log("Verifying invite with ID:", inviteId);
+      
       if (!inviteId) {
-        setError('Ugyldig eller manglende invitasjonslenke.');
-        setLoading(false);
-        return;
+        // If we still don't have it, maybe it's in the hash or we should check the raw URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const backupId = urlParams.get('id');
+        
+        if (!backupId) {
+            console.error("No ID found in searchParams or window.location.search. URL:", window.location.href);
+            setError('Ugyldig eller manglende invitasjonslenke (ID mangler).');
+            setLoading(false);
+            return;
+        }
       }
 
+      const finalId = inviteId || new URLSearchParams(window.location.search).get('id');
+
       try {
-        const inviteDoc = await getDoc(doc(db, 'invitations', inviteId));
+        const inviteDoc = await getDoc(doc(db, 'invitations', finalId!));
         
         if (!inviteDoc.exists()) {
-          console.error("Invitation document does not exist in Firestore.");
+          console.error("Invitation document does not exist in Firestore for ID:", finalId);
           setError('Invitasjonen finnes ikke eller har blitt slettet.');
           setLoading(false);
           return;
@@ -388,10 +400,10 @@ function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]
   );
 }
 
-export default function InvitePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+export default function InvitePage() {
   return (
     <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#F0F4F8]"><Loader2 className="h-8 w-8 animate-spin text-[#1A237E]" /></div>}>
-        <InviteContent searchParams={searchParams} />
+        <InviteContent />
     </Suspense>
   );
 }
