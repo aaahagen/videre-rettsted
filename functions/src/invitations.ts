@@ -114,34 +114,51 @@ export const acceptInvitation = functions.https.onCall(async (request) => {
         const orgId = inviteData.orgId;
         const role = inviteData.role;
 
-        let userRecord;
+        let uid: string;
         try {
-            userRecord = await admin.auth().createUser({
+            // Attempt to create the user in Auth
+            const userRecord = await admin.auth().createUser({
                 email: email,
                 password: password,
                 displayName: name,
             });
+            uid = userRecord.uid;
         } catch (authError: unknown) {
             const e = authError as { code?: string };
+            
+            // If the user already exists in Auth, let's see if we can finish their setup
             if (e.code === "auth/email-already-exists") {
-                throw new functions.https.HttpsError(
-                    "already-exists",
-                    "Email already in use."
-                );
-            }
-            if (e.code === "auth/invalid-password") {
+                const existingUser = await admin.auth().getUserByEmail(email);
+                uid = existingUser.uid;
+                
+                // Check if the user already has a document in Firestore
+                const userDoc = await db.collection("users").doc(uid).get();
+                if (userDoc.exists) {
+                     throw new functions.https.HttpsError(
+                        "already-exists",
+                        "Denne e-postadressen er allerede i bruk av en aktiv konto."
+                    );
+                }
+                
+                // If they exist in Auth but not in Firestore, we update their password and proceed
+                await admin.auth().updateUser(uid, {
+                    password: password,
+                    displayName: name
+                });
+                
+                console.log("User existed in Auth but not DB. Updated password and finishing setup for UID:", uid);
+            } else if (e.code === "auth/invalid-password") {
                 throw new functions.https.HttpsError(
                     "invalid-argument",
-                    "Password must be at least 6 characters."
+                    "Passordet må være minst 6 tegn."
+                );
+            } else {
+                throw new functions.https.HttpsError(
+                    "internal",
+                    "Kunne ikke opprette bruker: " + (authError instanceof Error ? authError.message : "Ukjent feil")
                 );
             }
-            throw new functions.https.HttpsError(
-                "internal",
-                "Failed to create user"
-            );
         }
-
-        const uid = userRecord.uid;
 
         const batch = db.batch();
 
@@ -163,6 +180,7 @@ export const acceptInvitation = functions.https.onCall(async (request) => {
 
         batch.set(userRef, userData);
 
+        // Mark invitation as accepted instead of deleting it, or delete it
         batch.delete(inviteRef);
         await batch.commit();
 
