@@ -130,7 +130,8 @@ export const firebaseAuth = {
 
   async deleteUser(uid: string) {
     try {
-      await deleteUserCallable({ uid });
+      // Pass both common parameter names to be robust against different cloud function versions
+      await deleteUserCallable({ uid: uid, userId: uid });
     } catch (error: any) {
       throw new Error(error.message);
     }

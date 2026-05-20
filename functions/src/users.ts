@@ -11,9 +11,17 @@ export const deleteUser = functions.https.onCall(async (request) => {
     }
 
     const callerUid = auth.uid;
-    const userIdToDelete = request.data.uid || request.data.userId; // Support both 'uid' and 'userId'
+    
+    // Support multiple ways of passing the UID for maximum robustness
+    let userIdToDelete = null;
+    if (typeof request.data === 'string') {
+        userIdToDelete = request.data;
+    } else if (request.data && typeof request.data === 'object') {
+        userIdToDelete = request.data.uid || request.data.userId || request.data.userid;
+    }
 
     if (!userIdToDelete) {
+        console.error("DeleteUser called without a valid UID. Data received:", request.data);
         throw new functions.https.HttpsError(
             "invalid-argument",
             "The function must be called with a \"uid\" or \"userId\" argument."
@@ -55,8 +63,10 @@ export const deleteUser = functions.https.onCall(async (request) => {
             }
         }
 
+        // Delete from Firebase Auth
         await admin.auth().deleteUser(userIdToDelete);
 
+        // Delete from Firestore
         if (userToDeleteDoc.exists) {
             await userToDeleteDocRef.delete();
         }
