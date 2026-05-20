@@ -11,12 +11,12 @@ export const deleteUser = functions.https.onCall(async (request) => {
     }
 
     const callerUid = auth.uid;
-    const userIdToDelete = request.data.userId;
+    const userIdToDelete = request.data.uid || request.data.userId; // Support both 'uid' and 'userId'
 
     if (!userIdToDelete) {
         throw new functions.https.HttpsError(
             "invalid-argument",
-            "The function must be called with a \"userId\" argument."
+            "The function must be called with a \"uid\" or \"userId\" argument."
         );
     }
 
@@ -34,10 +34,10 @@ export const deleteUser = functions.https.onCall(async (request) => {
         }
 
         const callerData = callerDoc.data();
-        if (callerData?.role !== "admin" && callerData?.role !== "super_admin") {
+        if (callerData?.role !== "admin" && callerData?.role !== "super_admin" && callerData?.role !== "owner") {
             throw new functions.https.HttpsError(
                 "permission-denied",
-                "Only administrators can delete users."
+                "Only administrators or owners can delete users."
             );
         }
 
@@ -46,6 +46,7 @@ export const deleteUser = functions.https.onCall(async (request) => {
 
         if (userToDeleteDoc.exists) {
             const userToDeleteData = userToDeleteDoc.data();
+            // super_admin can delete anyone. admin/owner can only delete within their own org.
             if (callerData?.role !== "super_admin" && userToDeleteData?.orgId !== callerData.orgId) {
                 throw new functions.https.HttpsError(
                     "permission-denied",

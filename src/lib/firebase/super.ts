@@ -1,6 +1,6 @@
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, getCountFromServer, writeBatch, serverTimestamp, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { Organization } from '../types';
+import { Organization, User } from '../types';
 
 export const superDB = {
   // Organizations
@@ -58,6 +58,11 @@ export const superDB = {
         admins: snapshot.docs.filter(d => d.data().role === 'admin').length,
         drivers: snapshot.docs.filter(d => d.data().role === 'driver').length,
     };
+  },
+
+  getGlobalUsers: async (): Promise<User[]> => {
+    const snapshot = await getDocs(collection(db, 'users'));
+    return snapshot.docs.map(doc => ({ ...doc.data() as User, id: doc.id }));
   },
 
   // Analytics per organization

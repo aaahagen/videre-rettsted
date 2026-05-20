@@ -31,7 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Invitation } from '@/lib/types';
 import Link from 'next/link';
 
@@ -60,6 +60,7 @@ function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]
 
   useEffect(() => {
     async function verifyInvite() {
+      console.log("Verifying invite with ID:", inviteId);
       if (!inviteId) {
         setError('Ugyldig eller manglende invitasjonslenke.');
         setLoading(false);
@@ -70,12 +71,14 @@ function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]
         const inviteDoc = await getDoc(doc(db, 'invitations', inviteId));
         
         if (!inviteDoc.exists()) {
-          setError('Invitasjonen finnes ikke.');
+          console.error("Invitation document does not exist in Firestore.");
+          setError('Invitasjonen finnes ikke eller har blitt slettet.');
           setLoading(false);
           return;
         }
 
-        const data = inviteDoc.data() as Invitation;
+        const data = inviteDoc.data() as any;
+        console.log("Invitation data found:", data);
         
         if (data.status !== 'pending') {
           setError('Denne invitasjonen har allerede blitt brukt.');
@@ -83,17 +86,36 @@ function InviteContent({ searchParams }: { searchParams: Promise<{ [key: string]
           return;
         }
 
-        // Check expiry (if implemented)
-        if (data.expiresAt && (data.expiresAt as any).toDate() < new Date()) {
-            setError('Denne invitasjonen er utløpt.');
+        // Handle both JS Date and Firestore Timestamp for expiresAt
+        let expiryDate: Date | null = null;
+        if (data.expiresAt) {
+            if (data.expiresAt instanceof Timestamp) {
+                expiryDate = data.expiresAt.toDate();
+            } else if (data.expiresAt.toDate) {
+                expiryDate = data.expiresAt.toDate();
+            } else if (data.expiresAt instanceof Date) {
+                expiryDate = data.expiresAt;
+            } else if (typeof data.expiresAt === 'number') {
+                expiryDate = new Date(data.expiresAt);
+            }
+        }
+
+        if (expiryDate && expiryDate < new Date()) {
+            setError('Denne invitasjonen er utløpt. Kontakt din administrator for en ny lenke.');
+            setLoading(false);
+            return;
+        }
+
+        if (!data.email) {
+            setError('Invitasjonen mangler e-postadresse.');
             setLoading(false);
             return;
         }
 
         setInvitation({ ...data, id: inviteDoc.id });
-      } catch (err) {
-        console.error(err);
-        setError('Det oppstod en feil under verifisering av invitasjonen.');
+      } catch (err: any) {
+        console.error("Error verifying invite:", err);
+        setError(`Det oppstod en feil under verifisering: ${err.message}`);
       } finally {
         setLoading(false);
       }
