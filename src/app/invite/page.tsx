@@ -10,11 +10,11 @@ import {
     CheckCircle2, 
     AlertCircle, 
     Lock, 
-    User, 
     Mail, 
     ArrowRight,
     ShieldCheck,
-    Check
+    Check,
+    ExternalLink
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db, functions } from '@/lib/firebase/firebase';
@@ -37,9 +38,11 @@ import { Invitation } from '@/lib/types';
 import Link from 'next/link';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Navnet må være minst 2 tegn.'),
   password: z.string().min(8, 'Passordet må være minst 8 tegn.'),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  privacyAccepted: z.boolean().refine(val => val === true, {
+    message: "Du må godta personvernerklæringen for å fortsette."
+  })
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passordene er ikke like",
   path: ["confirmPassword"],
@@ -51,7 +54,7 @@ function InviteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [invitation, setInvitation] = useState<Invitation & { name?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,9 +121,9 @@ function InviteContent() {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
       password: '',
       confirmPassword: '',
+      privacyAccepted: false,
     },
   });
 
@@ -129,18 +132,16 @@ function InviteContent() {
 
     setIsSubmitting(true);
     try {
-      // Use Cloud Function for atomic user creation and invitation cleanup
       const acceptInvitationCallable = httpsCallable(functions, 'acceptInvitation');
       
       const result = await acceptInvitationCallable({
         inviteId: invitation.id,
-        name: values.name,
+        name: invitation.name || 'Bruker', // Use name from invitation or default
         password: values.password
       });
 
       console.log("Account created successfully via Cloud Function", result.data);
 
-      // 2. Sign in the user immediately
       await signInWithEmailAndPassword(auth, invitation.email, values.password);
 
       setSuccess(true);
@@ -157,7 +158,6 @@ function InviteContent() {
       console.error("Error accepting invitation:", err);
       let message = 'Kunne ikke opprette konto. Prøv igjen senere.';
       
-      // Handle specific error messages from Cloud Functions
       if (err.message?.includes('already-exists') || err.code === 'functions/already-exists') {
         message = 'Denne e-postadressen er allerede i bruk.';
       } else if (err.message?.includes('invalid-argument')) {
@@ -241,10 +241,10 @@ function InviteContent() {
                 <ShieldCheck className="h-10 w-10 text-indigo-300" />
             </div>
             <h1 className="text-5xl font-black tracking-tight mb-6 leading-tight">
-                Bli en del av <span className="text-indigo-300">teamet.</span>
+                Fullfør din <span className="text-indigo-300">profil.</span>
             </h1>
             <p className="text-xl text-indigo-100/80 leading-relaxed font-medium">
-                Du er invitert til å bli med i din organisasjons logistikk-nettverk. Fullfør din profil for å komme i gang.
+                Velkommen til {invitation?.orgName || 'organisasjonen'}. Velg et sikkert passord for å komme i gang.
             </p>
             
             <div className="mt-12 space-y-6">
@@ -272,39 +272,19 @@ function InviteContent() {
                 <div className="w-2 h-8 bg-[#1A237E] rounded-full" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Invitasjon mottatt</span>
             </div>
-            <CardTitle className="text-4xl font-black text-slate-900 tracking-tight">Fullfør din profil</CardTitle>
+            <CardTitle className="text-4xl font-black text-slate-900 tracking-tight">Velg Passord</CardTitle>
             <CardDescription className="text-slate-500 font-medium text-lg pt-2">
-               Du oppretter nå en konto for <span className="text-[#1A237E] font-bold">{invitation?.email}</span>
+               Konto for <span className="text-[#1A237E] font-bold">{invitation?.email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 sm:p-12 pt-0">
+            <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Registrert navn</p>
+                <p className="text-lg font-black text-slate-700">{invitation?.name || 'Ikke oppgitt'}</p>
+            </div>
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Fullt Navn</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                            <Input placeholder="Ditt navn" {...field} className="h-14 pl-12 rounded-2xl bg-slate-50 border-none focus-visible:ring-2 focus-visible:ring-[#1A237E] text-lg font-bold" />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs font-bold text-red-500" />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-1.5">
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">E-postadresse (Låst)</FormLabel>
-                    <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                        <Input value={invitation?.email} disabled className="h-14 pl-12 rounded-2xl bg-slate-50 border-none text-slate-400 font-bold text-lg cursor-not-allowed" />
-                    </div>
-                </div>
-
                 <div className="grid grid-cols-1 gap-6">
                     <FormField
                     control={form.control}
@@ -340,6 +320,27 @@ function InviteContent() {
                     />
                 </div>
 
+                <FormField
+                    control={form.control}
+                    name="privacyAccepted"
+                    render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-2xl border p-4 bg-slate-50/50">
+                        <FormControl>
+                        <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                        />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-medium text-slate-600">
+                            Jeg godtar <Link href="/legal/personvern" target="_blank" className="text-[#1A237E] font-bold hover:underline inline-flex items-center gap-1">personvernerklæringen <ExternalLink className="h-3 w-3" /></Link>
+                        </FormLabel>
+                        <FormMessage className="text-[10px] font-bold text-red-500" />
+                        </div>
+                    </FormItem>
+                    )}
+                />
+
                 <Button 
                     type="submit" 
                     className="w-full h-16 bg-[#1A237E] hover:bg-[#1A237E]/90 text-white font-black rounded-2xl text-xl shadow-xl shadow-indigo-100 transition-all active:scale-[0.98] mt-4" 
@@ -348,7 +349,7 @@ function InviteContent() {
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                         <Loader2 className="h-6 w-6 animate-spin" />
-                        <span>Oppretter profil...</span>
+                        <span>Aktiverer...</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
