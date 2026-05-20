@@ -239,7 +239,9 @@ export interface Route {
 export interface Invitation {
   id: string;
   email: string;
+  name?: string; // Added: For pre-filled names
   orgId: string;
+  orgName?: string; // Added: For display in invite page
   organizationId?: string;
   role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   status: 'pending' | 'accepted' | 'expired';
