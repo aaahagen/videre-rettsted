@@ -35,6 +35,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Invitation } from '@/lib/types';
+import { useAuth } from '@/components/auth-provider';
 import Link from 'next/link';
 
 const registerSchema = z.object({
@@ -51,6 +52,7 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 function InviteContent() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -62,7 +64,18 @@ function InviteContent() {
 
   const inviteId = searchParams.get('id') || searchParams.get('invitation');
 
+  // 1. Safety Redirect: If the user is already logged in, send them to the dashboard
   useEffect(() => {
+    if (!authLoading && user) {
+        console.log("User already logged in, redirecting from invite to dashboard");
+        router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    // Only verify if we are not already redirecting a logged-in user
+    if (authLoading || user) return;
+
     async function verifyInvite() {
       const finalId = inviteId || new URLSearchParams(window.location.search).get('id');
       
@@ -116,7 +129,7 @@ function InviteContent() {
     }
 
     verifyInvite();
-  }, [inviteId]);
+  }, [inviteId, user, authLoading]);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -136,7 +149,7 @@ function InviteContent() {
       
       const result = await acceptInvitationCallable({
         inviteId: invitation.id,
-        name: invitation.name || 'Bruker', // Use name from invitation or default
+        name: invitation.name || 'Bruker', 
         password: values.password
       });
 
@@ -173,6 +186,15 @@ function InviteContent() {
       setIsSubmitting(false);
     }
   };
+
+  // If we are redirecting a logged-in user, show the loader
+  if (authLoading || (user && !success)) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[#F0F4F8] p-4">
+          <Loader2 className="h-12 w-12 animate-spin text-[#1A237E]" />
+        </div>
+      );
+  }
 
   if (loading) {
     return (
