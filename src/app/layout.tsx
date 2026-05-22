@@ -35,7 +35,6 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.png" },
       { url: "/icons/192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -55,7 +54,6 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/180.png" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-slate-50`}>
         <AuthProvider>
