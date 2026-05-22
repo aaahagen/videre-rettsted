@@ -35,12 +35,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icon.png" },
-      { url: "/icon.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.png" },
+      { url: "/icons/192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/icon.png" },
+      { url: "/icons/180.png", sizes: "180x180", type: "image/png" },
     ],
   },
 };
@@ -53,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="no">
       <head>
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/icons/180.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-slate-50`}>
         <AuthProvider>
