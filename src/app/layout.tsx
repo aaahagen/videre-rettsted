@@ -54,6 +54,8 @@ export default function RootLayout({
     <html lang="no">
       <head>
         <link rel="apple-touch-icon" href="/icons/180.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-slate-50`}>
         <AuthProvider>
