@@ -4,17 +4,18 @@ import { useEffect } from 'react';
 
 export default function RegisterSW() {
   useEffect(() => {
-    if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(
-          (registration) => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          },
-          (err) => {
-            console.log('ServiceWorker registration failed: ', err);
-          }
-        );
-      });
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      // Register the service worker as soon as possible
+      const register = async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js');
+          console.log('SW registered:', registration.scope);
+        } catch (error) {
+          console.error('SW registration failed:', error);
+        }
+      };
+
+      register();
     }
   }, []);
 
