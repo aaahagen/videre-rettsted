@@ -1,29 +1,48 @@
-import type { Metadata, Viewport } from 'next';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/components/auth-provider';
-import './globals.css';
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "@/components/auth-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { UpdateNotifier } from "@/components/update-notifier";
+import RegisterSW from "@/components/pwa-register";
 
-export const metadata: Metadata = {
-  title: 'VIDERE RettSted',
-  description: 'Finn leveringsstedet ditt med letthet.',
-  // manifest: '/manifest.json',
-  icons: {
-    icon: '/icon.png',
-    apple: '/icon.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'VIDERE RettSted',
-  },
-};
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const viewport: Viewport = {
-  themeColor: '#1A237E',
-  width: 'device-width',
+  themeColor: "#1A237E",
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+};
+
+export const metadata: Metadata = {
+  title: "Videre RettSted",
+  description: "Finn leveringsstedet ditt med letthet.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RettSted",
+  },
+  icons: {
+    icon: [
+      { url: "/icon.png" },
+      { url: "/icon.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icon.png" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -32,27 +51,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nb" suppressHydrationWarning>
+    <html lang="no">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="apple-touch-icon" href="/icon.png" />
       </head>
-      <body className="font-body antialiased">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans bg-slate-50`}>
         <AuthProvider>
+          <RegisterSW />
           {children}
           <Toaster />
+          <UpdateNotifier />
         </AuthProvider>
       </body>
     </html>
