@@ -14,6 +14,15 @@ import { cn } from '@/lib/utils';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useSearch } from '@/hooks/use-search';
 
+/**
+ * PlacesPage viser en oversikt over alle leveringssteder i organisasjonen.
+ * 
+ * Siden implementerer:
+ * - Real-time lytting på organisasjonsdata for umiddelbar oppdatering av modultilganger (f.eks. Avvik).
+ * - Søkefunksjonalitet på tvers av navn, adresse og hashtags.
+ * - Filtrering av favoritter.
+ * - Automatisk rulling til spesifikke steder via URL-hash (#place-id).
+ */
 export default function PlacesPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
   const [userData, setUserData] = useState<User | null>(null);
@@ -36,17 +45,34 @@ export default function PlacesPage() {
 
   useEffect(() => {
     if (!authUser) return;
-    const unsub = onSnapshot(doc(db, 'users', authUser.uid), (doc) => {
-      if (doc.exists()) {
-        const uData = { ...doc.data(), id: doc.id } as User;
+    
+    // Brukerdata-lytter: Henter orgId og favoritter
+    const unsubUser = onSnapshot(doc(db, 'users', authUser.uid), (userDoc) => {
+      if (userDoc.exists()) {
+        const uData = { ...userDoc.data(), id: userDoc.id } as User;
         setUserData(uData);
-        if (uData.orgId) {
-            firebaseDB.getOrganization(uData.orgId).then(setOrganization);
-        }
       }
     });
-    return () => unsub();
+
+    return () => unsubUser();
   }, [authUser]);
+
+  /**
+   * Organisasjonslytter (Sanntid).
+   * Dette er kritisk for at endringer gjort i admin-panelet (f.eks. deaktivering av Avvik-modulen)
+   * skal reflekteres umiddelbart for sjåfører uten at de må laste siden på nytt.
+   */
+  useEffect(() => {
+    if (!userData?.orgId) return;
+    
+    const unsubOrg = onSnapshot(doc(db, 'organizations', userData.orgId), (orgDoc) => {
+        if (orgDoc.exists()) {
+            setOrganization({ ...orgDoc.data(), id: orgDoc.id } as Organization);
+        }
+    });
+    
+    return () => unsubOrg();
+  }, [userData?.orgId]);
 
   useEffect(() => {
     async function fetchPlaces() {
@@ -66,17 +92,17 @@ export default function PlacesPage() {
     }
   }, [userData?.orgId]);
 
-  // Effect to handle scrolling to hash after data is loaded
+  /**
+   * Håndterer scrolling til spesifikt sted hvis det er angitt i URL-en (#place-id).
+   */
   useEffect(() => {
     if (!loadingPlaces && places.length > 0) {
       const hash = window.location.hash;
       if (hash) {
-        // Small timeout to ensure DOM has updated with the grid
         setTimeout(() => {
           const element = document.querySelector(hash);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Remove hash from URL without triggering scroll jump
             window.history.replaceState(null, '', window.location.pathname);
           }
         }, 100);

@@ -18,22 +18,31 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useEffect, useState } from 'react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { DangerReportModal } from '../reports/danger-report-modal';
+import { useAuth } from '../auth-provider';
 
 export function PlaceCard({ place, priority = false, orgSettings }: { place: DeliveryPlace; priority?: boolean; orgSettings?: Organization }) {
+  const { dbUser } = useAuth();
   const [hasOpenReport, setHasOpenReport] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  const isDangerReportsEnabled = orgSettings?.modules?.danger_reports === true;
+  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
+  
+  // Feature Gating: 
+  // 1. Super Admin Module level (Global off)
+  const isModuleEnabled = orgSettings?.modules?.danger_reports !== false;
+  // 2. Org Admin toggle level (Off for drivers, on for admins)
+  const isFeatureEnabledForUser = isAdmin || orgSettings?.dangerReportsEnabled !== false;
+  
+  const showDangerReports = isModuleEnabled && isFeatureEnabledForUser;
 
   useEffect(() => {
-    // Check for open danger reports only if the module is enabled
+    // Check for open danger reports only if the feature is active for this user
     const checkReports = async () => {
-       if(!place.orgId || !isDangerReportsEnabled) {
+       if(!place.orgId || !showDangerReports) {
            setHasOpenReport(false);
            return;
        }
        try {
-           // We fetch all open reports for this org, then filter locally for speed
            const reports = await firebaseDB.getReports(place.orgId);
            const openForThisPlace = reports.some(r => r.placeId === place.id && r.status === 'open');
            setHasOpenReport(openForThisPlace);
@@ -42,7 +51,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
        }
     };
     checkReports();
-  }, [place.id, place.orgId, isDangerReportsEnabled]);
+  }, [place.id, place.orgId, showDangerReports]);
 
   // Check if coordinates exist and are not the default (0,0)
   const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
@@ -68,7 +77,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
     <>
     <Card 
       id={`place-${place.id}`} 
-      className={`flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24 ${isDangerReportsEnabled && hasOpenReport ? 'border-2 border-red-500 shadow-red-500/20 shadow-lg' : ''}`}
+      className={`flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24 ${showDangerReports && hasOpenReport ? 'border-2 border-red-500 shadow-red-500/20 shadow-lg' : ''}`}
     >
       <CardHeader className="p-0">
         <div className="relative">
@@ -159,7 +168,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
                     </Link>
                 </Button>
             )}
-            {isDangerReportsEnabled && (
+            {showDangerReports && (
                 <Button 
                     variant="outline" 
                     size="sm" 

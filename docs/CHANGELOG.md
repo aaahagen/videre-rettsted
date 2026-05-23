@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin Dashboard Mobile Optimization:** Refactored the user management list into a stacked layout for small screens to improve accessibility and readability.
 
 ### Fixed
+- **Module Gating & Real-time Propagation:** Fixed an issue where the "Avvik" (Danger Report) features were still visible to drivers after being disabled by an administrator. Implemented real-time organization listeners in the Sidebar and Places page to ensure instant UI updates.
 - **Next.js 15 Migration & Build Stability:** Resolved all Promise-based API issues and type mismatches across the application. Verified with successful production builds.
 - **Firestore Missing Index:** Added a composite index for the `audit_logs` collection to support high-performance filtering and ordering by orgId and timestamp.
 - **Admin Dashboard Feature Restoration:** Fixed a regression where several administrative controls (Place field settings, Pending invitations) were temporarily removed during a documentation pass.

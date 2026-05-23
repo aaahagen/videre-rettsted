@@ -71,7 +71,7 @@ import { useAuth } from '../auth-provider';
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user: authUser, loading, dbUser } = useAuth();
+  const { user: authUser, loading, dbUser, isAdmin, isSuperAdmin } = useAuth();
   const [org, setOrg] = useState<Organization | null>(null);
   const [orgLoading, setOrgLoading] = useState(false);
   const { setOpenMobile, isMobile } = useSidebar();
@@ -157,8 +157,6 @@ export default function AppSidebar() {
   };
 
   const displayName = dbUser?.name || authUser?.displayName || authUser?.email || 'Bruker';
-  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
-  const isSuperAdmin = dbUser?.role === 'super_admin';
   const isOwner = dbUser?.role === 'owner';
 
   const navGroups = [
@@ -335,24 +333,27 @@ export default function AppSidebar() {
                   if (item.roles && !item.roles.includes(dbUser?.role || '')) return false;
                   if (item.hideFrom && item.hideFrom.includes(dbUser?.role || '')) return false;
                   
-                  // Module Gating (Super Admin Level)
+                  // 1. Module Gating (Super Admin Level - Global Off)
                   if (item.module && org?.modules) {
                     const moduleEnabled = (org.modules as any)[item.module];
-                    // If module setting exists and is false, hide it for EVERYONE
                     if (moduleEnabled === false) return false;
                   }
 
-                  // Internal toggles (Admin level)
-                  // These respect the isAdmin / hms_responsible exceptions
+                  // 2. Feature Toggles (Organization Admin Level)
                   
-                  // Reports: hidden for drivers/etc if disabled, but visible for admins
-                  if (item.href === '/dashboard/reports' && org && org.dangerReportsEnabled === false && !isAdmin) {
-                    return false;
+                  // Avvik (Danger Reports)
+                  // Hidden for non-admins if disabled, but always visible for admins if the module is enabled
+                  if (item.href === '/dashboard/reports' && org) {
+                      const featureEnabled = org.dangerReportsEnabled !== false;
+                      if (!featureEnabled && !isAdmin) return false;
                   }
                   
-                  // HMS: hidden for everyone EXCEPT admins/owners/hms_responsible if disabled
-                  if (item.href === '/dashboard/hms' && org && org.hmsSettings?.enabled === false && !isAdmin && dbUser?.role !== 'hms_responsible') {
-                    return false;
+                  // HMS Settings & Logs
+                  // Hidden for everyone except admins/owners/hms_responsible if disabled
+                  if (item.href === '/dashboard/hms' && org) {
+                      const featureEnabled = org.hmsSettings?.enabled !== false;
+                      const hasSpecialAccess = isAdmin || dbUser?.role === 'hms_responsible';
+                      if (!featureEnabled && !hasSpecialAccess) return false;
                   }
 
                   return true;
