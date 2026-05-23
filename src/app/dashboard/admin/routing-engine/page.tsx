@@ -28,7 +28,11 @@ import {
     RefreshCw,
     Scale,
     Wrench,
-    PlusCircle
+    PlusCircle,
+    Settings2,
+    Info,
+    LayoutGrid,
+    Target
 } from 'lucide-react';
 import { 
     Select, 
@@ -52,7 +56,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Separator } from '@/components/ui/separator';
 
+/**
+ * RoutingEnginePage er kontrollsenteret for automatisert ruteplanlegging.
+ * 
+ * Siden bruker ConstraintEngine for å:
+ * - Validere kjøretøyets lastekapasitet (vekt/volum).
+ * - Sjekke miljøkrav (ADR/Nullutslipp).
+ * - Optimalisere stopprekkefølge basert på geolokasjon.
+ */
 export default function RoutingEnginePage() {
     const { dbUser } = useAuth();
     const { toast } = useToast();
@@ -118,7 +131,6 @@ export default function RoutingEnginePage() {
                 const placesMap = new Map(places.map(p => [p.id, p]));
                 const depotCoords = { lat: 59.9139, lng: 10.7522 }; // Oslo Default
                 
-                // Calculate day of week for the delivery window constraints
                 const dayOfWeek = format(new Date(selectedDate), 'eeee').toLowerCase();
 
                 const results = engine.generateBasicSuggestion(
@@ -262,141 +274,135 @@ export default function RoutingEnginePage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-                        <Sparkles className="h-8 w-8 text-amber-500" />
-                        Smart Ruteplanlegger
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
+            {/* CLEAN HEADER */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 flex items-center gap-4">
+                        <Sparkles className="h-10 w-10 text-amber-500 shrink-0" />
+                        Ruteplanlegger
                     </h1>
-                    <p className="text-slate-500 font-medium">Planlegg logistikk og fordel arbeidsmengden effektivt.</p>
+                    <p className="text-slate-500 font-medium text-sm sm:text-base">Optimaliser arbeidsflyten med intelligent ressursfordeling.</p>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-3">
-                    {/* Strategy Switcher */}
-                    <div className="bg-white border rounded-lg p-1 flex items-center gap-1 shadow-sm">
-                        <Button 
-                            variant={strategy === 'fill_first' ? 'default' : 'ghost'} 
-                            size="sm" 
-                            className="h-8 text-[10px] font-black uppercase"
-                            onClick={() => setStrategy('fill_first')}
-                        >
-                            <Package className="h-3 w-3 mr-1" /> Fyll opp
-                        </Button>
-                        <Button 
-                            variant={strategy === 'balanced' ? 'default' : 'ghost'} 
-                            size="sm" 
-                            className="h-8 text-[10px] font-black uppercase"
-                            onClick={() => setStrategy('balanced')}
-                        >
-                            <Scale className="h-3 w-3 mr-1" /> Fordel jevnt
-                        </Button>
-                    </div>
+                <Button 
+                    onClick={handleGenerate} 
+                    disabled={calculating || orders.length === 0} 
+                    size="lg" 
+                    className="w-full md:w-auto h-14 px-8 text-lg font-black gap-3 shadow-xl bg-indigo-600 hover:bg-indigo-700 transition-all active:scale-95"
+                >
+                    {calculating ? <Loader2 className="h-6 w-6 animate-spin" /> : <RefreshCw className="h-6 w-6" />}
+                    {suggestions.length > 0 ? 'Beregn på nytt' : 'Generer ruter nå'}
+                </Button>
+            </div>
 
-                    <div className="bg-white border rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm">
-                        <Calendar className="h-4 w-4 text-primary" />
-                        <input 
-                            type="date" 
-                            value={selectedDate} 
-                            onChange={(e) => setSelectedDate(e.target.value)}
-                            className="bg-transparent font-bold text-xs outline-none"
-                        />
-                    </div>
-
-                    <Dialog open={isInternalTaskOpen} onOpenChange={setIsInternalTaskOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="font-bold border-indigo-200 text-indigo-700">
-                                <Wrench className="h-4 w-4 mr-2" /> Intern Oppgave
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Ny Intern Oppgave</DialogTitle>
-                                <DialogDescription>Lag en rute for støtteoppgaver som verksted, henting eller flytting av utstyr.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                    <Label>Type Oppgave</Label>
-                                    <Input value={internalTaskData.name} onChange={e => setInternalTaskData({...internalTaskData, name: e.target.value})} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Kjøretøy</Label>
-                                        <Select onValueChange={v => setInternalTaskData({...internalTaskData, vehicleId: v})}>
-                                            <SelectTrigger><SelectValue placeholder="Velg..." /></SelectTrigger>
-                                            <SelectContent>
-                                                {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Sjåfør</Label>
-                                        <Select onValueChange={v => setInternalTaskData({...internalTaskData, driverId: v})}>
-                                            <SelectTrigger><SelectValue placeholder="Velg..." /></SelectTrigger>
-                                            <SelectContent>
-                                                {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Notater / Instruksjoner</Label>
-                                    <Input placeholder="F.eks. Levere bil hos Volvo Furuset kl 09:00" value={internalTaskData.notes} onChange={e => setInternalTaskData({...internalTaskData, notes: e.target.value})} />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsInternalTaskOpen(false)}>Avbryt</Button>
-                                <Button onClick={handleCreateInternalTask} disabled={!internalTaskData.driverId || !internalTaskData.vehicleId}>Opprett Oppgave</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
-                    <Button onClick={handleGenerate} disabled={calculating || orders.length === 0} size="lg" className="shadow-lg font-bold gap-2">
-                        {calculating ? <Loader2 className="h-5 w-5 animate-spin" /> : <PlusCircle className="h-5 w-5" />}
-                        {suggestions.length > 0 ? 'Beregn på nytt' : 'Generer Forslag'}
-                    </Button>
+            {/* CONTROL TOOLBAR CARD */}
+            <Card className="border-2 border-slate-100 shadow-sm overflow-hidden">
+                <div className="bg-slate-50 border-b px-6 py-3 flex items-center gap-2">
+                    <Settings2 className="h-4 w-4 text-slate-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Planleggingsparametre</span>
                 </div>
+                <CardContent className="p-4 sm:p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Planleggingsdato</Label>
+                            <div className="relative group">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                <input 
+                                    type="date" 
+                                    value={selectedDate} 
+                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    className="w-full bg-white border-2 border-slate-100 h-12 rounded-xl pl-10 pr-4 font-bold text-sm outline-none focus:border-indigo-200 transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Optimaliseringsstrategi</Label>
+                            <div className="flex p-1 bg-slate-100 rounded-xl h-12 border-2 border-slate-100">
+                                <button 
+                                    onClick={() => setStrategy('fill_first')}
+                                    className={cn(
+                                        "flex-1 rounded-lg text-[10px] font-black uppercase tracking-tight flex items-center justify-center gap-2 transition-all",
+                                        strategy === 'fill_first' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                    )}
+                                >
+                                    <Package className="h-3.5 w-3.5" /> Fyll opp
+                                </button>
+                                <button 
+                                    onClick={() => setStrategy('balanced')}
+                                    className={cn(
+                                        "flex-1 rounded-lg text-[10px] font-black uppercase tracking-tight flex items-center justify-center gap-2 transition-all",
+                                        strategy === 'balanced' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                    )}
+                                >
+                                    <Scale className="h-3.5 w-3.5" /> Fordel jevnt
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Dialog open={isInternalTaskOpen} onOpenChange={setIsInternalTaskOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-indigo-100 text-indigo-700 bg-indigo-50/30 hover:bg-indigo-50">
+                                        <Wrench className="h-4 w-4 mr-2" /> Opprett Intern Oppgave
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="rounded-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-headline text-2xl">Ny Intern Oppgave</DialogTitle>
+                                        <DialogDescription>Lag en rute for støtteoppgaver som verksted eller flytting.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-5 py-4">
+                                        <div className="space-y-2">
+                                            <Label>Hva skal gjøres?</Label>
+                                            <Input value={internalTaskData.name} onChange={e => setInternalTaskData({...internalTaskData, name: e.target.value})} className="h-11" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Kjøretøy</Label>
+                                                <Select onValueChange={v => setInternalTaskData({...internalTaskData, vehicleId: v})}>
+                                                    <SelectTrigger className="h-11"><SelectValue placeholder="Velg..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {vehicles.map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Sjåfør</Label>
+                                                <Select onValueChange={v => setInternalTaskData({...internalTaskData, driverId: v})}>
+                                                    <SelectTrigger className="h-11"><SelectValue placeholder="Velg..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Ekstra info</Label>
+                                            <Input placeholder="F.eks. Lokasjon eller tidspunkt" value={internalTaskData.notes} onChange={e => setInternalTaskData({...internalTaskData, notes: e.target.value})} className="h-11" />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsInternalTaskOpen(false)} className="rounded-xl h-11">Avbryt</Button>
+                                        <Button onClick={handleCreateInternalTask} disabled={!internalTaskData.driverId || !internalTaskData.vehicleId} className="rounded-xl h-11 bg-indigo-600 hover:bg-indigo-700">Opprett Oppgave</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* RESOURCE STATS */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={<Package />} label="Ledige Ordre" value={orders.length} color="blue" />
+                <StatCard icon={<Truck />} label="Klare Biler" value={vehicles.length} color="emerald" />
+                <StatCard icon={<User />} label="Aktive Sjåfører" value={drivers.length} color="indigo" />
+                <StatCard icon={<Sparkles />} label="Nye Forslag" value={suggestions.length} color="amber" />
             </div>
 
-            {/* STATS BAR */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-slate-50 border-none shadow-none">
-                    <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><Package className="h-6 w-6" /></div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Ledige Ordre</p>
-                            <p className="text-2xl font-black">{orders.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-slate-50 border-none shadow-none">
-                    <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><Truck className="h-6 w-6" /></div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Klare Biler</p>
-                            <p className="text-2xl font-black">{vehicles.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-slate-50 border-none shadow-none">
-                    <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl"><User className="h-6 w-6" /></div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Sjåfører</p>
-                            <p className="text-2xl font-black">{drivers.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="bg-slate-50 border-none shadow-none">
-                    <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-3 bg-amber-100 text-amber-600 rounded-xl"><Sparkles className="h-6 w-6" /></div>
-                        <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Forslag</p>
-                            <p className="text-2xl font-black">{suggestions.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <Separator className="my-8" />
 
             {/* SUGGESTIONS GRID */}
             {suggestions.length > 0 ? (
@@ -407,29 +413,39 @@ export default function RoutingEnginePage() {
                         const isGreen = vehicle?.fuelType === 'electric' || vehicle?.fuelType === 'gas';
                         
                         return (
-                            <Card key={idx} className="overflow-hidden border-2 hover:border-primary/50 transition-all shadow-md flex flex-col relative group">
+                            <Card key={idx} className="overflow-hidden border-2 border-slate-100 hover:border-indigo-200 transition-all shadow-lg shadow-slate-100/50 flex flex-col relative group rounded-2xl">
                                 
                                 <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    className="absolute top-4 right-4 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-20 h-10 w-10 rounded-full hover:bg-red-50"
                                     onClick={() => handleRemoveSuggestion(idx)}
                                     title="Slett forslag"
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-5 w-5" />
                                 </Button>
 
-                                <CardHeader className="bg-slate-50 border-b pb-4">
+                                <CardHeader className="bg-slate-50/50 border-b p-6 pb-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-10 w-10 rounded-xl bg-white border shadow-sm flex items-center justify-center">
+                                            <Target className="h-5 w-5 text-indigo-600" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="font-headline text-xl">Ruteutkast {idx + 1}</CardTitle>
+                                            <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Automatisk forslag</CardDescription>
+                                        </div>
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="space-y-3">
-                                            <Label className="text-[10px] font-black uppercase text-slate-400">Kjøretøy</Label>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tildelt Kjøretøy</Label>
                                             <Select 
                                                 value={s.vehicleId} 
                                                 onValueChange={(val) => updateSuggestion(idx, { vehicleId: val })}
                                             >
-                                                <SelectTrigger className="bg-white font-bold h-10">
-                                                    <div className="flex items-center gap-2">
-                                                        <Truck className={cn("h-4 w-4", isGreen ? "text-green-600" : "text-slate-500")} />
+                                                <SelectTrigger className="bg-white font-bold h-11 border-slate-200 rounded-xl shadow-sm">
+                                                    <div className="flex items-center gap-2 truncate">
+                                                        <Truck className={cn("h-4 w-4 shrink-0", isGreen ? "text-green-600" : "text-slate-500")} />
                                                         <SelectValue />
                                                     </div>
                                                 </SelectTrigger>
@@ -441,15 +457,15 @@ export default function RoutingEnginePage() {
                                             </Select>
                                         </div>
 
-                                        <div className="space-y-3">
-                                            <Label className="text-[10px] font-black uppercase text-slate-400">Sjåfør</Label>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-slate-400 ml-1">Tildelt Sjåfør</Label>
                                             <Select 
                                                 value={s.driverId || 'none'} 
                                                 onValueChange={(val) => updateSuggestion(idx, { driverId: val === 'none' ? undefined : val })}
                                             >
-                                                <SelectTrigger className="bg-white font-bold h-10">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-slate-500" />
+                                                <SelectTrigger className="bg-white font-bold h-11 border-slate-200 rounded-xl shadow-sm">
+                                                    <div className="flex items-center gap-2 truncate">
+                                                        <User className="h-4 w-4 shrink-0 text-slate-500" />
                                                         <SelectValue placeholder="Velg sjåfør" />
                                                     </div>
                                                 </SelectTrigger>
@@ -464,40 +480,24 @@ export default function RoutingEnginePage() {
                                     </div>
                                 </CardHeader>
                                 
-                                <CardContent className="p-6 flex-1 space-y-6">
-                                    {/* Route Metrics */}
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase mb-1">
-                                                <MapPin className="h-3 w-3" /> Distanse
-                                            </div>
-                                            <p className="text-lg font-black">{s.estimatedDistance.toFixed(1)} km</p>
-                                        </div>
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase mb-1">
-                                                <Clock className="h-3 w-3" /> Varighet
-                                            </div>
-                                            <p className="text-lg font-black">
-                                                {Math.floor(s.estimatedDuration / 60)}t {Math.round(s.estimatedDuration % 60)}m
-                                            </p>
-                                        </div>
-                                        <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase mb-1">
-                                                <Package className="h-3 w-3" /> Ordre
-                                            </div>
-                                            <p className="text-lg font-black">{s.orders.length} stk</p>
-                                        </div>
+                                <CardContent className="p-6 flex-1 space-y-8 bg-white">
+                                    {/* Metrics Grid */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <MetricBox icon={<MapPin className="h-3.5 w-3.5" />} label="Distanse" value={`${s.estimatedDistance.toFixed(1)} km`} />
+                                        <MetricBox icon={<Clock className="h-3.5 w-3.5" />} label="Varighet" value={`${Math.floor(s.estimatedDuration / 60)}t ${Math.round(s.estimatedDuration % 60)}m`} />
+                                        <MetricBox icon={<Package className="h-3.5 w-3.5" />} label="Ordre" value={`${s.orders.length} stk`} />
                                     </div>
 
-                                    {/* Warnings Section */}
+                                    {/* Warnings */}
                                     {s.warnings.length > 0 && (
-                                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
-                                            <p className="text-[10px] font-black text-amber-700 uppercase flex items-center gap-1.5">
-                                                <AlertTriangle className="h-3 w-3" /> Systemmerknader
-                                            </p>
-                                            <div className="space-y-1">
+                                        <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 animate-in fade-in slide-in-from-top-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                                <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Systemmerknader</span>
+                                            </div>
+                                            <div className="space-y-1.5 pl-1">
                                                 {s.warnings.map((w, wIdx) => (
-                                                    <div key={wIdx} className="text-[10px] flex gap-2 font-bold text-amber-800">
+                                                    <div key={wIdx} className="text-[10px] flex gap-2 font-bold text-amber-800 leading-tight">
                                                         <div className="h-1 w-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
                                                         {w}
                                                     </div>
@@ -506,33 +506,45 @@ export default function RoutingEnginePage() {
                                         </div>
                                     )}
 
-                                    {/* Stops Timeline with Removal */}
+                                    {/* Timeline */}
                                     <div className="space-y-4">
-                                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Rekkefølge og justering</p>
-                                         <div className="space-y-3">
+                                         <div className="flex items-center justify-between">
+                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                 <LayoutGrid className="h-3 w-3" /> Stopp-sekvens
+                                             </h4>
+                                             <Badge variant="outline" className="text-[9px] font-bold border-slate-100 text-slate-400">{s.places.length} stopp</Badge>
+                                         </div>
+                                         <div className="space-y-3 relative pl-3 border-l-2 border-slate-50 ml-1">
                                              {s.places.map((p, pIdx) => {
                                                  const placeOrders = s.orders.filter(o => o.placeId === p.id);
                                                  return (
-                                                     <div key={pIdx} className="flex items-start gap-3 p-3 rounded-xl border bg-white hover:bg-slate-50 group/item transition-colors">
-                                                         <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0">
-                                                             {pIdx + 1}
+                                                     <div key={pIdx} className="relative group/stop">
+                                                         {/* Sequence Marker */}
+                                                         <div className="absolute -left-[1.25rem] top-2 w-4 h-4 rounded-full bg-white border-2 border-slate-200 group-hover/stop:border-indigo-600 transition-colors z-10 flex items-center justify-center">
+                                                            <div className="w-1 h-1 rounded-full bg-slate-300 group-hover/stop:bg-indigo-600 transition-colors" />
                                                          </div>
-                                                         <div className="flex-1 min-w-0">
-                                                             <div className="flex items-center gap-2">
-                                                                <p className="text-sm font-bold truncate text-slate-800">{p.name}</p>
-                                                                {p.isZeroEmissionZone && <Leaf className="h-3 w-3 text-green-600" />}
-                                                                {p.isCityCenter && <Building2 className="h-3 w-3 text-blue-600" />}
+
+                                                         <div className="bg-slate-50/50 hover:bg-slate-50 border border-transparent hover:border-slate-100 p-3 rounded-xl transition-all">
+                                                             <div className="flex items-start justify-between gap-3">
+                                                                 <div className="min-w-0">
+                                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                                        <span className="text-xs font-bold text-slate-800 truncate">{p.name}</span>
+                                                                        {p.isZeroEmissionZone && <Leaf className="h-3 w-3 text-green-600" />}
+                                                                        {p.isCityCenter && <Building2 className="h-3 w-3 text-blue-600" />}
+                                                                    </div>
+                                                                    <p className="text-[9px] text-slate-400 truncate mb-2">{p.address}</p>
+                                                                 </div>
+                                                                 <span className="text-[10px] font-black text-slate-300">#{pIdx + 1}</span>
                                                              </div>
-                                                             <p className="text-[10px] text-slate-500 truncate mb-2">{p.address}</p>
                                                              
                                                              <div className="flex flex-wrap gap-1.5">
                                                                 {placeOrders.map(o => (
-                                                                    <Badge key={o.id} variant="secondary" className="h-6 text-[9px] font-bold pr-1">
+                                                                    <Badge key={o.id} variant="secondary" className="h-6 text-[9px] font-bold bg-white border border-slate-100 shadow-sm pr-1 text-slate-600">
                                                                         {o.barcode}
                                                                         <Button 
                                                                             variant="ghost" 
                                                                             size="icon" 
-                                                                            className="h-4 w-4 ml-1 hover:text-red-500"
+                                                                            className="h-4 w-4 ml-1 hover:text-red-500 hover:bg-red-50 rounded-full"
                                                                             onClick={() => removeOrderFromSuggestion(idx, o.id)}
                                                                         >
                                                                             <X className="h-2 w-2" />
@@ -549,11 +561,11 @@ export default function RoutingEnginePage() {
 
                                     <Button 
                                         onClick={() => handleApplyRoute(s)} 
-                                        className="w-full h-12 text-lg font-bold gap-2 shadow-lg shadow-indigo-100"
+                                        className="w-full h-14 text-lg font-black gap-3 shadow-xl bg-slate-900 hover:bg-indigo-600 transition-all rounded-xl"
                                         variant="default"
                                     >
                                         <CheckCircle2 className="h-5 w-5" />
-                                        Opprett Rute
+                                        Lagre og aktiver rute
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -561,14 +573,54 @@ export default function RoutingEnginePage() {
                     })}
                 </div>
             ) : (
-                <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-4 border-2 border-dashed rounded-2xl bg-slate-50 border-slate-200">
-                    <Sparkles className="h-12 w-12 text-slate-300" />
-                    <div>
-                        <h3 className="text-xl font-bold text-slate-700">Ingen forslag enda</h3>
-                        <p className="text-slate-400 max-w-sm">Trykk på "Generer Forslag" knappen for å la motoren beregne ruter basert på dagens ordre og flåte.</p>
+                <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 animate-bounce-slow">
+                        <Sparkles className="h-16 w-16 text-indigo-200" />
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Klar for ruteoptimalisering?</h3>
+                        <p className="text-slate-500 max-w-sm font-medium">Klikk på knappen ovenfor for å beregne ruter basert på dagens {orders.length} ledige ordre og {vehicles.length} tilgjengelige kjøretøy.</p>
+                    </div>
+                    <div className="flex items-center gap-6 pt-4">
+                        <div className="flex items-center gap-2 opacity-50"><Package className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Intelligent lastekapasitet</span></div>
+                        <div className="flex items-center gap-2 opacity-50"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Geografisk optimalisering</span></div>
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function StatCard({ icon, label, value, color }: { icon: any, label: string, value: number, color: string }) {
+    const colors: any = {
+        blue: "bg-blue-50 text-blue-600 border-blue-100",
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100"
+    };
+
+    return (
+        <Card className={cn("border-2 shadow-none overflow-hidden rounded-2xl", colors[color])}>
+            <CardContent className="p-4 sm:p-6 flex items-center justify-between">
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{label}</p>
+                    <p className="text-3xl font-black leading-none">{value}</p>
+                </div>
+                <div className="p-3 bg-white/40 backdrop-blur-sm rounded-xl">
+                    {icon && <icon.type {...icon.props} className="h-6 w-6" />}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function MetricBox({ icon, label, value }: { icon: any, label: string, value: string }) {
+    return (
+        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors group">
+            <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-tight mb-1 group-hover:text-indigo-400 transition-colors">
+                {icon} {label}
+            </div>
+            <p className="text-sm font-black text-slate-800">{value}</p>
         </div>
     );
 }
