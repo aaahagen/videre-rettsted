@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
 
 ### Changed
+- **Super Admin Mobile Optimization:** Redesigned the "Global User List" to use a responsive stacked layout on mobile devices, eliminating horizontal overflow and improving usability.
 - **Next.js 15 Implementation:** Completed the transition to async APIs for `params` and `searchParams` across all dashboard routes.
 - **Enhanced Type Safety:** Refined internal interfaces (e.g., `Vehicle`, `WorkLog`) to better support strict TypeScript checks and TSDoc generation.
 - **Documentation Pyramid Update:** Refreshed `engineering.md`, `domain.md`, and `strategy.md` to reflect Next.js 15 architecture, specialized roles, and new Phase 6 features.

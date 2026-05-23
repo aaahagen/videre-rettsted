@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search, PlusCircle, Users, UserX, ShieldCheck } from 'lucide-react';
+import { Loader2, Building2, Globe, LayoutGrid, Zap, MoreVertical, Edit2, Trash2, Megaphone, Search, PlusCircle, Users, UserX, ShieldCheck, Mail, Briefcase, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { superDB } from '@/lib/firebase/super';
 import { Organization, User } from '@/lib/types';
@@ -24,7 +24,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { firebaseAuth } from '@/lib/firebase/auth';
+import { cn } from '@/lib/utils';
 
+/**
+ * SuperAdminPage er plattformens kontrollpanel for Super Admins.
+ * Her administreres alle organisasjoner, modultilganger, og globale brukere.
+ */
 export default function SuperAdminPage() {
   const [activeTab, setActiveTab] = useState('organizations');
   const { dbUser, loading } = useAuth();
@@ -143,7 +148,6 @@ export default function SuperAdminPage() {
     }
   };
 
-  // ... rest of organization handling functions (same as before) ...
   const handleSendBroadcast = async () => {
       if (!broadcastMessage.trim() || !dbUser) return;
       setIsSendingBroadcast(true);
@@ -537,22 +541,24 @@ export default function SuperAdminPage() {
 
           <TabsContent value="users" className="space-y-6 mt-6">
               <Card className="border-2 border-slate-100 shadow-sm overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b p-4">
-                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardHeader className="bg-slate-50/50 border-b p-4 sm:p-6">
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                          <Users className="h-5 w-5 text-blue-600" />
+                          <div className="p-2 bg-blue-600 rounded-lg text-white">
+                              <Users className="h-5 w-5" />
+                          </div>
                           <div>
-                              <CardTitle className="text-lg font-black uppercase">Global Brukerliste</CardTitle>
-                              <CardDescription className="text-xs">Oversikt over alle registrerte brukere på plattformen.</CardDescription>
+                              <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Global Brukerliste</CardTitle>
+                              <CardDescription className="text-xs font-medium">Oversikt over alle registrerte brukere på plattformen.</CardDescription>
                           </div>
                       </div>
-                      <div className="relative w-full sm:w-80">
+                      <div className="relative w-full md:w-80">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input 
                               placeholder="Søk navn, e-post eller ID..." 
                               value={userSearchQuery}
                               onChange={(e) => setUserSearchQuery(e.target.value)}
-                              className="pl-9 h-10 bg-white border-slate-200 font-medium"
+                              className="pl-9 h-11 bg-white border-slate-200 rounded-xl font-bold shadow-sm"
                           />
                       </div>
                    </div>
@@ -561,60 +567,146 @@ export default function SuperAdminPage() {
                     {isUsersLoading ? (
                         <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-blue-600" /></div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm border-collapse">
-                                <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b">
-                                    <tr>
-                                        <th className="px-4 py-3">Bruker</th>
-                                        <th className="px-4 py-3">Organisasjon</th>
-                                        <th className="px-4 py-3">Rolle</th>
-                                        <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3 text-right">Handlinger</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {filteredUsers.map((u) => (
-                                        <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-4 py-4">
-                                                <div className="font-bold text-slate-900">{u.name || 'Uten navn'}</div>
-                                                <div className="text-[10px] text-slate-500 font-mono">{u.email}</div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <Badge variant="outline" className="font-mono text-[10px] bg-white">
-                                                    {organizations.find(o => o.id === u.orgId)?.name || u.orgId?.substring(0, 8)}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <Badge className={`uppercase text-[10px] font-black ${u.role === 'super_admin' ? 'bg-purple-600' : u.role === 'owner' || u.role === 'admin' ? 'bg-blue-600' : 'bg-slate-500'}`}>
-                                                    {u.role}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <Badge className={u.status === 'paused' ? 'bg-amber-500' : 'bg-emerald-500'}>
-                                                    {u.status || 'active'}
-                                                </Badge>
-                                            </td>
-                                            <td className="px-4 py-4 text-right">
-                                                <div className="flex justify-end items-center gap-2">
-                                                    {u.role === 'super_admin' ? (
-                                                        <ShieldCheck className="h-4 w-4 text-purple-600 mr-2" />
-                                                    ) : (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="sm" 
-                                                            className="h-8 text-destructive hover:text-destructive hover:bg-red-50 font-bold"
-                                                            onClick={() => handleDeleteUserGlobal(u.id)}
-                                                        >
-                                                            <UserX className="h-4 w-4 mr-2" /> Slett
-                                                        </Button>
-                                                    )}
-                                                    <Button variant="outline" size="sm" className="h-8 text-xs font-bold" onClick={() => handleSwitchOrg(u.orgId)}>Gå til org</Button>
-                                                </div>
-                                            </td>
+                        <div className="w-full">
+                            {/* Desktop View: Table */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <table className="w-full text-left text-sm border-collapse">
+                                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b">
+                                        <tr>
+                                            <th className="px-6 py-4">Bruker</th>
+                                            <th className="px-6 py-4">Organisasjon</th>
+                                            <th className="px-6 py-4">Rolle</th>
+                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-6 py-4 text-right">Handlinger</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredUsers.map((u) => (
+                                            <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{u.name || 'Uten navn'}</div>
+                                                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">{u.email}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant="outline" className="font-bold text-[10px] bg-white border-slate-200 text-slate-600 px-2">
+                                                        {organizations.find(o => o.id === u.orgId)?.name || u.orgId?.substring(0, 8)}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge className={cn(
+                                                        "uppercase text-[10px] font-black px-2 py-0.5",
+                                                        u.role === 'super_admin' ? 'bg-purple-600' : 
+                                                        u.role === 'owner' || u.role === 'admin' ? 'bg-blue-600' : 'bg-slate-500'
+                                                    )}>
+                                                        {u.role}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge className={cn(
+                                                        "text-[10px] font-black uppercase px-2 py-0.5",
+                                                        u.status === 'paused' ? 'bg-amber-500' : 'bg-emerald-500'
+                                                    )}>
+                                                        {u.status || 'active'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {u.role === 'super_admin' ? (
+                                                            <ShieldCheck className="h-5 w-5 text-purple-600" />
+                                                        ) : (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm" 
+                                                                className="h-8 text-destructive hover:text-white hover:bg-red-500 font-bold text-xs"
+                                                                onClick={() => handleDeleteUserGlobal(u.id)}
+                                                            >
+                                                                <UserX className="h-4 w-4 mr-2" /> Slett
+                                                            </Button>
+                                                        )}
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-8 text-xs font-bold border-slate-200" 
+                                                            onClick={() => handleSwitchOrg(u.orgId)}
+                                                        >
+                                                            <ExternalLink className="h-3 w-3 mr-2" /> Gå til org
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile/Tablet View: Stacked Layout */}
+                            <div className="lg:hidden divide-y divide-slate-100">
+                                {filteredUsers.map((u) => (
+                                    <div key={u.id} className="p-4 sm:p-6 hover:bg-slate-50/50 transition-colors space-y-4">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="min-w-0">
+                                                <h4 className="font-bold text-slate-900 truncate">{u.name || 'Uten navn'}</h4>
+                                                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-medium">
+                                                    <Mail className="h-3 w-3" />
+                                                    <span className="truncate">{u.email}</span>
+                                                </div>
+                                            </div>
+                                            <Badge className={cn(
+                                                "shrink-0 text-[10px] font-black uppercase px-2",
+                                                u.status === 'paused' ? 'bg-amber-500' : 'bg-emerald-500'
+                                            )}>
+                                                {u.status || 'active'}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
+                                                <Building2 className="h-3 w-3" />
+                                                {organizations.find(o => o.id === u.orgId)?.name || 'Ukjent org'}
+                                            </div>
+                                            <div className={cn(
+                                                "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-black uppercase text-white",
+                                                u.role === 'super_admin' ? 'bg-purple-600' : 
+                                                u.role === 'owner' || u.role === 'admin' ? 'bg-blue-600' : 'bg-slate-500'
+                                            )}>
+                                                <Briefcase className="h-3 w-3" />
+                                                {u.role}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                                            {u.role !== 'super_admin' ? (
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="w-full text-destructive hover:bg-red-50 border-slate-200 font-bold h-9"
+                                                    onClick={() => handleDeleteUserGlobal(u.id)}
+                                                >
+                                                    <UserX className="h-4 w-4 mr-2" /> Slett bruker
+                                                </Button>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-9 text-[10px] font-black uppercase text-purple-600">
+                                                    <ShieldCheck className="h-4 w-4 mr-2" /> Systembeskyttet
+                                                </div>
+                                            )}
+                                            <Button 
+                                                variant="default" 
+                                                size="sm" 
+                                                className="w-full h-9 font-bold shadow-none bg-slate-900" 
+                                                onClick={() => handleSwitchOrg(u.orgId)}
+                                            >
+                                                <ExternalLink className="h-4 w-4 mr-2" /> Gå til org
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {filteredUsers.length === 0 && (
+                                <div className="py-20 text-center text-slate-400 font-medium">
+                                    Ingen brukere matchet søket.
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
