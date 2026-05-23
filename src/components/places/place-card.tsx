@@ -23,13 +23,17 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
   const [hasOpenReport, setHasOpenReport] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  const isDangerReportsEnabled = orgSettings?.modules?.danger_reports === true;
+
   useEffect(() => {
-    // Check for open danger reports
+    // Check for open danger reports only if the module is enabled
     const checkReports = async () => {
-       if(!place.orgId) return;
+       if(!place.orgId || !isDangerReportsEnabled) {
+           setHasOpenReport(false);
+           return;
+       }
        try {
-           // We fetch all open reports for this org, then filter locally for speed,
-           // or we could add a specific query in db.ts. For now, since reports shouldn't be thousands, this is ok.
+           // We fetch all open reports for this org, then filter locally for speed
            const reports = await firebaseDB.getReports(place.orgId);
            const openForThisPlace = reports.some(r => r.placeId === place.id && r.status === 'open');
            setHasOpenReport(openForThisPlace);
@@ -38,7 +42,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
        }
     };
     checkReports();
-  }, [place.id, place.orgId]);
+  }, [place.id, place.orgId, isDangerReportsEnabled]);
 
   // Check if coordinates exist and are not the default (0,0)
   const hasCoordinates = place.coordinates && (place.coordinates.lat !== 0 || place.coordinates.lng !== 0);
@@ -64,7 +68,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
     <>
     <Card 
       id={`place-${place.id}`} 
-      className={`flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24 ${hasOpenReport ? 'border-2 border-red-500 shadow-red-500/20 shadow-lg' : ''}`}
+      className={`flex flex-col overflow-hidden transition-all hover:shadow-xl scroll-mt-24 ${isDangerReportsEnabled && hasOpenReport ? 'border-2 border-red-500 shadow-red-500/20 shadow-lg' : ''}`}
     >
       <CardHeader className="p-0">
         <div className="relative">
@@ -155,7 +159,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
                     </Link>
                 </Button>
             )}
-            {orgSettings?.dangerReportsEnabled !== false && (
+            {isDangerReportsEnabled && (
                 <Button 
                     variant="outline" 
                     size="sm" 

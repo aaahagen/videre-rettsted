@@ -70,5 +70,9 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   **Approval Workflow:** Overtime requires explicit admin review.
 *   *(Future: Peer approval restriction to prevent admins approving their own logs).*
 
-## 4. Language Support
+## 4. Resilience & Updates
+*   **PWA Lifecycle:** The application is designed as a Progressive Web App. 
+*   **Update Notifier:** Users are automatically notified when a new version of the app is available, ensuring they always have access to the latest security fixes and features.
+
+## 5. Language Support
 - Primary: Norwegian (Bokmål). Architecture must support future i18n.

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added   
+- **PWA Update Notifier:** Added a "New Version Available" toast notification with one-click refresh, ensuring users always run the latest version of the application.
+- **Automated API Documentation:** Configured `typedoc` with `typedoc-plugin-markdown` to automatically generate comprehensive API documentation from TSDocs in the `docs/api` directory.
 - **Compliance & Risk Management (Phase 6 Completion):**
     - **Odometer Tracking (`kilometerstand`):** Vehicles now track and display real-time mileage. Drivers update the odometer reading during every pre/post-trip inspection.
     - **Tachograph Download Monitoring:** Implemented automated tracking for the 90-day vehicle tachograph download requirement. Includes color-coded visual alerts for overdue or approaching deadlines.
@@ -44,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
 
 ### Changed
+- **Next.js 15 Implementation:** Completed the transition to async APIs for `params` and `searchParams` across all dashboard routes.
+- **Enhanced Type Safety:** Refined internal interfaces (e.g., `Vehicle`, `WorkLog`) to better support strict TypeScript checks and TSDoc generation.
 - **Documentation Pyramid Update:** Refreshed `engineering.md`, `domain.md`, and `strategy.md` to reflect Next.js 15 architecture, specialized roles, and new Phase 6 features.
 - **UI Specification:** Authored `docs/ui-specification.md` to serve as a mandatory reference for all page refactors, preventing accidental feature loss.
 - **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact.

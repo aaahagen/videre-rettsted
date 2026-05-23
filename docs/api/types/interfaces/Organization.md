@@ -14,7 +14,7 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **dangerReportsEnabled?**: `boolean`
 
-Defined in: [types.ts:83](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L83)
+Defined in: [types.ts:85](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L85)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:83](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **fieldSettings?**: `object`
 
-Defined in: [types.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L46)
+Defined in: [types.ts:48](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L48)
 
 #### contactPersons?
 
@@ -142,7 +142,7 @@ Defined in: [types.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **hmsSettings?**: `object`
 
-Defined in: [types.ts:40](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L40)
+Defined in: [types.ts:42](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L42)
 
 #### enabled
 
@@ -174,7 +174,7 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:84](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L84)
+Defined in: [types.ts:86](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L86)
 
 #### dpaAcceptedAt?
 
@@ -222,7 +222,7 @@ Defined in: [types.ts:84](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **mainDepot?**: `object`
 
-Defined in: [types.ts:30](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L30)
+Defined in: [types.ts:32](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L32)
 
 #### address
 
@@ -256,9 +256,17 @@ Defined in: [types.ts:21](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **analytics?**: `boolean`
 
+#### danger\_reports?
+
+> `optional` **danger\_reports?**: `boolean`
+
 #### fleet?
 
 > `optional` **fleet?**: `boolean`
+
+#### hms?
+
+> `optional` **hms?**: `boolean`
 
 #### learning?
 
@@ -310,7 +318,7 @@ Defined in: [types.ts:17](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **placeSettings?**: `object`
 
-Defined in: [types.ts:35](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L35)
+Defined in: [types.ts:37](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L37)
 
 #### autoGenerateCustomerNumbers?
 

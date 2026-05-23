@@ -6,7 +6,7 @@
 
 # Interface: ProofOfDelivery
 
-Defined in: [types.ts:449](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L449)
+Defined in: [types.ts:453](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L453)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:449](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **coordinates?**: `object`
 
-Defined in: [types.ts:452](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L452)
+Defined in: [types.ts:456](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L456)
 
 #### accuracy?
 
@@ -34,7 +34,7 @@ Defined in: [types.ts:452](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **damageDetails?**: `string`
 
-Defined in: [types.ts:479](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L479)
+Defined in: [types.ts:483](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L483)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [types.ts:479](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **damageReported?**: `boolean`
 
-Defined in: [types.ts:478](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L478)
+Defined in: [types.ts:482](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L482)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [types.ts:478](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **deliveryMethod?**: `"handed_to_recipient"` \| `"left_at_door"` \| `"left_in_safe_place"` \| `"mailroom_reception"` \| `"neighbor"`
 
-Defined in: [types.ts:458](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L458)
+Defined in: [types.ts:462](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L462)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types.ts:458](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **failureReason?**: `"other"` \| `"recipient_unavailable"` \| `"address_not_found"` \| `"access_denied"` \| `"package_damaged_refused"`
 
-Defined in: [types.ts:477](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L477)
+Defined in: [types.ts:481](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L481)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types.ts:477](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **notes?**: `string`
 
-Defined in: [types.ts:482](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L482)
+Defined in: [types.ts:486](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L486)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [types.ts:482](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **photos?**: `object`[]
 
-Defined in: [types.ts:466](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L466)
+Defined in: [types.ts:470](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L470)
 
 #### description?
 
@@ -98,7 +98,7 @@ Defined in: [types.ts:466](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **recipientPhone?**: `string`
 
-Defined in: [types.ts:463](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L463)
+Defined in: [types.ts:467](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L467)
 
 ***
 
@@ -106,7 +106,7 @@ Defined in: [types.ts:463](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **scannedBarcodes?**: `string`[]
 
-Defined in: [types.ts:474](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L474)
+Defined in: [types.ts:478](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L478)
 
 ***
 
@@ -114,7 +114,7 @@ Defined in: [types.ts:474](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **signatureName?**: `string`
 
-Defined in: [types.ts:462](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L462)
+Defined in: [types.ts:466](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L466)
 
 ***
 
@@ -122,7 +122,7 @@ Defined in: [types.ts:462](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > `optional` **signatureUrl?**: `string`
 
-Defined in: [types.ts:461](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L461)
+Defined in: [types.ts:465](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L465)
 
 ***
 
@@ -130,7 +130,7 @@ Defined in: [types.ts:461](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"successful"` \| `"partially_successful"` \| `"failed_attempt"`
 
-Defined in: [types.ts:455](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L455)
+Defined in: [types.ts:459](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L459)
 
 ***
 
@@ -138,4 +138,4 @@ Defined in: [types.ts:455](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **timestamp**: `any`
 
-Defined in: [types.ts:451](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L451)
+Defined in: [types.ts:455](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L455)

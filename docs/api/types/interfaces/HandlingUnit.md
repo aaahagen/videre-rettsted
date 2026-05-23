@@ -6,7 +6,7 @@
 
 # Interface: HandlingUnit
 
-Defined in: [types.ts:504](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L504)
+Defined in: [types.ts:508](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L508)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [types.ts:504](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **id**: `string`
 
-Defined in: [types.ts:505](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L505)
+Defined in: [types.ts:509](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L509)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:505](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **status**: `"pending"` \| `"loaded"` \| `"delivered"` \| `"failed"`
 
-Defined in: [types.ts:507](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L507)
+Defined in: [types.ts:511](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L511)
 
 ***
 
@@ -30,4 +30,4 @@ Defined in: [types.ts:507](https://github.com/aaahagen/videre-rettsted/blob/main
 
 > **type**: `"custom"` \| `"eur-pallet"` \| `"half-pallet"`
 
-Defined in: [types.ts:506](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L506)
+Defined in: [types.ts:510](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L510)
