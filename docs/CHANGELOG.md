@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
 
 ### Changed
+- **Route Optimization UI:** Renamed the "AI Optimering" button to "Optimer igjen" on the Route Details page to more accurately describe the action.
+- **Manifest Workflow Terminology:** Updated manifest-related buttons to consistently use "Send til Lasterampe" for both creation and viewing, providing a more intuitive logistics workflow.
 - **Super Admin Mobile Optimization:** Redesigned the "Global User List" to use a responsive stacked layout on mobile devices, eliminating horizontal overflow and improving usability.
 - **Next.js 15 Implementation:** Completed the transition to async APIs for `params` and `searchParams` across all dashboard routes.
 - **Enhanced Type Safety:** Refined internal interfaces (e.g., `Vehicle`, `WorkLog`) to better support strict TypeScript checks and TSDoc generation.
@@ -62,7 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Driver Assignment Consistency:** 
     - Updated the Routing Engine to correctly save the `driverName` when autogenerating routes.
     - Enhanced the Route Details page to look up missing driver names and provided a validated selection menu for manual assignment.
-- **UI Label Clarity:** Renamed "Opprett Manifest" to "Send til lasting" on the Route Details page for better workflow alignment.
 - **Module Gating & Real-time Propagation:** Fixed an issue where the "Avvik" (Danger Report) features were still visible to drivers after being disabled by an administrator. Implemented real-time organization listeners in the Sidebar and Places page to ensure instant UI updates.
 - **Next.js 15 Migration & Build Stability:** Resolved all Promise-based API issues and type mismatches across the application. Verified with successful production builds.
 - **Firestore Missing Index:** Added a composite index for the `audit_logs` collection to support high-performance filtering and ordering by orgId and timestamp.

@@ -347,7 +347,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
             </Button>
             <Button size="lg" onClick={handleOptimize} disabled={isOptimizing} className="h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 shadow-lg shadow-indigo-200">
                 {isOptimizing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                AI Optimering
+                Optimer igjen
             </Button>
         </div>
       </div>
@@ -400,13 +400,13 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                     {manifest ? (
                         <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
                             <Link href={`/dashboard/manifests/${manifest.id}`}>
-                                <ClipboardList className="mr-2 h-4 w-4" /> Se Lasterampe
+                                <ClipboardList className="mr-2 h-4 w-4" /> Send til Lasterampe
                             </Link>
                         </Button>
                     ) : (
                         <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
                             <Link href={`/dashboard/loader/scan-to-receive`}>
-                                <Scan className="mr-2 h-4 w-4" /> Send til lasting
+                                <Scan className="mr-2 h-4 w-4" /> Send til Lasterampe
                             </Link>
                         </Button>
                     )}
