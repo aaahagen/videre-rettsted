@@ -162,12 +162,14 @@ export default function RoutingEnginePage() {
 
         try {
             setCalculating(true);
+            const driver = drivers.find(d => d.id === internalTaskData.driverId);
             await firebaseDB.createRoute({
                 name: `INTERN: ${internalTaskData.name}`,
                 orgId: dbUser.orgId,
                 places: [],
                 vehicleId: internalTaskData.vehicleId,
                 driverId: internalTaskData.driverId,
+                driverName: driver?.name,
                 date: selectedDate,
                 status: 'active',
                 notes: internalTaskData.notes
@@ -226,12 +228,15 @@ export default function RoutingEnginePage() {
             setCalculating(true);
             const routeName = `Auto: ${suggestion.places[0]?.name || 'Rute'} - ${new Date(selectedDate).toLocaleDateString('nb-NO')}`;
             
+            const driver = drivers.find(d => d.id === suggestion.driverId);
+
             const newRoute = await firebaseDB.createRoute({
                 name: routeName,
                 orgId: dbUser.orgId,
                 places: suggestion.places.map(p => p.id),
                 vehicleId: suggestion.vehicleId,
                 driverId: suggestion.driverId,
+                driverName: driver?.name,
                 date: selectedDate,
                 status: 'active'
             });

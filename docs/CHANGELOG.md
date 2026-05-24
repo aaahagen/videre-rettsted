@@ -57,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin Dashboard Mobile Optimization:** Refactored the user management list into a stacked layout for small screens to improve accessibility and readability.
 
 ### Fixed
+- **Parsing Error in Routes:** Fixed a stray character on the first line of `src/app/dashboard/routes/page.tsx` and added missing imports.
+- **Firestore Security Rules:** Corrected a malformed `list` rule for the `routes` collection and fixed the manifest query path in the route details page to resolve `permission-denied` errors.
+- **Driver Assignment Consistency:** 
+    - Updated the Routing Engine to correctly save the `driverName` when autogenerating routes.
+    - Enhanced the Route Details page to look up missing driver names and provided a validated selection menu for manual assignment.
+- **UI Label Clarity:** Renamed "Opprett Manifest" to "Send til lasting" on the Route Details page for better workflow alignment.
 - **Module Gating & Real-time Propagation:** Fixed an issue where the "Avvik" (Danger Report) features were still visible to drivers after being disabled by an administrator. Implemented real-time organization listeners in the Sidebar and Places page to ensure instant UI updates.
 - **Next.js 15 Migration & Build Stability:** Resolved all Promise-based API issues and type mismatches across the application. Verified with successful production builds.
 - **Firestore Missing Index:** Added a composite index for the `audit_logs` collection to support high-performance filtering and ordering by orgId and timestamp.

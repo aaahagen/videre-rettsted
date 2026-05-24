@@ -21,7 +21,8 @@ import {
     ClipboardList,
     Navigation,
     Scan,
-    Car
+    Car,
+    User as UserIcon
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -44,7 +45,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth, db } from '@/lib/firebase/firebase';
-import { Route, DeliveryPlace, Vehicle, Order, Manifest } from '@/lib/types';
+import { Route, DeliveryPlace, Vehicle, Order, Manifest, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -154,6 +155,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   const [places, setPlaces] = useState<DeliveryPlace[]>([]);
   const [availablePlaces, setAvailablePlaces] = useState<DeliveryPlace[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [drivers, setDrivers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   
   const [isEditing, setIsEditing] = useState(false);
@@ -182,7 +184,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   }, [authUser, loadingAuth, router]);
 
   useEffect(() => {
-    if (!authUser || !routeId) return;
+    if (!authUser || !routeId || !dbUser?.orgId) return;
 
     // Listen to route
     const routeUnsub = onSnapshot(doc(db, 'routes', routeId), (doc) => {
@@ -193,8 +195,11 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
         }
     });
 
-    // Listen to manifest for this route
-    const manifestQuery = query(collection(db, 'manifests'), where('routeId', '==', routeId));
+    // Listen to manifest for this route - manifests are nested under organizations
+    const manifestQuery = query(
+        collection(db, 'organizations', dbUser.orgId, 'manifests'), 
+        where('routeId', '==', routeId)
+    );
     const manifestUnsub = onSnapshot(manifestQuery, (snapshot) => {
         if (!snapshot.empty) {
             setManifest({ ...snapshot.docs[0].data(), id: snapshot.docs[0].id } as Manifest);
@@ -207,21 +212,23 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
         routeUnsub();
         manifestUnsub();
     };
-  }, [authUser, routeId]);
+  }, [authUser, routeId, dbUser?.orgId]);
 
   useEffect(() => {
     async function fetchData() {
       if (dbUser?.orgId) {
         try {
-          const [allPlaces, allVehicles, allOrders] = await Promise.all([
+          const [allPlaces, allVehicles, allOrders, allUsers] = await Promise.all([
             firebaseDB.getPlaces(dbUser.orgId),
             firebaseDB.getVehicles(dbUser.orgId),
-            firebaseDB.getOrders(dbUser.orgId)
+            firebaseDB.getOrders(dbUser.orgId),
+            firebaseDB.getUsers(dbUser.orgId)
           ]);
           
           setAvailablePlaces(allPlaces as DeliveryPlace[]);
           setVehicles(allVehicles as Vehicle[]);
           setOrders(allOrders as Order[]);
+          setDrivers(allUsers.filter(u => u.role === 'driver' || u.role === 'contractor'));
         } catch (error) {
           console.error('Error fetching details:', error);
         } finally {
@@ -300,6 +307,8 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   };
 
   const vehicle = route ? vehicles.find(v => v.id === route.vehicleId) : null;
+  const assignedDriver = route?.driverId ? drivers.find(d => d.id === route.driverId) : null;
+  const displayDriverName = route?.driverName || assignedDriver?.name || 'Ikke tildelt';
 
   if (isLoading || !route) return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -360,7 +369,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Sjåfør</span>
                             <div className="flex items-center gap-2">
                                 <Home className="h-4 w-4 text-indigo-500" />
-                                <span className="font-bold text-slate-700 truncate">{route.driverName || 'Ikke tildelt'}</span>
+                                <span className="font-bold text-slate-700 truncate">{displayDriverName}</span>
                             </div>
                         </div>
                         <div className="space-y-1">
@@ -397,7 +406,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                     ) : (
                         <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
                             <Link href={`/dashboard/loader/scan-to-receive`}>
-                                <Scan className="mr-2 h-4 w-4" /> Opprett Manifest
+                                <Scan className="mr-2 h-4 w-4" /> Send til lasting
                             </Link>
                         </Button>
                     )}
@@ -579,12 +588,31 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                       </Select>
                   </div>
                   <div className="space-y-2">
-                      <Label>Sjåfør (Fritekst)</Label>
-                      <Input 
-                          value={route.driverName || ''} 
-                          onChange={(e) => setRoute({ ...route, driverName: e.target.value })} 
-                          placeholder="Navn på sjåfør"
-                      />
+                      <Label>Sjåfør</Label>
+                      <Select 
+                          value={route.driverId || 'none'} 
+                          onValueChange={(val) => {
+                              const selectedDriver = drivers.find(d => d.id === val);
+                              setRoute({ 
+                                  ...route, 
+                                  driverId: val === 'none' ? undefined : val,
+                                  driverName: val === 'none' ? undefined : selectedDriver?.name 
+                              });
+                          }}
+                      >
+                          <SelectTrigger>
+                              <div className="flex items-center gap-2">
+                                  <UserIcon className="h-4 w-4 text-slate-400" />
+                                  <SelectValue placeholder="Velg sjåfør" />
+                              </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="none">Ikke tildelt</SelectItem>
+                              {drivers.map(d => (
+                                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
                   </div>
               </div>
               <DialogFooter className="flex gap-2">
