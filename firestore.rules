@@ -103,14 +103,10 @@ service cloud.firestore {
 
     // === ROUTES ===
     match /routes/{routeId} {
-      // Logic for reading routes: Must be in the organization
-      allow read: if (isAuthenticated() && isUserInOrg(resource.data.orgId)) || isSuperAdmin();
-      // Logic for querying routes: The query MUST include 'where("orgId", "==", userOrgId)'
-      allow list: if (isAuthenticated() && isUserInOrg(request.query.limit > 0 ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId : '')) || isSuperAdmin();
-
-      allow create: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow update: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
-      allow delete: if isUserInOrg(request.resource.data.orgId) || isSuperAdmin();
+      allow read: if isAuthenticated() && (isUserInOrg(resource.data.orgId) || isSuperAdmin());
+      allow create: if isAuthenticated() && (isUserInOrg(request.resource.data.orgId) || isSuperAdmin());
+      allow update: if isAuthenticated() && (isUserInOrg(resource.data.orgId) || isSuperAdmin());
+      allow delete: if isAuthenticated() && (isUserInOrg(resource.data.orgId) || isSuperAdmin());
     }
 
     // === VEHICLES ===

@@ -4,14 +4,35 @@ import { SplashScreen } from "@/components/ui/splash-screen";
 import { useEffect, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2, Trash2, MapPin, Route as RouteIcon, Car, Clock, SearchX, CheckCircle2, Copy, Play, Calendar } from 'lucide-react';
+import { 
+    Plus, 
+    Loader2, 
+    Trash2, 
+    MapPin, 
+    Route as RouteIcon, 
+    Car, 
+    Clock, 
+    SearchX, 
+    CheckCircle2, 
+    Copy, 
+    Play, 
+    Calendar,
+    Target,
+    ArrowRight,
+    LayoutGrid,
+    Target as TargetIcon,
+    Sparkles,
+    Filter,
+    Package
+} from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { firebaseDB } from '@/lib/firebase/database';
 import { db, auth } from '@/lib/firebase/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +40,17 @@ import { Route } from '@/lib/types';
 import { useSearch } from '@/hooks/use-search';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
+/**
+ * RoutesPage viser en oversikt over aktive ruter og rutemaler.
+ * 
+ * Siden er designet for å gi rask oversikt over logistikkstatus:
+ * - Aktive ruter viser fremdrift, tildelt sjåfør og estimert tid.
+ * - Maler tillater rask opprettelse av repeterende ruter.
+ * - Søkefunksjonalitet på tvers av navn, forsendelsesnummer og sjåførnavn.
+ */
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
   const [userData, setUserData] = useState<any>(null);
@@ -34,10 +65,9 @@ export default function RoutesPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Set context for global search
   useEffect(() => {
     setContext('Ruter', '/dashboard/routes/new');
-    return () => setContext('Steder', '/dashboard/new'); // Reset context on unmount
+    return () => setContext('Steder', '/dashboard/new');
   }, [setContext]);
 
   useEffect(() => {
@@ -55,7 +85,6 @@ export default function RoutesPage() {
             snapshot.forEach((doc) => {
               routesData.push({ id: doc.id, ...doc.data() } as Route);
             });
-            // Sort by created/updated
             routesData.sort((a, b) => {
                 const timeA = a.createdAt ? ('toMillis' in a.createdAt ? (a.createdAt as any).toMillis() : new Date(a.createdAt as any).getTime()) : 0;
                 const timeB = b.createdAt ? ('toMillis' in b.createdAt ? (b.createdAt as any).toMillis() : new Date(b.createdAt as any).getTime()) : 0;
@@ -72,20 +101,14 @@ export default function RoutesPage() {
 
   const filteredRoutes = useMemo(() => {
     let filtered = routes;
-    
-    // Admin sees all, drivers see only their own
-    if (userData?.role !== 'admin') {
+    if (userData?.role !== 'admin' && userData?.role !== 'owner' && userData?.role !== 'super_admin') {
       filtered = filtered.filter(route => route.driverId === user?.uid);
     }
-    
-    // Filter by tab
     if (activeTab === 'active') {
         filtered = filtered.filter(r => r.status !== 'template');
     } else {
         filtered = filtered.filter(r => r.status === 'template');
     }
-
-    // Apply search filter
     if (searchQuery && searchQuery.trim() !== '') {
       const lowerQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(route => 
@@ -94,12 +117,11 @@ export default function RoutesPage() {
         organizationUsers.find(u => u.id === route.driverId)?.name?.toLowerCase().includes(lowerQuery)
       );
     }
-    
     return filtered;
   }, [routes, userData, user?.uid, searchQuery, organizationUsers, activeTab]);
 
   const handleDeleteClick = (e: React.MouseEvent, route: Route) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     setRouteToDelete(route);
     setDeleteConfirmation('');
   };
@@ -160,120 +182,195 @@ export default function RoutesPage() {
     return null;
   }
 
+  const isAdmin = userData?.role === 'admin' || userData?.role === 'owner' || userData?.role === 'super_admin';
+
   return (
-    <div className="space-y-8 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">Ruteplanlegging</h1>
-          <p className="text-slate-500 mt-1 font-medium">
-             {userData?.role === 'admin' 
-               ? "Administrer aktive ruter og lagre faste ruter som maler." 
-               : "Oversikt over dine tildelte ruter."}
-          </p>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-1">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 flex items-center gap-4">
+                <RouteIcon className="h-10 w-10 text-indigo-600 shrink-0" />
+                Ruteoversikt
+            </h1>
+            <p className="text-slate-500 font-medium text-sm sm:text-base">
+                {isAdmin 
+                    ? "Full kontroll over organisasjonens aktive distribusjonsruter." 
+                    : "Dine tildelte oppdrag og ruter."}
+            </p>
         </div>
+        
+        {isAdmin && (
+            <Button 
+                asChild
+                size="lg" 
+                className="w-full md:w-auto h-14 px-8 text-lg font-black gap-3 shadow-xl bg-indigo-600 hover:bg-indigo-700 transition-all active:scale-95"
+            >
+                <Link href="/dashboard/routes/new">
+                    <Plus className="h-6 w-6" /> Ny Rute
+                </Link>
+            </Button>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <TabsList className="bg-slate-100 p-1">
-                <TabsTrigger value="active" className="font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600">Aktive Ruter</TabsTrigger>
-                <TabsTrigger value="template" className="font-bold px-6 data-[state=active]:bg-white data-[state=active]:text-indigo-600">Maler</TabsTrigger>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
+            <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 p-1 rounded-xl h-12 shadow-inner">
+                <TabsTrigger value="active" className="font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                    Aktive Oppdrag
+                </TabsTrigger>
+                <TabsTrigger value="template" className="font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                    Rutemaler
+                </TabsTrigger>
             </TabsList>
             
-            {activeTab === 'template' && userData?.role === 'admin' && (
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest italic">
-                    Tips: Lagre en eksisterende rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
-                </p>
-            )}
+            <div className="flex items-center gap-4">
+                {searchQuery && (
+                    <Badge variant="secondary" className="h-8 px-4 font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <Filter className="h-3 w-3 mr-2" /> Viser søkeresultater
+                    </Badge>
+                )}
+                {activeTab === 'template' && isAdmin && (
+                    <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-lg border">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                        Tips: Gjenbruk ruter for å spare tid
+                    </div>
+                )}
+            </div>
         </div>
 
-        <TabsContent value="active" className="mt-0">
+        <TabsContent value="active" className="mt-0 focus-visible:outline-none">
             {filteredRoutes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed rounded-3xl bg-slate-50/50">
-                    <div className="rounded-full bg-white shadow-sm p-6 mb-4">
-                        <RouteIcon className="h-10 w-10 text-slate-200" />
+                <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+                        <RouteIcon className="h-16 w-16 text-slate-200" />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800">Ingen aktive ruter</h2>
-                    <p className="text-slate-400 mt-2 max-w-xs mx-auto text-sm font-medium">
-                        {userData?.role === 'admin' ? "Du har ingen aktive ruter for øyeblikket." : "Du har ingen ruter tildelt deg ennå."}
-                    </p>
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Ingen ruter her</h3>
+                        <p className="text-slate-500 max-w-sm font-medium">
+                            {isAdmin 
+                                ? "Det er ingen aktive ruter i systemet akkurat nå." 
+                                : "Du har ingen tildelte ruter i dag."}
+                        </p>
+                    </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredRoutes.map(route => {
                         const totalStops = route.places?.length || 0;
                         const completedStopsCount = route.completedStops?.length || 0;
                         const isFinished = totalStops > 0 && completedStopsCount >= totalStops;
                         const createdAtDate = (route.createdAt as any)?.toDate ? (route.createdAt as any).toDate() : new Date(route.createdAt as any);
+                        const driver = organizationUsers.find(u => u.id === route.driverId);
 
                         return (
                             <Card 
                                 key={route.id} 
-                                className={`group cursor-pointer transition-all duration-300 overflow-hidden flex flex-col h-full bg-white hover:border-indigo-200 ${isFinished ? 'border-green-200 bg-green-50/10' : 'border-slate-200 shadow-sm hover:shadow-md'}`}
+                                className={cn(
+                                    "group cursor-pointer transition-all duration-300 overflow-hidden flex flex-col h-full relative rounded-2xl border-2",
+                                    isFinished 
+                                        ? "border-emerald-100 bg-emerald-50/5 hover:border-emerald-200" 
+                                        : "border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-50 bg-white"
+                                )}
                                 onClick={() => router.push(`/dashboard/routes/${route.id}`)}
                             >
-                                <div className={`h-1.5 w-full ${isFinished ? 'bg-green-500' : 'bg-slate-200 group-hover:bg-indigo-400 transition-colors'}`} />
-                                <CardHeader className="pb-2 pt-5">
+                                {/* Indicator Line */}
+                                <div className={cn(
+                                    "absolute left-0 top-0 bottom-0 w-1.5 transition-colors",
+                                    isFinished ? "bg-emerald-500" : "bg-slate-200 group-hover:bg-indigo-500"
+                                )} />
+
+                                <CardHeader className="pb-4 pt-6 px-6">
                                     <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
-                                            <CardTitle className="text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{route.name}</CardTitle>
-                                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                                                <Calendar className="h-3 w-3" /> {isNaN(createdAtDate.getTime()) ? 'Ukjent' : createdAtDate.toLocaleDateString()}
-                                                {route.shipmentNumber && <span>• {route.shipmentNumber}</span>}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "p-1.5 rounded-lg shrink-0",
+                                                    isFinished ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors"
+                                                )}>
+                                                    <TargetIcon className="h-4 w-4" />
+                                                </div>
+                                                <CardTitle className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors truncate">{route.name}</CardTitle>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Calendar className="h-3 w-3" /> 
+                                                    {isNaN(createdAtDate.getTime()) ? 'Ukjent' : createdAtDate.toLocaleDateString()}
+                                                </div>
+                                                {route.shipmentNumber && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-slate-200">•</span>
+                                                        <Package className="h-3 w-3" />
+                                                        {route.shipmentNumber}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        {userData?.role === 'admin' && (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500" onClick={(e) => handleDeleteClick(e, route)}>
-                                                <Trash2 className="h-4 w-4" />
+                                        {isAdmin && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                onClick={(e) => handleDeleteClick(e, route)}
+                                            >
+                                                <Trash2 className="h-4.5 w-4.5" />
                                             </Button>
                                         )}
                                     </div>
                                 </CardHeader>
                                 
-                                <CardContent className="space-y-4 pt-4 flex-grow flex flex-col">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                                            <MapPin className="h-4 w-4 text-indigo-500" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Stopp</span>
-                                                <span className="text-sm font-bold text-slate-700">{totalStops}</span>
+                                <CardContent className="space-y-6 pt-2 px-6 flex-grow flex flex-col">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-100 group-hover:bg-indigo-50/30 transition-all">
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                                <MapPin className="h-3 w-3 text-indigo-500" /> Stopp
                                             </div>
+                                            <p className="text-lg font-black text-slate-800">{totalStops}</p>
                                         </div>
-                                        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                                            <Clock className="h-4 w-4 text-amber-500" />
-                                            <div className="flex flex-col">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Tid</span>
-                                                <span className="text-sm font-bold text-slate-700">{route.duration || '--'}</span>
+                                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-100 group-hover:bg-indigo-50/30 transition-all">
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                                <Clock className="h-3 w-3 text-amber-500" /> Varighet
                                             </div>
+                                            <p className="text-lg font-black text-slate-800">{route.duration || '--'}</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                                        <Car className="h-4 w-4 text-emerald-500" />
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Sjåfør</span>
-                                            <span className="text-sm font-bold text-slate-700 truncate">
-                                                {route.driverId ? (organizationUsers.find(u => u.id === route.driverId)?.name || 'Tildelt') : <span className="text-amber-600">Venter på tildeling</span>}
-                                            </span>
+                                    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 group-hover:border-indigo-100 group-hover:bg-indigo-50/30 transition-all">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                <Car className="h-4 w-4 text-emerald-500" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Ansvarlig Sjåfør</span>
+                                                <span className="text-sm font-bold text-slate-700 truncate">
+                                                    {route.driverId ? (driver?.name || 'Tildelt') : <span className="text-amber-600 italic">Venter på tildeling...</span>}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div className="pt-2 mt-auto">
                                         {isFinished ? (
-                                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 font-bold border-green-200">
-                                                <CheckCircle2 className="h-3 w-3 mr-1" /> FULLFØRT
+                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-bold border-emerald-200 px-3 py-1 rounded-lg">
+                                                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> FULLFØRT
                                             </Badge>
                                         ) : route.driverId ? (
-                                            <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 font-bold border-indigo-100">
-                                                AKTIV
+                                            <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 font-bold border-indigo-100 px-3 py-1 rounded-lg">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse mr-2" />
+                                                AKTIV OPPDRAG
                                             </Badge>
                                         ) : (
-                                            <Badge variant="outline" className="text-slate-400 font-bold border-slate-200">
+                                            <Badge variant="outline" className="text-slate-400 font-bold border-slate-200 px-3 py-1 rounded-lg uppercase tracking-widest text-[9px]">
                                                 KLARGJØRES
                                             </Badge>
                                         )}
                                     </div>
                                 </CardContent>
+                                <div className="p-6 pt-0 mt-auto">
+                                    <Button variant="ghost" className="w-full text-indigo-600 font-black uppercase text-[10px] tracking-widest gap-2 group-hover:bg-indigo-50 rounded-xl">
+                                        Se detaljer <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                                    </Button>
+                                </div>
                             </Card>
                         );
                     })}
@@ -281,33 +378,42 @@ export default function RoutesPage() {
             )}
         </TabsContent>
 
-        <TabsContent value="template" className="mt-0">
+        <TabsContent value="template" className="mt-0 focus-visible:outline-none">
             {filteredRoutes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed rounded-3xl bg-slate-50/50">
-                    <div className="rounded-full bg-white shadow-sm p-6 mb-4">
-                        <Copy className="h-10 w-10 text-slate-200" />
+                <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+                        <Copy className="h-16 w-16 text-slate-200" />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800">Ingen maler lagret</h2>
-                    <p className="text-slate-400 mt-2 max-w-xs mx-auto text-sm font-medium">
-                        Lagre en rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
-                    </p>
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Ingen rutemaler</h3>
+                        <p className="text-slate-500 max-w-sm font-medium">
+                            Lagre en rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
+                        </p>
+                    </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredRoutes.map(template => (
-                        <Card key={template.id} className="group overflow-hidden flex flex-col h-full bg-white border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
-                             <CardHeader className="pb-2 pt-5">
+                        <Card key={template.id} className="group overflow-hidden flex flex-col h-full bg-white border-2 border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-50 hover:border-indigo-200 transition-all rounded-2xl relative">
+                             <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-400 opacity-20" />
+                             
+                             <CardHeader className="pb-4 pt-6 px-6">
                                 <div className="flex justify-between items-start">
-                                    <div className="space-y-1">
-                                        <CardTitle className="text-lg font-black text-slate-900">{template.name}</CardTitle>
-                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Rutemal</p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                                                <Copy className="h-4 w-4" />
+                                            </div>
+                                            <CardTitle className="text-xl font-black text-slate-900 truncate">{template.name}</CardTitle>
+                                        </div>
+                                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Mal-konfigurasjon</p>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500" onClick={(e) => handleDeleteClick(e, template)}>
-                                        <Trash2 className="h-4 w-4" />
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full" onClick={(e) => handleDeleteClick(e, template)}>
+                                        <Trash2 className="h-4.5 w-4.5" />
                                     </Button>
                                 </div>
                             </CardHeader>
-                            <CardContent className="space-y-4 pt-4 flex-grow">
+                            <CardContent className="space-y-4 pt-2 px-6 flex-grow">
                                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
                                     <div className="flex items-center gap-3">
                                         <MapPin className="h-5 w-5 text-indigo-500" />
@@ -315,17 +421,19 @@ export default function RoutesPage() {
                                     </div>
                                 </div>
                                 {template.notes && (
-                                    <p className="text-xs text-slate-500 line-clamp-2 italic">"{template.notes}"</p>
+                                    <div className="p-4 bg-slate-50/50 rounded-xl border border-dashed text-xs text-slate-500 italic line-clamp-3">
+                                        "{template.notes}"
+                                    </div>
                                 )}
                             </CardContent>
-                            <CardFooter className="bg-slate-50 border-t p-4 mt-auto">
+                            <CardFooter className="bg-slate-50/50 border-t p-6 mt-auto">
                                 <Button 
-                                    className="w-full font-bold bg-indigo-600 hover:bg-indigo-700" 
+                                    className="w-full h-12 font-black uppercase text-xs tracking-widest bg-slate-900 hover:bg-indigo-600 shadow-lg transition-all rounded-xl gap-2" 
                                     onClick={(e) => handleCreateFromTemplate(e, template)}
                                     disabled={isCreatingFromTemplate}
                                 >
-                                    {isCreatingFromTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-                                    Opprett Aktiv Rute
+                                    {isCreatingFromTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                                    Opprett fra mal
                                 </Button>
                             </CardFooter>
                         </Card>
@@ -337,28 +445,32 @@ export default function RoutesPage() {
           
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!routeToDelete} onOpenChange={(open) => !open && setRouteToDelete(null)}>
-        <DialogContent aria-describedby={undefined}>
+        <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Slett rute</DialogTitle>
-            <DialogDescription>
-              Er du sikker på at du vil slette <strong>{routeToDelete?.name}</strong>? Denne handlingen kan ikke angres.
-              For å bekrefte, skriv <strong>slett rute</strong> i feltet under.
+            <DialogTitle className="text-2xl font-black tracking-tight">Slett rute</DialogTitle>
+            <DialogDescription className="font-medium">
+              Er du sikker på at du vil slette <span className="text-slate-900 font-bold">"{routeToDelete?.name}"</span>? Denne handlingen kan ikke angres.
             </DialogDescription>
           </DialogHeader>
-          <Input 
-            value={deleteConfirmation}
-            onChange={(e) => setDeleteConfirmation(e.target.value)}
-            placeholder="Skriv 'slett rute'"
-            className="mt-4"
-          />
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setRouteToDelete(null)} disabled={isDeleting}>Avbryt</Button>
+          <div className="space-y-4 py-4">
+              <Label className="text-xs font-black uppercase text-slate-400 ml-1">Bekreft sletting</Label>
+              <Input 
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Skriv 'slett rute'"
+                className="h-12 rounded-xl border-2 border-slate-100 font-bold focus:border-red-200"
+              />
+          </div>
+          <DialogFooter className="gap-3 sm:gap-0">
+            <Button variant="outline" onClick={() => setRouteToDelete(null)} disabled={isDeleting} className="rounded-xl h-12 font-bold px-6">Avbryt</Button>
             <Button 
               variant="destructive" 
               onClick={confirmDeleteRoute}
               disabled={deleteConfirmation.toLowerCase() !== 'slett rute' || isDeleting}
+              className="rounded-xl h-12 font-black uppercase text-xs tracking-widest px-8 bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Slett permanent'}
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Slett permanent
             </Button>
           </DialogFooter>
         </DialogContent>
