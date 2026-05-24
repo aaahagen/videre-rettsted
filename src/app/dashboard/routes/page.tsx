@@ -23,7 +23,10 @@ import {
     Target as TargetIcon,
     Sparkles,
     Filter,
-    Package
+    Package,
+    ClipboardList,
+    Navigation,
+    Truck
 } from 'lucide-react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
@@ -36,7 +39,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Route } from '@/lib/types';
+import { Progress } from '@/components/ui/progress';
+import { Route, Manifest } from '@/lib/types';
 import { useSearch } from '@/hooks/use-search';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -45,16 +49,12 @@ import { Separator } from '@/components/ui/separator';
 
 /**
  * RoutesPage viser en oversikt over aktive ruter og rutemaler.
- * 
- * Siden er designet for å gi rask oversikt over logistikkstatus:
- * - Aktive ruter viser fremdrift, tildelt sjåfør og estimert tid.
- * - Maler tillater rask opprettelse av repeterende ruter.
- * - Søkefunksjonalitet på tvers av navn, forsendelsesnummer og sjåførnavn.
  */
 export default function RoutesPage() {
   const [user, loading, error] = useAuthState(auth);
   const [userData, setUserData] = useState<any>(null);
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [manifests, setManifests] = useState<Manifest[]>([]);
   const [routeToDelete, setRouteToDelete] = useState<Route | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -77,10 +77,10 @@ export default function RoutesPage() {
         if (userDoc?.orgId) {
           firebaseDB.getUsers(userDoc.orgId).then(setOrganizationUsers);
 
+          // Listen to routes
           const routesRef = collection(db, 'routes');
-          const q = query(routesRef, where('orgId', '==', userDoc.orgId));
-          
-          const unsubscribe = onSnapshot(q, (snapshot) => {
+          const qRoutes = query(routesRef, where('orgId', '==', userDoc.orgId));
+          const unsubRoutes = onSnapshot(qRoutes, (snapshot) => {
             const routesData: Route[] = [];
             snapshot.forEach((doc) => {
               routesData.push({ id: doc.id, ...doc.data() } as Route);
@@ -92,8 +92,21 @@ export default function RoutesPage() {
             });
             setRoutes(routesData);
           });
+
+          // Listen to manifests
+          const manifestsRef = collection(db, 'organizations', userDoc.orgId, 'manifests');
+          const unsubManifests = onSnapshot(manifestsRef, (snapshot) => {
+              const manifestsData: Manifest[] = [];
+              snapshot.forEach((doc) => {
+                  manifestsData.push({ id: doc.id, ...doc.data() } as Manifest);
+              });
+              setManifests(manifestsData);
+          });
           
-          return () => unsubscribe();
+          return () => {
+              unsubRoutes();
+              unsubManifests();
+          };
         }
       });
     }
@@ -184,6 +197,25 @@ export default function RoutesPage() {
 
   const isAdmin = userData?.role === 'admin' || userData?.role === 'owner' || userData?.role === 'super_admin';
 
+  const getRouteStatus = (route: Route) => {
+      if (route.status === 'completed') return { label: 'FULLFØRT', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 };
+      
+      const manifest = manifests.find(m => m.routeId === route.id);
+      if (!manifest) return { label: 'KLARGJØRES', color: 'bg-slate-100 text-slate-600 border-slate-200', icon: Clock };
+
+      switch (manifest.status) {
+          case 'pending':
+              return { label: 'VENTER PÅ RAMPEN', color: 'bg-amber-50 text-amber-700 border-amber-100', icon: ClipboardList };
+          case 'loading':
+          case 'verified':
+              return { label: 'LASTES', color: 'bg-blue-50 text-blue-700 border-blue-100', icon: Package };
+          case 'departed':
+              return { label: 'UNDERVEIS', color: 'bg-indigo-50 text-indigo-700 border-indigo-100', icon: Truck };
+          default:
+              return { label: 'KLARGJØRES', color: 'bg-slate-100 text-slate-600 border-slate-200', icon: Clock };
+      }
+  };
+
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
       {/* HEADER SECTION */}
@@ -230,12 +262,6 @@ export default function RoutesPage() {
                         <Filter className="h-3 w-3 mr-2" /> Viser søkeresultater
                     </Badge>
                 )}
-                {activeTab === 'template' && isAdmin && (
-                    <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-lg border">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                        Tips: Gjenbruk ruter for å spare tid
-                    </div>
-                )}
             </div>
         </div>
 
@@ -260,8 +286,10 @@ export default function RoutesPage() {
                         const totalStops = route.places?.length || 0;
                         const completedStopsCount = route.completedStops?.length || 0;
                         const isFinished = totalStops > 0 && completedStopsCount >= totalStops;
+                        const progress = totalStops > 0 ? (completedStopsCount / totalStops) * 100 : 0;
                         const createdAtDate = (route.createdAt as any)?.toDate ? (route.createdAt as any).toDate() : new Date(route.createdAt as any);
                         const driver = organizationUsers.find(u => u.id === route.driverId);
+                        const status = getRouteStatus(route);
 
                         return (
                             <Card 
@@ -306,16 +334,6 @@ export default function RoutesPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        {isAdmin && (
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                                onClick={(e) => handleDeleteClick(e, route)}
-                                            >
-                                                <Trash2 className="h-4.5 w-4.5" />
-                                            </Button>
-                                        )}
                                     </div>
                                 </CardHeader>
                                 
@@ -349,27 +367,36 @@ export default function RoutesPage() {
                                         </div>
                                     </div>
 
-                                    <div className="pt-2 mt-auto">
-                                        {isFinished ? (
-                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-bold border-emerald-200 px-3 py-1 rounded-lg">
-                                                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> FULLFØRT
+                                    <div className="space-y-4 mt-auto">
+                                        <div className="flex items-center justify-between">
+                                            <Badge className={cn("font-bold text-[9px] px-2 py-0.5 rounded-md border shadow-none", status.color)}>
+                                                <status.icon className="h-3 w-3 mr-1.5" />
+                                                {status.label}
                                             </Badge>
-                                        ) : route.driverId ? (
-                                            <Badge className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 font-bold border-indigo-100 px-3 py-1 rounded-lg">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse mr-2" />
-                                                AKTIV OPPDRAG
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="text-slate-400 font-bold border-slate-200 px-3 py-1 rounded-lg uppercase tracking-widest text-[9px]">
-                                                KLARGJØRES
-                                            </Badge>
-                                        )}
+                                            <span className="text-[10px] font-black text-slate-900">{completedStopsCount}/{totalStops} stopp</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between items-center px-0.5">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Fremdrift</span>
+                                                <span className="text-[8px] font-black text-slate-400">{Math.round(progress)}%</span>
+                                            </div>
+                                            <Progress value={progress} className="h-1.5 bg-slate-100" indicatorClassName={isFinished ? "bg-emerald-500" : "bg-indigo-600"} />
+                                        </div>
                                     </div>
                                 </CardContent>
-                                <div className="p-6 pt-0 mt-auto">
+                                <div className="p-6 pt-0 mt-auto flex flex-col gap-2">
                                     <Button variant="ghost" className="w-full text-indigo-600 font-black uppercase text-[10px] tracking-widest gap-2 group-hover:bg-indigo-50 rounded-xl">
                                         Se detaljer <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
                                     </Button>
+                                    {isAdmin && (
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full text-slate-400 hover:text-red-500 hover:bg-red-50 font-black uppercase text-[9px] tracking-widest gap-2 rounded-xl h-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={(e) => handleDeleteClick(e, route)}
+                                        >
+                                            <Trash2 className="h-3 w-3" /> Slett Rute
+                                        </Button>
+                                    )}
                                 </div>
                             </Card>
                         );
@@ -408,9 +435,6 @@ export default function RoutesPage() {
                                         </div>
                                         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Mal-konfigurasjon</p>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full" onClick={(e) => handleDeleteClick(e, template)}>
-                                        <Trash2 className="h-4.5 w-4.5" />
-                                    </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4 pt-2 px-6 flex-grow">
@@ -426,7 +450,7 @@ export default function RoutesPage() {
                                     </div>
                                 )}
                             </CardContent>
-                            <CardFooter className="bg-slate-50/50 border-t p-6 mt-auto">
+                            <CardFooter className="bg-slate-50/50 border-t p-6 mt-auto flex flex-col gap-3">
                                 <Button 
                                     className="w-full h-12 font-black uppercase text-xs tracking-widest bg-slate-900 hover:bg-indigo-600 shadow-lg transition-all rounded-xl gap-2" 
                                     onClick={(e) => handleCreateFromTemplate(e, template)}
@@ -435,6 +459,15 @@ export default function RoutesPage() {
                                     {isCreatingFromTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                                     Opprett fra mal
                                 </Button>
+                                {isAdmin && (
+                                    <Button 
+                                        variant="outline"
+                                        className="w-full h-10 font-black uppercase text-[10px] tracking-widest border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all rounded-xl gap-2" 
+                                        onClick={(e) => handleDeleteClick(e, template)}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" /> Slett Mal
+                                    </Button>
+                                )}
                             </CardFooter>
                         </Card>
                     ))}

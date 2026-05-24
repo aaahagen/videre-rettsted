@@ -130,3 +130,20 @@ This document defines the mandatory components, features, and role-based access 
 - **Active Route Card:** Route name, Manifest progress, Link to execution.
 - **Notifications:** Unread messages badge, Pending courses badge.
 - **Shortcuts:** Kart, Ruter, Favoritter.
+
+---
+
+## 9. Routes Overview (`/dashboard/routes`)
+
+### Mandatory Components
+1.  **Tab System:** "Aktive Oppdrag" vs "Rutemaler".
+2.  **Route Cards (Active):**
+    *   **Header:** Route Name, Creation Date, Shipment Number.
+    *   **Metrics:** Stop count, Duration (formatted), Responsible Driver (Name + Vehicle icon).
+    *   **Lifecycle Status:** Dynamic badge (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført).
+    *   **Progress:** Data-driven Progress Bar (Completed/Total stops) with percentage.
+    *   **Actions:** "Se detaljer" button, "Slett Rute" (Admin only, bottom-aligned).
+3.  **Template Cards:**
+    *   **Header:** Name, "Template" label.
+    *   **Content:** Stop count, Notes snippet.
+    *   **Actions:** "Opprett fra mal" button, "Slett Mal" (Admin only).

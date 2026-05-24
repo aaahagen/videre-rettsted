@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
 import { Order, Vehicle, Place, DriverProfile, RouteSuggestion } from '@/lib/types';
-import { ConstraintEngine } from '@/lib/routing-engine';
+import { ConstraintEngine, getDistanceFromLatLonInKm } from '@/lib/routing-engine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -117,6 +117,15 @@ export default function RoutingEnginePage() {
         loadData();
     }, [dbUser?.orgId]);
 
+    const formatDuration = (minutes: number): string => {
+        if (isNaN(minutes) || minutes === 0) return "--";
+        const h = Math.floor(minutes / 60);
+        const m = Math.round(minutes % 60);
+        if (h === 0) return `${m} min`;
+        if (m === 0) return `${h} t`;
+        return `${h} t ${m} min`;
+    };
+
     const handleGenerate = () => {
         if (orders.length === 0) {
             toast({ title: "Ingen ordre", description: "Det er ingen ledige ordre å planlegge ruter for." });
@@ -193,6 +202,29 @@ export default function RoutingEnginePage() {
         });
     };
 
+    const recalculateSuggestionMetrics = (orders: Order[], places: Place[]): { duration: number, distance: number } => {
+        const depotCoords = { lat: 59.9139, lng: 10.7522 };
+        let distance = 0;
+        let duration = 0;
+        let currentCoords = depotCoords;
+        const visitedPlaceIds = new Set<string>();
+
+        // Heuristic: Process stops in the order they appear in the places list
+        for (const place of places) {
+            const dist = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates!.lat, place.coordinates!.lng);
+            distance += dist;
+            
+            const travelTime = (dist / 40) * 60; // 40km/h average
+            const stopTime = visitedPlaceIds.has(place.id) ? 2 : (place.estimatedDeliveryTime || 15);
+            
+            duration += travelTime + stopTime;
+            visitedPlaceIds.add(place.id);
+            currentCoords = place.coordinates!;
+        }
+
+        return { duration, distance };
+    };
+
     const removeOrderFromSuggestion = (suggestionIdx: number, orderId: string) => {
         const suggestion = suggestions[suggestionIdx];
         const removedOrder = suggestion.orders.find(o => o.id === orderId);
@@ -208,9 +240,12 @@ export default function RoutingEnginePage() {
         if (remainingOrders.length === 0) {
             setSuggestions(prev => prev.filter((_, i) => i !== suggestionIdx));
         } else {
+            const { duration, distance } = recalculateSuggestionMetrics(remainingOrders, remainingPlaces);
             updateSuggestion(suggestionIdx, {
                 orders: remainingOrders,
                 places: remainingPlaces,
+                estimatedDuration: duration,
+                estimatedDistance: distance
             });
         }
     };
@@ -238,7 +273,9 @@ export default function RoutingEnginePage() {
                 driverId: suggestion.driverId,
                 driverName: driver?.name,
                 date: selectedDate,
-                status: 'active'
+                status: 'active',
+                duration: formatDuration(suggestion.estimatedDuration),
+                distance: suggestion.estimatedDistance
             });
 
             await Promise.all(suggestion.orders.map(order => 
@@ -489,7 +526,7 @@ export default function RoutingEnginePage() {
                                     {/* Metrics Grid */}
                                     <div className="grid grid-cols-3 gap-3">
                                         <MetricBox icon={<MapPin className="h-3.5 w-3.5" />} label="Distanse" value={`${s.estimatedDistance.toFixed(1)} km`} />
-                                        <MetricBox icon={<Clock className="h-3.5 w-3.5" />} label="Varighet" value={`${Math.floor(s.estimatedDuration / 60)}t ${Math.round(s.estimatedDuration % 60)}m`} />
+                                        <MetricBox icon={<Clock className="h-3.5 w-3.5" />} label="Varighet" value={formatDuration(s.estimatedDuration)} />
                                         <MetricBox icon={<Package className="h-3.5 w-3.5" />} label="Ordre" value={`${s.orders.length} stk`} />
                                     </div>
 

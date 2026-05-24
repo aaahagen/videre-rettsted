@@ -2,6 +2,7 @@ import { Order, Vehicle, Place, DriverProfile } from './types';
 
 // Helper to calculate distance between two coordinates (Haversine formula)
 export function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) return 0;
   const R = 6371; // Radius of the earth in km
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
@@ -377,8 +378,10 @@ export class ConstraintEngine {
                 
                 console.log(`[Engine] Assigned ${selectedOrder.barcode} to Vehicle ${vehicle.name}. Distance: ${shortestDistance.toFixed(2)}km`);
                 
+                const isNewStop = !suggestion.places.some(p => p.id === place.id);
+                
                 suggestion.orders.push(selectedOrder);
-                if (!suggestion.places.some(p => p.id === place.id)) {
+                if (isNewStop) {
                     suggestion.places.push(place);
                 }
                 
@@ -387,7 +390,10 @@ export class ConstraintEngine {
 
                 suggestion.estimatedDistance += shortestDistance;
                 const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
-                suggestion.estimatedDuration += travelTimeMins + (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!);
+                
+                // FIXED: Only add stop time if it's a new stop, OR add a smaller "per order" handling time
+                const stopTime = isNewStop ? (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!) : 2; // 2 min per extra order at same stop
+                suggestion.estimatedDuration += travelTimeMins + stopTime;
                 
                 suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
                 

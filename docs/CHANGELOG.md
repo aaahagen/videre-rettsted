@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added   
+### Added
+- **Route Lifecycle Visualization:** Route cards now dynamically display their operational status (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført) based on real-time manifest data.
+- **Route Progress Visualization:** Replaced text-based badges with a sleek data-driven Progress Bar on route cards, showing exact completion metrics (e.g., "3/10 stopp").
+- **Customizable Progress Component:** Enhanced the UI `Progress` component to support custom indicator colors via the `indicatorClassName` prop.
+
+### Changed
+- **Robust Route Estimation:** Optimized the Routing Engine to prevent double-counting stop times and added validation to prevent invalid (NaN) duration values.
+- **Improved Deletion UX:** Replaced the squeezed header delete icon with a clear "Slett Rute/Mal" button at the bottom of the card for better accessibility on mobile and high-density layouts.
+- **Real-time Metric Recalculation:** The Routing Engine dashboard now automatically recalculates estimated time and distance when orders are removed from a suggestion.
 - **PWA Update Notifier:** Added a "New Version Available" toast notification with one-click refresh, ensuring users always run the latest version of the application.
 - **Automated API Documentation:** Configured `typedoc` with `typedoc-plugin-markdown` to automatically generate comprehensive API documentation from TSDocs in the `docs/api` directory.
 - **Compliance & Risk Management (Phase 6 Completion):**
@@ -27,9 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
     - Added a dedicated `/dashboard/reports` page for admins and drivers to view and resolve issues.
-    - **Place Card UI Upgrades:**
-        - Cards now highlight in red if they have an open, unresolved danger report.
-        - Added a "Meld Avvik" button directly on the card for quick reporting.
 - **Role System Expansion:**
     - **HMS Responsible (`hms_responsible`):** A new role that has access only to Places and the new dedicated HMS page. 
     - **Salesman (`salesman`):** A new role that has access only to Places. Restricted to editing basic info and a new temporary "Sales Message" field.
@@ -44,19 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bulk Order Import Migration:** Moved order import functionality to the Orders page.
 - **Hybrid Customer Numbering System:** Introduced manual/auto-generated numbering for Places.
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
-
-### Changed
-- **Route Optimization UI:** Renamed the "AI Optimering" button to "Optimer igjen" on the Route Details page to more accurately describe the action.
-- **Manifest Workflow Terminology:** Updated manifest-related buttons to consistently use "Send til Lasterampe" for both creation and viewing, providing a more intuitive logistics workflow.
-- **Super Admin Mobile Optimization:** Redesigned the "Global User List" to use a responsive stacked layout on mobile devices, eliminating horizontal overflow and improving usability.
-- **Next.js 15 Implementation:** Completed the transition to async APIs for `params` and `searchParams` across all dashboard routes.
-- **Enhanced Type Safety:** Refined internal interfaces (e.g., `Vehicle`, `WorkLog`) to better support strict TypeScript checks and TSDoc generation.
-- **Documentation Pyramid Update:** Refreshed `engineering.md`, `domain.md`, and `strategy.md` to reflect Next.js 15 architecture, specialized roles, and new Phase 6 features.
-- **UI Specification:** Authored `docs/ui-specification.md` to serve as a mandatory reference for all page refactors, preventing accidental feature loss.
-- **Super Admin UI Refactor:** Completely redesigned the Super Admin dashboard layout to be more compact.
-- **Place Form Redesign:** Converted creation form sections to collapsible cards.
-- **Responsive Message System:** Redesigned messages page for mobile with split-view layout.
-- **Admin Dashboard Mobile Optimization:** Refactored the user management list into a stacked layout for small screens to improve accessibility and readability.
 
 ### Fixed
 - **Parsing Error in Routes:** Fixed a stray character on the first line of `src/app/dashboard/routes/page.tsx` and added missing imports.
