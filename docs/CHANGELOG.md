@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Super Admin Responsiveness:** Optimized the Super Admin dashboard (`/dashboard/super`) for mobile and tablet views. Fixed horizontal overflow by implementing responsive grids for organization stats, ensuring text truncation in dense tables, and refining the header layout for smaller screens.
+- **Routing Engine UI Refinement:** Fixed vertical overflow and spacing issues on the Routing Engine page (`/dashboard/admin/routing-engine`). Improved the empty state layout with better padding and contained animations.
 
 ### Added
 - **Route Lifecycle Visualization:** Route cards now dynamically display their operational status (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført) based on real-time manifest data.

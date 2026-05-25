@@ -316,7 +316,7 @@ export default function RoutingEnginePage() {
     }
 
     return (
-        <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 pb-20">
             {/* CLEAN HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="space-y-1">
@@ -615,17 +615,19 @@ export default function RoutingEnginePage() {
                     })}
                 </div>
             ) : (
-                <div className="h-[50vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
-                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 animate-bounce-slow">
-                        <Sparkles className="h-16 w-16 text-indigo-200" />
+                <div className="min-h-[50vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8 sm:p-12 mb-10">
+                    <div className="relative p-6 sm:p-8 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+                        <div className="animate-bounce-slow">
+                            <Sparkles className="h-16 w-16 text-indigo-200" />
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Klar for ruteoptimalisering?</h3>
-                        <p className="text-slate-500 max-w-sm font-medium">Klikk på knappen ovenfor for å beregne ruter basert på dagens {orders.length} ledige ordre og {vehicles.length} tilgjengelige kjøretøy.</p>
+                    <div className="space-y-3">
+                        <h3 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Klar for ruteoptimalisering?</h3>
+                        <p className="text-slate-500 max-w-sm font-medium mx-auto text-sm sm:text-base">Klikk på knappen ovenfor for å beregne ruter basert på dagens {orders.length} ledige ordre og {vehicles.length} tilgjengelige kjøretøy.</p>
                     </div>
-                    <div className="flex items-center gap-6 pt-4">
-                        <div className="flex items-center gap-2 opacity-50"><Package className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Intelligent lastekapasitet</span></div>
-                        <div className="flex items-center gap-2 opacity-50"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Geografisk optimalisering</span></div>
+                    <div className="flex flex-col sm:flex-row items-center gap-6 pt-8 sm:pt-12">
+                        <div className="flex items-center gap-2 opacity-50"><Package className="h-4 w-4 shrink-0" /><span className="text-[10px] font-black uppercase tracking-widest">Intelligent lastekapasitet</span></div>
+                        <div className="flex items-center gap-2 opacity-50"><Target className="h-4 w-4 shrink-0" /><span className="text-[10px] font-black uppercase tracking-widest">Geografisk optimalisering</span></div>
                     </div>
                 </div>
             )}
