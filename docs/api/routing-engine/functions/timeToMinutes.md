@@ -8,7 +8,7 @@
 
 > **timeToMinutes**(`timeStr`): `number`
 
-Defined in: [routing-engine.ts:22](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L22)
+Defined in: [routing-engine.ts:23](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L23)
 
 ## Parameters
 

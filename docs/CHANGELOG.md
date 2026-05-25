@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Super Admin Responsiveness:** Optimized the Super Admin dashboard (`/dashboard/super`) for mobile and tablet views. Fixed horizontal overflow by implementing responsive grids for organization stats, ensuring text truncation in dense tables, and refining the header layout for smaller screens.
+
 ### Added
 - **Route Lifecycle Visualization:** Route cards now dynamically display their operational status (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført) based on real-time manifest data.
 - **Route Progress Visualization:** Replaced text-based badges with a sleek data-driven Progress Bar on route cards, showing exact completion metrics (e.g., "3/10 stopp").

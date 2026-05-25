@@ -315,34 +315,34 @@ export default function SuperAdminPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 overflow-x-hidden">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2 sm:gap-3">
-            <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
-            Super Admin <span className="text-slate-400">Control</span>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 shrink-0" />
+            <span className="truncate">Super Admin</span> <span className="text-slate-400">Control</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium">Global oversikt over alle organisasjoner og moduler.</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <Button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-bold h-10 shadow-none"
+                className="bg-blue-600 hover:bg-blue-700 font-bold h-10 shadow-none shrink-0"
             >
                 <PlusCircle className="h-4 w-4 mr-2" /> Ny Organisasjon
             </Button>
 
-            <Card className="p-3 border-2 border-slate-100 shadow-none w-full sm:w-auto flex flex-col gap-2">
-                <div className="flex flex-row items-center justify-between gap-4">
+            <Card className="p-3 border-2 border-slate-100 shadow-none w-full sm:w-auto flex flex-col gap-2 shrink-0">
+                <div className="flex flex-row items-center justify-between gap-6">
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Brukere</span>
                     <span className="text-sm font-black leading-none">{globalStats.totalUsers}</span>
                 </div>
-                <div className="flex flex-row items-center justify-between gap-4">
+                <div className="flex flex-row items-center justify-between gap-6">
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Totale Steder</span>
                     <span className="text-sm font-black leading-none">{globalStats.totalPlaces}</span>
                 </div>
-                <div className="flex flex-row items-center justify-between gap-4">
+                <div className="flex flex-row items-center justify-between gap-6">
                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Fullførte Ruter</span>
                     <span className="text-sm font-black leading-none">{globalStats.completedRoutes}</span>
                 </div>
@@ -356,12 +356,12 @@ export default function SuperAdminPage() {
                 <Building2 className="h-3.5 w-3.5 mr-2" /> Organisasjoner
               </TabsTrigger>
               <TabsTrigger value="users" className="font-bold uppercase text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Users className="h-3.5 w-3.5 mr-2" /> Global Brukerliste
+                <Users className="h-3.5 w-3.5 mr-2" /> Brukere
               </TabsTrigger>
           </TabsList>
 
           <TabsContent value="organizations" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <Card className="border-2 border-slate-100 shadow-sm">
                         <CardHeader className="bg-slate-50 border-b p-4">
@@ -403,11 +403,11 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {filteredOrganizations.map((org) => (
                   <Card key={org.id} className={`overflow-hidden border-2 transition-all ${dbUser?.orgId === org.id ? 'border-blue-600 ring-4 ring-blue-600/5' : 'border-slate-100 shadow-sm hover:shadow-md'}`}>
                     <div className="bg-white border-b p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
                           <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-slate-500" />
                         </div>
@@ -417,23 +417,22 @@ export default function SuperAdminPage() {
                             {dbUser?.orgId === org.id && <Badge className="bg-blue-600 uppercase text-[8px] sm:text-[10px]">Aktiv</Badge>}
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0 bg-slate-50 text-slate-500 border-slate-200">{org.id.substring(0, 8)}</Badge>
-                            <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 ${org.status === 'active' ? 'bg-emerald-500' : org.status === 'suspended' ? 'bg-red-500' : 'bg-amber-500'}`}>
+                            <Badge variant="outline" className="font-mono text-[8px] sm:text-[10px] px-1.5 py-0 bg-slate-50 text-slate-500 border-slate-200 shrink-0">{org.id.substring(0, 8)}</Badge>
+                            <Badge className={`text-[8px] sm:text-[10px] px-1.5 py-0 shrink-0 ${org.status === 'active' ? 'bg-emerald-500' : org.status === 'suspended' ? 'bg-red-500' : 'bg-amber-500'}`}>
                               {org.status === 'active' ? 'Aktiv' : org.status === 'suspended' ? 'Suspendert' : 'Prøveperiode'}
                             </Badge>
-                            <Badge variant="outline" className={`text-[8px] sm:text-[10px] px-1.5 py-0 uppercase border-slate-200 ${org.plan === 'enterprise' ? 'bg-indigo-50 text-indigo-700' : org.plan === 'pro' ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'}`}>
+                            <Badge variant="outline" className={`text-[8px] sm:text-[10px] px-1.5 py-0 uppercase border-slate-200 shrink-0 ${org.plan === 'enterprise' ? 'bg-indigo-50 text-indigo-700' : org.plan === 'pro' ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-500'}`}>
                               {org.plan || 'Free'}
                             </Badge>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <div className="hidden sm:flex items-center gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                           <Button 
                               variant={dbUser?.orgId === org.id ? "secondary" : "default"} 
                               size="sm" 
-                              className="font-bold text-xs shadow-none"
+                              className="font-bold text-xs shadow-none h-8 px-3"
                               disabled={dbUser?.orgId === org.id || isSwitching !== null}
                               onClick={() => handleSwitchOrg(org.id)}
                           >
@@ -478,17 +477,16 @@ export default function SuperAdminPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
                       </div>
                     </div>
 
                     <CardContent className="p-0">
-                      <div className="grid grid-cols-4 divide-x border-b bg-slate-50/50">
-                          <div className="p-3 sm:p-4 text-center">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x border-b bg-slate-50/50">
+                          <div className="p-3 sm:p-4 text-center border-b sm:border-b-0">
                               <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Brukere</p>
                               <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.users ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
                           </div>
-                          <div className="p-3 sm:p-4 text-center">
+                          <div className="p-3 sm:p-4 text-center border-b sm:border-b-0">
                               <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Steder</p>
                               <p className="text-lg sm:text-xl font-black text-slate-800">{orgStats[org.id]?.places ?? <Loader2 className="h-4 w-4 animate-spin text-slate-300 mx-auto"/>}</p>
                           </div>
@@ -544,12 +542,12 @@ export default function SuperAdminPage() {
                 <CardHeader className="bg-slate-50/50 border-b p-4 sm:p-6">
                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-600 rounded-lg text-white">
+                          <div className="p-2 bg-blue-600 rounded-lg text-white shrink-0">
                               <Users className="h-5 w-5" />
                           </div>
-                          <div>
-                              <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight">Global Brukerliste</CardTitle>
-                              <CardDescription className="text-xs font-medium">Oversikt over alle registrerte brukere på plattformen.</CardDescription>
+                          <div className="min-w-0">
+                              <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-tight truncate">Global Brukerliste</CardTitle>
+                              <CardDescription className="text-xs font-medium truncate">Oversikt over alle registrerte brukere på plattformen.</CardDescription>
                           </div>
                       </div>
                       <div className="relative w-full md:w-80">
@@ -570,7 +568,7 @@ export default function SuperAdminPage() {
                         <div className="w-full">
                             {/* Desktop View: Table */}
                             <div className="hidden lg:block overflow-x-auto">
-                                <table className="w-full text-left text-sm border-collapse">
+                                <table className="w-full text-left text-sm border-collapse min-w-[800px]">
                                     <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b">
                                         <tr>
                                             <th className="px-6 py-4">Bruker</th>
@@ -584,11 +582,11 @@ export default function SuperAdminPage() {
                                         {filteredUsers.map((u) => (
                                             <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
                                                 <td className="px-6 py-4">
-                                                    <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{u.name || 'Uten navn'}</div>
-                                                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">{u.email}</div>
+                                                    <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[200px]">{u.name || 'Uten navn'}</div>
+                                                    <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[200px]">{u.email}</div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <Badge variant="outline" className="font-bold text-[10px] bg-white border-slate-200 text-slate-600 px-2">
+                                                    <Badge variant="outline" className="font-bold text-[10px] bg-white border-slate-200 text-slate-600 px-2 truncate max-w-[150px]">
                                                         {organizations.find(o => o.id === u.orgId)?.name || u.orgId?.substring(0, 8)}
                                                     </Badge>
                                                 </td>
@@ -647,7 +645,7 @@ export default function SuperAdminPage() {
                                             <div className="min-w-0">
                                                 <h4 className="font-bold text-slate-900 truncate">{u.name || 'Uten navn'}</h4>
                                                 <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-medium">
-                                                    <Mail className="h-3 w-3" />
+                                                    <Mail className="h-3 w-3 shrink-0" />
                                                     <span className="truncate">{u.email}</span>
                                                 </div>
                                             </div>
@@ -660,16 +658,16 @@ export default function SuperAdminPage() {
                                         </div>
 
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
-                                                <Building2 className="h-3 w-3" />
-                                                {organizations.find(o => o.id === u.orgId)?.name || 'Ukjent org'}
+                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold min-w-0">
+                                                <Building2 className="h-3 w-3 shrink-0" />
+                                                <span className="truncate">{organizations.find(o => o.id === u.orgId)?.name || 'Ukjent org'}</span>
                                             </div>
                                             <div className={cn(
                                                 "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-black uppercase text-white",
                                                 u.role === 'super_admin' ? 'bg-purple-600' : 
                                                 u.role === 'owner' || u.role === 'admin' ? 'bg-blue-600' : 'bg-slate-500'
                                             )}>
-                                                <Briefcase className="h-3 w-3" />
+                                                <Briefcase className="h-3 w-3 shrink-0" />
                                                 {u.role}
                                             </div>
                                         </div>
@@ -679,23 +677,23 @@ export default function SuperAdminPage() {
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
-                                                    className="w-full text-destructive hover:bg-red-50 border-slate-200 font-bold h-9"
+                                                    className="w-full text-destructive hover:bg-red-50 border-slate-200 font-bold h-9 px-1"
                                                     onClick={() => handleDeleteUserGlobal(u.id)}
                                                 >
-                                                    <UserX className="h-4 w-4 mr-2" /> Slett bruker
+                                                    <UserX className="h-4 w-4 mr-2 shrink-0" /> <span className="truncate">Slett bruker</span>
                                                 </Button>
                                             ) : (
                                                 <div className="flex items-center justify-center h-9 text-[10px] font-black uppercase text-purple-600">
-                                                    <ShieldCheck className="h-4 w-4 mr-2" /> Systembeskyttet
+                                                    <ShieldCheck className="h-4 w-4 mr-2 shrink-0" /> Systembeskyttet
                                                 </div>
                                             )}
                                             <Button 
                                                 variant="default" 
                                                 size="sm" 
-                                                className="w-full h-9 font-bold shadow-none bg-slate-900" 
+                                                className="w-full h-9 font-bold shadow-none bg-slate-900 px-1" 
                                                 onClick={() => handleSwitchOrg(u.orgId)}
                                             >
-                                                <ExternalLink className="h-4 w-4 mr-2" /> Gå til org
+                                                <ExternalLink className="h-4 w-4 mr-2 shrink-0" /> <span className="truncate">Gå til org</span>
                                             </Button>
                                         </div>
                                     </div>
@@ -716,7 +714,7 @@ export default function SuperAdminPage() {
 
       {/* Create Organization Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Opprett Ny Organisasjon</DialogTitle>
             <DialogDescription>
@@ -733,7 +731,7 @@ export default function SuperAdminPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Avbryt</Button>
             <Button onClick={handleCreateOrg} disabled={isCreating || !newOrgName.trim()} className="bg-blue-600 hover:bg-blue-700">
                 {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -745,7 +743,7 @@ export default function SuperAdminPage() {
 
       {/* Edit Organization Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Rediger Organisasjon</DialogTitle>
           </DialogHeader>
@@ -765,7 +763,7 @@ export default function SuperAdminPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Avbryt</Button>
             <Button onClick={handleSaveEdit} disabled={isSaving || !editingOrg?.name}>
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -783,7 +781,7 @@ export default function SuperAdminPage() {
           }
           setIsDeleteModalOpen(open);
       }}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-destructive">Slett Organisasjon Permanent</DialogTitle>
             <DialogDescription>
@@ -800,7 +798,7 @@ export default function SuperAdminPage() {
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Avbryt</Button>
             <Button 
                 variant="destructive" 

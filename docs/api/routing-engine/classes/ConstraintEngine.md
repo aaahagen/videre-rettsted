@@ -6,7 +6,7 @@
 
 # Class: ConstraintEngine
 
-Defined in: [routing-engine.ts:59](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L59)
+Defined in: [routing-engine.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L60)
 
 ## Constructors
 
@@ -14,7 +14,7 @@ Defined in: [routing-engine.ts:59](https://github.com/aaahagen/videre-rettsted/b
 
 > **new ConstraintEngine**(`options?`): `ConstraintEngine`
 
-Defined in: [routing-engine.ts:62](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L62)
+Defined in: [routing-engine.ts:63](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L63)
 
 #### Parameters
 
@@ -32,7 +32,7 @@ Defined in: [routing-engine.ts:62](https://github.com/aaahagen/videre-rettsted/b
 
 > **options**: [`RoutingEngineOptions`](../interfaces/RoutingEngineOptions.md)
 
-Defined in: [routing-engine.ts:60](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L60)
+Defined in: [routing-engine.ts:61](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L61)
 
 ## Methods
 
@@ -40,7 +40,7 @@ Defined in: [routing-engine.ts:60](https://github.com/aaahagen/videre-rettsted/b
 
 > **checkCapabilities**(`vehicle`, `order`): `string`[]
 
-Defined in: [routing-engine.ts:77](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L77)
+Defined in: [routing-engine.ts:78](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L78)
 
 Checks if an order's specific requirements match the vehicle's capabilities.
 Returns an array of error strings if constraints are violated.
@@ -65,7 +65,7 @@ Returns an array of error strings if constraints are violated.
 
 > **checkCapacity**(`vehicle`, `currentOrders`, `newOrder`): `string`[]
 
-Defined in: [routing-engine.ts:98](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L98)
+Defined in: [routing-engine.ts:99](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L99)
 
 Checks if adding an order exceeds the vehicle's physical capacity buffers.
 
@@ -93,7 +93,7 @@ Checks if adding an order exceeds the vehicle's physical capacity buffers.
 
 > **checkDeliveryWindow**(`place`, `dayOfWeek`, `etaMinutes`): `string`[]
 
-Defined in: [routing-engine.ts:162](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L162)
+Defined in: [routing-engine.ts:163](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L163)
 
 Checks if the ETA falls within the delivery window for a specific day.
 
@@ -121,7 +121,7 @@ Checks if the ETA falls within the delivery window for a specific day.
 
 > **checkDriverShift**(`driver`, `routeStartTime`, `estimatedDurationMinutes`): `string`[]
 
-Defined in: [routing-engine.ts:208](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L208)
+Defined in: [routing-engine.ts:209](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L209)
 
 Checks if the route duration exceeds the driver's planned shift or legal limits.
 
@@ -149,7 +149,7 @@ Checks if the route duration exceeds the driver's planned shift or legal limits.
 
 > **checkEnvironmentalZones**(`vehicle`, `place`): `string`[]
 
-Defined in: [routing-engine.ts:192](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L192)
+Defined in: [routing-engine.ts:193](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L193)
 
 Checks environmental zone compatibility (Diesel bans/tolls)
 
@@ -173,7 +173,7 @@ Checks environmental zone compatibility (Diesel bans/tolls)
 
 > **checkPhysicalConstraints**(`vehicle`, `place`): `string`[]
 
-Defined in: [routing-engine.ts:135](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L135)
+Defined in: [routing-engine.ts:136](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L136)
 
 Checks if the vehicle fits within the physical constraints of the delivery place.
 
@@ -197,7 +197,7 @@ Checks if the vehicle fits within the physical constraints of the delivery place
 
 > **generateBasicSuggestion**(`availableVehicles`, `availableDrivers`, `unassignedOrders`, `placesMap`, `depotCoords`, `startTimeStr?`, `dayOfWeek?`): [`RouteSuggestion`](../interfaces/RouteSuggestion.md)[]
 
-Defined in: [routing-engine.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L240)
+Defined in: [routing-engine.ts:241](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L241)
 
 Basic greedy heuristic (Nearest Neighbor) to suggest a route.
 

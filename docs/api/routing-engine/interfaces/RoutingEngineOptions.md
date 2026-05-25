@@ -6,7 +6,7 @@
 
 # Interface: RoutingEngineOptions
 
-Defined in: [routing-engine.ts:50](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L50)
+Defined in: [routing-engine.ts:51](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L51)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [routing-engine.ts:50](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **assignmentStrategy?**: `"fill_first"` \| `"balanced"`
 
-Defined in: [routing-engine.ts:56](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L56)
+Defined in: [routing-engine.ts:57](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L57)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [routing-engine.ts:56](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **averageSpeedKmph?**: `number`
 
-Defined in: [routing-engine.ts:53](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L53)
+Defined in: [routing-engine.ts:54](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L54)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [routing-engine.ts:53](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **baseUnloadTimeMinutes?**: `number`
 
-Defined in: [routing-engine.ts:54](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L54)
+Defined in: [routing-engine.ts:55](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L55)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [routing-engine.ts:54](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **maxDrivingTimeMinutes?**: `number`
 
-Defined in: [routing-engine.ts:55](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L55)
+Defined in: [routing-engine.ts:56](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L56)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [routing-engine.ts:55](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **volumeBufferPercent?**: `number`
 
-Defined in: [routing-engine.ts:51](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L51)
+Defined in: [routing-engine.ts:52](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L52)
 
 ***
 
@@ -54,4 +54,4 @@ Defined in: [routing-engine.ts:51](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **weightBufferPercent?**: `number`
 
-Defined in: [routing-engine.ts:52](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L52)
+Defined in: [routing-engine.ts:53](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L53)

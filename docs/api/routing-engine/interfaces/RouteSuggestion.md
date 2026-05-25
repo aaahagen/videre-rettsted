@@ -6,7 +6,7 @@
 
 # Interface: RouteSuggestion
 
-Defined in: [routing-engine.ts:39](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L39)
+Defined in: [routing-engine.ts:40](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L40)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [routing-engine.ts:39](https://github.com/aaahagen/videre-rettsted/b
 
 > `optional` **driverId?**: `string`
 
-Defined in: [routing-engine.ts:41](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L41)
+Defined in: [routing-engine.ts:42](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L42)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [routing-engine.ts:41](https://github.com/aaahagen/videre-rettsted/b
 
 > **errors**: `string`[]
 
-Defined in: [routing-engine.ts:47](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L47)
+Defined in: [routing-engine.ts:48](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L48)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [routing-engine.ts:47](https://github.com/aaahagen/videre-rettsted/b
 
 > **estimatedDistance**: `number`
 
-Defined in: [routing-engine.ts:45](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L45)
+Defined in: [routing-engine.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L46)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [routing-engine.ts:45](https://github.com/aaahagen/videre-rettsted/b
 
 > **estimatedDuration**: `number`
 
-Defined in: [routing-engine.ts:44](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L44)
+Defined in: [routing-engine.ts:45](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L45)
 
 ***
 
@@ -46,7 +46,7 @@ Defined in: [routing-engine.ts:44](https://github.com/aaahagen/videre-rettsted/b
 
 > **orders**: [`Order`](../../types/interfaces/Order.md)[]
 
-Defined in: [routing-engine.ts:42](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L42)
+Defined in: [routing-engine.ts:43](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L43)
 
 ***
 
@@ -54,7 +54,7 @@ Defined in: [routing-engine.ts:42](https://github.com/aaahagen/videre-rettsted/b
 
 > **places**: [`Place`](../../types/interfaces/Place.md)[]
 
-Defined in: [routing-engine.ts:43](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L43)
+Defined in: [routing-engine.ts:44](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L44)
 
 ***
 
@@ -62,7 +62,7 @@ Defined in: [routing-engine.ts:43](https://github.com/aaahagen/videre-rettsted/b
 
 > **vehicleId**: `string`
 
-Defined in: [routing-engine.ts:40](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L40)
+Defined in: [routing-engine.ts:41](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L41)
 
 ***
 
@@ -70,4 +70,4 @@ Defined in: [routing-engine.ts:40](https://github.com/aaahagen/videre-rettsted/b
 
 > **warnings**: `string`[]
 
-Defined in: [routing-engine.ts:46](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L46)
+Defined in: [routing-engine.ts:47](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/routing-engine.ts#L47)
