@@ -184,7 +184,6 @@ export const decrementManifestItemLoadedCount = async (
       currentItem.loadedItems -= 1;
       currentItem.status = 'pending'; 
       
-      // Use delete operator or explicit assignment for fields that should be removed/reset
       delete currentItem.loadedAt;
       delete currentItem.loadedBy;
 
@@ -230,14 +229,6 @@ export const finalizeManifest = async (orgId: string, manifestId: string, userId
  * @param scannedBarcode - Strekkoden som ble lest av skanneren.
  * @param userId - ID-en til brukeren som skanner.
  * @returns En Promise med suksess-status og en beskrivende melding for UI.
- * 
- * @example
- * ```typescript
- * const result = await processManifestScan("org_1", "man_2", "SSCC-12345", "user_3");
- * if (result.success) {
- *   toast({ title: result.message });
- * }
- * ```
  */
 export const processManifestScan = async (
     orgId: string,
@@ -250,19 +241,22 @@ export const processManifestScan = async (
     if (!manifestSnap.exists()) throw new Error('Manifest not found');
     const manifest = manifestSnap.data() as Manifest;
 
-    let orderIndex = manifest.orders.findIndex(o => o.barcode === scannedBarcode);
+    // 1. Prøv først direkte match mot ordrene i manifestet
+    let orderIndex = manifest.orders.findIndex(o => o.barcode === scannedBarcode || o.orderId === scannedBarcode);
     
     let matchedOrderId = null;
     let itemsToAddCount = 0;
     let idsToMarkScanned: string[] = [];
 
+    // 2. Søk i alle ordrer tilknyttet denne ruten for å finne kolli/paller
     const ordersRef = collection(db, `organizations/${orgId}/orders`);
     const routeOrdersQuery = query(ordersRef, where('routeId', '==', manifest.routeId));
     const routeOrdersSnap = await getDocs(routeOrdersQuery);
     
     for (const orderDoc of routeOrdersSnap.docs) {
-        const orderData = orderDoc.data() as Order;
+        const orderData = { ...orderDoc.data(), id: orderDoc.id } as Order;
         
+        // Sjekk om skanningen er et kolli
         const collieMatch = orderData.collies?.find(c => c.id === scannedBarcode);
         if (collieMatch) {
             matchedOrderId = orderData.id;
@@ -271,6 +265,7 @@ export const processManifestScan = async (
             break;
         }
 
+        // Sjekk om skanningen er en pall
         const palletMatch = orderData.handlingUnits?.find(h => h.id === scannedBarcode);
         if (palletMatch) {
             matchedOrderId = orderData.id;
@@ -281,15 +276,18 @@ export const processManifestScan = async (
         }
     }
 
+    // 3. Oppdater orderIndex hvis vi fant en match via kolli/pall
     if (matchedOrderId) {
         orderIndex = manifest.orders.findIndex(o => o.orderId === matchedOrderId);
     } else if (orderIndex !== -1) {
+        // Funnet via direkte match mot manifestets barcode/id
         itemsToAddCount = 1;
-        idsToMarkScanned.push(`GENERIC-${Date.now()}`); 
+        idsToMarkScanned.push(`SCAN-${scannedBarcode}-${Date.now()}`); 
     }
 
+    // 4. Verifisering
     if (orderIndex === -1) {
-        return { success: false, message: `Strekkoden ${scannedBarcode} tilhører ikke denne ruten.` };
+        return { success: false, message: `Strekkoden ${scannedBarcode} ble ikke funnet i dette manifestet.` };
     }
 
     const currentItem = manifest.orders[orderIndex];
@@ -298,13 +296,15 @@ export const processManifestScan = async (
     const newItems = idsToMarkScanned.filter(id => !alreadyScanned.includes(id));
     
     if (newItems.length === 0 && idsToMarkScanned.length > 0) {
-        return { success: false, message: 'Dette kolliet/pallen er allerede scannet.' };
+        return { success: false, message: 'Denne varen er allerede registrert i manifestet.' };
     }
 
+    // Sjekk kapasitet
     if (currentItem.loadedItems + newItems.length > currentItem.totalItems) {
-        return { success: false, message: 'Antall lastede varer vil overstige totalen for denne ordren.' };
+        return { success: false, message: `Kan ikke legge til ${newItems.length} kolli. Ordren har kun ${currentItem.totalItems - currentItem.loadedItems} ledige plasser.` };
     }
 
+    // Oppdater tellere og status
     currentItem.loadedItems += newItems.length;
     currentItem.scannedCollieIds = [...alreadyScanned, ...newItems];
 
@@ -315,13 +315,14 @@ export const processManifestScan = async (
         await updateOrder(orgId, currentItem.orderId, { status: 'loaded' });
     }
 
+    // Lagre endringer
     await updateDoc(manifestRef, {
         orders: manifest.orders,
         updatedAt: serverTimestamp()
     });
 
     if (itemsToAddCount > 1) {
-        return { success: true, message: `Pall scannet. ${itemsToAddCount} kolli lagt til automatisk.` };
+        return { success: true, message: `Pall registrert. ${itemsToAddCount} kolli lagt til automatisk.` };
     }
-    return { success: true, message: 'Vare scannet og lastet.' };
+    return { success: true, message: 'Vare registrert og lastet.' };
 };
