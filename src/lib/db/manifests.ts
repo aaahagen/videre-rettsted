@@ -140,7 +140,7 @@ export const incrementManifestItemLoadedCount = async (
       currentItem.loadedItems += 1;
       if (currentItem.loadedItems === currentItem.totalItems) {
           currentItem.status = 'loaded';
-          currentItem.loadedAt = serverTimestamp() as any;
+          currentItem.loadedAt = new Date().toISOString();
           currentItem.loadedBy = userId;
           await updateOrder(orgId, orderId, { status: 'loaded' });
       }
@@ -183,8 +183,10 @@ export const decrementManifestItemLoadedCount = async (
   if (currentItem.loadedItems > 0) {
       currentItem.loadedItems -= 1;
       currentItem.status = 'pending'; 
-      currentItem.loadedAt = undefined; 
-      currentItem.loadedBy = undefined; 
+      
+      // Use delete operator or explicit assignment for fields that should be removed/reset
+      delete currentItem.loadedAt;
+      delete currentItem.loadedBy;
 
       await updateDoc(docRef, {
           orders: manifest.orders,
@@ -308,7 +310,7 @@ export const processManifestScan = async (
 
     if (currentItem.loadedItems >= currentItem.totalItems) {
         currentItem.status = 'loaded';
-        currentItem.loadedAt = serverTimestamp() as any;
+        currentItem.loadedAt = new Date().toISOString();
         currentItem.loadedBy = userId;
         await updateOrder(orgId, currentItem.orderId, { status: 'loaded' });
     }
