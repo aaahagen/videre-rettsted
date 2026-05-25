@@ -217,7 +217,7 @@ export default function RoutesPage() {
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-10 mb-8">
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
@@ -267,13 +267,13 @@ export default function RoutesPage() {
 
         <TabsContent value="active" className="mt-0 focus-visible:outline-none">
             {filteredRoutes.length === 0 ? (
-                <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
-                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                        <RouteIcon className="h-16 w-16 text-slate-200" />
+                <div className="h-[40vh] min-h-[300px] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 shrink-0">
+                        <RouteIcon className="h-12 w-12 sm:h-16 sm:w-16 text-slate-200" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Ingen ruter her</h3>
-                        <p className="text-slate-500 max-w-sm font-medium">
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Ingen ruter her</h3>
+                        <p className="text-sm sm:text-base text-slate-500 max-w-sm font-medium">
                             {isAdmin 
                                 ? "Det er ingen aktive ruter i systemet akkurat nå." 
                                 : "Du har ingen tildelte ruter i dag."}
@@ -407,13 +407,13 @@ export default function RoutesPage() {
 
         <TabsContent value="template" className="mt-0 focus-visible:outline-none">
             {filteredRoutes.length === 0 ? (
-                <div className="h-[40vh] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
-                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                        <Copy className="h-16 w-16 text-slate-200" />
+                <div className="h-[40vh] min-h-[300px] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                    <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 shrink-0">
+                        <Copy className="h-12 w-12 sm:h-16 sm:w-16 text-slate-200" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight">Ingen rutemaler</h3>
-                        <p className="text-slate-500 max-w-sm font-medium">
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Ingen rutemaler</h3>
+                        <p className="text-sm sm:text-base text-slate-500 max-w-sm font-medium">
                             Lagre en rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
                         </p>
                     </div>
