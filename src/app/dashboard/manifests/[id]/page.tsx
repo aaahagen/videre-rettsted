@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, use } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Manifest, Route, Vehicle, Order, ManifestNote } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Manifest, Route, Vehicle, Order } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Search, Scan, X, Check, AlertCircle, Info, Plus, Minus, MessageSquare, AlertTriangle, Send } from 'lucide-react';
+import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Scan, X, Check, MessageSquare, Plus, Minus, Send, Camera, CameraOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,7 @@ import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { BrowserMultiFormatReader, Result } from '@zxing/library';
 
 export default function ManifestDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: manifestId } = use(params);
@@ -29,34 +30,38 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    
     const [scanInput, setScanInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const scanInputRef = useRef<HTMLInputElement>(null);
+
     const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
     const [newNote, setNewNote] = useState('');
 
-    const scanInputRef = useRef<HTMLInputElement>(null);
+    // Camera Scanner state
+    const [isCameraActive, setIsCameraActive] = useState(false);
+    const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+    const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
 
     useEffect(() => {
         if (!manifestId || !dbUser?.orgId) return;
 
-        // 1. Listen to manifest
         const unsubManifest = onSnapshot(doc(db, `organizations/${dbUser.orgId}/manifests`, manifestId), async (docSnap) => {
             if (docSnap.exists()) {
                 const mData = { ...docSnap.data(), id: docSnap.id } as Manifest;
                 setManifest(mData);
 
-                // 2. Load route
                 if (mData.routeId) {
                     const rData = await firebaseDB.getRoute(mData.routeId);
                     setRoute(rData as Route);
                     
-                    // 3. Load vehicle
                     if (rData?.vehicleId) {
                         const vData = await firebaseDB.getVehicle(rData.vehicleId);
                         setVehicle(vData as Vehicle);
                     }
 
-                    // 4. Load orders for this route
                     const allOrders = await firebaseDB.getOrders(dbUser.orgId);
                     setOrders(allOrders.filter(o => o.routeId === mData.routeId));
                 }
@@ -68,15 +73,97 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
         });
 
         return () => unsubManifest();
-    }, [manifestId, dbUser?.orgId]);
+    }, [manifestId, dbUser?.orgId, router, toast]);
 
-    const handleScan = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!scanInput.trim() || !manifest || !dbUser?.orgId || isProcessing) return;
+    // Cleanup camera when unmounting
+    useEffect(() => {
+        return () => {
+            if (codeReaderRef.current) {
+                codeReaderRef.current.reset();
+            }
+        };
+    }, []);
+
+    const initCameraScanner = async () => {
+        setIsCameraActive(true);
+        if (!codeReaderRef.current) {
+            codeReaderRef.current = new BrowserMultiFormatReader();
+        }
+
+        try {
+            const videoInputDevices = await codeReaderRef.current.listVideoInputDevices();
+            setCameras(videoInputDevices);
+            
+            if (videoInputDevices.length > 0) {
+                // Try to find a back camera
+                const backCamera = videoInputDevices.find(device => 
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('rear')
+                );
+                
+                const deviceIdToUse = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+                setSelectedCameraId(deviceIdToUse);
+                startScanning(deviceIdToUse);
+            } else {
+                toast({ title: 'Kamera feil', description: 'Ingen kameraer funnet på denne enheten.', variant: 'destructive' });
+                setIsCameraActive(false);
+            }
+        } catch (err) {
+            console.error(err);
+            toast({ title: 'Kamera feil', description: 'Kunne ikke få tilgang til kameraet.', variant: 'destructive' });
+            setIsCameraActive(false);
+        }
+    };
+
+    const startScanning = (deviceId: string) => {
+        if (!codeReaderRef.current || !videoRef.current) return;
+        
+        codeReaderRef.current.reset();
+        
+        codeReaderRef.current.decodeFromVideoDevice(deviceId, videoRef.current, (result: Result, err: any) => {
+            if (result && !isProcessing) {
+                // Play a beep sound
+                const audio = new Audio('/beep.mp3'); // Optional: Add a beep.mp3 to public folder
+                audio.play().catch(() => {}); // Ignore play errors (e.g. if user hasn't interacted)
+
+                const text = result.getText();
+                handleScannedText(text);
+                
+                // Briefly pause scanning to prevent double scans
+                codeReaderRef.current?.reset();
+                setTimeout(() => {
+                    if (isCameraActive && selectedCameraId) {
+                        startScanning(selectedCameraId);
+                    }
+                }, 1500);
+            }
+        });
+    };
+
+    const stopCameraScanner = () => {
+        if (codeReaderRef.current) {
+            codeReaderRef.current.reset();
+        }
+        setIsCameraActive(false);
+    };
+
+    const switchCamera = () => {
+        if (cameras.length > 1) {
+            const currentIndex = cameras.findIndex(c => c.deviceId === selectedCameraId);
+            const nextIndex = (currentIndex + 1) % cameras.length;
+            const nextDeviceId = cameras[nextIndex].deviceId;
+            
+            setSelectedCameraId(nextDeviceId);
+            startScanning(nextDeviceId);
+        }
+    };
+
+    const handleScannedText = async (text: string) => {
+        if (!text.trim() || !manifest || !dbUser?.orgId || isProcessing) return;
 
         setIsProcessing(true);
         try {
-            const result = await firebaseDB.processManifestScan(dbUser.orgId, manifest.id, scanInput.trim(), dbUser.id);
+            const result = await firebaseDB.processManifestScan(dbUser.orgId, manifest.id, text.trim(), dbUser.id);
             if (result.success) {
                 toast({ 
                     title: 'Skannet!', 
@@ -88,10 +175,15 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
         } catch (error: any) {
             toast({ title: 'Systemfeil', description: error.message, variant: 'destructive' });
         } finally {
-            setScanInput('');
             setIsProcessing(false);
-            scanInputRef.current?.focus();
         }
+    };
+
+    const handleManualSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleScannedText(scanInput);
+        setScanInput('');
+        setTimeout(() => scanInputRef.current?.focus(), 100);
     };
 
     const handleAddNote = async () => {
@@ -218,31 +310,96 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                     </Card>
 
                     {manifest.status !== 'verified' && (
-                        <Card className="border-2 border-dashed border-slate-200 bg-white">
-                            <CardContent className="p-6">
-                                <form onSubmit={handleScan} className="space-y-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="p-2 bg-slate-100 rounded-lg">
-                                            <Scan className="h-4 w-4 text-slate-600" />
+                        <Card className="border-2 border-slate-200 bg-white overflow-hidden shadow-lg">
+                            <CardHeader className="bg-slate-50 border-b pb-4">
+                                <CardTitle className="text-sm font-black uppercase flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                        <Scan className="h-4 w-4 text-indigo-600" />
+                                        Hurtigskanning
+                                    </span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {isCameraActive ? (
+                                    <div className="relative bg-black w-full aspect-square sm:aspect-video lg:aspect-square">
+                                        <video 
+                                            ref={videoRef} 
+                                            className="w-full h-full object-cover"
+                                            autoPlay 
+                                            playsInline 
+                                            muted
+                                        />
+                                        
+                                        {/* Scanner Overlay UI */}
+                                        <div className="absolute inset-0 border-[40px] border-black/40 pointer-events-none z-10" />
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                                            <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-indigo-500/50 rounded-xl relative">
+                                                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg -mt-1 -ml-1"></div>
+                                                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg -mt-1 -mr-1"></div>
+                                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg -mb-1 -ml-1"></div>
+                                                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg -mb-1 -mr-1"></div>
+                                                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse"></div>
+                                            </div>
                                         </div>
-                                        <p className="text-xs font-black text-slate-500 uppercase">Hurtigskanning</p>
+
+                                        {isProcessing && (
+                                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-30">
+                                                <Loader2 className="h-10 w-10 text-white animate-spin mb-4" />
+                                                <span className="text-white font-bold tracking-widest text-sm uppercase">Behandler...</span>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-40">
+                                            {cameras.length > 1 && (
+                                                <Button 
+                                                    variant="secondary" 
+                                                    size="icon" 
+                                                    className="rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30"
+                                                    onClick={switchCamera}
+                                                >
+                                                    <Camera className="h-5 w-5" />
+                                                </Button>
+                                            )}
+                                            <Button 
+                                                variant="destructive" 
+                                                className="rounded-full px-6 font-bold shadow-xl"
+                                                onClick={stopCameraScanner}
+                                            >
+                                                <CameraOff className="h-4 w-4 mr-2" /> Stopp Kamera
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <Input
-                                        ref={scanInputRef}
-                                        placeholder="Skann strekkode..."
-                                        value={scanInput}
-                                        onChange={(e) => setScanInput(e.target.value)}
-                                        disabled={isProcessing}
-                                        className="h-12 text-lg font-bold border-2 focus-visible:ring-indigo-500"
-                                        autoFocus
-                                    />
-                                    <Button type="submit" className="w-full h-12 bg-slate-900 font-bold" disabled={isProcessing}>
-                                        {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrer kolli'}
-                                    </Button>
-                                    <p className="text-[10px] text-center text-slate-400 font-medium italic">
-                                        Tips: Bruk en fysisk skanner eller tast inn ID manuelt
-                                    </p>
-                                </form>
+                                ) : (
+                                    <div className="p-6">
+                                        <Button 
+                                            className="w-full h-16 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-2 border-dashed border-indigo-200 shadow-none font-bold text-base mb-6 group transition-all"
+                                            onClick={initCameraScanner}
+                                        >
+                                            <Camera className="h-6 w-6 mr-3 text-indigo-400 group-hover:scale-110 transition-transform" /> 
+                                            Start Kameraskanner
+                                        </Button>
+
+                                        <div className="relative flex items-center py-2 mb-4">
+                                            <div className="flex-grow border-t border-slate-200"></div>
+                                            <span className="flex-shrink-0 mx-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ELLER TAST INN</span>
+                                            <div className="flex-grow border-t border-slate-200"></div>
+                                        </div>
+
+                                        <form onSubmit={handleManualSubmit} className="space-y-4">
+                                            <Input
+                                                ref={scanInputRef}
+                                                placeholder="Strekkode ID..."
+                                                value={scanInput}
+                                                onChange={(e) => setScanInput(e.target.value)}
+                                                disabled={isProcessing}
+                                                className="h-12 text-lg font-bold border-2 focus-visible:ring-indigo-500 bg-slate-50"
+                                            />
+                                            <Button type="submit" className="w-full h-12 bg-slate-900 font-bold" disabled={isProcessing || !scanInput.trim()}>
+                                                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrer manuelt'}
+                                            </Button>
+                                        </form>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}
