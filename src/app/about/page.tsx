@@ -1,8 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle, Globe, Smartphone, DownloadCloud, Eye, Car, Route as RouteIcon, Users, Clock, ShieldCheck, Zap, Leaf, Truck, Ruler, Package, GraduationCap, MapPin, Activity, Shield, Info, Download, Trash2, Search, Bell, Calculator, Lock, Server } from "lucide-react";
+import { CheckCircle, Globe, Smartphone, DownloadCloud, Eye, Car, Route as RouteIcon, Users, Clock, ShieldCheck, Zap, Leaf, Truck, Ruler, Package, GraduationCap, MapPin, Activity, Shield, Info, Download, Trash2, Search, Bell, Calculator, Lock, Server, Send } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Om Videre RettSted | Moderne Logistikkstyring",
+  description: "Lær hvordan Videre RettSted digitaliserer lokal kunnskap, optimerer ruter og sikrer ubrutt kontroll fra rampe til dør.",
+  openGraph: {
+    title: "Om Videre RettSted | Moderne Logistikkstyring",
+    description: "Digitaliser lokal kunnskap og optimer distribusjonen med markedets mest moderne logistikkverktøy.",
+  }
+};
 
 export default function AboutPage() {
   return (
@@ -168,7 +178,7 @@ export default function AboutPage() {
                 <CardTitle className="text-2xl font-bold">Fysisk Firewall</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-slate-600">Systemet validerer automatisk bilens dimensjoner mot stedets begrensninger for å unngå skader.</p>
+                <p className="text-slate-600">Systemet validerer automatisk bilens dimensjoner mot stedets begrensninger for å unngå skaden.</p>
                 <ul className="text-sm space-y-2 text-slate-500">
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Høyde- og breddesjekk</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" /> Vektbegrensninger i sanntid</li>
