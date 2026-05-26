@@ -12,7 +12,6 @@ import { UploadCloud, Trash2, Loader2, FileText, Download, Plus, Star, Info, Set
 import Image from 'next/image';
 import { firebaseStorage } from '@/lib/firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
-import { firebaseDB } from '@/lib/firebase/database';
 import { cn } from '@/lib/utils';
 import { deleteField, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +28,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const docFileInputRef = useRef<HTMLInputElement>(null);
+    
     const [images, setImages] = useState<Array<{ url: string, preview?: string, file?: File, isMain?: boolean }>>(
         initialData?.images || []
     );
@@ -168,12 +168,15 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
         e.preventDefault();
         setIsSubmitting(true);
         setIsUploading(true);
+        
+        console.log("[VehicleForm] Starting submit process...");
+
         try {
             const isNew = !initialData;
-            let currentVehicleId = initialData?.id;
+            // Use a temporary folder ID if we don't have a vehicle ID yet
+            const vehicleIdForStorage = initialData?.id || `temp-${uuidv4()}`;
             
             // Helper to get value or deletion sentinel. 
-            // deleteField() is ONLY allowed for updates. For new docs, we use undefined so cleanObject removes it.
             const getVal = (val: any) => {
                 if (val === undefined || val === null || val === '') {
                     return isNew ? undefined : deleteField();
@@ -212,50 +215,52 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                 (finalFormData as any).lastOdometerDate = serverTimestamp();
             }
 
-            // If creating a new vehicle, create it first to get an ID for storage paths
-            if (!currentVehicleId) {
-                // Remove ID and timestamps before creation if they somehow snuck in
-                const { id: _, createdAt: __, updatedAt: ___, ...createData } = finalFormData as any;
-                const newVehicle = await firebaseDB.createVehicle(createData);
-                currentVehicleId = newVehicle.id;
-                finalFormData = { ...finalFormData, id: newVehicle.id };
-            }
-
+            console.log("[VehicleForm] Uploading images...");
             const finalImages = [];
             for (const img of images) {
                 if (img.file) {
                     const ext = img.file.name.split('.').pop() || 'jpg';
-                    const path = `vehicles/${currentVehicleId}/${uuidv4()}.${ext}`;
+                    const path = `vehicles/${vehicleIdForStorage}/images/${uuidv4()}.${ext}`;
                     const url = await firebaseStorage.uploadFile(path, img.file);
-                    finalImages.push({ url, isMain: img.isMain });
-                } else {
-                    finalImages.push({ url: img.url, isMain: img.isMain });
+                    finalImages.push({ url, isMain: img.isMain, uploadedAt: new Date() });
+                } else if (img.url) {
+                    finalImages.push(img);
                 }
             }
             
+            console.log("[VehicleForm] Uploading documents...");
             const finalDocuments = [];
             for (const doc of documents) {
                 if (doc.file) {
-                    const path = `vehicles/${currentVehicleId}/documents/${doc.file.name}`;
+                    const path = `vehicles/${vehicleIdForStorage}/documents/${uuidv4()}-${doc.file.name}`;
                     const url = await firebaseStorage.uploadFile(path, doc.file, {
                         customMetadata: {
                             originalName: doc.file.name,
                             docType: doc.type,
                         }
                     });
-                    finalDocuments.push({ url, name: doc.file.name, type: doc.type });
-                } else {
+                    finalDocuments.push({ url, name: doc.name || doc.file.name, type: doc.type, uploadedAt: new Date() });
+                } else if (doc.url) {
                     finalDocuments.push(doc);
                 }
             }
 
-            // Call onSubmit which will perform the final update (saving image/doc URLs)
-            await onSubmit({ ...finalFormData, images: finalImages, documents: finalDocuments } as any);
-        } catch (error) {
-            console.error("Error submitting vehicle form:", error);
+            console.log("[VehicleForm] Calling onSubmit...");
+            // Remove system fields before passing to onSubmit
+            const { createdAt: _, updatedAt: __, ...submitData } = finalFormData as any;
+            
+            await onSubmit({ 
+                ...submitData, 
+                images: finalImages, 
+                documents: finalDocuments 
+            } as any);
+            
+            console.log("[VehicleForm] Submit successful.");
+        } catch (error: any) {
+            console.error("[VehicleForm] Error submitting vehicle form:", error);
             toast({ 
-                title: "Feil", 
-                description: "Kunne ikke lagre kjøretøyet. Vennligst sjekk alle felt.", 
+                title: "Feil ved lagring", 
+                description: error.message || "Kunne ikke lagre kjøretøyet. Vennligst sjekk alle felt.", 
                 variant: "destructive" 
             });
         } finally {

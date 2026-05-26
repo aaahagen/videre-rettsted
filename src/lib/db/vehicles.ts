@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, serverTimestamp, Timestamp, arrayUnion, arrayRemove, orderBy, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Vehicle, VehicleDamageReport } from '../types';
 import { cleanObject } from '../utils';
@@ -67,16 +67,6 @@ export async function getVehicle(id: string): Promise<Vehicle | null> {
  * 
  * @param data - Kjøretøydata (uten ID og tidsstempler).
  * @returns En Promise med det nyopprettede `Vehicle`-objektet inkludert ID.
- * 
- * @example
- * ```typescript
- * const newTruck = await createVehicle({
- *   name: "Lastebil 1",
- *   plateNumber: "AB12345",
- *   type: "truck",
- *   orgId: "org_123"
- * });
- * ```
  */
 export async function createVehicle(data: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vehicle> {
   try {
@@ -116,6 +106,37 @@ export async function updateVehicle(id: string, data: Partial<Vehicle>): Promise
     console.error("Error updating vehicle:", error);
     throw error;
   }
+}
+
+/**
+ * Lagrer et kjøretøy (oppretter eller oppdaterer).
+ * Brukes for å sikre konsistent lagring uavhengig av om ID er forhåndsgenerert.
+ */
+export async function saveVehicle(id: string | undefined, data: Partial<Vehicle>): Promise<string> {
+    try {
+        const { id: _, createdAt, updatedAt, ...rest } = data as any;
+        const finalData = cleanObject(rest);
+        
+        if (id) {
+            const docRef = doc(db, 'vehicles', id);
+            await setDoc(docRef, {
+                ...finalData,
+                updatedAt: serverTimestamp(),
+            }, { merge: true });
+            return id;
+        } else {
+            const docRef = await addDoc(collection(db, 'vehicles'), {
+                ...finalData,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                currentStatuses: finalData.currentStatuses || ['ready'],
+            });
+            return docRef.id;
+        }
+    } catch (error) {
+        console.error("Error saving vehicle:", error);
+        throw error;
+    }
 }
 
 /**

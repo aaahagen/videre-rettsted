@@ -133,18 +133,26 @@ export default function FleetPage() {
     const handleSubmit = async (data: Partial<Vehicle>) => {
         if (!dbUser?.orgId) return;
 
+        console.log("[FleetPage] handleSubmit called with data:", data);
+
         try {
-            if (data.id) {
-                await firebaseDB.updateVehicle(data.id, data);
-                toast({ title: "Lagret", description: "Kjøretøyet ble oppdatert." });
-            } else {
-                await firebaseDB.createVehicle({ ...data, orgId: dbUser.orgId } as any);
-                toast({ title: "Lagret", description: "Nytt kjøretøy ble lagt til." });
-            }
+            // Use the unified saveVehicle function which is more robust
+            await firebaseDB.saveVehicle(data.id, { ...data, orgId: dbUser.orgId });
+            
+            toast({ 
+                title: "Lagret", 
+                description: data.id ? "Kjøretøyet ble oppdatert." : "Nytt kjøretøy ble lagt til." 
+            });
+            
             await loadVehicles();
             handleCloseForm();
-        } catch (error) {
-            toast({ title: "Feil", description: "Kunne ikke lagre kjøretøyet.", variant: "destructive" });
+        } catch (error: any) {
+            console.error("[FleetPage] Save failed:", error);
+            toast({ 
+                title: "Feil ved lagring", 
+                description: error.message || "Kunne ikke lagre kjøretøyet til databasen.", 
+                variant: "destructive" 
+            });
         }
     };
 

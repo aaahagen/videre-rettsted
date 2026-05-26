@@ -59,6 +59,7 @@ export const firebaseDB: Database = {
   getVehicle: vehiclesDb.getVehicle,
   getVehicles: vehiclesDb.getVehicles,
   updateVehicle: vehiclesDb.updateVehicle,
+  saveVehicle: vehiclesDb.saveVehicle,
   deleteVehicle: vehiclesDb.deleteVehicle,
   getVehicleDamages: vehiclesDb.getVehicleDamages,
   createVehicleDamageReport: vehiclesDb.reportVehicleDamage,
