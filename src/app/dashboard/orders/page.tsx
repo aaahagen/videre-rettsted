@@ -197,11 +197,14 @@ export default function OrdersPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 mx-auto w-full px-4 max-w-7xl py-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Ordrer</h1>
-          <p className="text-slate-500 mt-2 max-w-2xl">
-            Oversikt over alle aktive og historiske leveringsordre.
-          </p>
+        <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl shadow-sm border border-indigo-200">
+                <Package className="h-8 w-8" />
+            </div>
+            <div>
+                <h1 className="text-3xl font-black tracking-tight text-slate-900 font-headline">Ordrer</h1>
+                <p className="text-slate-500 font-medium">Oversikt over alle leveringsordre.</p>
+            </div>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && userData?.orgId && (

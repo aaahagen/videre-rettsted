@@ -7,7 +7,7 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Manifest, Route, Vehicle, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Truck, CheckCircle2, QrCode, Search, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Loader2, Package, Truck, CheckCircle2, QrCode, Search, RefreshCw, AlertTriangle, ScanBarcode } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -84,9 +84,14 @@ export default function ManifestsPage() {
     return (
         <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Lasterampe</h1>
-                    <p className="text-muted-foreground">Oversikt over ruter som skal lastes og verifiseres.</p>
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl shadow-sm border border-indigo-200">
+                        <ScanBarcode className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight font-headline">Lasterampe</h1>
+                        <p className="text-muted-foreground font-medium">Oversikt over ruter som skal lastes.</p>
+                    </div>
                 </div>
                 <Button onClick={loadManifests} variant="outline" size="sm">
                     <RefreshCw className="mr-2 h-4 w-4" />
