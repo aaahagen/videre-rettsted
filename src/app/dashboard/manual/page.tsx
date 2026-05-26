@@ -58,7 +58,10 @@ import {
     Smartphone,
     Vibrate,
     RefreshCw,
-    CheckCircle2 as CheckIcon
+    CheckCircle2 as CheckIcon,
+    QrCode,
+    Barcode,
+    Tag
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,7 +70,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-provider';
 
-type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'lasterampe' | 'ordrer' | 'ruter' | 'fleet' | 'workforce' | 'admin' | 'owner';
+type Chapter = 'intro' | 'roller' | 'steder' | 'avvik' | 'pod' | 'hms' | 'lasterampe' | 'etiketter' | 'ordrer' | 'ruter' | 'fleet' | 'workforce' | 'admin' | 'owner';
 
 interface ChapterDef {
     id: Chapter;
@@ -84,6 +87,7 @@ const ALL_CHAPTERS: ChapterDef[] = [
     { id: 'pod', title: 'Leveringsbevis (POD)', icon: CheckCircle2 },
     { id: 'hms', title: 'HMS-Systemet', icon: Shield },
     { id: 'lasterampe', title: 'Lasterampe (Manifest)', icon: ScanBarcode },
+    { id: 'etiketter', title: 'Etiketter & Format', icon: Tag },
     // Admin/Specialized chapters
     { id: 'ordrer', title: 'Ordrehåndtering', icon: Package, adminOnly: true },
     { id: 'ruter', title: 'Ruteplanlegging', icon: Route, adminOnly: true },
@@ -803,6 +807,67 @@ export default function ManualPage() {
                                         <p className="text-[11px] text-slate-400 font-medium">Når manifestet er ferdigstilt, endres rutens status til "Lastet" i alle dashbord.</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CHAPTER: ETIKETTER */}
+                    {activeChapter === 'etiketter' && (
+                        <div className="space-y-12 animate-in fade-in duration-300">
+                            <div className="flex items-center gap-3 border-b pb-4">
+                                <div className="p-2 bg-slate-100 rounded-lg"><Tag className="h-5 w-5 text-slate-700" /></div>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Etiketter & Format</h2>
+                            </div>
+                            
+                            <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                                RettSted bruker gjenbrukbare, rute-uavhengige etiketter. Dette betyr at du aldri trenger å printe nye etiketter selv om en pakke bytter bil eller rute.
+                            </p>
+
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4 border-l-4 border-l-indigo-500">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-xs tracking-widest">
+                                        <Barcode className="h-4 w-4 text-indigo-600" />
+                                        Strekkode (Standard)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Det klassiske valget. Fungerer med alle typer skannere, inkludert eldre lasere. Vises horisontalt på etiketten for maksimal lesbarhet.
+                                    </p>
+                                </div>
+
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4 border-l-4 border-l-indigo-600">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2 uppercase text-xs tracking-widest">
+                                        <QrCode className="h-4 w-4 text-indigo-600" />
+                                        QR-Kode (Anbefalt)
+                                    </h3>
+                                    <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                        Det moderne alternativet. QR-koder er mer robuste mot skader og skitt, og kan skannes fra hvilken som helst vinkel med mobilen.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-slate-50 border rounded-2xl space-y-6">
+                                <h3 className="font-black text-slate-800 text-xl tracking-tight">Hvordan endre format?</h3>
+                                <p className="text-sm text-slate-600 font-medium">Bare organisasjons-administratorer og eiere kan endre etikett-innstillinger:</p>
+                                <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                        <div className="h-8 w-8 rounded-full bg-white border shadow-sm flex items-center justify-center font-black text-xs shrink-0">1</div>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Gå til <strong className="text-slate-800">Adminpanel</strong> i menyen.</p>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="h-8 w-8 rounded-full bg-white border shadow-sm flex items-center justify-center font-black text-xs shrink-0">2</div>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Finn seksjonen <strong className="text-slate-800">Label-innstillinger</strong>.</p>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="h-8 w-8 rounded-full bg-white border shadow-sm flex items-center justify-center font-black text-xs shrink-0">3</div>
+                                        <p className="text-xs text-slate-600 font-medium mt-1">Velg ønsket format og trykk <strong className="text-indigo-600">Lagre</strong> nederst på siden.</p>
+                                    </div>
+                                </div>
+                                <Alert className="bg-indigo-50 border-indigo-100">
+                                    <Info className="h-4 w-4 text-indigo-600" />
+                                    <AlertDescription className="text-[11px] text-indigo-900 font-bold">
+                                        Skanneren på mobilen vil alltid kunne lese begge formater, uavhengig av hva du har valgt som standard for printing.
+                                    </AlertDescription>
+                                </Alert>
                             </div>
                         </div>
                     )}

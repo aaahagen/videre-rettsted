@@ -14,7 +14,7 @@ Defined in: [types.ts:13](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **dangerReportsEnabled?**: `boolean`
 
-Defined in: [types.ts:85](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L85)
+Defined in: [types.ts:90](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L90)
 
 ***
 
@@ -22,7 +22,7 @@ Defined in: [types.ts:85](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **fieldSettings?**: `object`
 
-Defined in: [types.ts:48](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L48)
+Defined in: [types.ts:53](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L53)
 
 #### contactPersons?
 
@@ -142,7 +142,7 @@ Defined in: [types.ts:48](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **hmsSettings?**: `object`
 
-Defined in: [types.ts:42](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L42)
+Defined in: [types.ts:47](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L47)
 
 #### enabled
 
@@ -170,11 +170,31 @@ Defined in: [types.ts:14](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 ***
 
+### labelSettings?
+
+> `optional` **labelSettings?**: `object`
+
+Defined in: [types.ts:37](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L37)
+
+#### format
+
+> **format**: `"barcode"` \| `"qrcode"`
+
+#### includeBranding?
+
+> `optional` **includeBranding?**: `boolean`
+
+#### size?
+
+> `optional` **size?**: `"small"` \| `"standard"` \| `"large"`
+
+***
+
 ### legal?
 
 > `optional` **legal?**: `object`
 
-Defined in: [types.ts:86](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L86)
+Defined in: [types.ts:91](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L91)
 
 #### dpaAcceptedAt?
 
@@ -318,7 +338,7 @@ Defined in: [types.ts:17](https://github.com/aaahagen/videre-rettsted/blob/main/
 
 > `optional` **placeSettings?**: `object`
 
-Defined in: [types.ts:37](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L37)
+Defined in: [types.ts:42](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/types.ts#L42)
 
 #### autoGenerateCustomerNumbers?
 

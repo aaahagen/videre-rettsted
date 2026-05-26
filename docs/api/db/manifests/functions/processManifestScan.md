@@ -8,7 +8,7 @@
 
 > **processManifestScan**(`orgId`, `manifestId`, `scannedBarcode`, `userId`): `Promise`\<\{ `message`: `string`; `success`: `boolean`; \}\>
 
-Defined in: [db/manifests.ts:240](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L240)
+Defined in: [db/manifests.ts:233](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L233)
 
 Prosesserer en strekkodeskan mot et manifest.
 
@@ -48,12 +48,3 @@ ID-en til brukeren som skanner.
 `Promise`\<\{ `message`: `string`; `success`: `boolean`; \}\>
 
 En Promise med suksess-status og en beskrivende melding for UI.
-
-## Example
-
-```typescript
-const result = await processManifestScan("org_1", "man_2", "SSCC-12345", "user_3");
-if (result.success) {
-  toast({ title: result.message });
-}
-```

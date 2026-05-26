@@ -8,7 +8,7 @@
 
 > **finalizeManifest**(`orgId`, `manifestId`, `userId`): `Promise`\<`void`\>
 
-Defined in: [db/manifests.ts:208](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L208)
+Defined in: [db/manifests.ts:209](https://github.com/aaahagen/videre-rettsted/blob/main/src/lib/db/manifests.ts#L209)
 
 Markerer et manifest som ferdig verifisert.
 

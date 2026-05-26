@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Persistent Label System**: Implemented a professional, route-independent labeling system for orders.
+    - Labels focus on destination (Name, Address, Postal Code) and physical specs rather than transient route names.
+    - Eliminates the need for re-printing labels when routes are changed or orders are reassigned.
+    - Supports both **Barcode (Code 128)** and **QR-code** formats.
+- **Organization-Level Label Settings**: Administrators can now customize their label infrastructure.
+    - Choice between traditional Barcodes or omnidirectional QR codes.
+    - Toggle for "VIDERE RettSted" branding on physical labels.
+    - Real-time preview of label formats in the generation modal.
 - **PWA Routing Optimization**: The application `manifest.json` now defines `/dashboard` as the `start_url` to bypass marketing landing pages and provide a true native app experience.
 - **SEO & Search Indexing**:
     - Added comprehensive OpenGraph and Twitter meta tags to `src/app/about/page.tsx` for optimal social sharing.
