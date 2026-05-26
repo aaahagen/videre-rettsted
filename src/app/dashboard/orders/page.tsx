@@ -15,7 +15,10 @@ import {
   AlertCircle,
   BarChart3,
   Trash2,
-  Upload
+  Upload,
+  Printer,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
@@ -47,6 +50,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { OrderImport } from '@/components/admin/order-import';
+import { BulkBarcodeGenerator } from '@/components/orders/bulk-barcode-generator';
+import { cn } from '@/lib/utils';
 
 export default function OrdersPage() {
   const [user, loading, error] = useAuthState(auth);
@@ -58,6 +63,10 @@ export default function OrdersPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  
+  // Selection State
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  
   const { query: searchQuery, setContext } = useSearch();
   const { setQuery } = useSearch();
   const { toast } = useToast();
@@ -67,7 +76,6 @@ export default function OrdersPage() {
   }, [setQuery]);
   const router = useRouter();
 
-  // Set context for global search
   useEffect(() => {
     setContext('Ordrer', '/dashboard/orders/new');
   }, [setContext]);
@@ -77,7 +85,6 @@ export default function OrdersPage() {
       firebaseDB.getUser(user.uid).then(userDoc => {
         setUserData(userDoc);
         if (userDoc?.orgId) {
-          // Listen to orders
           const ordersRef = collection(db, 'organizations', userDoc.orgId, 'orders');
           const q = query(ordersRef, orderBy('createdAt', 'desc'));
           
@@ -90,7 +97,6 @@ export default function OrdersPage() {
             setIsLoading(false);
           });
 
-          // Fetch places to resolve names
           firebaseDB.getPlaces(userDoc.orgId).then(placesData => {
             const placesMap: Record<string, Place> = {};
             placesData.forEach(p => {
@@ -116,6 +122,26 @@ export default function OrdersPage() {
       places[order.placeId]?.address?.toLowerCase().includes(lowerQuery)
     );
   }, [orders, searchQuery, places]);
+
+  const selectedOrders = useMemo(() => 
+    orders.filter(o => selectedOrderIds.includes(o.id)),
+    [orders, selectedOrderIds]
+  );
+
+  const toggleSelectOrder = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setSelectedOrderIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.length === displayedOrders.length) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(displayedOrders.map(o => o.id));
+    }
+  };
 
   const getStatusBadge = (status: Order['status']) => {
     switch (status) {
@@ -258,6 +284,28 @@ export default function OrdersPage() {
         </Card>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedOrderIds.length > 0 && (
+          <div className="sticky top-20 z-40 bg-indigo-600 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center gap-4">
+                  <Badge className="bg-white text-indigo-600 hover:bg-white">{selectedOrderIds.length} valgt</Badge>
+                  <p className="text-xs font-bold uppercase tracking-wider hidden md:block text-indigo-100">Handlinger for markerte ordrer</p>
+              </div>
+              <div className="flex items-center gap-2">
+                  <BulkBarcodeGenerator 
+                    orders={selectedOrders} 
+                    places={places} 
+                    buttonLabel="Skriv ut etiketter" 
+                    variant="outline"
+                    onComplete={() => setSelectedOrderIds([])} 
+                  />
+                  <Button variant="ghost" onClick={() => setSelectedOrderIds([])} className="text-white hover:bg-white/10 font-bold">
+                      Avbryt
+                  </Button>
+              </div>
+          </div>
+      )}
+
       {displayedOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-dashed border-slate-200">
           <div className="rounded-full bg-slate-100 p-6 mb-4">
@@ -287,53 +335,79 @@ export default function OrdersPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {displayedOrders.map((order) => (
-            <Card key={order.id} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => router.push(`/dashboard/orders/${order.id}`)}>
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 relative">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-slate-100 rounded text-slate-600">
-                      <Package className="h-5 w-5" />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+              <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition-colors">
+                  {selectedOrderIds.length === displayedOrders.length ? <CheckSquare className="h-4 w-4 mr-2" /> : <Square className="h-4 w-4 mr-2" />}
+                  {selectedOrderIds.length === displayedOrders.length ? 'Velg ingen' : 'Velg alle'}
+              </Button>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
+            {displayedOrders.map((order) => {
+              const isSelected = selectedOrderIds.includes(order.id);
+              return (
+                <Card 
+                    key={order.id} 
+                    className={cn(
+                        "hover:shadow-md transition-all cursor-pointer group border-2",
+                        isSelected ? "border-indigo-600 bg-indigo-50/20" : "border-transparent"
+                    )} 
+                    onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                >
+                  <CardContent className="p-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 relative">
+                    <div className="flex items-center gap-4">
+                        <div 
+                            className={cn(
+                                "p-2 rounded transition-colors",
+                                isSelected ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                            )}
+                            onClick={(e) => toggleSelectOrder(e, order.id)}
+                        >
+                        {isSelected ? <CheckSquare className="h-5 w-5" /> : <Package className="h-5 w-5" />}
+                        </div>
+                        <div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">{order.barcode || 'Ingen strekkode'}</span>
+                            {getStatusBadge(order.status)}
+                        </div>
+                        <p className="text-sm text-slate-500 line-clamp-1">{order.details?.description}</p>
+                        </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900">{order.barcode || 'Ingen strekkode'}</span>
-                        {getStatusBadge(order.status)}
-                      </div>
-                      <p className="text-sm text-slate-500 line-clamp-1">{order.details?.description}</p>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 pr-8 sm:pr-12">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <MapPin className="h-4 w-4" />
+                        <span>{places[order.placeId]?.name || 'Ukjent sted'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                            {(order.createdAt as any)?.toDate 
+                            ? (order.createdAt as any).toDate().toLocaleDateString('no-NO') 
+                            : new Date(order.createdAt as any).toLocaleDateString('no-NO')}
+                        </span>
+                        </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 pr-8 sm:pr-12">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{places[order.placeId]?.name || 'Ukjent sted'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {(order.createdAt as any)?.toDate 
-                          ? (order.createdAt as any).toDate().toLocaleDateString('no-NO') 
-                          : new Date(order.createdAt as any).toLocaleDateString('no-NO')}
-                      </span>
-                    </div>
-                  </div>
 
-                  {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-                        onClick={(e) => handleDeleteClick(e, order)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    {isAdmin && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+                                onClick={(e) => handleDeleteClick(e, order)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
 

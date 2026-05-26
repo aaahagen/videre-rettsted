@@ -22,7 +22,8 @@ import {
     Navigation,
     Scan,
     Car,
-    User as UserIcon
+    User as UserIcon,
+    Printer
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -45,7 +46,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { firebaseDB } from '@/lib/firebase/database';
 import { auth, db } from '@/lib/firebase/firebase';
-import { Route, DeliveryPlace, Vehicle, Order, Manifest, User } from '@/lib/types';
+import { Route, DeliveryPlace, Vehicle, Order, Manifest, User, Place } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,6 +69,7 @@ import { useAuth } from '@/components/auth-provider';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { BulkBarcodeGenerator } from '@/components/orders/bulk-barcode-generator';
 
 interface SortableItemProps {
     id: string;
@@ -323,6 +325,10 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   const routeOrders = orders.filter(o => o.routeId === routeId);
   const totalPallets = routeOrders.reduce((sum, o) => sum + (o.handlingUnits?.length || 0), 0);
 
+  // Map places for the bulk generator
+  const placesMap: Record<string, Place> = {};
+  availablePlaces.forEach(p => { placesMap[p.id] = p; });
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
@@ -397,6 +403,13 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                     </div>
                 </CardContent>
                 <CardFooter className="bg-slate-50 p-4 border-t flex flex-col gap-2">
+                    <BulkBarcodeGenerator 
+                        orders={routeOrders} 
+                        places={placesMap} 
+                        buttonLabel="Skriv ut alle etiketter" 
+                        variant="default"
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11"
+                    />
                     {manifest ? (
                         <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
                             <Link href={`/dashboard/manifests/${manifest.id}`}>
