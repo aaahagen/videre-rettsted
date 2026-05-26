@@ -164,15 +164,18 @@ export class ConstraintEngine {
         }
         
         if (place.maxVehicleWeight) {
-            // BUG FIX: Don't add 15 tons to every vehicle. 
-            // Estimate curb weight based on type if not explicitly known.
+            // Estimate curb weight based on explicit registration or type fallback
             let curbWeightEstimate = 0;
-            switch(vehicle.type) {
-                case 'truck': curbWeightEstimate = 7500; break;
-                case 'van': curbWeightEstimate = 2200; break;
-                case 'car': curbWeightEstimate = 1500; break;
-                case 'tractor': curbWeightEstimate = 8000; break;
-                default: curbWeightEstimate = 2000;
+            if (vehicle.capacity?.emptyWeight) {
+                curbWeightEstimate = vehicle.capacity.emptyWeight;
+            } else {
+                switch(vehicle.type) {
+                    case 'truck': curbWeightEstimate = 7500; break;
+                    case 'van': curbWeightEstimate = 2200; break;
+                    case 'car': curbWeightEstimate = 1500; break;
+                    case 'tractor': curbWeightEstimate = 8000; break;
+                    default: curbWeightEstimate = 2000;
+                }
             }
 
             const estimatedTotalWeight = (vehicle.capacity?.weight || 0) + curbWeightEstimate; 

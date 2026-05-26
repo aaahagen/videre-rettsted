@@ -298,6 +298,7 @@ export interface Vehicle {
   };
   capacity: {
     weight?: number;
+    emptyWeight?: number;
     volume?: number;
     pallets?: number;
     notes?: string;

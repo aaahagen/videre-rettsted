@@ -61,6 +61,7 @@ The system is multi-tenant from the ground up to support commercialization. All 
 
 ### E. Fleet Management
 *   Registry tracking dimensions, capacities, and capabilities (tail-lift, ADR).
+*   **Physical Specifications:** Vehicles track both payload capacity and `emptyWeight` (curb weight) for precise operational planning.
 *   **Digital Inspections:** Drivers perform pre/post-trip safety checks.
 *   **Damage Triage Workflow:** Reported damages automatically flag the vehicle as "Observasjon" and create a structured report. Admins track workshop orders and repair receipts to return vehicles to "Klar" status.
 *   **Odometer Tracking:** Real-time tracking of vehicle mileage updated during driver inspections.

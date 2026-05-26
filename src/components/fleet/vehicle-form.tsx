@@ -45,7 +45,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
             config: 'rigid',
             fuelType: 'diesel',
             currentStatuses: ['ready'], status: 'active',
-            capacity: { weight: undefined, volume: undefined, pallets: undefined },
+            capacity: { weight: undefined, emptyWeight: undefined, volume: undefined, pallets: undefined },
             dimensions: { length: undefined, height: undefined, width: undefined },
             capabilities: { refrigeration: false, tailLift: false, adr: false, trailerCoupling: false, fifthWheel: false },
             documents: [],
@@ -184,6 +184,7 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
             // Explicitly handle clearing capacity and dimensions
             const cleanedCapacity = {
                 weight: typeof formData.capacity?.weight !== 'number' ? getVal(undefined) : formData.capacity.weight,
+                emptyWeight: typeof formData.capacity?.emptyWeight !== 'number' ? getVal(undefined) : formData.capacity.emptyWeight,
                 volume: typeof formData.capacity?.volume !== 'number' ? getVal(undefined) : formData.capacity.volume,
                 pallets: typeof formData.capacity?.pallets !== 'number' ? getVal(undefined) : formData.capacity.pallets,
                 notes: getVal(formData.capacity?.notes)
@@ -421,7 +422,11 @@ export function VehicleForm({ initialData, orgId, onSubmit, onCancel }: VehicleF
                     <CardDescription>Brukes av ruteplanleggeren for å unngå overlast og trange passasjer.</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="space-y-2">
+                            <Label className="font-bold text-slate-700">Egenvekt (kg)</Label>
+                            <Input type="number" placeholder="Kjøretøyets vekt tom" value={safeNumberValue(formData.capacity?.emptyWeight)} onChange={e => handleNestedChange('capacity', 'emptyWeight', e.target.value ? Number(e.target.value) : undefined)} />
+                        </div>
                         <div className="space-y-2">
                             <Label className="font-bold text-slate-700">Maks Nyttelast (kg)</Label>
                             <Input type="number" value={safeNumberValue(formData.capacity?.weight)} onChange={e => handleNestedChange('capacity', 'weight', e.target.value ? Number(e.target.value) : undefined)} />

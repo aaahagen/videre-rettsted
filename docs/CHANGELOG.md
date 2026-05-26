@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Explicit Vehicle Weight Tracking**: Added `emptyWeight` field to vehicle profiles for precise site access validation.
 - **Persistent Label System**: Implemented a professional, route-independent labeling system for orders.
     - Labels focus on destination (Name, Address, Postal Code) and physical specs rather than transient route names.
     - Eliminates the need for re-printing labels when routes are changed or orders are reassigned.
@@ -28,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Optimized Routing Engine**: Major overhaul of the constraint-based routing logic for increased reliability and accuracy.
-    - **Fixed Weight Calculation**: Resolved a bug where 15,000 kg was erroneously added to all vehicle types. Now uses realistic curb weight estimates (Van: 2.2t, Truck: 7.5t, etc.).
+    - **Fixed Weight Calculation**: Resolved a bug where 15,000 kg was erroneously added to all vehicle types. Now uses registered `emptyWeight` with fallback to type-based estimates (Van: 2.2t, Truck: 7.5t, etc.).
     - **Dynamic Depot Positioning**: The engine now utilizes the organization's `mainDepot` coordinates if defined, eliminating range errors for non-Oslo based organizations.
     - **Robust Location Handling**: Added support for both `coordinates` and `location` fields on places to ensure compatibility with imported data.
     - **Improved Diagnostics**: Enhanced internal logging and UI feedback to clearly explain why specific orders were skipped (e.g., "Range exceeded", "Capacity mismatch").
