@@ -7,21 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **Super Admin Responsiveness:** Optimized the Super Admin dashboard (`/dashboard/super`) for mobile and tablet views. Fixed horizontal overflow by implementing responsive grids for organization stats, ensuring text truncation in dense tables, and refining the header layout for smaller screens.
-- **Routing Engine UI Refinement:** Fixed vertical overflow and spacing issues on the Routing Engine page (`/dashboard/admin/routing-engine`). Improved the empty state layout with better padding and contained animations.
-
 ### Added
+- **PWA Routing Optimization**: The application `manifest.json` now defines `/dashboard` as the `start_url` to bypass marketing landing pages and provide a true native app experience.
+- **SEO & Search Indexing**:
+    - Added comprehensive OpenGraph and Twitter meta tags to `src/app/about/page.tsx` for optimal social sharing.
+    - Generated a `sitemap.xml` via `src/app/sitemap.ts` pointing to the public marketing pages.
+    - Implemented a `robots.txt` that allows crawling of marketing pages while actively disallowing indexing of `/dashboard/` and auth routes.
+- **Advanced Camera Scanner**: Integrated `@zxing/library` into the Manifest loading view (`/dashboard/manifests/[id]`). Users can now use their device's built-in camera (front or back) to rapidly scan barcodes/QR codes during the loading process with visual targeting UI and audio feedback.
 - **Route Lifecycle Visualization:** Route cards now dynamically display their operational status (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført) based on real-time manifest data.
 - **Route Progress Visualization:** Replaced text-based badges with a sleek data-driven Progress Bar on route cards, showing exact completion metrics (e.g., "3/10 stopp").
 - **Customizable Progress Component:** Enhanced the UI `Progress` component to support custom indicator colors via the `indicatorClassName` prop.
 
 ### Changed
+- **Optimized Mobile Scanner**: Significantly improved the camera scanner for iOS and other mobile devices.
+    - Switched to `decodeFromConstraints` with `facingMode: environment` to ensure the rear camera is used by default.
+    - Improved camera switching logic for better compatibility with Safari on iOS.
+    - Added haptic feedback (vibration) and scan debouncing for a better user experience.
+    - Expanded supported barcode formats and enabled `TRY_HARDER` mode for faster/more accurate scanning.
+- **Super Admin Responsiveness:** Optimized the Super Admin dashboard (`/dashboard/super`) for mobile and tablet views. Fixed horizontal overflow by implementing responsive grids for organization stats, ensuring text truncation in dense tables, and refining the header layout for smaller screens.
+- **Routing Engine UI Refinement:** Fixed vertical overflow and spacing issues on the Routing Engine page (`/dashboard/admin/routing-engine`). Improved the empty state layout with better padding and contained animations.
 - **Robust Route Estimation:** Optimized the Routing Engine to prevent double-counting stop times and added validation to prevent invalid (NaN) duration values.
 - **Improved Deletion UX:** Replaced the squeezed header delete icon with a clear "Slett Rute/Mal" button at the bottom of the card for better accessibility on mobile and high-density layouts.
 - **Real-time Metric Recalculation:** The Routing Engine dashboard now automatically recalculates estimated time and distance when orders are removed from a suggestion.
 - **PWA Update Notifier:** Added a "New Version Available" toast notification with one-click refresh, ensuring users always run the latest version of the application.
 - **Automated API Documentation:** Configured `typedoc` with `typedoc-plugin-markdown` to automatically generate comprehensive API documentation from TSDocs in the `docs/api` directory.
+- **User Manual Updates:** Added detailed instructions for the new Kameraskanner functionality to the internal manual.
 - **Compliance & Risk Management (Phase 6 Completion):**
     - **Odometer Tracking (`kilometerstand`):** Vehicles now track and display real-time mileage. Drivers update the odometer reading during every pre/post-trip inspection.
     - **Tachograph Download Monitoring:** Implemented automated tracking for the 90-day vehicle tachograph download requirement. Includes color-coded visual alerts for overdue or approaching deadlines.
@@ -55,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
 
 ### Fixed
+- **UI Overflow Issue on Routes Page**: Adjusted responsive sizing and flex properties on the empty state icons in `/dashboard/routes` to prevent vertical overflow on smaller screens. Added margin to the bottom of the container.
+- **Firestore Array Timestamp Error**: Replaced `serverTimestamp()` with ISO strings (`new Date().toISOString()`) when updating nested fields inside the `orders` array within a Manifest.
+- **Firestore Undefined Field Error**: Fixed an issue in `decrementManifestItemLoadedCount` where setting a property to `undefined` caused a crash. Replaced with the `delete` operator.
+- **Manifest Scanner Matching**: Corrected a bug where the manual scanner input failed to match valid order IDs or collie IDs due to missing document ID properties and restricted queries.
 - **Parsing Error in Routes:** Fixed a stray character on the first line of `src/app/dashboard/routes/page.tsx` and added missing imports.
 - **Firestore Security Rules:** Corrected a malformed `list` rule for the `routes` collection and fixed the manifest query path in the route details page to resolve `permission-denied` errors.
 - **Driver Assignment Consistency:** 
@@ -90,6 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bulk Order Import:** CSV-based tool with auto-mapping.
 - **Rapid "Scan-to-Receive":** Mobile ingestion interface for terminal workers.
 - **Hierarchical Barcodes:** SSCC and collie tracking.
+- Initial project scaffolding with Next.js 15, React 19, and Tailwind CSS.
+- Basic Firebase configuration (Auth, Firestore, Storage).
+- Architecture blueprints (`docs/blueprint.md`, `docs/domain.md`, `docs/engineering.md`, `docs/roles-and-permissions.md`, `docs/strategy.md`, `docs/ui-specification.md`).
+- Core generic database functions for user profiles, organizations, and logging.
+- `types.ts` defining the data model based on `docs/domain.md`.
 
 ### Fixed
 - **Vehicle Creation Bug:** Fixed issue where registration failed.

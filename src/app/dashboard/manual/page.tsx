@@ -53,7 +53,8 @@ import {
     Database,
     Hash,
     Settings2,
-    Lock
+    Lock,
+    MessageSquare
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -674,7 +675,7 @@ export default function ManualPage() {
                                         <ul className="space-y-2 list-disc list-inside">
                                             <li>En <strong className="text-red-600">Rød HMS-knapp</strong> betyr at stedet krever sjekk.</li>
                                             <li>Når knappen trykkes, åpnes sjekklisten med de spørsmålene admin har valgt.</li>
-                                            <li>Man kan legge til en utfyllende kommentar til sjekken.</li>
+                                            <li>Man kan legge til una utfyllende kommentar til sjekken.</li>
                                             <li>Når sjekken er lagret, blir knappen <strong className="text-emerald-600">Grønn</strong> og viser når den sist ble utført.</li>
                                         </ul>
                                     </CardContent>
@@ -725,7 +726,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Lasterampen er terminalarbeiderens viktigste verktøy for å sikre at riktig pakke havner på riktig bil.
+                                Lasterampen er terminalarbeiderens viktigste verktøy for å sikre at riktig pakke havner på riktig bil før avreise.
                             </p>
 
                             <div className="space-y-8">
@@ -735,24 +736,25 @@ export default function ManualPage() {
                                         Hva er et Manifest?
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Et manifest er en digital pakkseddel for en hel rute. Den viser nøyaktig hvilke ordrer og kolli som skal være med bilen.
+                                        Et manifest er en digital pakkseddel for en hel rute. Den viser nøyaktig hvilke ordrer og kolli som skal være med på bilen. Målet er å oppnå 100% "Progresjon" før bilen forlater terminalen.
                                     </p>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-6">
-                                    <Card className="border-2 border-slate-100">
+                                    <Card className="border-2 border-indigo-100 bg-indigo-50/20">
                                         <CardHeader>
                                             <CardTitle className="text-base font-black flex items-center gap-2">
-                                                <ScanBarcode className="h-5 w-5 text-blue-600" />
-                                                Skanning av Varer
+                                                <Camera className="h-5 w-5 text-indigo-600" />
+                                                Kameraskanner (Nyhet)
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                            <p>Bruk en håndskanner eller mobilkamera for å skanne strekkoder på pakkene:</p>
+                                            <p>Gjør mobiltelefonen din om til en profesjonell strekkodeskanner:</p>
                                             <ul className="list-disc list-inside space-y-1">
-                                                <li>Systemet gir umiddelbar lyd- og visuell respons.</li>
-                                                <li>Telleren oppdateres (f.eks. <strong className="text-slate-900">4/10 kolli lastet</strong>).</li>
-                                                <li>Varsler hvis du skanner en vare som <strong className="text-red-600">ikke</strong> tilhører denne ruten.</li>
+                                                <li>Trykk <strong>"Start Kameraskanner"</strong> inne på manifestet.</li>
+                                                <li>Hold kameraet over strekkoden.</li>
+                                                <li>Når den fanger koden hører du et "Beep", og ordren oppdateres automatisk.</li>
+                                                <li>Du kan skanne kolli etter kolli uten å trykke noe mer.</li>
                                             </ul>
                                         </CardContent>
                                     </Card>
@@ -760,17 +762,37 @@ export default function ManualPage() {
                                     <Card className="border-2 border-slate-100">
                                         <CardHeader>
                                             <CardTitle className="text-base font-black flex items-center gap-2">
-                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
-                                                Verifisering
+                                                <ScanBarcode className="h-5 w-5 text-slate-600" />
+                                                Manuell Inntasting & Fysisk Skanner
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                            <p>Når alle varer er skannet inn:</p>
+                                            <p>Du har også andre alternativer for registrering:</p>
                                             <ul className="list-disc list-inside space-y-1">
-                                                <li>Trykk på "Fullfør Manifest".</li>
-                                                <li>Systemet sjekker om alt er med.</li>
-                                                <li>Hvis noe mangler, må du bekrefte avviket før bilen kan kjøre.</li>
+                                                <li><strong>Fysisk håndskanner:</strong> Bare klikk i feltet "Strekkode ID..." og skann i vei.</li>
+                                                <li><strong>Manuell inntasting:</strong> Skriv inn kolli- eller ordre-IDen hvis strekkoden er uleselig, og trykk "Registrer manuelt".</li>
                                             </ul>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="border-2 border-slate-100 md:col-span-2">
+                                        <CardHeader>
+                                            <CardTitle className="text-base font-black flex items-center gap-2">
+                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                                Verifisering og Avvik
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                            <p>Når opplastingen er ferdig:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Trykk på den grønne knappen <strong>"Ferdigstill Manifest"</strong>.</li>
+                                                <li>Systemet verifiserer at alle forventede kolli er skannet.</li>
+                                                <li>Hvis det mangler varer (f.eks. en ordre ikke dukket opp på terminalen), vil systemet be deg bekrefte at du bevisst sender bilen avsted med mangler.</li>
+                                            </ul>
+                                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 mt-4">
+                                                <MessageSquare className="h-5 w-5 text-amber-600 shrink-0" />
+                                                <p className="text-amber-800 text-xs"><strong>TIPS:</strong> Du kan bruke "Notat"-knappen for å legge igjen en beskjed til ruteplanlegger eller sjåfør hvis for eksempel en pall var skadet og måtte settes igjen.</p>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -894,7 +916,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Administrer bedriftens bilflåte, overvåk vedlikehold og sørg for at alle kjøretøy er lovlige og trygge.
+                                Administrer bedriftens bilflåte, overvåk vedlikehold og sørg for at alle kjøretøy are lovlige og trygge.
                             </p>
 
                             <div className="grid md:grid-cols-2 gap-8">
@@ -1009,7 +1031,7 @@ export default function ManualPage() {
                                         Brukere & Tilganger
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Inviter nye ansatte ved å sende en unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som helst pause eller slette en bruker hvis de slutter.
+                                        Inviter nye ansatte ved å sende en unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som heller pause eller slette en bruker hvis de slutter.
                                     </p>
                                 </section>
 

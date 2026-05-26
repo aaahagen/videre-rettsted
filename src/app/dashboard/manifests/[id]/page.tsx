@@ -7,17 +7,17 @@ import { firebaseDB } from '@/lib/firebase/database';
 import { Manifest, Route, Vehicle, Order } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Scan, X, Check, MessageSquare, Plus, Minus, Send, Camera, CameraOff } from 'lucide-react';
+import { Loader2, Package, Truck, CheckCircle2, ChevronLeft, Scan, X, Check, MessageSquare, Plus, Minus, Send, Camera, CameraOff, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
+import { onSnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
-import { BrowserMultiFormatReader, Result } from '@zxing/library';
+import { BrowserMultiFormatReader, Result, BarcodeFormat, DecodeHintType } from '@zxing/library';
 
 export default function ManifestDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: manifestId } = use(params);
@@ -42,8 +42,11 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     const [isCameraActive, setIsCameraActive] = useState(false);
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
     const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
     const videoRef = useRef<HTMLVideoElement>(null);
     const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+    const lastScannedText = useRef<string>('');
+    const lastScanTime = useRef<number>(0);
 
     useEffect(() => {
         if (!manifestId || !dbUser?.orgId) return;
@@ -86,28 +89,32 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
 
     const initCameraScanner = async () => {
         setIsCameraActive(true);
+        
         if (!codeReaderRef.current) {
-            codeReaderRef.current = new BrowserMultiFormatReader();
+            const hints = new Map();
+            const formats = [
+                BarcodeFormat.QR_CODE,
+                BarcodeFormat.CODE_128,
+                BarcodeFormat.CODE_39,
+                BarcodeFormat.EAN_13,
+                BarcodeFormat.EAN_8,
+                BarcodeFormat.ITF,
+                BarcodeFormat.UPC_A,
+                BarcodeFormat.UPC_E,
+                BarcodeFormat.DATA_MATRIX
+            ];
+            hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+            hints.set(DecodeHintType.TRY_HARDER, true);
+            codeReaderRef.current = new BrowserMultiFormatReader(hints);
         }
 
         try {
             const videoInputDevices = await codeReaderRef.current.listVideoInputDevices();
             setCameras(videoInputDevices);
             
-            if (videoInputDevices.length > 0) {
-                // Try to find a back camera
-                const backCamera = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('rear')
-                );
-                
-                const deviceIdToUse = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
-                setSelectedCameraId(deviceIdToUse);
-                startScanning(deviceIdToUse);
-            } else {
-                toast({ title: 'Kamera feil', description: 'Ingen kameraer funnet på denne enheten.', variant: 'destructive' });
-                setIsCameraActive(false);
-            }
+            // On mobile, labels might be empty initially.
+            // Using facingMode is more reliable than deviceId for the first start.
+            startScanningWithConstraints('environment');
         } catch (err) {
             console.error(err);
             toast({ title: 'Kamera feil', description: 'Kunne ikke få tilgang til kameraet.', variant: 'destructive' });
@@ -115,29 +122,45 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
         }
     };
 
-    const startScanning = (deviceId: string) => {
+    const startScanningWithConstraints = async (mode: 'user' | 'environment', deviceId?: string) => {
         if (!codeReaderRef.current || !videoRef.current) return;
         
         codeReaderRef.current.reset();
+        setFacingMode(mode);
         
-        codeReaderRef.current.decodeFromVideoDevice(deviceId, videoRef.current, (result: Result, err: any) => {
-            if (result && !isProcessing) {
-                // Play a beep sound
-                const audio = new Audio('/beep.mp3'); // Optional: Add a beep.mp3 to public folder
-                audio.play().catch(() => {}); // Ignore play errors (e.g. if user hasn't interacted)
+        const constraints: MediaStreamConstraints = deviceId 
+            ? { video: { deviceId: { exact: deviceId } } }
+            : { video: { facingMode: mode } };
 
-                const text = result.getText();
-                handleScannedText(text);
-                
-                // Briefly pause scanning to prevent double scans
-                codeReaderRef.current?.reset();
-                setTimeout(() => {
-                    if (isCameraActive && selectedCameraId) {
-                        startScanning(selectedCameraId);
+        try {
+            await codeReaderRef.current.decodeFromConstraints(constraints, videoRef.current, (result: Result, err: any) => {
+                if (result && !isProcessing) {
+                    const text = result.getText();
+                    const now = Date.now();
+                    
+                    // Prevent duplicate scans within 2 seconds if it's the same text
+                    if (text === lastScannedText.current && now - lastScanTime.current < 2000) {
+                        return;
                     }
-                }, 1500);
+
+                    lastScannedText.current = text;
+                    lastScanTime.current = now;
+
+                    // Haptic feedback
+                    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+                        window.navigator.vibrate(100);
+                    }
+
+                    handleScannedText(text);
+                }
+            });
+        } catch (err) {
+            console.error('Scanning error:', err);
+            // If environment fails, try default
+            if (mode === 'environment' && !deviceId) {
+                startScanningWithConstraints('user');
             }
-        });
+        }
     };
 
     const stopCameraScanner = () => {
@@ -148,14 +171,8 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
     };
 
     const switchCamera = () => {
-        if (cameras.length > 1) {
-            const currentIndex = cameras.findIndex(c => c.deviceId === selectedCameraId);
-            const nextIndex = (currentIndex + 1) % cameras.length;
-            const nextDeviceId = cameras[nextIndex].deviceId;
-            
-            setSelectedCameraId(nextDeviceId);
-            startScanning(nextDeviceId);
-        }
+        const nextMode = facingMode === 'environment' ? 'user' : 'environment';
+        startScanningWithConstraints(nextMode);
     };
 
     const handleScannedText = async (text: string) => {
@@ -350,16 +367,15 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                                         )}
                                         
                                         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-40">
-                                            {cameras.length > 1 && (
-                                                <Button 
-                                                    variant="secondary" 
-                                                    size="icon" 
-                                                    className="rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30"
-                                                    onClick={switchCamera}
-                                                >
-                                                    <Camera className="h-5 w-5" />
-                                                </Button>
-                                            )}
+                                            <Button 
+                                                variant="secondary" 
+                                                size="icon" 
+                                                className="rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30"
+                                                onClick={switchCamera}
+                                                title="Bytt kamera"
+                                            >
+                                                <RefreshCw className="h-5 w-5" />
+                                            </Button>
                                             <Button 
                                                 variant="destructive" 
                                                 className="rounded-full px-6 font-bold shadow-xl"
