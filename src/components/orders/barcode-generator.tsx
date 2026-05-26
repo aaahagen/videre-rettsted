@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import bwipjs from 'bwip-js';
 import { Button } from '@/components/ui/button';
-import { Printer, Loader2, Info } from 'lucide-react';
+import { Printer, Loader2, Info, QrCode as QrIcon, Barcode as BarcodeIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,10 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Order, Place } from '@/lib/types';
+import { useAuth } from '@/components/auth-provider';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
+import { Organization } from '@/lib/types';
 
 interface BarcodeGeneratorProps {
   order: Order;
@@ -22,14 +26,25 @@ interface BarcodeGeneratorProps {
 }
 
 export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
+  const { dbUser } = useAuth();
+  const [org, setOrganization] = useState<Organization | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [labelUrls, setLabelUrls] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Listen to organization settings for real-time format changes
+  useEffect(() => {
+    if (!dbUser?.orgId) return;
+    return onSnapshot(doc(db, 'organizations', dbUser.orgId), (doc) => {
+      if (doc.exists()) setOrganization({ id: doc.id, ...doc.data() } as Organization);
+    });
+  }, [dbUser?.orgId]);
 
   const generateLabels = async () => {
     setIsGenerating(true);
     const urls: string[] = [];
     const itemCount = order.details?.numberOfItems || 1;
+    const format = org?.labelSettings?.format || 'barcode';
     
     try {
       for (let i = 1; i <= itemCount; i++) {
@@ -37,11 +52,12 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
         const barcodeData = order.barcode || order.id;
         
         await bwipjs.toCanvas(canvas, {
-          bcid: 'code128',
+          bcid: format === 'qrcode' ? 'qrcode' : 'code128',
           text: barcodeData,
           scale: 3,
-          height: 12,
-          includetext: true,
+          height: format === 'qrcode' ? 30 : 12,
+          width: format === 'qrcode' ? 30 : undefined,
+          includetext: format !== 'qrcode',
           textxalign: 'center',
         });
 
@@ -49,7 +65,6 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
         const ctx = labelCanvas.getContext('2d');
         if (!ctx) continue;
 
-        // Standard Label Size: 100mm x 75mm (approx 4x3 inches)
         labelCanvas.width = 800;
         labelCanvas.height = 600;
 
@@ -62,7 +77,7 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
         ctx.lineWidth = 4;
         ctx.strokeRect(10, 10, labelCanvas.width - 20, labelCanvas.height - 20);
 
-        // Header - VIDERE RettSted Branding (Small)
+        // Header - Branding
         ctx.fillStyle = '#6366f1';
         ctx.font = 'black 18px sans-serif';
         ctx.fillText('VIDERE RettSted', 30, 45);
@@ -77,7 +92,6 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
         const address = place?.address || '';
         ctx.fillText(address.substring(0, 40), 30, 135);
         
-        // Postal Code (Big and Clear for sorting)
         const postalCode = address.match(/\d{4}/)?.[0] || '----';
         ctx.font = 'black 72px sans-serif';
         ctx.textAlign = 'right';
@@ -90,35 +104,46 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
         ctx.lineTo(labelCanvas.width - 30, 160);
         ctx.stroke();
 
-        // --- SECTION 2: BARCODE ---
-        const barcodeScale = 1.1;
-        const barcodeWidth = canvas.width * barcodeScale;
-        const barcodeHeight = canvas.height * barcodeScale;
-        const x = (labelCanvas.width - barcodeWidth) / 2;
-        ctx.drawImage(canvas, x, 180, barcodeWidth, barcodeHeight);
+        // --- SECTION 2: BARCODE / QR ---
+        if (format === 'qrcode') {
+            const qrSize = 240;
+            const x = (labelCanvas.width - qrSize) / 2;
+            ctx.drawImage(canvas, x, 180, qrSize, qrSize);
+            
+            // Human readable text for QR
+            ctx.font = 'bold 18px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(barcodeData, labelCanvas.width / 2, 440);
+            ctx.textAlign = 'left';
+        } else {
+            const barcodeScale = 1.1;
+            const barcodeWidth = canvas.width * barcodeScale;
+            const barcodeHeight = canvas.height * barcodeScale;
+            const x = (labelCanvas.width - barcodeWidth) / 2;
+            ctx.drawImage(canvas, x, 180, barcodeWidth, barcodeHeight);
+        }
 
         // --- SECTION 3: PHYSICAL SPECS ---
         ctx.font = 'bold 24px sans-serif';
-        ctx.fillText(`KOLLI: ${i} / ${itemCount}`, 30, 460);
+        ctx.fillText(`KOLLI: ${i} / ${itemCount}`, 30, 480);
 
         ctx.textAlign = 'right';
         let specs = '';
         if (order.details?.weight) specs += `${order.details.weight} KG  `;
         if (order.details?.volume) specs += `${order.details.volume} M3`;
-        ctx.fillText(specs, labelCanvas.width - 40, 460);
+        ctx.fillText(specs, labelCanvas.width - 40, 480);
         ctx.textAlign = 'left';
 
-        // --- SECTION 4: ROUTING HINT (The persistent part) ---
-        // We use a "Zone" or "Zip" based hint instead of Route Name
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(30, 490, labelCanvas.width - 60, 80);
+        // --- SECTION 4: INSTRUCTION ---
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(30, 510, labelCanvas.width - 60, 65);
         ctx.fillStyle = 'black';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('SKANN FOR LASTERAMPE-INFO', 50, 525);
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('SKANN FOR LASTERAMPE-INFO', 50, 535);
         
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#475569';
-        ctx.fillText('Denne etiketten er persistent. Rute og bil tildeles digitalt ved skanning.', 50, 555);
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('Rute og bil tildeles digitalt. Gjenbrukbar etikett.', 50, 558);
 
         urls.push(labelCanvas.toDataURL('image/png'));
       }
@@ -169,7 +194,8 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(val) => {
       setIsOpen(val);
-      if (val && labelUrls.length === 0) {
+      if (val) {
+        setLabelUrls([]); // Clear old if format changed
         generateLabels();
       }
     }}>
@@ -181,10 +207,19 @@ export function BarcodeGenerator({ order, place }: BarcodeGeneratorProps) {
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col border-none shadow-2xl">
         <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-2xl font-black text-slate-900">Forhåndsvisning av Etiketter</DialogTitle>
-          <DialogDescription className="font-medium text-slate-500">
-            Genererer {order.details?.numberOfItems || 1} etikett(er) for ordre {order.barcode || order.id}.
-          </DialogDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <DialogTitle className="text-2xl font-black text-slate-900">Forhåndsvisning</DialogTitle>
+              <DialogDescription className="font-medium text-slate-500">
+                Ordre {order.barcode || order.id.slice(0,8)} • {org?.labelSettings?.format === 'qrcode' ? 'QR-kode' : 'Strekkode'}
+              </DialogDescription>
+            </div>
+            {org?.labelSettings?.format === 'qrcode' ? (
+                <QrIcon className="h-8 w-8 text-indigo-100" />
+            ) : (
+                <BarcodeIcon className="h-8 w-8 text-indigo-100" />
+            )}
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-6">

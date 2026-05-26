@@ -26,13 +26,18 @@ export interface Organization {
     workforce?: boolean;
     logistics?: boolean;
     analytics?: boolean;
-    hms?: boolean; // Added
-    danger_reports?: boolean; // Added
+    hms?: boolean;
+    danger_reports?: boolean;
   };
   mainDepot?: {
     address: string;
     coordinates: { lat: number, lng: number };
     radius: number; // in meters
+  };
+  labelSettings?: {
+    format: 'barcode' | 'qrcode';
+    includeBranding?: boolean;
+    size?: 'small' | 'standard' | 'large';
   };
   placeSettings?: {
     autoGenerateCustomerNumbers?: boolean;
@@ -40,7 +45,7 @@ export interface Organization {
     nextCustomerNumber?: number;
   };
   hmsSettings?: {
-    enabled: boolean; // Keep for internal toggle if needed, or deprecate
+    enabled: boolean;
     title?: string;
     questions: { id: string; text: string }[];
     requireComment?: boolean;
@@ -76,13 +81,13 @@ export interface Organization {
       placeholder: string;
       enabled?: boolean;
     };
-    salesMessage?: { // Added
+    salesMessage?: {
       label: string;
       placeholder: string;
       enabled?: boolean;
     };
   };
-  dangerReportsEnabled?: boolean; // Keep for internal toggle if needed, or deprecate
+  dangerReportsEnabled?: boolean;
   legal?: {
     dpaAcceptedAt?: {
       toDate: () => Date;
@@ -107,20 +112,20 @@ export interface Place {
   id: string;
   name: string;
   address: string;
-  customerNumber?: string; // Added: Manual or Auto-generated ID
-  description: string; // Used for "description"
-  notes?: string;      // Used for "notes"
-  field3?: string;     // Added: Additional text field 3
-  field4?: string;     // Added: Additional text field 4
+  customerNumber?: string;
+  description: string;
+  notes?: string;
+  field3?: string;
+  field4?: string;
   doorCode?: { category?: string; name?: string; value?: string; }[];
   contactPersons?: { name: string; phone: string; email: string; }[];
   hashtags?: string[];
   
   // Sales specific fields
   salesMessage?: string;
-  salesMessageValidUntil?: any; // Firestore Timestamp or Date
+  salesMessageValidUntil?: any;
 
-  // Custom HMS Answers (One-time occurrence per place)
+  // Custom HMS Answers
   hmsData?: {
     answers: Record<string, boolean>;
     comment?: string;
@@ -130,14 +135,14 @@ export interface Place {
   };
 
   // Zone constraints
-  isZeroEmissionZone?: boolean; // If true, prefers/requires electric/gas
-  isCityCenter?: boolean; // High toll area
+  isZeroEmissionZone?: boolean;
+  isCityCenter?: boolean;
 
   // Physical limitations for vehicles at this location
-  maxVehicleHeight?: number; // meters
-  maxVehicleWidth?: number;  // meters
-  maxVehicleLength?: number; // meters
-  maxVehicleWeight?: number; // kg (total weight of vehicle)
+  maxVehicleHeight?: number;
+  maxVehicleWidth?: number;
+  maxVehicleLength?: number;
+  maxVehicleWeight?: number;
 
   // Opening Hours
   weeklySchedule?: {
@@ -151,7 +156,7 @@ export interface Place {
   };
   
   // Delivery stats
-  estimatedDeliveryTime?: number; // estimated time to complete delivery at this place in minutes
+  estimatedDeliveryTime?: number;
   
   // Images
   imageUrl?: string;
@@ -163,20 +168,20 @@ export interface Place {
     lat: number;
     lng: number;
   };
-  location?: { // keeping for backward compatibility if needed
+  location?: {
     latitude: number;
     longitude: number;
   };
 
   // Meta
-  orgId: string; // Database field is orgId
-  organizationId?: string; // Alias or legacy
+  orgId: string;
+  organizationId?: string;
   
-  authorId?: string; // Legacy
-  authorName?: string; // Cache for display
-  createdBy: string; // UID
-  updatedBy?: string; // UID
-  updatedByName?: string; // Cache for display
+  authorId?: string;
+  authorName?: string;
+  createdBy: string;
+  updatedBy?: string;
+  updatedByName?: string;
   
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
@@ -199,8 +204,8 @@ export interface RouteSuggestion {
     driverId?: string;
     orders: Order[];
     places: Place[];
-    estimatedDuration: number; // minutes
-    estimatedDistance: number; // km
+    estimatedDuration: number;
+    estimatedDistance: number;
     warnings: string[]; 
     errors: string[];   
 }
@@ -208,30 +213,30 @@ export interface RouteSuggestion {
 export interface Route {
   id: string;
   name: string;
-  status?: 'active' | 'completed' | 'template'; // Added 'template'
+  status?: 'active' | 'completed' | 'template';
   shipmentNumber?: string;
-  orgId: string; // Database field is orgId
+  orgId: string;
   organizationId?: string;
-  places: string[]; // array of placeIds
-  completedStops?: string[]; // array of placeIds that are marked as complete
-  completedStopEvents?: Record<string, CompletedStopEvent & { pod?: ProofOfDelivery }>; // map of placeId to completion event
-  startAddress?: string; // The starting address of the route
-  endAddress?: string; // The ending address of the route
-  notes?: string; // Crucial information about the route
+  places: string[];
+  completedStops?: string[];
+  completedStopEvents?: Record<string, CompletedStopEvent & { pod?: ProofOfDelivery }>;
+  startAddress?: string;
+  endAddress?: string;
+  notes?: string;
   driverId?: string;
-  driverName?: string; // Added: Name of the driver (denormalized for display)
+  driverName?: string;
   isThirdParty?: boolean;
-  thirdPartySupplier?: string; // Name of the 3PS company
+  thirdPartySupplier?: string;
   vehicleId?: string;
-  trailerId?: string; // Added for Modular Combinations
-  distance?: number; // in kilometers
-  distanceString?: string; // e.g. "10.5 km"
-  duration?: string; // e.g., "1 t 23 min"
-  prepTimeStart?: number; // in minutes
-  prepTimeEnd?: number; // in minutes
-  breakTime?: number; // in minutes
-  fuelServiceTime?: number; // in minutes
-  date?: string; // ISO date string (YYYY-MM-DD) for when the route is planned
+  trailerId?: string;
+  distance?: number;
+  distanceString?: string;
+  duration?: string;
+  prepTimeStart?: number;
+  prepTimeEnd?: number;
+  breakTime?: number;
+  fuelServiceTime?: number;
+  date?: string;
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }
@@ -239,9 +244,9 @@ export interface Route {
 export interface Invitation {
   id: string;
   email: string;
-  name?: string; // Added: For pre-filled names
+  name?: string;
   orgId: string;
-  orgName?: string; // Added: For display in invite page
+  orgName?: string;
   organizationId?: string;
   role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   status: 'pending' | 'accepted' | 'expired';
@@ -259,13 +264,13 @@ export interface User {
   orgId: string;
   role: 'super_admin' | 'owner' | 'admin' | 'hms_responsible' | 'salesman' | 'driver' | 'contractor' | 'loader' | 'planner';
   favorites: string[];
-  visitedPlaces?: string[]; // Array of placeIds the user has completed on a route
+  visitedPlaces?: string[];
   status?: 'active' | 'paused';
   disabled?: boolean;
   images?: { url: string; description?: string; isMain?: boolean; uploadedAt?: any }[];
   
   // Compliance
-  lastTachoDownloadDate?: string; // ISO Date YYYY-MM-DD
+  lastTachoDownloadDate?: string;
 }
 
 export interface LogEntry {
@@ -280,45 +285,45 @@ export interface LogEntry {
 export interface Vehicle {
   id: string;
   orgId: string;
-  name: string; // e.g., "Scania R500", "Van 1"
+  name: string;
   registrationNumber: string;
-  type: 'truck' | 'van' | 'car' | 'trailer' | 'tractor'; // Expanded
-  config?: 'rigid' | 'tractor' | 'drawbar' | 'semi' | 'box_swap' | 'fixed_box'; // Added config
+  type: 'truck' | 'van' | 'car' | 'trailer' | 'tractor';
+  config?: 'rigid' | 'tractor' | 'drawbar' | 'semi' | 'box_swap' | 'fixed_box';
   fuelType?: 'diesel' | 'electric' | 'gas' | 'hybrid';
-  maxRange?: number; // km (for electric/gas)
+  maxRange?: number;
   dimensions?: {
-    length?: number; // meters
-    height?: number; // meters
-    width?: number; // meters
+    length?: number;
+    height?: number;
+    width?: number;
   };
   capacity: {
-    weight?: number; // in kg
-    volume?: number; // in cubic meters
+    weight?: number;
+    volume?: number;
     pallets?: number;
     notes?: string;
   };
   capabilities: {
     refrigeration: boolean;
     tailLift: boolean;
-    adr: boolean; // Hazardous materials
-    trailerCoupling: boolean; // Can drag a trailer (VBG/Drawbar)
-    fifthWheel?: boolean; // Can drag a semi-trailer
-    flatbed?: boolean; // Flakbil
+    adr: boolean;
+    trailerCoupling: boolean;
+    fifthWheel?: boolean;
+    flatbed?: boolean;
     notes?: string;
     customFields?: { name: string; value: string }[];
   };
   
   // Compliance & Deadlines
-  euControl?: string; // ISO date (YYYY-MM-DD)
-  nextService?: string; // ISO date or descriptive string
-  tachographCalibration?: string; // ISO date (YYYY-MM-DD)
-  lastTachoDownloadDate?: string; // ISO date (YYYY-MM-DD)
+  euControl?: string;
+  nextService?: string;
+  tachographCalibration?: string;
+  lastTachoDownloadDate?: string;
 
   // Odometer tracking
   lastOdometerReading?: number;
-  lastOdometerDate?: any; // Date or Timestamp
+  lastOdometerDate?: any;
 
-  status: 'active' | 'maintenance' | 'inactive'; // DEPRECATED: Use currentStatuses array instead.
+  status: 'active' | 'maintenance' | 'inactive';
   currentStatuses: ("ready" | "pending_workshop" | "workshop" | "observation" | "on_tour" | "parked")[];
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
@@ -328,9 +333,9 @@ export interface Vehicle {
 
 export interface Contract {
   id: string;
-  startDate: string; // ISO date string
-  endDate?: string; // ISO date string, optional for current contract
-  contractedHours: number; // Weekly hours
+  startDate: string;
+  endDate?: string;
+  contractedHours: number;
   role: string;
   salary?: number;
 }
@@ -340,13 +345,13 @@ export interface WorkLog {
   orgId: string;
   driverId: string;
   
-  // Planned Schedule (Snapshot of what was expected)
-  plannedStart?: string; // ISO DateTime string
-  plannedEnd?: string;   // ISO DateTime string
+  // Planned Schedule
+  plannedStart?: string;
+  plannedEnd?: string;
   
   // Actual Punches
-  actualPunchIn?: string;  // ISO DateTime string
-  actualPunchOut?: string; // ISO DateTime string
+  actualPunchIn?: string;
+  actualPunchOut?: string;
   
   // Location Data
   entryMethod: 'geofence' | 'gps_stamp' | 'manual_entry';
@@ -378,11 +383,11 @@ export interface DriverProfile extends User {
     email: string;
   };
   workingHours?: {
-    start: string; // e.g., "08:00"
-    end: string;   // e.g., "16:00"
+    start: string;
+    end: string;
   };
   rotation?: {
-    startDate: string; // ISO date string when rotation starts
+    startDate: string;
     weeks: Array<{
       days: {
         monday: { isWorking: boolean; start?: string; end?: string };
@@ -400,22 +405,22 @@ export interface DriverProfile extends User {
     start?: string;
     end?: string;
   }>;
-  certifications?: string[]; // e.g., ["ADR", "Forklift"]
+  certifications?: string[];
   skills?: string[];
-  documents?: { url: string; name: string; type: string; uploadedAt?: any }[]; // For certificates, diplomas, etc.
+  documents?: { url: string; name: string; type: string; uploadedAt?: any }[];
   
   // New HR/Workforce fields
   address?: string;
   phone?: string;
-  emergencyContact?: string; // Format: Name, Relationship, Phone
+  emergencyContact?: string;
   nextOfKin?: string;
-  children?: string; // Simple text field for now, can be expanded later
+  children?: string;
   adminNotes?: string;
-  seniorityDate?: string; // ISO date string
+  seniorityDate?: string;
   contracts?: Contract[];
 
   // Personal Identification
-  dateOfBirth?: string; // ISO date string
+  dateOfBirth?: string;
   socialSecurityNumber?: string;
   gender?: string;
 
@@ -424,8 +429,8 @@ export interface DriverProfile extends User {
   jobTitle?: string;
   department?: string;
   supervisor?: string;
-  employmentStatus?: string; // e.g., 'full-time', 'part-time'
-  probationEndDate?: string; // ISO date string
+  employmentStatus?: string;
+  probationEndDate?: string;
 
   // Compensation & Benefits
   hourlyRate?: number;
@@ -434,79 +439,64 @@ export interface DriverProfile extends User {
 
   // Compliance & Records
   staffHandbookAcknowledged?: boolean;
-  backgroundCheckDate?: string; // ISO date string
+  backgroundCheckDate?: string;
 }
 
 export interface Message {
   id: string;
   orgId: string;
-  senderId: string; // userId
-  recipientId: string; // userId or 'all'/'drivers'/'admins' for broadcast
+  senderId: string;
+  recipientId: string;
   content: string;
   createdAt: FieldValue | Date;
-  readBy: string[]; // array of userIds who have read the message
+  readBy: string[];
   type: 'direct' | 'broadcast';
 }
 
 // --- PHASE 3: END-TO-END VERIFICATION MODELS ---
 
 export interface ProofOfDelivery {
-  // Core Tracking
   timestamp: string | Date | any;
-  coordinates?: { lat: number; lng: number; accuracy?: number }; // Accuracy is industry standard for geofencing disputes
-  
-  // Status
+  coordinates?: { lat: number; lng: number; accuracy?: number };
   status: 'successful' | 'partially_successful' | 'failed_attempt';
-  
-  // Delivery Context
   deliveryMethod?: 'handed_to_recipient' | 'left_at_door' | 'left_in_safe_place' | 'mailroom_reception' | 'neighbor';
-  
-  // Recipient Verification
-  signatureUrl?: string; // Image of signature
-  signatureName?: string; // Printed name of signee
-  recipientPhone?: string; // Optional: For verification
-
-  // Visual Proof (Crucial for redundancy)
+  signatureUrl?: string;
+  signatureName?: string;
+  recipientPhone?: string;
   photos?: { 
     url: string; 
     description?: string; 
     type?: 'package_in_situ' | 'damage_proof' | 'door_number' | 'general';
     uploadedAt?: any;
   }[];
-  
-  // Package Tracking
-  scannedBarcodes?: string[]; // Verification that specific items were dropped
-  
-  // Exceptions & Damages
+  scannedBarcodes?: string[];
   failureReason?: 'recipient_unavailable' | 'address_not_found' | 'access_denied' | 'package_damaged_refused' | 'other';
   damageReported?: boolean;
   damageDetails?: string;
-  
-  // Notes
   notes?: string; 
 }
 
 
 export interface LineItem {
-  id: string; // Unique ID for the line item (e.g. 'keg-of-beer')
+  id: string;
   description: string;
   quantity: number;
-  weightPerItem?: number; // kg
-  length?: number; // cm
-  width?: number; // cm
-  height?: number; // cm
+  weightPerItem?: number;
+  length?: number;
+  width?: number;
+  height?: number;
   type?: 'keg' | 'case' | 'box' | 'other';
 }
 
 export interface Collie {
-  id: string; // Unique tracking ID (Barcode) for this specific item (e.g. Order-123-Item-1)
-  lineItemId: string; // Reference back to the line item type
-  handlingUnitId?: string; // If it is on a pallet, which one?
+  id: string;
+  lineItemId: string;
+  handlingUnitId?: string;
   status: 'pending' | 'loaded' | 'delivered' | 'failed';
 }
 
 export interface HandlingUnit {
-  id: string; // Parent SSCC / Pallet Barcode
+  id: string;
   type: 'eur-pallet' | 'half-pallet' | 'custom';
   status: 'pending' | 'loaded' | 'delivered' | 'failed';
 }
@@ -514,16 +504,16 @@ export interface HandlingUnit {
 export interface Order {
   id: string;
   orgId: string;
-  routeId?: string; // If assigned to a route
-  placeId: string; // The destination
+  routeId?: string;
+  placeId: string;
   status: 'pending' | 'loaded' | 'delivered' | 'failed';
-  barcode: string; // The primary tracking identifier
+  barcode: string;
   details: {
     description: string;
     weight?: number;
     volume?: number;
     form?: 'pallet' | 'package' | 'liquid' | 'other';
-    numberOfItems?: number; // Added: How many individual items/pallets are in this order
+    numberOfItems?: number;
     specialRequirements?: {
       adr?: boolean;
       temperatureControlled?: boolean;
@@ -540,8 +530,8 @@ export interface Order {
 export interface ManifestNote {
     content: string;
     createdAt: string | Date | FieldValue;
-    createdBy: string; // userId
-    userName?: string; // name of the creator
+    createdBy: string;
+    userName?: string;
     type: 'note' | 'issue';
 }
 
@@ -555,15 +545,15 @@ export interface Manifest {
     orderId: string;
     barcode: string;
     status: 'pending' | 'loaded';
-    totalItems: number; // Added: The total number of items/pallets for this order
+    totalItems: number;
     loadedItems: number;
     scannedCollieIds?: string[];
     loadedAt?: string | Date | FieldValue;
-    loadedBy?: string; // userId of the loader
+    loadedBy?: string;
   }[];
-  notes?: ManifestNote[]; // Added: Loader notes and issue reports
+  notes?: ManifestNote[];
   verifiedAt?: string | Date | FieldValue;
-  verifiedBy?: string; // userId of the admin/loader who finalized it
+  verifiedBy?: string;
   createdAt: FieldValue | Date;
   updatedAt: FieldValue | Date;
 }
@@ -606,8 +596,6 @@ export interface VehicleDamageReport {
   workshopRepairReceiptUrl?: string;
 }
 
-// --- PHASE 2: LMS (Learning Management System) MODELS ---
-
 export interface Course {
   id: string;
   orgId: string;
@@ -619,8 +607,8 @@ export interface Course {
     url?: string;
     body?: string;
   }[];
-  isCertification?: boolean; // New field
-  validityMonths?: number;   // New field
+  isCertification?: boolean;
+  validityMonths?: number;
   requiredRoles?: ('super_admin' | 'admin' | 'driver' | 'contractor' | 'loader' | 'planner')[];
   estimatedMinutes?: number;
   isPublished: boolean;
@@ -634,11 +622,11 @@ export interface CourseAssignment {
   courseId: string;
   userId: string;
   status: 'assigned' | 'in_progress' | 'completed' | 'expired';
-  progress?: number; // 0-100
+  progress?: number;
   assignedAt: FieldValue | Date;
-  updatedAt: FieldValue | Date; // Added missing field
+  updatedAt: FieldValue | Date;
   completedAt?: FieldValue | Date;
-  expiresAt?: FieldValue | Date; // For certifications that need renewal
+  expiresAt?: FieldValue | Date;
 }
 
 export interface DangerReport {
@@ -646,14 +634,14 @@ export interface DangerReport {
   orgId: string;
   placeId: string;
   placeName: string;
-  reportedBy: string; // userId
+  reportedBy: string;
   reportedByName: string;
   description: string;
   images?: string[];
   status: 'open' | 'resolved';
   createdAt: FieldValue | Date;
   resolvedAt?: FieldValue | Date;
-  resolvedBy?: string; // userId
+  resolvedBy?: string;
   resolutionNote?: string;
   resolutionImages?: string[];
 }

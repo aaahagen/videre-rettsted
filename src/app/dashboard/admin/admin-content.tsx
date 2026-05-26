@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield, Settings2, Database, Trash2, Megaphone, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Loader2, Copy, Check, MoreVertical, Pause, Play, User as UserIcon, Edit2, Search, Building2, CheckCircle2, Plus, Users, Download, Upload, ChevronDown, ChevronUp, Clock, MapPin, Hash, Save, UserX, LocateFixed, Shield, Settings2, Database, Trash2, Megaphone, AlertTriangle, ShieldAlert, QrCode, Barcode } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -116,6 +116,9 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   const [orgSettings, setOrgSettings] = useState({
     name: '',
     orgNumber: '',
+    // Label settings
+    labelFormat: 'barcode' as 'barcode' | 'qrcode',
+    labelBranding: true,
     // Field settings
     descEnabled: true, descLabel: '', descPlaceholder: '',
     notesEnabled: true, notesLabel: '', notesPlaceholder: '',
@@ -147,6 +150,8 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
           setOrgSettings({
             name: org.name || '',
             orgNumber: org.orgNumber || '',
+            labelFormat: org.labelSettings?.format || 'barcode',
+            labelBranding: org.labelSettings?.includeBranding ?? true,
             descEnabled: org.fieldSettings?.description?.enabled ?? true,
             descLabel: org.fieldSettings?.description?.label || '',
             descPlaceholder: org.fieldSettings?.description?.placeholder || '',
@@ -204,11 +209,15 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
       await firebaseDB.updateOrganization(organization.id, {
         name: orgSettings.name,
         orgNumber: orgSettings.orgNumber,
-        dangerReportsEnabled: orgSettings.dangerReportsEnabled, // Save new setting
+        dangerReportsEnabled: orgSettings.dangerReportsEnabled,
         mainDepot: {
           address: orgSettings.depotAddress,
           coordinates: { lat: parseFloat(orgSettings.depotLat) || 0, lng: parseFloat(orgSettings.depotLng) || 0 },
           radius: orgSettings.depotRadius
+        },
+        labelSettings: {
+            format: orgSettings.labelFormat,
+            includeBranding: orgSettings.labelBranding
         },
         fieldSettings: {
           description: { enabled: orgSettings.descEnabled, label: orgSettings.descLabel, placeholder: orgSettings.descPlaceholder },
@@ -374,76 +383,130 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
         {organization && <PendingInvitations orgId={organization.id} />}
 
         {/* 2. PLACE CARD SETTINGS */}
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b p-6">
-                <div className="flex items-center gap-3">
-                    <Settings2 className="h-5 w-5 text-blue-600" />
-                    <div>
-                        <CardTitle className="font-headline text-xl">Tilpasning av Leveringssteder</CardTitle>
-                        <CardDescription className="text-xs">Endre kundenummerering og feltvisning</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-8">
-                {/* Customer Numbering */}
-                <div className="space-y-4">
-                  <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2"><Hash className="h-3.5 w-3.5" /> Kundenummerering</h3>
-                  <div className="p-4 rounded-xl border bg-slate-50/50 space-y-6 max-w-3xl">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5"><Label className="text-sm font-bold">Auto-generer kundenummer</Label><p className="text-xs text-muted-foreground">Nye steder får tildelt nummer automatisk.</p></div>
-                        <Switch checked={orgSettings.autoGenerateCustomerNumbers} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, autoGenerateCustomerNumbers: v }))} />
-                    </div>
-                    {orgSettings.autoGenerateCustomerNumbers && (
-                        <div className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-top-1">
-                            <div className="space-y-2"><Label>Prefix (f.eks. K-)</Label><Input value={orgSettings.customerNumberPrefix} onChange={e => setOrgSettings(s => ({ ...s, customerNumberPrefix: e.target.value }))} /></div>
-                            <div className="space-y-2"><Label>Neste nummer</Label><Input type="number" value={orgSettings.nextCustomerNumber} onChange={e => setOrgSettings(s => ({ ...s, nextCustomerNumber: parseInt(e.target.value) || 1000 }))} /></div>
-                        </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-slate-100">
-                    <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Tilpass Skjema for "Nytt Sted"</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-                        <FieldConfig label="Felt 1" enabled={orgSettings.descEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, descEnabled: v }))} name={orgSettings.descLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, descLabel: v }))} placeholder={orgSettings.descPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, descPlaceholder: v }))} />
-                        <FieldConfig label="Felt 2" enabled={orgSettings.notesEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, notesEnabled: v }))} name={orgSettings.notesLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, notesLabel: v }))} placeholder={orgSettings.notesPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, notesPlaceholder: v }))} />
-                        <FieldConfig label="Felt 3" enabled={orgSettings.field3Enabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, field3Enabled: v }))} name={orgSettings.field3Label} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, field3Label: v }))} placeholder={orgSettings.field3Placeholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, field3Placeholder: v }))} />
-                        <FieldConfig label="Felt 4" enabled={orgSettings.field4Enabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, field4Enabled: v }))} name={orgSettings.field4Label} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, field4Label: v }))} placeholder={orgSettings.field4Placeholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, field4Placeholder: v }))} />
-                        <FieldConfig label="Dørkode" enabled={orgSettings.doorCodeEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, doorCodeEnabled: v }))} name={orgSettings.doorCodeLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodeLabel: v }))} placeholder={orgSettings.doorCodePlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodePlaceholder: v }))} />
-                        <FieldConfig label="Kontaktpersoner" enabled={orgSettings.contactPersonsEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, contactPersonsEnabled: v }))} name={orgSettings.contactPersonsLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, contactPersonsLabel: v }))} />
-                        <div className="md:col-span-2 pt-4 border-t border-dashed">
-                            <FieldConfig icon={<Megaphone className="h-4 w-4 text-amber-500" />} label="Midlertidig Salgsmelding" enabled={orgSettings.salesMessageEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, salesMessageEnabled: v }))} name={orgSettings.salesMessageLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, salesMessageLabel: v }))} />
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-
-        {/* 3. SAFETY & DANGER REPORTS (Restored/Added) */}
-        {organization?.modules?.danger_reports === true && (
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="border-slate-200 shadow-sm overflow-hidden h-fit">
+                <CardHeader className="bg-slate-50/50 border-b p-6">
                     <div className="flex items-center gap-3">
-                        <ShieldAlert className="h-5 w-5 text-red-600" />
+                        <Settings2 className="h-5 w-5 text-blue-600" />
                         <div>
-                            <CardTitle className="font-headline text-xl">Sikkerhet & Avvik</CardTitle>
-                            <CardDescription className="text-xs">Administrer systemet for faremeldinger og avvik</CardDescription>
+                            <CardTitle className="font-headline text-xl">Tilpasning av Steder</CardTitle>
+                            <CardDescription className="text-xs">Endre kundenummerering og feltvisning</CardDescription>
                         </div>
                     </div>
-                    <Switch checked={orgSettings.dangerReportsEnabled} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, dangerReportsEnabled: v }))} />
                 </CardHeader>
-                {orgSettings.dangerReportsEnabled && (
-                    <CardContent className="p-6">
-                        <div className="flex items-start gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-800">
-                            <AlertTriangle className="h-5 w-5 shrink-0" />
-                            <p className="text-sm font-medium">
-                                Når avvikshåndtering er aktivert, kan sjåfører rapportere farlige forhold ved leveringssteder. Administratorer må gjennomgå og løse disse sakene i avvikspanelet.
-                            </p>
+                <CardContent className="p-6 space-y-8">
+                    <div className="space-y-4">
+                        <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest flex items-center gap-2"><Hash className="h-3.5 w-3.5" /> Kundenummerering</h3>
+                        <div className="p-4 rounded-xl border bg-slate-50/50 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5"><Label className="text-sm font-bold">Auto-generer</Label><p className="text-[10px] text-muted-foreground">Tildel nummer automatisk.</p></div>
+                                <Switch checked={orgSettings.autoGenerateCustomerNumbers} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, autoGenerateCustomerNumbers: v }))} />
+                            </div>
+                            {orgSettings.autoGenerateCustomerNumbers && (
+                                <div className="grid gap-4 animate-in fade-in slide-in-from-top-1">
+                                    <div className="space-y-1"><Label className="text-xs">Prefix</Label><Input value={orgSettings.customerNumberPrefix} onChange={e => setOrgSettings(s => ({ ...s, customerNumberPrefix: e.target.value }))} className="h-8" /></div>
+                                    <div className="space-y-1"><Label className="text-xs">Neste nr</Label><Input type="number" value={orgSettings.nextCustomerNumber} onChange={e => setOrgSettings(s => ({ ...s, nextCustomerNumber: parseInt(e.target.value) || 1000 }))} className="h-8" /></div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t">
+                        <h3 className="font-bold text-xs text-slate-500 uppercase tracking-widest mb-4">Skjema-felter</h3>
+                        <div className="space-y-4">
+                            <FieldConfig label="Felt 1" enabled={orgSettings.descEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, descEnabled: v }))} name={orgSettings.descLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, descLabel: v }))} placeholder={orgSettings.descPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, descPlaceholder: v }))} />
+                            <FieldConfig label="Felt 2" enabled={orgSettings.notesEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, notesEnabled: v }))} name={orgSettings.notesLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, notesLabel: v }))} placeholder={orgSettings.notesPlaceholder} onPlaceholderChange={(v: string) => setOrgSettings(s => ({ ...s, notesPlaceholder: v }))} />
+                            <FieldConfig label="Dørkode" enabled={orgSettings.doorCodeEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, doorCodeEnabled: v }))} name={orgSettings.doorCodeLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, doorCodeLabel: v }))} />
+                            <FieldConfig icon={<Megaphone className="h-4 w-4 text-amber-500" />} label="Salgsmelding" enabled={orgSettings.salesMessageEnabled} onEnabledChange={(v: boolean) => setOrgSettings(s => ({ ...s, salesMessageEnabled: v }))} name={orgSettings.salesMessageLabel} onNameChange={(v: string) => setOrgSettings(s => ({ ...s, salesMessageLabel: v }))} />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-8">
+                {/* LABEL SETTINGS */}
+                <Card className="border-slate-200 shadow-sm overflow-hidden h-fit">
+                    <CardHeader className="bg-slate-50/50 border-b p-6">
+                        <div className="flex items-center gap-3">
+                            <QrCode className="h-5 w-5 text-indigo-600" />
+                            <div>
+                                <CardTitle className="font-headline text-xl">Label-innstillinger</CardTitle>
+                                <CardDescription className="text-xs">Velg format og utseende på etiketter</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
+                        <div className="space-y-4">
+                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Etikett-format</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div 
+                                    className={cn(
+                                        "cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3",
+                                        orgSettings.labelFormat === 'barcode' ? "border-indigo-600 bg-indigo-50" : "border-slate-100 hover:border-slate-200 bg-white"
+                                    )}
+                                    onClick={() => setOrgSettings(s => ({ ...s, labelFormat: 'barcode' }))}
+                                >
+                                    <Barcode className={cn("h-8 w-8", orgSettings.labelFormat === 'barcode' ? "text-indigo-600" : "text-slate-400")} />
+                                    <span className="text-xs font-black uppercase">Strekkode</span>
+                                </div>
+                                <div 
+                                    className={cn(
+                                        "cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-3",
+                                        orgSettings.labelFormat === 'qrcode' ? "border-indigo-600 bg-indigo-50" : "border-slate-100 hover:border-slate-200 bg-white"
+                                    )}
+                                    onClick={() => setOrgSettings(s => ({ ...s, labelFormat: 'qrcode' }))}
+                                >
+                                    <QrCode className={cn("h-8 w-8", orgSettings.labelFormat === 'qrcode' ? "text-indigo-600" : "text-slate-400")} />
+                                    <span className="text-xs font-black uppercase">QR-kode</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-xl border space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-sm font-bold">Inkluder branding</Label>
+                                    <p className="text-[10px] text-muted-foreground">Viser "VIDERE RettSted" på etiketten.</p>
+                                </div>
+                                <Switch checked={orgSettings.labelBranding} onCheckedChange={(v) => setOrgSettings(s => ({ ...s, labelBranding: v }))} />
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                            <div className="flex gap-3">
+                                <ShieldAlert className="h-5 w-5 text-indigo-600 shrink-0" />
+                                <p className="text-[11px] text-indigo-900 font-medium leading-relaxed">
+                                    <strong>Tips:</strong> QR-koder er mer robuste mot skader og kan skannes fra alle vinkler, mens strekkoder er mer tradisjonelle og fungerer godt med eldre lasere.
+                                </p>
+                            </div>
                         </div>
                     </CardContent>
+                </Card>
+
+                {/* SAFETY & DANGER REPORTS */}
+                {organization?.modules?.danger_reports === true && (
+                    <Card className="border-slate-200 shadow-sm overflow-hidden h-fit">
+                        <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <ShieldAlert className="h-5 w-5 text-red-600" />
+                                <div>
+                                    <CardTitle className="font-headline text-xl">Sikkerhet & Avvik</CardTitle>
+                                    <CardDescription className="text-xs">Faremeldinger</CardDescription>
+                                </div>
+                            </div>
+                            <Switch checked={orgSettings.dangerReportsEnabled} onCheckedChange={(v: boolean) => setOrgSettings(s => ({ ...s, dangerReportsEnabled: v }))} />
+                        </CardHeader>
+                        {orgSettings.dangerReportsEnabled && (
+                            <CardContent className="p-6">
+                                <p className="text-[11px] font-medium text-red-800 bg-red-50 p-3 rounded-lg border border-red-100">
+                                    Når avvikshåndtering er aktivert, kan sjåfører rapportere farlige forhold ved leveringssteder.
+                                </p>
+                            </CardContent>
+                        )}
+                    </Card>
                 )}
-            </Card>
-        )}
+            </div>
+        </div>
 
         {/* 4. DEPOT & GEOFENCING */}
         <Card className="border-slate-200 shadow-sm overflow-hidden">
@@ -473,7 +536,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                     <div>
                         <CardTitle className="font-headline text-xl">Sikkerhetslogg (Audit Trail)</CardTitle>
                         <CardDescription className="text-xs">
-                            Logger viktige handlinger som innlogging, opprettelse og sletting av steder, uavhengig av hvilke moduler som er aktivert.
+                            Logger viktige handlinger som innlogging, opprettelse og sletting av steder.
                         </CardDescription>
                     </div>
                 </CardHeader>
