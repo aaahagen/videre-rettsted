@@ -54,7 +54,11 @@ import {
     Hash,
     Settings2,
     Lock,
-    MessageSquare
+    MessageSquare,
+    Smartphone,
+    Vibrate,
+    RefreshCw,
+    CheckCircle2 as CheckIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -559,7 +563,7 @@ export default function ManualPage() {
                                             <h3 className="font-black text-red-700 text-lg">Advarsel til kollegaer</h3>
                                         </div>
                                         <p className="text-slate-700 font-medium text-sm leading-relaxed">
-                                            Når et avvik er meldt, vil kortet til dette stedet umiddelbart få en rød ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
+                                            Når et avvik èr meldt, vil kortet til dette stedet umiddelbart få en rød ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
                                         </p>
                                     </div>
                                 </div>
@@ -722,79 +726,82 @@ export default function ManualPage() {
                         <div className="space-y-12 animate-in fade-in duration-300">
                             <div className="flex items-center gap-3 border-b pb-4">
                                 <div className="p-2 bg-slate-100 rounded-lg"><ScanBarcode className="h-5 w-5 text-slate-700" /></div>
-                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Lasterampe (Manifest)</h2>
+                                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Lasterampe & Manifest</h2>
                             </div>
                             
-                            <p className="text-slate-700 text-lg font-medium">
-                                Lasterampen er terminalarbeiderens viktigste verktøy for å sikre at riktig pakke havner på riktig bil før avreise.
+                            <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                                Lasterampen er terminalarbeiderens kontrollsenter. Her sikrer vi at <strong className="text-indigo-700">riktig vare havner på riktig bil</strong>, og at ingenting blir glemt igjen på terminalen.
                             </p>
 
-                            <div className="space-y-8">
+                            <div className="grid md:grid-cols-2 gap-8">
                                 <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
                                     <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                        <ListTree className="h-5 w-5 text-indigo-500" />
-                                        Hva er et Manifest?
+                                        <Smartphone className="h-5 w-5 text-indigo-500" />
+                                        Bruke Kameraskanneren
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Et manifest er en digital pakkseddel for en hel rute. Den viser nøyaktig hvilke ordrer og kolli som skal være med på bilen. Målet er å oppnå 100% "Progresjon" før bilen forlater terminalen.
+                                        For rask registrering av kolli direkte med mobilen:
                                     </p>
+                                    <ol className="text-xs text-slate-500 space-y-3 list-decimal list-inside">
+                                        <li>Trykk på den store knappen <strong className="text-indigo-600">"Start Kameraskanner"</strong>.</li>
+                                        <li>Appen vil be om tillatelse til å bruke kameraet (feller første gang).</li>
+                                        <li><strong className="text-slate-800">Sikt:</strong> Hold strekkoden inne i den markerte rammen på skjermen.</li>
+                                        <li><strong className="text-slate-800">Feedback:</strong> Telefonen vil <strong className="text-indigo-600">vibrere</strong> og gi et lydsignal når koden er fanget.</li>
+                                        <li><strong className="text-slate-800">Kontinuerlig skanning:</strong> Du kan skanne neste kolli med en gang. Appen debouncer automatisk slik at du ikke skanner samme kolli to ganger ved et uhell.</li>
+                                    </ol>
+                                    <div className="p-3 bg-indigo-50 rounded-lg flex gap-2 border border-indigo-100">
+                                        <RefreshCw className="h-4 w-4 text-indigo-500 shrink-0" />
+                                        <p className="text-[10px] text-indigo-700 font-bold">TIPS: Bruk "Bytt Kamera"-ikonet hvis mobilen din åpner feil kamera (f.eks. selfie-kameraet).</p>
+                                    </div>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <Card className="border-2 border-indigo-100 bg-indigo-50/20">
-                                        <CardHeader>
-                                            <CardTitle className="text-base font-black flex items-center gap-2">
-                                                <Camera className="h-5 w-5 text-indigo-600" />
-                                                Kameraskanner (Nyhet)
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                            <p>Gjør mobiltelefonen din om til en profesjonell strekkodeskanner:</p>
-                                            <ul className="list-disc list-inside space-y-1">
-                                                <li>Trykk <strong>"Start Kameraskanner"</strong> inne på manifestet.</li>
-                                                <li>Hold kameraet over strekkoden.</li>
-                                                <li>Når den fanger koden hører du et "Beep", og ordren oppdateres automatisk.</li>
-                                                <li>Du kan skanne kolli etter kolli uten å trykke noe mer.</li>
-                                            </ul>
-                                        </CardContent>
-                                    </Card>
+                                <div className="p-6 border rounded-2xl bg-white shadow-sm space-y-4">
+                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                        <ListTree className="h-5 w-5 text-emerald-500" />
+                                        Arbeidsflyt på terminalen
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div className="flex gap-3">
+                                            <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                                            <p className="text-xs text-slate-600 font-medium">Åpne manifestet for ruten som skal lastes.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                                            <p className="text-xs text-slate-600 font-medium">Skann alle kolli etterhvert som de settes på bilen. Følg med på at <strong className="text-slate-800">Progresjonsbaren</strong> beveger seg mot 100%.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">3</div>
+                                            <p className="text-xs text-slate-600 font-medium">Hvis en strekkode er ødelagt, skriv inn nummeret manuelt i feltet under skanneren.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">4</div>
+                                            <p className="text-xs text-slate-600 font-medium">Bruk <strong className="text-slate-800">Pluss/Minus</strong> knappene på hver ordre for å korrigere antall manuelt hvis nødvendig.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                    <Card className="border-2 border-slate-100">
-                                        <CardHeader>
-                                            <CardTitle className="text-base font-black flex items-center gap-2">
-                                                <ScanBarcode className="h-5 w-5 text-slate-600" />
-                                                Manuell Inntasting & Fysisk Skanner
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                            <p>Du har også andre alternativer for registrering:</p>
-                                            <ul className="list-disc list-inside space-y-1">
-                                                <li><strong>Fysisk håndskanner:</strong> Bare klikk i feltet "Strekkode ID..." og skann i vei.</li>
-                                                <li><strong>Manuell inntasting:</strong> Skriv inn kolli- eller ordre-IDen hvis strekkoden er uleselig, og trykk "Registrer manuelt".</li>
-                                            </ul>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card className="border-2 border-slate-100 md:col-span-2">
-                                        <CardHeader>
-                                            <CardTitle className="text-base font-black flex items-center gap-2">
-                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
-                                                Verifisering og Avvik
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                            <p>Når opplastingen er ferdig:</p>
-                                            <ul className="list-disc list-inside space-y-1">
-                                                <li>Trykk på den grønne knappen <strong>"Ferdigstill Manifest"</strong>.</li>
-                                                <li>Systemet verifiserer at alle forventede kolli er skannet.</li>
-                                                <li>Hvis det mangler varer (f.eks. en ordre ikke dukket opp på terminalen), vil systemet be deg bekrefte at du bevisst sender bilen avsted med mangler.</li>
-                                            </ul>
-                                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 mt-4">
-                                                <MessageSquare className="h-5 w-5 text-amber-600 shrink-0" />
-                                                <p className="text-amber-800 text-xs"><strong>TIPS:</strong> Du kan bruke "Notat"-knappen for å legge igjen en beskjed til ruteplanlegger eller sjåfør hvis for eksempel en pall var skadet og måtte settes igjen.</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                            <div className="p-6 bg-slate-900 text-white rounded-3xl shadow-xl space-y-6">
+                                <h3 className="font-black text-xl flex items-center gap-2">
+                                    <CheckIcon className="h-6 w-6 text-emerald-400" />
+                                    Ferdigstilling
+                                </h3>
+                                <p className="text-slate-300 text-sm font-medium leading-relaxed">
+                                    Når ruten er ferdig lastet, må den <strong className="text-white">Ferdigstilles</strong>. Dette er et kritisk steg for å aktivere ruten for sjåføren:
+                                </p>
+                                <div className="grid sm:grid-cols-3 gap-4">
+                                    <div className="p-4 bg-white/10 rounded-xl border border-white/10">
+                                        <p className="font-black text-emerald-400 text-xs uppercase mb-2">Validering</p>
+                                        <p className="text-[11px] text-slate-400 font-medium">Systemet sjekker automatisk at alle forventede varer er registrert som lastet.</p>
+                                    </div>
+                                    <div className="p-4 bg-white/10 rounded-xl border border-white/10">
+                                        <p className="font-black text-emerald-400 text-xs uppercase mb-2">Avvik</p>
+                                        <p className="text-[11px] text-slate-400 font-medium">Dersom noe mangler, må du aktivt bekrefte at bilen sendes med manglende last.</p>
+                                    </div>
+                                    <div className="p-4 bg-white/10 rounded-xl border border-white/10">
+                                        <p className="font-black text-emerald-400 text-xs uppercase mb-2">Aktivering</p>
+                                        <p className="text-[11px] text-slate-400 font-medium">Når manifestet er ferdigstilt, endres rutens status til "Lastet" i alle dashbord.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
