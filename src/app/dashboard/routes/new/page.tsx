@@ -43,7 +43,7 @@ export default function NewRoutePage() {
           orders: [], // No orders initially
         });
 
-        router.push('/dashboard/routes');
+        router.push(`/dashboard/routes/${newRoute.id}`);
       } catch (err) {
         console.error(err);
       } finally {
@@ -101,9 +101,14 @@ export default function NewRoutePage() {
             placeholder="F.eks. SH-12345"
           />
         </div>
-        <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg">
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Opprett Rute'}
-        </Button>
+        <div className="flex gap-4">
+            <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 h-12 text-lg">
+                Avbryt
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 text-lg">
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Opprett Rute'}
+            </Button>
+        </div>
       </form>
     </div>
   );

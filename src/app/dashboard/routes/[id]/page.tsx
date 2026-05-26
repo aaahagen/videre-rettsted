@@ -23,7 +23,12 @@ import {
     Scan,
     Car,
     User as UserIcon,
-    Printer
+    Printer,
+    PlusCircle,
+    Package,
+    Trash2,
+    Search,
+    MapPinned
 } from 'lucide-react';
 import { 
     DndContext, 
@@ -66,10 +71,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { useAuth } from '@/components/auth-provider';
-import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDocs, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { BulkBarcodeGenerator } from '@/components/orders/bulk-barcode-generator';
+import { Separator } from '@/components/ui/separator';
 
 interface SortableItemProps {
     id: string;
@@ -77,11 +83,12 @@ interface SortableItemProps {
     index: number;
     isOptimizing: boolean;
     onViewPlace: (place: DeliveryPlace) => void;
+    onRemovePlace: (placeId: string) => void;
     isCompleted?: boolean;
     orderCount?: number;
 }
 
-function SortablePlaceItem({ id, place, index, isOptimizing, onViewPlace, isCompleted, orderCount }: SortableItemProps) {
+function SortablePlaceItem({ id, place, index, isOptimizing, onViewPlace, onRemovePlace, isCompleted, orderCount }: SortableItemProps) {
     const {
         attributes,
         listeners,
@@ -130,19 +137,28 @@ function SortablePlaceItem({ id, place, index, isOptimizing, onViewPlace, isComp
                 <p className="text-[10px] text-slate-500 truncate">{place.address}</p>
             </div>
 
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-slate-400 hover:text-primary rounded-full"
-                onClick={() => onViewPlace(place)}
-            >
-                <Info className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-primary rounded-full"
+                    onClick={() => onViewPlace(place)}
+                >
+                    <Info className="h-4 w-4" />
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-slate-400 hover:text-red-500 rounded-full"
+                    onClick={() => onRemovePlace(place.id)}
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
         </div>
     );
 }
 
-// Minimal icons used in the simplified version
 const CheckCircle2 = ({ className }: { className?: string }) => (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -167,6 +183,12 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   
   const [manifest, setManifest] = useState<Manifest | null>(null);
 
+  // Management Dialogs
+  const [isManageOrdersOpen, setIsManageOrdersOpen] = useState(false);
+  const [isAddStopOpen, setIsAddStopOpen] = useState(false);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [stopSearch, setStopSearch] = useState("");
+
   const router = useRouter();
   const { toast } = useToast();
   const sensors = useSensors(
@@ -188,7 +210,6 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     if (!authUser || !routeId || !dbUser?.orgId) return;
 
-    // Listen to route
     const routeUnsub = onSnapshot(doc(db, 'routes', routeId), (doc) => {
         if (doc.exists()) {
             setRoute({ ...doc.data(), id: doc.id } as Route);
@@ -197,7 +218,6 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
         }
     });
 
-    // Listen to manifest for this route - manifests are nested under organizations
     const manifestQuery = query(
         collection(db, 'organizations', dbUser.orgId, 'manifests'), 
         where('routeId', '==', routeId)
@@ -254,16 +274,12 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id && route) {
         const oldIndex = places.findIndex(p => p.id === active.id);
         const newIndex = places.findIndex(p => p.id === over.id);
-        
         const newPlacesOrder = arrayMove(places, oldIndex, newIndex);
         setPlaces(newPlacesOrder);
-
         const newPlaceIds = newPlacesOrder.map(p => p.id);
-
         try {
             await firebaseDB.updateRoute(routeId, { places: newPlaceIds });
         } catch (error) {
@@ -293,12 +309,104 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const handleAddStop = async (placeId: string) => {
+      if (!route) return;
+      if (route.places.includes(placeId)) {
+          toast({ title: "Stoppet er allerede lagt til" });
+          return;
+      }
+      try {
+          const updatedPlaces = [...route.places, placeId];
+          await firebaseDB.updateRoute(routeId, { places: updatedPlaces });
+          toast({ title: "Stopp lagt til" });
+      } catch (err) {
+          toast({ title: "Feil", description: "Kunne ikke legge til stopp.", variant: "destructive" });
+      }
+  };
+
+  const handleRemoveStop = async (placeId: string) => {
+      if (!route) return;
+      const stopOrders = orders.filter(o => o.routeId === routeId && o.placeId === placeId);
+      if (stopOrders.length > 0) {
+          if (!confirm(`Det er ${stopOrders.length} ordrer knyttet til dette stoppet. Vil du fjerne stoppet og tildele ordrene til 'Ingen rute'?`)) return;
+          
+          try {
+              // Unassign orders
+              await Promise.all(stopOrders.map(o => firebaseDB.updateOrder(dbUser!.orgId!, o.id, { routeId: undefined })));
+          } catch (err) {
+              console.error(err);
+          }
+      }
+
+      try {
+          const updatedPlaces = route.places.filter(p => p !== placeId);
+          await firebaseDB.updateRoute(routeId, { places: updatedPlaces });
+          toast({ title: "Stopp fjernet" });
+      } catch (err) {
+          toast({ title: "Feil", description: "Kunne ikke fjerne stopp.", variant: "destructive" });
+      }
+  };
+
+  const handleToggleOrder = async (order: Order) => {
+    if (!dbUser?.orgId || !route) return;
+    const isAssigned = order.routeId === routeId;
+
+    try {
+        if (isAssigned) {
+            // Remove order from route
+            await firebaseDB.updateOrder(dbUser.orgId, order.id, { routeId: undefined });
+            toast({ title: "Ordre fjernet fra rute" });
+        } else {
+            // Add order to route
+            await firebaseDB.updateOrder(dbUser.orgId, order.id, { routeId: routeId });
+            
+            // Ensure the place is in the route's stops
+            if (!route.places.includes(order.placeId)) {
+                await firebaseDB.updateRoute(routeId, { places: [...route.places, order.placeId] });
+            }
+
+            // Sync Manifest if it exists
+            if (manifest) {
+                const manifestOrder = {
+                    orderId: order.id,
+                    barcode: order.barcode,
+                    status: 'pending' as const,
+                    totalItems: order.details.numberOfItems || 1,
+                    loadedItems: 0
+                };
+                await firebaseDB.updateManifest(dbUser.orgId, manifest.id, {
+                    orders: [...manifest.orders, manifestOrder]
+                });
+            } else {
+                // Create manifest if missing
+                await firebaseDB.createManifest({
+                    orgId: dbUser.orgId,
+                    routeId: routeId,
+                    vehicleId: route.vehicleId || '',
+                    status: 'pending',
+                    orders: [{
+                        orderId: order.id,
+                        barcode: order.barcode,
+                        status: 'pending',
+                        totalItems: order.details.numberOfItems || 1,
+                        loadedItems: 0
+                    }]
+                });
+            }
+            toast({ title: "Ordre lagt til på rute" });
+        }
+    } catch (err) {
+        console.error(err);
+        toast({ title: "Feil", description: "Kunne ikke oppdatere ordre.", variant: "destructive" });
+    }
+  };
+
   const handleOptimize = async () => {
       if (!route) return;
       setIsOptimizing(true);
       try {
           const optimizeRoute = httpsCallable(getFunctions(), 'optimizeRoute');
-          const result = await optimizeRoute({ routeId: route.id });
+          await optimizeRoute({ routeId: route.id });
           toast({ title: 'Suksess', description: 'Ruten er optimert med AI.' });
       } catch (error) {
           console.error(error);
@@ -323,14 +431,25 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
   };
 
   const routeOrders = orders.filter(o => o.routeId === routeId);
+  const availableOrders = orders.filter(o => !o.routeId || o.routeId === '');
   const totalPallets = routeOrders.reduce((sum, o) => sum + (o.handlingUnits?.length || 0), 0);
 
-  // Map places for the bulk generator
   const placesMap: Record<string, Place> = {};
   availablePlaces.forEach(p => { placesMap[p.id] = p; });
 
+  const filteredAvailableOrders = availableOrders.filter(o => 
+    o.barcode.toLowerCase().includes(orderSearch.toLowerCase()) || 
+    placesMap[o.placeId]?.name.toLowerCase().includes(orderSearch.toLowerCase())
+  );
+
+  const filteredAvailablePlaces = availablePlaces.filter(p => 
+    !route.places.includes(p.id) && 
+    (p.name.toLowerCase().includes(stopSearch.toLowerCase()) || p.address.toLowerCase().includes(stopSearch.toLowerCase()))
+  );
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild className="rounded-full">
@@ -341,7 +460,9 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                     <Badge className="bg-primary/10 text-primary border-none text-[10px] font-bold uppercase tracking-wider">
                         {route.status === 'completed' ? 'Fullført' : route.status === 'active' ? 'Aktiv' : 'Planlagt'}
                     </Badge>
-                    <span className="text-slate-400 text-xs font-medium">Opprettet {format(route.createdAt instanceof Date ? route.createdAt : (route.createdAt as any).toDate(), 'dd. MMM', { locale: nb })}</span>
+                    {route.createdAt && (
+                        <span className="text-slate-400 text-xs font-medium">Opprettet {format(route.createdAt instanceof Date ? route.createdAt : (route.createdAt as any).toDate(), 'dd. MMM', { locale: nb })}</span>
+                    )}
                 </div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">{route.name}</h1>
             </div>
@@ -359,70 +480,37 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT COLUMN: ROUTE OVERVIEW & STOPS */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-4 space-y-6">
-            {/* STATS OVERVIEW */}
+            {/* STATS CARD */}
             <Card className="border-none shadow-xl shadow-slate-200/50 overflow-hidden">
                 <CardHeader className="bg-slate-900 text-white p-6">
                     <CardTitle className="text-lg font-bold flex items-center gap-2">
-                        <RouteIcon className="h-5 w-5 text-indigo-400" />
-                        Ruteoversikt
+                        <RouteIcon className="h-5 w-5 text-indigo-400" /> Ruteoversikt
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Sjåfør</span>
-                            <div className="flex items-center gap-2">
-                                <Home className="h-4 w-4 text-indigo-500" />
-                                <span className="font-bold text-slate-700 truncate">{displayDriverName}</span>
-                            </div>
+                            <div className="flex items-center gap-2"><UserIcon className="h-4 w-4 text-indigo-500" /><span className="font-bold text-slate-700 truncate">{displayDriverName}</span></div>
                         </div>
                         <div className="space-y-1">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Kjøretøy</span>
-                            <div className="flex items-center gap-2">
-                                {vehicle?.type === 'truck' ? <Truck className="h-4 w-4 text-indigo-500" /> : <Car className="h-4 w-4 text-indigo-500" />}
-                                <span className="font-bold text-slate-700 truncate">{vehicle?.name || 'Uten bil'}</span>
-                            </div>
+                            <div className="flex items-center gap-2">{vehicle?.type === 'truck' ? <Truck className="h-4 w-4 text-indigo-500" /> : <Car className="h-4 w-4 text-indigo-500" />}<span className="font-bold text-slate-700 truncate">{vehicle?.name || 'Uten bil'}</span></div>
                         </div>
                     </div>
-
                     <div className="pt-6 border-t grid grid-cols-3 gap-2">
-                        <div className="text-center p-2 bg-slate-50 rounded-xl">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase">Stopp</span>
-                            <span className="text-xl font-black text-slate-900">{places.length}</span>
-                        </div>
-                        <div className="text-center p-2 bg-slate-50 rounded-xl">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase">Ordrer</span>
-                            <span className="text-xl font-black text-slate-900">{routeOrders.length}</span>
-                        </div>
-                        <div className="text-center p-2 bg-slate-50 rounded-xl">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase">Paller</span>
-                            <span className="text-xl font-black text-slate-900">{totalPallets}</span>
-                        </div>
+                        <div className="text-center p-2 bg-slate-50 rounded-xl"><span className="block text-[10px] font-bold text-slate-400 uppercase">Stopp</span><span className="text-xl font-black text-slate-900">{places.length}</span></div>
+                        <div className="text-center p-2 bg-slate-50 rounded-xl"><span className="block text-[10px] font-bold text-slate-400 uppercase">Ordrer</span><span className="text-xl font-black text-slate-900">{routeOrders.length}</span></div>
+                        <div className="text-center p-2 bg-slate-50 rounded-xl"><span className="block text-[10px] font-bold text-slate-400 uppercase">Paller</span><span className="text-xl font-black text-slate-900">{totalPallets}</span></div>
                     </div>
                 </CardContent>
                 <CardFooter className="bg-slate-50 p-4 border-t flex flex-col gap-2">
-                    <BulkBarcodeGenerator 
-                        orders={routeOrders} 
-                        places={placesMap} 
-                        buttonLabel="Skriv ut alle etiketter" 
-                        variant="default"
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11"
-                    />
-                    {manifest ? (
-                        <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
-                            <Link href={`/dashboard/manifests/${manifest.id}`}>
-                                <ClipboardList className="mr-2 h-4 w-4" /> Send til Lasterampe
-                            </Link>
-                        </Button>
-                    ) : (
-                        <Button variant="outline" className="w-full bg-white border-slate-200 text-slate-700 font-bold" asChild>
-                            <Link href={`/dashboard/loader/scan-to-receive`}>
-                                <Scan className="mr-2 h-4 w-4" /> Send til Lasterampe
-                            </Link>
-                        </Button>
-                    )}
+                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11" onClick={() => setIsManageOrdersOpen(true)}>
+                        <Package className="mr-2 h-4 w-4" /> Administrer Ordrer
+                    </Button>
+                    <BulkBarcodeGenerator orders={routeOrders} places={placesMap} buttonLabel="Skriv ut alle etiketter" variant="outline" className="w-full font-bold h-11" />
                 </CardFooter>
             </Card>
 
@@ -430,20 +518,13 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
             <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
                     <h3 className="font-black text-slate-900 uppercase tracking-tight text-sm">Rekkefølge & Stopp</h3>
-                    <Badge variant="outline" className="bg-white text-slate-400 border-slate-200 text-[10px]">
-                        Dra for å sortere
-                    </Badge>
+                    <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-indigo-600 hover:bg-indigo-50" onClick={() => setIsAddStopOpen(true)}>
+                        <PlusCircle className="h-3 w-3 mr-1" /> Legg til stopp
+                    </Button>
                 </div>
                 
-                <DndContext 
-                    sensors={sensors} 
-                    collisionDetection={closestCenter} 
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext 
-                        items={places.map(p => p.id)} 
-                        strategy={verticalListSortingStrategy}
-                    >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={places.map(p => p.id)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-2">
                             {places.map((place, index) => (
                                 <SortablePlaceItem 
@@ -453,6 +534,7 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                                     index={index}
                                     isOptimizing={isOptimizing}
                                     onViewPlace={setSelectedPlace}
+                                    onRemovePlace={handleRemoveStop}
                                     orderCount={getStopOrdersCount(place.id)}
                                 />
                             ))}
@@ -469,82 +551,42 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
             </div>
         </div>
 
-        {/* RIGHT COLUMN: PLACE DETAILS & MAP */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-8 space-y-6">
             {selectedPlace ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border overflow-hidden">
                         <div className="relative aspect-video bg-slate-900">
-                            <Image 
-                                src={selectedPlace.imageUrl || '/icon.png'} 
-                                alt={selectedPlace.name} 
-                                fill 
-                                className="object-cover opacity-90"
-                            />
+                            <Image src={selectedPlace.imageUrl || '/icon.png'} alt={selectedPlace.name} fill className="object-cover opacity-90" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                            <div className="absolute bottom-6 left-6 right-6">
-                                <h2 className="text-3xl font-black text-white tracking-tight mb-1">{selectedPlace.name}</h2>
-                                <p className="text-slate-300 font-medium flex items-center gap-2">
-                                    <MapPin className="h-4 w-4" /> {selectedPlace.address}
-                                </p>
-                            </div>
-                            <Button 
-                                variant="secondary" 
-                                size="sm" 
-                                className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 border-none text-white backdrop-blur-md rounded-full px-4 font-bold"
-                                onClick={() => setSelectedPlace(null)}
-                            >
-                                <X className="h-4 w-4 mr-2" /> Lukk visning
-                            </Button>
+                            <div className="absolute bottom-6 left-6 right-6"><h2 className="text-3xl font-black text-white tracking-tight mb-1">{selectedPlace.name}</h2><p className="text-slate-300 font-medium flex items-center gap-2"><MapPin className="h-4 w-4" /> {selectedPlace.address}</p></div>
+                            <Button variant="secondary" size="sm" className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 border-none text-white backdrop-blur-md rounded-full px-4 font-bold" onClick={() => setSelectedPlace(null)}><X className="h-4 w-4 mr-2" /> Lukk visning</Button>
                         </div>
                         
                         <div className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-6">
                                     <div className="space-y-2">
-                                        <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2">
-                                            <FileText className="h-3 w-3" /> Instruksjoner
-                                        </h3>
-                                        <div className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
-                                            {selectedPlace.description || "Ingen spesifikke instruksjoner registrert for dette stedet."}
+                                        <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2"><FileText className="h-3 w-3" /> Instruksjoner</h3>
+                                        <div className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedPlace.description || "Ingen spesifikasjoner."}</div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ordrer på dette stoppet</h3>
+                                        <div className="space-y-2">
+                                            {routeOrders.filter(o => o.placeId === selectedPlace.id).map(o => (
+                                                <div key={o.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border">
+                                                    <div className="flex items-center gap-3"><Package className="h-4 w-4 text-slate-400" /><span className="font-bold text-sm">{o.barcode}</span></div>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => handleToggleOrder(o)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-
-                                    {selectedPlace.notes && (
-                                        <div className="space-y-2">
-                                            <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                                                <Info className="h-3 w-3" /> Viktige Notater
-                                            </h3>
-                                            <div className="text-slate-600 leading-relaxed font-medium bg-amber-50 p-4 rounded-2xl border border-amber-100 italic whitespace-pre-wrap">
-                                                "{selectedPlace.notes}"
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
-
                                 <div className="space-y-6">
                                     <div className="bg-slate-50 rounded-2xl p-6 space-y-4">
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stoppdetaljer</h3>
-                                        
-                                        <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                                            <span className="text-sm font-bold text-slate-500">Estimert tidsbruk</span>
-                                            <Badge className="bg-white border-slate-200 text-slate-900 font-black">
-                                                {selectedPlace.estimatedDeliveryTime || 0} min
-                                            </Badge>
-                                        </div>
-
-                                        <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                                            <span className="text-sm font-bold text-slate-500">Antall ordrer her</span>
-                                            <Badge className="bg-indigo-600 text-white font-black border-none">
-                                                {getStopOrdersCount(selectedPlace.id)}
-                                            </Badge>
-                                        </div>
-
-                                        <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl mt-4" asChild>
-                                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coordinates?.lat},${selectedPlace.coordinates?.lng}`} target="_blank" rel="noopener noreferrer">
-                                                <Navigation className="mr-2 h-4 w-4" /> Start Navigasjon
-                                            </a>
-                                        </Button>
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-200"><span className="text-sm font-bold text-slate-500">Estimert tidsbruk</span><Badge className="bg-white border-slate-200 text-slate-900 font-black">{selectedPlace.estimatedDeliveryTime || 0} min</Badge></div>
+                                        <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 rounded-xl mt-4" asChild><a href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coordinates?.lat},${selectedPlace.coordinates?.lng}`} target="_blank" rel="noopener noreferrer"><Navigation className="mr-2 h-4 w-4" /> Start Navigasjon</a></Button>
                                     </div>
                                 </div>
                             </div>
@@ -552,87 +594,105 @@ export default function RouteDetailsPage({ params }: { params: Promise<{ id: str
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center min-h-[400px] bg-white border-2 border-dashed rounded-3xl p-12 text-center">
-                    <div className="p-6 bg-slate-50 rounded-full mb-6">
-                        <MapPin className="h-12 w-12 text-slate-200" />
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 mb-2">Ingen stopp valgt</h3>
-                    <p className="text-slate-400 max-w-sm font-medium">
-                        Klikk på et stopp i listen til venstre for å se detaljer, bilder og instruksjoner for det spesifikke stedet.
-                    </p>
+                <div className="flex flex-col items-center justify-center min-h-[600px] bg-slate-50/50 border-2 border-dashed rounded-[3rem] p-12 text-center">
+                    <div className="p-8 bg-white rounded-full shadow-lg mb-8 animate-bounce-slow"><MapPinned className="h-16 w-16 text-indigo-200" /></div>
+                    <h3 className="text-2xl font-black text-slate-900 mb-2">Planleggingsvisning</h3>
+                    <p className="text-slate-400 max-w-sm font-medium mb-8">Tildel ordrer fra organisasjonen eller legg til stopp manuelt for å bygge ruten din.</p>
+                    <div className="flex gap-4"><Button variant="outline" className="font-bold h-12 px-6 rounded-xl" onClick={() => setIsAddStopOpen(true)}><MapPin className="mr-2 h-4 w-4" /> Legg til stopp</Button><Button className="bg-slate-900 hover:bg-indigo-600 font-bold h-12 px-6 rounded-xl" onClick={() => setIsManageOrdersOpen(true)}><PlusCircle className="mr-2 h-4 w-4" /> Tildel Ordrer</Button></div>
                 </div>
             )}
         </div>
       </div>
 
+      {/* MANAGE ORDERS DIALOG */}
+      <Dialog open={isManageOrdersOpen} onOpenChange={setIsManageOrdersOpen}>
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-[2rem]">
+              <DialogHeader className="p-8 pb-4">
+                  <DialogTitle className="text-2xl font-black">Tildel Ordrer</DialogTitle>
+                  <DialogDescription className="font-medium text-slate-500">Velg ordrer som skal inkluderes i ruten '{route.name}'.</DialogDescription>
+              </DialogHeader>
+              
+              <div className="px-8 pb-4">
+                  <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" /><Input placeholder="Søk i ordrer eller steder..." className="pl-10 h-12 bg-slate-50 border-none rounded-xl" value={orderSearch} onChange={e => setOrderSearch(e.target.value)} /></div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-8 py-2 space-y-3 min-h-[300px]">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-4">Tilgjengelige Ordrer ({filteredAvailableOrders.length})</h4>
+                  {filteredAvailableOrders.map(o => (
+                      <div key={o.id} className="flex items-center justify-between p-4 bg-white border rounded-2xl hover:border-indigo-200 transition-colors group">
+                          <div className="flex items-center gap-4">
+                              <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors"><Package className="h-5 w-5 text-slate-400 group-hover:text-indigo-500" /></div>
+                              <div><p className="font-bold text-sm text-slate-900">{o.barcode}</p><p className="text-[10px] text-slate-500 font-medium">{placesMap[o.placeId]?.name || 'Ukjent sted'}</p></div>
+                          </div>
+                          <Button size="sm" className="bg-slate-900 hover:bg-indigo-600 font-bold rounded-lg h-9" onClick={() => handleToggleOrder(o)}>Legg til</Button>
+                      </div>
+                  ))}
+                  {filteredAvailableOrders.length === 0 && <div className="text-center py-10 text-slate-400 italic">Ingen ledige ordrer funnet.</div>}
+                  
+                  {routeOrders.length > 0 && (
+                      <>
+                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-8">Allerede på ruten ({routeOrders.length})</h4>
+                        {routeOrders.map(o => (
+                            <div key={o.id} className="flex items-center justify-between p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-indigo-100 flex items-center justify-center"><Package className="h-5 w-5 text-indigo-600" /></div>
+                                    <div><p className="font-bold text-sm text-indigo-900">{o.barcode}</p><p className="text-[10px] text-indigo-500 font-medium">{placesMap[o.placeId]?.name}</p></div>
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 font-bold" onClick={() => handleToggleOrder(o)}>Fjern</Button>
+                            </div>
+                        ))}
+                      </>
+                  )}
+              </div>
+              <DialogFooter className="p-8 bg-slate-50 border-t"><Button onClick={() => setIsManageOrdersOpen(false)} className="w-full h-12 rounded-xl font-black text-lg">Ferdig</Button></DialogFooter>
+          </DialogContent>
+      </Dialog>
+
+      {/* ADD STOP DIALOG */}
+      <Dialog open={isAddStopOpen} onOpenChange={setIsAddStopOpen}>
+          <DialogContent className="max-w-md p-0 overflow-hidden rounded-[2rem]">
+              <DialogHeader className="p-8 pb-4">
+                  <DialogTitle className="text-2xl font-black">Legg til stopp</DialogTitle>
+                  <DialogDescription className="font-medium text-slate-500">Velg et sted fra registeret for å legge til som et stopp uten ordre.</DialogDescription>
+              </DialogHeader>
+              <div className="px-8 pb-4">
+                  <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" /><Input placeholder="Søk i steder..." className="pl-10 h-12 bg-slate-50 border-none rounded-xl" value={stopSearch} onChange={e => setStopSearch(e.target.value)} /></div>
+              </div>
+              <div className="px-8 py-2 max-h-[400px] overflow-y-auto space-y-2 mb-4">
+                  {filteredAvailablePlaces.map(p => (
+                      <div key={p.id} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer" onClick={() => handleAddStop(p.id)}>
+                          <div className="min-w-0"><p className="font-bold text-sm text-slate-900 truncate">{p.name}</p><p className="text-[10px] text-slate-500 truncate">{p.address}</p></div>
+                          <Button size="sm" variant="ghost" className="text-indigo-600 hover:text-indigo-700 h-8 w-8 rounded-full"><PlusCircle className="h-5 w-5" /></Button>
+                      </div>
+                  ))}
+                  {filteredAvailablePlaces.length === 0 && <div className="text-center py-10 text-slate-400 italic">Ingen steder funnet.</div>}
+              </div>
+              <DialogFooter className="p-8 bg-slate-50 border-t"><Button variant="outline" onClick={() => setIsAddStopOpen(false)} className="w-full h-12 rounded-xl font-bold">Lukk</Button></DialogFooter>
+          </DialogContent>
+      </Dialog>
+
       {/* EDIT DIALOG */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogContent className="max-w-md" aria-describedby={undefined}>
-              <DialogHeader>
-                  <DialogTitle>Rediger Rute</DialogTitle>
-                  <DialogDescription>
-                      Oppdater grunnleggende informasjon om ruten.
-                  </DialogDescription>
-              </DialogHeader>
+              <DialogHeader><DialogTitle>Rediger Rute</DialogTitle><DialogDescription>Oppdater grunnleggende informasjon om ruten.</DialogDescription></DialogHeader>
               <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                      <Label htmlFor="name">Rutenavn</Label>
-                      <Input 
-                          id="name" 
-                          value={route.name} 
-                          onChange={(e) => setRoute({ ...route, name: e.target.value })} 
-                      />
-                  </div>
+                  <div className="space-y-2"><Label htmlFor="name">Rutenavn</Label><Input id="name" value={route.name} onChange={(e) => setRoute({ ...route, name: e.target.value })} /></div>
                   <div className="space-y-2">
                       <Label>Kjøretøy</Label>
-                      <Select 
-                          value={route.vehicleId || 'none'} 
-                          onValueChange={(val) => setRoute({ ...route, vehicleId: val === 'none' ? undefined : val })}
-                      >
-                          <SelectTrigger>
-                              <SelectValue placeholder="Velg kjøretøy" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="none">Uten kjøretøy</SelectItem>
-                              {vehicles.map(v => (
-                                  <SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>
-                              ))}
-                          </SelectContent>
+                      <Select value={route.vehicleId || 'none'} onValueChange={(val) => setRoute({ ...route, vehicleId: val === 'none' ? undefined : val })}>
+                          <SelectTrigger><SelectValue placeholder="Velg kjøretøy" /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">Uten kjøretøy</SelectItem>{vehicles.map(v => (<SelectItem key={v.id} value={v.id}>{v.name} ({v.registrationNumber})</SelectItem>))}</SelectContent>
                       </Select>
                   </div>
                   <div className="space-y-2">
                       <Label>Sjåfør</Label>
-                      <Select 
-                          value={route.driverId || 'none'} 
-                          onValueChange={(val) => {
-                              const selectedDriver = drivers.find(d => d.id === val);
-                              setRoute({ 
-                                  ...route, 
-                                  driverId: val === 'none' ? undefined : val,
-                                  driverName: val === 'none' ? undefined : selectedDriver?.name 
-                              });
-                          }}
-                      >
-                          <SelectTrigger>
-                              <div className="flex items-center gap-2">
-                                  <UserIcon className="h-4 w-4 text-slate-400" />
-                                  <SelectValue placeholder="Velg sjåfør" />
-                              </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="none">Ikke tildelt</SelectItem>
-                              {drivers.map(d => (
-                                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                              ))}
-                          </SelectContent>
+                      <Select value={route.driverId || 'none'} onValueChange={(val) => { const selectedDriver = drivers.find(d => d.id === val); setRoute({ ...route, driverId: val === 'none' ? undefined : val, driverName: val === 'none' ? undefined : selectedDriver?.name }); }}>
+                          <SelectTrigger><div className="flex items-center gap-2"><UserIcon className="h-4 w-4 text-slate-400" /><SelectValue placeholder="Velg sjåfør" /></div></SelectTrigger>
+                          <SelectContent><SelectItem value="none">Ikke tildelt</SelectItem>{drivers.map(d => (<SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>))}</SelectContent>
                       </Select>
                   </div>
               </div>
-              <DialogFooter className="flex gap-2">
-                  <Button variant="destructive" onClick={handleDeleteRoute} className="mr-auto">Slett Rute</Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>Avbryt</Button>
-                  <Button onClick={() => handleUpdateRoute(route)}>Lagre Endringer</Button>
-              </DialogFooter>
+              <DialogFooter className="flex gap-2"><Button variant="destructive" onClick={handleDeleteRoute} className="mr-auto">Slett Rute</Button><Button variant="outline" onClick={() => setIsEditing(false)}>Avbryt</Button><Button onClick={() => handleUpdateRoute(route)}>Lagre Endringer</Button></DialogFooter>
           </DialogContent>
       </Dialog>
     </div>
