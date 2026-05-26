@@ -266,14 +266,18 @@ export default function RoutesPage() {
         </div>
 
         <TabsContent value="active" className="mt-0 focus-visible:outline-none">
+            <div className="flex items-center gap-3 border-b pb-4 mb-8">
+                <div className="p-2 bg-slate-100 rounded-lg"><RouteIcon className="h-5 w-5 text-slate-700" /></div>
+                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Aktive Oppdrag</h2>
+            </div>
             {filteredRoutes.length === 0 ? (
-                <div className="h-[40vh] min-h-[300px] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                <div className="h-[40vh] min-h-[300px] flex flex-col items-start justify-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8 sm:p-12">
                     <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 shrink-0">
                         <RouteIcon className="h-12 w-12 sm:h-16 sm:w-16 text-slate-200" />
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Ingen ruter her</h3>
-                        <p className="text-sm sm:text-base text-slate-500 max-w-sm font-medium">
+                    <div className="space-y-2 text-left">
+                        <h3 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Ingen ruter her</h3>
+                        <p className="text-sm sm:text-base text-slate-500 max-w-sm font-medium leading-relaxed">
                             {isAdmin 
                                 ? "Det er ingen aktive ruter i systemet akkurat nå." 
                                 : "Du har ingen tildelte ruter i dag."}
@@ -406,13 +410,17 @@ export default function RoutesPage() {
         </TabsContent>
 
         <TabsContent value="template" className="mt-0 focus-visible:outline-none">
+            <div className="flex items-center gap-3 border-b pb-4 mb-8">
+                <div className="p-2 bg-slate-100 rounded-lg"><Copy className="h-5 w-5 text-slate-700" /></div>
+                <h2 className="text-2xl font-headline font-black text-slate-900 tracking-tight">Rutemaler</h2>
+            </div>
             {filteredRoutes.length === 0 ? (
-                <div className="h-[40vh] min-h-[300px] flex flex-col items-center justify-center text-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8">
+                <div className="h-[40vh] min-h-[300px] flex flex-col items-start justify-center space-y-6 border-4 border-dashed rounded-[2.5rem] bg-slate-50/50 border-slate-100 p-8 sm:p-12">
                     <div className="p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 shrink-0">
                         <Copy className="h-12 w-12 sm:h-16 sm:w-16 text-slate-200" />
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Ingen rutemaler</h3>
+                    <div className="space-y-2 text-left">
+                        <h3 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Ingen rutemaler</h3>
                         <p className="text-sm sm:text-base text-slate-500 max-w-sm font-medium">
                             Lagre en rute som mal for å enkelt kunne gjenta den senere uten å legge til stopp manuelt.
                         </p>
