@@ -7,13 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **Vehicle Persistence Reliability**: Refactored the vehicle saving architecture to resolve issues where new or edited vehicles could not be saved.
-    - Implemented a unified `saveVehicle` method to handle both creation and updates atomically.
-    - Decoupled database logic from the `VehicleForm` UI component for cleaner data flow.
-    - Improved error handling and user feedback during the save process on the Fleet Dashboard.
-
 ### Added
+- **Intelligent Vehicle Coupling**: The routing engine now supports complex vehicle combinations.
+    - **Tractor & Semi-trailer**: Automatically pairs tractors with compatible semi-trailers.
+    - **Swap-body Support**: Links rigid trucks with swap-body configurations to appropriate units.
+    - **Aggregated Capacity**: Weight, volume, and pallet limits are now calculated based on the total combined capacity of the power unit and trailer.
+    - **Unified Physical Constraints**: Site access checks (Height, Length, GVM) now account for the full vehicle setup.
 - **Explicit Vehicle Weight Tracking**: Added `emptyWeight` field to vehicle profiles for precise site access validation.
 - **Persistent Label System**: Implemented a professional, route-independent labeling system for orders.
     - Labels focus on destination (Name, Address, Postal Code) and physical specs rather than transient route names.
@@ -84,7 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hybrid Customer Numbering System:** Introduced manual/auto-generated numbering for Places.
 - **Super Admin Dashboard:** Launched cockpit at `/dashboard/super` for platform-wide organization management.
 
-### Fixed (Previous)
+### Fixed
+- **Vehicle Persistence Reliability**: Refactored the vehicle saving architecture to resolve issues where new or edited vehicles could not be saved.
+    - Implemented a unified `saveVehicle` method to handle both creation and updates atomically.
+    - Decoupled database logic from the `VehicleForm` UI component for cleaner data flow.
+    - Improved error handling and user feedback during the save process on the Fleet Dashboard.
 - **UI Overflow Issue on Routes Page**: Adjusted responsive sizing and flex properties on the empty state icons in `/dashboard/routes` to prevent vertical overflow on smaller screens. Added margin to the bottom of the container.
 - **Firestore Array Timestamp Error**: Replaced `serverTimestamp()` with ISO strings (`new Date().toISOString()`) when updating nested fields inside the `orders` array within a Manifest.
 - **Firestore Undefined Field Error**: Fixed an issue in `decrementManifestItemLoadedCount` where setting a property to `undefined` caused a crash. Replaced with the `delete` operator.

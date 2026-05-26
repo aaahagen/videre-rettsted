@@ -201,6 +201,8 @@ export interface CompletedStopEvent {
 
 export interface RouteSuggestion {
     vehicleId: string;
+    trailerId?: string;
+    trailerName?: string;
     driverId?: string;
     orders: Order[];
     places: Place[];

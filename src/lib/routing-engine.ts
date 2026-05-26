@@ -31,7 +31,6 @@ export function timeToMinutes(timeStr: string): number {
  */
 function isValidCoordinate(coords?: { lat: number, lng: number }): boolean {
     if (!coords) return false;
-    // We allow slight variations around 0,0 but absolute 0,0 is usually a failure in geocoding
     if (coords.lat === 0 && coords.lng === 0) return false;
     if (Math.abs(coords.lat) < 0.000001 && Math.abs(coords.lng) < 0.000001) return false;
     if (coords.lat < -90 || coords.lat > 90 || coords.lng < -180 || coords.lng > 180) return false;
@@ -43,34 +42,52 @@ function isValidCoordinate(coords?: { lat: number, lng: number }): boolean {
  */
 function getNormalizedCoords(place: Place): { lat: number, lng: number } | null {
     if (isValidCoordinate(place.coordinates)) return place.coordinates!;
-    
-    // Fallback to 'location' field if 'coordinates' is missing/invalid
     if (place.location && typeof place.location.latitude === 'number' && typeof place.location.longitude === 'number') {
         const coords = { lat: place.location.latitude, lng: place.location.longitude };
         if (isValidCoordinate(coords)) return coords;
     }
-    
     return null;
 }
 
 export interface RouteSuggestion {
     vehicleId: string;
+    trailerId?: string;
+    trailerName?: string;
     driverId?: string;
     orders: Order[];
     places: Place[];
     estimatedDuration: number; // minutes
     estimatedDistance: number; // km
-    warnings: string[]; // Soft warnings (e.g., "Vehicle is at 95% volume capacity", "Overtime warning")
-    errors: string[];   // Hard errors preventing this route (e.g., "Vehicle lacks ADR for Order Y")
+    warnings: string[]; 
+    errors: string[];   
+}
+
+/**
+ * Represents a logical planning unit (e.g. Tractor + Semi, or just a Van)
+ */
+export interface VehicleSetup {
+    powerUnit: Vehicle;
+    passiveUnit?: Vehicle; // Trailer, Semi, Swap-body
+    combinedCapacity: {
+        weight: number;
+        volume: number;
+        pallets: number;
+        emptyWeight: number;
+    };
+    combinedDimensions: {
+        height: number;
+        width: number;
+        length: number;
+    };
 }
 
 export interface RoutingEngineOptions {
-    volumeBufferPercent?: number; // e.g., 0.85 means vehicle holds 85% of its max volume safely
-    weightBufferPercent?: number; // e.g., 0.95
-    averageSpeedKmph?: number; // fallback speed for ETA calculation
-    baseUnloadTimeMinutes?: number; // Default Time spent at each stop if place has none defined
-    maxDrivingTimeMinutes?: number; // EU 561/2006 baseline e.g. 9 hours (540 mins)
-    assignmentStrategy?: 'fill_first' | 'balanced'; // NEW: Balancing mode
+    volumeBufferPercent?: number; 
+    weightBufferPercent?: number; 
+    averageSpeedKmph?: number; 
+    baseUnloadTimeMinutes?: number; 
+    maxDrivingTimeMinutes?: number; 
+    assignmentStrategy?: 'fill_first' | 'balanced';
 }
 
 export class ConstraintEngine {
@@ -80,7 +97,7 @@ export class ConstraintEngine {
         this.options = {
             volumeBufferPercent: options.volumeBufferPercent || 0.85,
             weightBufferPercent: options.weightBufferPercent || 0.95,
-            averageSpeedKmph: options.averageSpeedKmph || 40, // 40km/h average city/mixed driving
+            averageSpeedKmph: options.averageSpeedKmph || 40,
             baseUnloadTimeMinutes: options.baseUnloadTimeMinutes || 15,
             maxDrivingTimeMinutes: options.maxDrivingTimeMinutes || 540,
             assignmentStrategy: options.assignmentStrategy || 'fill_first',
@@ -88,32 +105,67 @@ export class ConstraintEngine {
     }
 
     /**
-     * Checks if an order's specific requirements match the vehicle's capabilities.
-     * Returns an array of error strings if constraints are violated.
+     * Creates a logical setup from a Power Unit and optional Passive Unit.
      */
-    checkCapabilities(vehicle: Vehicle, order: Order): string[] {
+    createSetup(powerUnit: Vehicle, passiveUnit?: Vehicle): VehicleSetup {
+        const capP = powerUnit.capacity;
+        const capS = passiveUnit?.capacity;
+        
+        const dimP = powerUnit.dimensions;
+        const dimS = passiveUnit?.dimensions;
+
+        // Capacity is additive
+        const weight = (capP?.weight || 0) + (capS?.weight || 0);
+        const volume = (capP?.volume || 0) + (capS?.volume || 0);
+        const pallets = (capP?.pallets || 0) + (capS?.pallets || 0);
+        
+        // Empty weight is additive
+        let emptyWeight = (capP?.emptyWeight || 0) + (capS?.emptyWeight || 0);
+        if (!capP?.emptyWeight) {
+             // Fallback estimates
+             if (powerUnit.type === 'truck') emptyWeight += 7500;
+             else if (powerUnit.type === 'tractor') emptyWeight += 8000;
+             else if (powerUnit.type === 'van') emptyWeight += 2200;
+             else emptyWeight += 1500;
+        }
+        if (passiveUnit && !capS?.emptyWeight) {
+             if (passiveUnit.config === 'semi') emptyWeight += 6000;
+             else emptyWeight += 3000;
+        }
+
+        // Dimensions: Max height/width, additive length (roughly)
+        const height = Math.max(dimP?.height || 0, dimS?.height || 0);
+        const width = Math.max(dimP?.width || 0, dimS?.width || 0);
+        const length = (dimP?.length || 0) + (dimS?.length || 0);
+
+        return {
+            powerUnit,
+            passiveUnit,
+            combinedCapacity: { weight, volume, pallets, emptyWeight },
+            combinedDimensions: { height, width, length }
+        };
+    }
+
+    checkCapabilities(setup: VehicleSetup, order: Order): string[] {
         const errors: string[] = [];
         if (!order.details?.specialRequirements) return errors;
 
         const reqs = order.details.specialRequirements;
-        const caps = vehicle.capabilities;
+        const capsP = setup.powerUnit.capabilities;
+        const capsS = setup.passiveUnit?.capabilities;
 
-        if (reqs.adr && !caps?.adr) {
-            errors.push(`Order ${order.barcode} requires ADR, but vehicle ${vehicle.name} lacks ADR capability.`);
+        if (reqs.adr && !capsP?.adr && !capsS?.adr) {
+            errors.push(`Order ${order.barcode} requires ADR.`);
         }
-        if (reqs.temperatureControlled && !caps?.refrigeration) {
-            errors.push(`Order ${order.barcode} requires refrigeration, but vehicle ${vehicle.name} does not have it.`);
+        if (reqs.temperatureControlled && !capsP?.refrigeration && !capsS?.refrigeration) {
+            errors.push(`Order ${order.barcode} requires refrigeration.`);
         }
-        // Can be expanded with Tail-lift checks etc.
-
         return errors;
     }
 
-    /**
-     * Checks if adding an order exceeds the vehicle's physical capacity buffers.
-     */
-    checkCapacity(vehicle: Vehicle, currentOrders: Order[], newOrder: Order): string[] {
+    checkCapacity(setup: VehicleSetup, currentOrders: Order[], newOrder: Order): string[] {
         const warnings: string[] = [];
+        const cap = setup.combinedCapacity;
         
         const currentWeight = currentOrders.reduce((sum, o) => sum + (o.details?.weight || 0), 0);
         const currentVolume = currentOrders.reduce((sum, o) => sum + (o.details?.volume || 0), 0);
@@ -121,24 +173,24 @@ export class ConstraintEngine {
         const newWeight = currentWeight + (newOrder.details?.weight || 0);
         const newVolume = currentVolume + (newOrder.details?.volume || 0);
 
-        if (vehicle.capacity?.weight) {
-            const maxWeight = vehicle.capacity.weight * this.options.weightBufferPercent!;
+        if (cap.weight > 0) {
+            const maxWeight = cap.weight * this.options.weightBufferPercent!;
             if (newWeight > maxWeight) {
-                if (newWeight > vehicle.capacity.weight) {
-                     warnings.push(`HARD_LIMIT_WEIGHT: Total weight (${newWeight}kg) exceeds vehicle max (${vehicle.capacity.weight}kg).`);
+                if (newWeight > cap.weight) {
+                     warnings.push(`HARD_LIMIT_WEIGHT: Total weight (${newWeight}kg) exceeds setup max (${cap.weight}kg).`);
                 } else {
-                     warnings.push(`Warning: Total weight (${newWeight}kg) approaches vehicle limit (Buffer: ${Math.round(vehicle.capacity.weight * this.options.weightBufferPercent!)}kg).`);
+                     warnings.push(`Warning: Weight approaches limit.`);
                 }
             }
         }
 
-        if (vehicle.capacity?.volume) {
-            const maxVolume = vehicle.capacity.volume * this.options.volumeBufferPercent!;
+        if (cap.volume > 0) {
+            const maxVolume = cap.volume * this.options.volumeBufferPercent!;
             if (newVolume > maxVolume) {
-                 if (newVolume > vehicle.capacity.volume) {
-                     warnings.push(`HARD_LIMIT_VOLUME: Total volume (${newVolume}m3) exceeds vehicle max (${vehicle.capacity.volume}m3).`);
+                 if (newVolume > cap.volume) {
+                     warnings.push(`HARD_LIMIT_VOLUME: Total volume (${newVolume}m3) exceeds setup max (${cap.volume}m3).`);
                  } else {
-                     warnings.push(`Warning: Total volume (${newVolume}m3) approaches vehicle limit (Buffer: ${Math.round(vehicle.capacity.volume * this.options.volumeBufferPercent!)}m3).`);
+                     warnings.push(`Warning: Volume approaches limit.`);
                  }
             }
         }
@@ -146,187 +198,148 @@ export class ConstraintEngine {
         return warnings;
     }
 
-    /**
-     * Checks if the vehicle fits within the physical constraints of the delivery place.
-     */
-    checkPhysicalConstraints(vehicle: Vehicle, place: Place): string[] {
+    checkPhysicalConstraints(setup: VehicleSetup, place: Place): string[] {
         const errors: string[] = [];
-        const dim = vehicle.dimensions;
+        const dim = setup.combinedDimensions;
 
-        if (place.maxVehicleHeight && dim?.height && dim.height > place.maxVehicleHeight) {
-            errors.push(`PHYSICAL_ERROR: Vehicle is too tall (${dim.height}m) for ${place.name} (Max: ${place.maxVehicleHeight}m).`);
+        if (place.maxVehicleHeight && dim.height > place.maxVehicleHeight) {
+            errors.push(`PHYSICAL_ERROR: Too tall (${dim.height}m). Max: ${place.maxVehicleHeight}m.`);
         }
-        if (place.maxVehicleWidth && dim?.width && dim.width > place.maxVehicleWidth) {
-            errors.push(`PHYSICAL_ERROR: Vehicle is too wide (${dim.width}m) for ${place.name} (Max: ${place.maxVehicleWidth}m).`);
+        if (place.maxVehicleWidth && dim.width > place.maxVehicleWidth) {
+            errors.push(`PHYSICAL_ERROR: Too wide (${dim.width}m). Max: ${place.maxVehicleWidth}m.`);
         }
-        if (place.maxVehicleLength && dim?.length && dim.length > place.maxVehicleLength) {
-            errors.push(`PHYSICAL_ERROR: Vehicle is too long (${dim.length}m) for ${place.name} (Max: ${place.maxVehicleLength}m).`);
+        if (place.maxVehicleLength && dim.length > place.maxVehicleLength) {
+            errors.push(`PHYSICAL_ERROR: Too long (${dim.length}m). Max: ${place.maxVehicleLength}m.`);
         }
         
         if (place.maxVehicleWeight) {
-            // Estimate curb weight based on explicit registration or type fallback
-            let curbWeightEstimate = 0;
-            if (vehicle.capacity?.emptyWeight) {
-                curbWeightEstimate = vehicle.capacity.emptyWeight;
-            } else {
-                switch(vehicle.type) {
-                    case 'truck': curbWeightEstimate = 7500; break;
-                    case 'van': curbWeightEstimate = 2200; break;
-                    case 'car': curbWeightEstimate = 1500; break;
-                    case 'tractor': curbWeightEstimate = 8000; break;
-                    default: curbWeightEstimate = 2000;
-                }
-            }
-
-            const estimatedTotalWeight = (vehicle.capacity?.weight || 0) + curbWeightEstimate; 
-            if (estimatedTotalWeight > place.maxVehicleWeight) {
-                 errors.push(`PHYSICAL_ERROR: Vehicle potential GVM (${estimatedTotalWeight}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
+            const totalGVM = setup.combinedCapacity.weight + setup.combinedCapacity.emptyWeight;
+            if (totalGVM > place.maxVehicleWeight) {
+                 errors.push(`PHYSICAL_ERROR: Potential GVM (${totalGVM}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
             }
         }
 
         return errors;
     }
 
-    /**
-     * Checks if the ETA falls within the delivery window for a specific day.
-     */
     checkDeliveryWindow(place: Place, dayOfWeek: string, etaMinutes: number): string[] {
         const warnings: string[] = [];
         const schedule = (place.weeklySchedule as any)?.[dayOfWeek];
-
-        if (!schedule) return warnings; // No schedule defined, assume open
-
+        if (!schedule) return warnings;
         if (!schedule.isOpen) {
-            warnings.push(`Delivery Window: Place ${place.name} is scheduled to be closed today.`);
+            warnings.push(`Closed today.`);
             return warnings;
         }
-
         if (schedule.open && schedule.close) {
             const openTime = timeToMinutes(schedule.open);
             const closeTime = timeToMinutes(schedule.close);
-
-            if (etaMinutes < openTime) {
-                warnings.push(`Delivery Window: ETA for ${place.name} is before opening time (${schedule.open}).`);
-            } else if (etaMinutes > closeTime) {
-                warnings.push(`Delivery Window: ETA for ${place.name} is past closing time (${schedule.close}).`);
-            } else if (closeTime - etaMinutes < 30) {
-                 warnings.push(`Delivery Window: ETA is within 30 minutes of closing time for ${place.name}.`);
-            }
+            if (etaMinutes < openTime) warnings.push(`Before opening.`);
+            else if (etaMinutes > closeTime) warnings.push(`Past closing.`);
         }
-
         return warnings;
     }
 
-    /**
-     * Checks environmental zone compatibility (Diesel bans/tolls)
-     */
-    checkEnvironmentalZones(vehicle: Vehicle, place: Place): string[] {
+    checkEnvironmentalZones(setup: VehicleSetup, place: Place): string[] {
         const warnings: string[] = [];
-        const isDiesel = vehicle.fuelType === 'diesel';
-
+        const isDiesel = setup.powerUnit.fuelType === 'diesel';
         if (place.isZeroEmissionZone && isDiesel) {
-            warnings.push(`ENVIRONMENTAL_ERROR: Place ${place.name} is in a Zero-Emission Zone. Diesel vehicles are prohibited.`);
-        } else if (place.isCityCenter && isDiesel) {
-            warnings.push(`Environmental: ${place.name} is in a high-toll city center. Diesel vehicles will incur extra costs.`);
+            warnings.push(`ENVIRONMENTAL_ERROR: Zero-Emission Zone.`);
         }
-
         return warnings;
     }
 
-    /**
-     * Checks if the route duration exceeds the driver's planned shift or legal limits.
-     */
     checkDriverShift(driver: DriverProfile, routeStartTime: string, estimatedDurationMinutes: number): string[] {
         const warnings: string[] = [];
-        
-        // 1. Legal Limit Check (e.g. EU driving rules)
         if (estimatedDurationMinutes > this.options.maxDrivingTimeMinutes!) {
-            warnings.push(`HARD_LIMIT_DRIVING: Estimated route duration (${Math.floor(estimatedDurationMinutes/60)}h ${Math.floor(estimatedDurationMinutes%60)}m) exceeds legal daily driving limits.`);
+            warnings.push(`HARD_LIMIT_DRIVING: Exceeds legal limit.`);
         }
-
-        // 2. Scheduled Shift Check
-        if (!driver.workingHours || !driver.workingHours.end) {
-            warnings.push(`Driver Shift: ${driver.name} has no standard working hours defined. Assuming flexible schedule.`);
-            return warnings;
-        }
+        if (!driver.workingHours || !driver.workingHours.end) return warnings;
 
         const shiftEndTime = timeToMinutes(driver.workingHours.end);
         const startTime = timeToMinutes(routeStartTime);
-        
         let availableMinutes = shiftEndTime - startTime;
-        if (availableMinutes < 0) availableMinutes += 24 * 60; // Cross-midnight adjustment
+        if (availableMinutes < 0) availableMinutes += 1440;
 
-        // 3. Overtime calculation
         if (estimatedDurationMinutes > availableMinutes) {
-            const overtime = Math.ceil(estimatedDurationMinutes - availableMinutes);
-            warnings.push(`Driver Shift: Route duration will cause approx ${overtime} mins of overtime for ${driver.name} (Shift ends at ${driver.workingHours.end}).`);
+            warnings.push(`Driver Shift: Overtime predicted.`);
         }
-
         return warnings;
     }
 
     /**
-     * Basic greedy heuristic (Nearest Neighbor) to suggest a route.
+     * Main Generation logic using Setups
      */
     generateBasicSuggestion(
         availableVehicles: Vehicle[], 
         availableDrivers: DriverProfile[],
         unassignedOrders: Order[], 
-        placesMap: Map<string, Place>, // PlaceID -> Place
+        placesMap: Map<string, Place>,
         depotCoords: { lat: number, lng: number },
         startTimeStr: string = "08:00",
         dayOfWeek: string = 'monday'
     ): RouteSuggestion[] {
         
-        console.log(`[Engine] Starting generation with ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles, ${availableDrivers.length} drivers.`);
-        console.log(`[Engine] Depot coordinates: ${depotCoords.lat}, ${depotCoords.lng}`);
+        console.log(`[Engine] Start: ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles.`);
 
-        // 1. Initial Data Validation: Skip orders with invalid coordinates
+        // 1. FORM SETUPS
+        const powerUnits = availableVehicles.filter(v => ['truck', 'tractor', 'van', 'car'].includes(v.type));
+        const passiveUnits = availableVehicles.filter(v => v.type === 'trailer');
+
+        const setups: VehicleSetup[] = [];
+        const remainingPassives = [...passiveUnits];
+
+        for (const p of powerUnits) {
+            if (p.type === 'tractor') {
+                const semi = remainingPassives.find(s => s.config === 'semi');
+                if (semi) {
+                    setups.push(this.createSetup(p, semi));
+                    remainingPassives.splice(remainingPassives.indexOf(semi), 1);
+                } else {
+                    console.log(`[Engine] Skipping tractor ${p.name} - No Semi-trailer available.`);
+                }
+            } else if (p.type === 'truck' && p.config === 'box_swap') {
+                const swapBody = remainingPassives.find(s => s.config === 'box_swap');
+                if (swapBody) {
+                    setups.push(this.createSetup(p, swapBody));
+                    remainingPassives.splice(remainingPassives.indexOf(swapBody), 1);
+                } else {
+                    console.log(`[Engine] Skipping truck ${p.name} - No Swap-body available.`);
+                }
+            } else {
+                // Optional trailer for rigid trucks
+                if (p.type === 'truck' && remainingPassives.length > 0) {
+                     const trailer = remainingPassives.find(s => s.config === 'drawbar');
+                     if (trailer) {
+                        setups.push(this.createSetup(p, trailer));
+                        remainingPassives.splice(remainingPassives.indexOf(trailer), 1);
+                     } else {
+                        setups.push(this.createSetup(p));
+                     }
+                } else {
+                    setups.push(this.createSetup(p));
+                }
+            }
+        }
+
+        // 2. FILTER ORDERS
         const validOrders: Order[] = [];
-        const invalidOrderCount: string[] = [];
-
         for (const order of unassignedOrders) {
             const place = placesMap.get(order.placeId);
-            if (!place) {
-                console.log(`[Engine] Skipping order ${order.barcode} - Place not found: ${order.placeId}`);
-                invalidOrderCount.push(order.barcode);
-                continue;
-            }
-            
-            const coords = getNormalizedCoords(place);
-            if (coords) {
-                validOrders.push(order);
-            } else {
-                console.log(`[Engine] Skipping order ${order.barcode} - Invalid coordinates for place ${place.name || order.placeId}`);
-                invalidOrderCount.push(order.barcode);
-            }
+            if (place && getNormalizedCoords(place)) validOrders.push(order);
         }
 
         let remainingOrders = [...validOrders];
+        const sortedDrivers = [...availableDrivers].sort((a, b) => (a.employmentType === 'internal' ? -1 : 1));
+
+        const maxRoutes = Math.min(setups.length, sortedDrivers.length);
+        if (maxRoutes === 0) return [];
+
         const suggestions: RouteSuggestion[] = [];
-        const startTimeMinutes = timeToMinutes(startTimeStr);
-
-        const sortedDrivers = [...availableDrivers].sort((a, b) => {
-            const typeA = a.employmentType || 'internal';
-            const typeB = b.employmentType || 'internal';
-            if (typeA === 'internal' && typeB === 'external') return -1;
-            if (typeA === 'external' && typeB === 'internal') return 1;
-            return 0;
-        });
-
-        const maxRoutes = Math.min(availableVehicles.length, sortedDrivers.length);
-        if (maxRoutes === 0) {
-            console.log("[Engine] Abort: No combinations of ready vehicles or drivers available.");
-            return [];
-        }
-        if (remainingOrders.length === 0) {
-            console.log("[Engine] Abort: No valid orders with coordinates found.");
-            return [];
-        }
-
         for (let i = 0; i < maxRoutes; i++) {
             suggestions.push({
-                vehicleId: availableVehicles[i].id,
+                vehicleId: setups[i].powerUnit.id,
+                trailerId: setups[i].passiveUnit?.id,
+                trailerName: setups[i].passiveUnit?.name,
                 driverId: sortedDrivers[i].id,
                 orders: [],
                 places: [],
@@ -340,17 +353,10 @@ export class ConstraintEngine {
         const isBalanced = this.options.assignmentStrategy === 'balanced';
         let currentRouteIdx = 0;
         let stalledRoutes = new Set<number>();
-        
-        // Loop safety to prevent infinite loops if logic is flawed
         let safetyCounter = 0;
-        const MAX_ITERATIONS = remainingOrders.length * maxRoutes * 2;
 
         while (remainingOrders.length > 0 && stalledRoutes.size < maxRoutes) {
-            safetyCounter++;
-            if (safetyCounter > MAX_ITERATIONS) {
-                console.error("[Engine] Force aborted loop - reached max iterations. Possible logic error.");
-                break;
-            }
+            if (++safetyCounter > (remainingOrders.length * maxRoutes * 2)) break;
             
             if (isBalanced && stalledRoutes.has(currentRouteIdx)) {
                 currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
@@ -358,8 +364,7 @@ export class ConstraintEngine {
             }
 
             const suggestion = suggestions[currentRouteIdx];
-            const vehicle = availableVehicles[currentRouteIdx];
-            
+            const setup = setups[currentRouteIdx];
             const lastPlaceId = suggestion.places[suggestion.places.length - 1]?.id;
             const currentCoords = lastPlaceId ? (getNormalizedCoords(placesMap.get(lastPlaceId)!) || depotCoords) : depotCoords;
 
@@ -369,39 +374,16 @@ export class ConstraintEngine {
             for (let j = 0; j < remainingOrders.length; j++) {
                 const candidateOrder = remainingOrders[j];
                 const place = placesMap.get(candidateOrder.placeId);
-                if (!place) continue;
-                
-                const placeCoords = getNormalizedCoords(place);
+                const placeCoords = place ? getNormalizedCoords(place) : null;
                 if (!placeCoords) continue;
 
-                // Constraint Checks with Verbose Debugging
-                const capErrors = this.checkCapabilities(vehicle, candidateOrder);
-                if (capErrors.length > 0) {
-                    continue; 
-                }
-
-                const capacityWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
-                if (capacityWarnings.some(w => w.includes("HARD_LIMIT"))) {
-                    continue; 
-                }
-
-                const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, placeCoords.lat, placeCoords.lng);
+                if (this.checkCapabilities(setup, candidateOrder).length > 0) continue;
+                if (this.checkCapacity(setup, suggestion.orders, candidateOrder).some(w => w.includes("HARD_LIMIT"))) continue;
                 
-                // RANGE CHECK
-                if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode} for ${vehicle.name}: Range exceeded (${(suggestion.estimatedDistance + distToNext).toFixed(1)}km > ${vehicle.maxRange}km)`);
-                    continue;
-                }
-
-                const envWarnings = this.checkEnvironmentalZones(vehicle, place);
-                if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) {
-                    continue;
-                }
-
-                const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
-                if (physicalErrors.length > 0) {
-                    continue;
-                }
+                const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, placeCoords.lat, placeCoords.lng);
+                if (setup.powerUnit.maxRange && (suggestion.estimatedDistance + distToNext) > setup.powerUnit.maxRange) continue;
+                if (this.checkEnvironmentalZones(setup, place!).some(w => w.includes("ENVIRONMENTAL_ERROR"))) continue;
+                if (this.checkPhysicalConstraints(setup, place!).length > 0) continue;
 
                 if (distToNext < shortestDistance) {
                     shortestDistance = distToNext;
@@ -412,55 +394,30 @@ export class ConstraintEngine {
             if (bestOrderIndex !== -1) {
                 const selectedOrder = remainingOrders[bestOrderIndex];
                 const place = placesMap.get(selectedOrder.placeId)!;
-                
-                console.log(`[Engine] Assigned ${selectedOrder.barcode} to ${vehicle.name}. Dist: ${shortestDistance.toFixed(2)}km`);
-                
                 const isNewStop = !suggestion.places.some(p => p.id === place.id);
                 
                 suggestion.orders.push(selectedOrder);
-                if (isNewStop) {
-                    suggestion.places.push(place);
-                }
+                if (isNewStop) suggestion.places.push(place);
                 
-                suggestion.warnings.push(...this.checkCapacity(vehicle, suggestion.orders.slice(0,-1), selectedOrder).filter(w => !w.includes("HARD_LIMIT")));
-                suggestion.warnings.push(...this.checkEnvironmentalZones(vehicle, place));
-
                 suggestion.estimatedDistance += shortestDistance;
-                const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
-                
-                const stopTime = isNewStop ? (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!) : 2; 
-                suggestion.estimatedDuration += travelTimeMins + stopTime;
-                
-                suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
+                const travelTime = (shortestDistance / this.options.averageSpeedKmph!) * 60;
+                const stopTime = isNewStop ? (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!) : 2;
+                suggestion.estimatedDuration += travelTime + stopTime;
                 
                 remainingOrders.splice(bestOrderIndex, 1);
                 stalledRoutes.delete(currentRouteIdx);
-
-                if (isBalanced) {
-                    currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
-                }
+                if (isBalanced) currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
             } else {
-                console.log(`[Engine] Route for ${vehicle.name} is stalled. ${remainingOrders.length} orders remaining but none fit.`);
                 stalledRoutes.add(currentRouteIdx);
-                if (!isBalanced) {
-                    currentRouteIdx++;
-                    if (currentRouteIdx >= maxRoutes) break;
-                } else {
-                    currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
-                }
+                currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
             }
         }
-
-        console.log(`[Engine] Generation finished. Remaining orders: ${remainingOrders.length}. Suggestions: ${suggestions.filter(s => s.orders.length > 0).length}`);
 
         return suggestions.filter(s => s.orders.length > 0).map(s => {
             const driver = sortedDrivers.find(d => d.id === s.driverId)!;
             const shiftWarnings = this.checkDriverShift(driver, startTimeStr, s.estimatedDuration);
             s.errors.push(...shiftWarnings.filter(w => w.includes("HARD_LIMIT")));
             s.warnings.push(...shiftWarnings.filter(w => !w.includes("HARD_LIMIT")));
-            if (invalidOrderCount.length > 0) {
-                s.warnings.push(`DATA_WARNING: ${invalidOrderCount.length} ordre hoppet over pga manglende koordinater.`);
-            }
             s.warnings = [...new Set(s.warnings)];
             return s;
         });
