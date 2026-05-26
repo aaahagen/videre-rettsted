@@ -52,6 +52,8 @@ The system is multi-tenant from the ground up to support commercialization. All 
 ### D. Route Execution & POD
 *   **Cyborg Planning:** Automated routing provides suggestions and warnings; planners maintain ultimate drag-and-drop manual control.
 *   **Constraint-Based Routing:** Engine validates Capability (ADR/Thermo), Capacity (Weight/Volume), Physical (Height/Width), and Temporal (Time windows/Shifts) constraints.
+*   **Organization-Aware Optimization**: The routing engine utilizes the organization's `mainDepot` coordinates for all distance and range calculations.
+*   **Intelligent Capacity Modeling**: Vehicle weight constraints are evaluated against dynamic curb weight estimates based on vehicle type (e.g., Van vs. Rigid Truck).
 *   **Distribution Strategy:** Planners can choose "Fill First" (efficiency) or "Balanced" (workload fairness).
 *   **Personnel Priority:** Internal employees are routed before external contractors.
 *   **Internal Tasks:** Planners can assign non-delivery routes (e.g., workshop runs).

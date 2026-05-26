@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Customizable Progress Component:** Enhanced the UI `Progress` component to support custom indicator colors via the `indicatorClassName` prop.
 
 ### Changed
+- **Optimized Routing Engine**: Major overhaul of the constraint-based routing logic for increased reliability and accuracy.
+    - **Fixed Weight Calculation**: Resolved a bug where 15,000 kg was erroneously added to all vehicle types. Now uses realistic curb weight estimates (Van: 2.2t, Truck: 7.5t, etc.).
+    - **Dynamic Depot Positioning**: The engine now utilizes the organization's `mainDepot` coordinates if defined, eliminating range errors for non-Oslo based organizations.
+    - **Robust Location Handling**: Added support for both `coordinates` and `location` fields on places to ensure compatibility with imported data.
+    - **Improved Diagnostics**: Enhanced internal logging and UI feedback to clearly explain why specific orders were skipped (e.g., "Range exceeded", "Capacity mismatch").
 - **Optimized Mobile Scanner**: Significantly improved the camera scanner for iOS and other mobile devices.
     - Switched to `decodeFromConstraints` with `facingMode: environment` to ensure the rear camera is used by default.
     - Improved camera switching logic for better compatibility with Safari on iOS.
@@ -53,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Restricted Organization Creation:** Updated Firestore security rules to strictly allow only `super_admin` to create new top-level `organizations` documents.
     - **Super Admin Creation Logic:** Enhanced the Super Admin dashboard to properly initialize new organizations with default modules, timestamps, and legal versioning.
     - **MFA Implementation Plan:** Created a comprehensive roadmap (`docs/mfa-plan.md`) for introducing Multi-Factor Authentication across the platform.
-    - **Voluntary MFA Enrollment:** Added a new Security section to the User Profile (`/dashboard/profile`) allowing users to link a phone number for SMS-based two-factor authentication.
+- **Voluntary MFA Enrollment:** Added a new Security section to the User Profile (`/dashboard/profile`) allowing users to link a phone number for SMS-based two-factor authentication.
 - **Avvikshåndtering (Danger Reports) Foundation:**
     - Established the `reports` Firestore collection rules to track hazards at delivery locations.
     - Added a dedicated `/dashboard/reports` page for admins and drivers to view and resolve issues.

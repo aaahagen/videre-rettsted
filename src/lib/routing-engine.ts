@@ -31,10 +31,26 @@ export function timeToMinutes(timeStr: string): number {
  */
 function isValidCoordinate(coords?: { lat: number, lng: number }): boolean {
     if (!coords) return false;
+    // We allow slight variations around 0,0 but absolute 0,0 is usually a failure in geocoding
     if (coords.lat === 0 && coords.lng === 0) return false;
-    if (Math.abs(coords.lat) < 0.0001 && Math.abs(coords.lng) < 0.0001) return false;
+    if (Math.abs(coords.lat) < 0.000001 && Math.abs(coords.lng) < 0.000001) return false;
     if (coords.lat < -90 || coords.lat > 90 || coords.lng < -180 || coords.lng > 180) return false;
     return true;
+}
+
+/**
+ * Normalizes coordinates from various possible field names
+ */
+function getNormalizedCoords(place: Place): { lat: number, lng: number } | null {
+    if (isValidCoordinate(place.coordinates)) return place.coordinates!;
+    
+    // Fallback to 'location' field if 'coordinates' is missing/invalid
+    if (place.location && typeof place.location.latitude === 'number' && typeof place.location.longitude === 'number') {
+        const coords = { lat: place.location.latitude, lng: place.location.longitude };
+        if (isValidCoordinate(coords)) return coords;
+    }
+    
+    return null;
 }
 
 export interface RouteSuggestion {
@@ -147,10 +163,21 @@ export class ConstraintEngine {
             errors.push(`PHYSICAL_ERROR: Vehicle is too long (${dim.length}m) for ${place.name} (Max: ${place.maxVehicleLength}m).`);
         }
         
-        if (place.maxVehicleWeight && vehicle.capacity?.weight) {
-            const estimatedTotalWeight = (vehicle.capacity.weight || 0) + 15000; 
+        if (place.maxVehicleWeight) {
+            // BUG FIX: Don't add 15 tons to every vehicle. 
+            // Estimate curb weight based on type if not explicitly known.
+            let curbWeightEstimate = 0;
+            switch(vehicle.type) {
+                case 'truck': curbWeightEstimate = 7500; break;
+                case 'van': curbWeightEstimate = 2200; break;
+                case 'car': curbWeightEstimate = 1500; break;
+                case 'tractor': curbWeightEstimate = 8000; break;
+                default: curbWeightEstimate = 2000;
+            }
+
+            const estimatedTotalWeight = (vehicle.capacity?.weight || 0) + curbWeightEstimate; 
             if (estimatedTotalWeight > place.maxVehicleWeight) {
-                 errors.push(`PHYSICAL_ERROR: Vehicle potential weight (${estimatedTotalWeight}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
+                 errors.push(`PHYSICAL_ERROR: Vehicle potential GVM (${estimatedTotalWeight}kg) exceeds site limit (${place.maxVehicleWeight}kg).`);
             }
         }
 
@@ -249,6 +276,7 @@ export class ConstraintEngine {
     ): RouteSuggestion[] {
         
         console.log(`[Engine] Starting generation with ${unassignedOrders.length} orders, ${availableVehicles.length} vehicles, ${availableDrivers.length} drivers.`);
+        console.log(`[Engine] Depot coordinates: ${depotCoords.lat}, ${depotCoords.lng}`);
 
         // 1. Initial Data Validation: Skip orders with invalid coordinates
         const validOrders: Order[] = [];
@@ -256,10 +284,17 @@ export class ConstraintEngine {
 
         for (const order of unassignedOrders) {
             const place = placesMap.get(order.placeId);
-            if (place && isValidCoordinate(place.coordinates)) {
+            if (!place) {
+                console.log(`[Engine] Skipping order ${order.barcode} - Place not found: ${order.placeId}`);
+                invalidOrderCount.push(order.barcode);
+                continue;
+            }
+            
+            const coords = getNormalizedCoords(place);
+            if (coords) {
                 validOrders.push(order);
             } else {
-                console.log(`[Engine] Skipping order ${order.barcode} - Invalid coordinates for place ${place?.name || order.placeId}`);
+                console.log(`[Engine] Skipping order ${order.barcode} - Invalid coordinates for place ${place.name || order.placeId}`);
                 invalidOrderCount.push(order.barcode);
             }
         }
@@ -323,46 +358,45 @@ export class ConstraintEngine {
             const vehicle = availableVehicles[currentRouteIdx];
             
             const lastPlaceId = suggestion.places[suggestion.places.length - 1]?.id;
-            const currentCoords = lastPlaceId ? placesMap.get(lastPlaceId)?.coordinates || depotCoords : depotCoords;
+            const currentCoords = lastPlaceId ? (getNormalizedCoords(placesMap.get(lastPlaceId)!) || depotCoords) : depotCoords;
 
             let bestOrderIndex = -1;
             let shortestDistance = Infinity;
 
-            console.log(`[Engine] Trying to assign ${remainingOrders.length} orders to Vehicle ${vehicle.name}...`);
-
             for (let j = 0; j < remainingOrders.length; j++) {
                 const candidateOrder = remainingOrders[j];
                 const place = placesMap.get(candidateOrder.placeId);
-                if (!place || !place.coordinates) continue;
+                if (!place) continue;
+                
+                const placeCoords = getNormalizedCoords(place);
+                if (!placeCoords) continue;
 
                 // Constraint Checks with Verbose Debugging
                 const capErrors = this.checkCapabilities(vehicle, candidateOrder);
                 if (capErrors.length > 0) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode}: Capability mismatch (${capErrors[0]})`);
                     continue; 
                 }
 
                 const capacityWarnings = this.checkCapacity(vehicle, suggestion.orders, candidateOrder);
                 if (capacityWarnings.some(w => w.includes("HARD_LIMIT"))) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode}: Capacity Hard Limit Reached`);
                     continue; 
                 }
 
-                const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates.lat, place.coordinates.lng);
+                const distToNext = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, placeCoords.lat, placeCoords.lng);
+                
+                // RANGE CHECK
                 if (vehicle.maxRange && (suggestion.estimatedDistance + distToNext) > vehicle.maxRange) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode}: Vehicle max range exceeded`);
+                    console.log(`   -> Skipping ${candidateOrder.barcode} for ${vehicle.name}: Range exceeded (${(suggestion.estimatedDistance + distToNext).toFixed(1)}km > ${vehicle.maxRange}km)`);
                     continue;
                 }
 
                 const envWarnings = this.checkEnvironmentalZones(vehicle, place);
                 if (envWarnings.some(w => w.includes("ENVIRONMENTAL_ERROR"))) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode}: Environmental Zone Violation`);
                     continue;
                 }
 
                 const physicalErrors = this.checkPhysicalConstraints(vehicle, place);
                 if (physicalErrors.length > 0) {
-                    console.log(`   -> Skipping ${candidateOrder.barcode}: Physical Constraints Violation (${physicalErrors[0]})`);
                     continue;
                 }
 
@@ -376,7 +410,7 @@ export class ConstraintEngine {
                 const selectedOrder = remainingOrders[bestOrderIndex];
                 const place = placesMap.get(selectedOrder.placeId)!;
                 
-                console.log(`[Engine] Assigned ${selectedOrder.barcode} to Vehicle ${vehicle.name}. Distance: ${shortestDistance.toFixed(2)}km`);
+                console.log(`[Engine] Assigned ${selectedOrder.barcode} to ${vehicle.name}. Dist: ${shortestDistance.toFixed(2)}km`);
                 
                 const isNewStop = !suggestion.places.some(p => p.id === place.id);
                 
@@ -391,22 +425,19 @@ export class ConstraintEngine {
                 suggestion.estimatedDistance += shortestDistance;
                 const travelTimeMins = (shortestDistance / this.options.averageSpeedKmph!) * 60;
                 
-                // FIXED: Only add stop time if it's a new stop, OR add a smaller "per order" handling time
-                const stopTime = isNewStop ? (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!) : 2; // 2 min per extra order at same stop
+                const stopTime = isNewStop ? (place.estimatedDeliveryTime || this.options.baseUnloadTimeMinutes!) : 2; 
                 suggestion.estimatedDuration += travelTimeMins + stopTime;
                 
                 suggestion.warnings.push(...this.checkDeliveryWindow(place, dayOfWeek, startTimeMinutes + suggestion.estimatedDuration));
                 
                 remainingOrders.splice(bestOrderIndex, 1);
-                
-                // If an order was assigned, reset stalled route state for THIS route, but we don't clear the set completely
                 stalledRoutes.delete(currentRouteIdx);
 
                 if (isBalanced) {
                     currentRouteIdx = (currentRouteIdx + 1) % maxRoutes;
                 }
             } else {
-                console.log(`[Engine] Route for Vehicle ${vehicle.name} is stalled. No more valid orders fit.`);
+                console.log(`[Engine] Route for ${vehicle.name} is stalled. ${remainingOrders.length} orders remaining but none fit.`);
                 stalledRoutes.add(currentRouteIdx);
                 if (!isBalanced) {
                     currentRouteIdx++;
@@ -417,7 +448,7 @@ export class ConstraintEngine {
             }
         }
 
-        console.log(`[Engine] Generation finished. Remaining unassigned orders: ${remainingOrders.length}. Suggestions created: ${suggestions.filter(s => s.orders.length > 0).length}`);
+        console.log(`[Engine] Generation finished. Remaining orders: ${remainingOrders.length}. Suggestions: ${suggestions.filter(s => s.orders.length > 0).length}`);
 
         return suggestions.filter(s => s.orders.length > 0).map(s => {
             const driver = sortedDrivers.find(d => d.id === s.driverId)!;

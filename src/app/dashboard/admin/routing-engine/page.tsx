@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/components/auth-provider';
 import { firebaseDB } from '@/lib/firebase/database';
-import { Order, Vehicle, Place, DriverProfile, RouteSuggestion } from '@/lib/types';
+import { Order, Vehicle, Place, DriverProfile, RouteSuggestion, Organization } from '@/lib/types';
 import { ConstraintEngine, getDistanceFromLatLonInKm } from '@/lib/routing-engine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -74,6 +74,7 @@ export default function RoutingEnginePage() {
     const [loading, setLoading] = useState(true);
     const [calculating, setCalculating] = useState(false);
     
+    const [organization, setOrganization] = useState<Organization | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [drivers, setDrivers] = useState<DriverProfile[]>([]);
@@ -96,13 +97,15 @@ export default function RoutingEnginePage() {
         async function loadData() {
             if (!dbUser?.orgId) return;
             try {
-                const [allOrders, allVehicles, allUsers, allPlaces] = await Promise.all([
+                const [org, allOrders, allVehicles, allUsers, allPlaces] = await Promise.all([
+                    firebaseDB.getOrganization(dbUser.orgId),
                     firebaseDB.getOrders(dbUser.orgId),
                     firebaseDB.getVehicles(dbUser.orgId),
                     firebaseDB.getUsers(dbUser.orgId),
                     firebaseDB.getPlaces(dbUser.orgId)
                 ]);
 
+                setOrganization(org);
                 setOrders(allOrders.filter(o => !o.routeId && o.status === 'pending'));
                 setVehicles(allVehicles.filter(v => v.currentStatuses.includes('ready') || v.currentStatuses.includes('parked')));
                 setDrivers(allUsers.filter(u => (u.role === 'driver' || u.role === 'contractor') && u.status !== 'paused') as DriverProfile[]);
@@ -132,14 +135,42 @@ export default function RoutingEnginePage() {
             return;
         }
 
+        if (vehicles.length === 0) {
+             toast({ 
+                 title: "Mangler kjøretøy", 
+                 description: "Ingen kjøretøy er markert som 'Klar' eller 'Parkert'. Sjekk flåtestyringen.",
+                 variant: "destructive" 
+             });
+             return;
+        }
+
+        if (drivers.length === 0) {
+             toast({ 
+                 title: "Mangler sjåfører", 
+                 description: "Ingen sjåfører er tilgjengelige (ikke satt til 'Pause').",
+                 variant: "destructive" 
+             });
+             return;
+        }
+
         setCalculating(true);
         
         setTimeout(() => {
             try {
                 const engine = new ConstraintEngine({ assignmentStrategy: strategy });
                 const placesMap = new Map(places.map(p => [p.id, p]));
-                const depotCoords = { lat: 59.9139, lng: 10.7522 }; // Oslo Default
                 
+                // Use organization's main depot, fallback to Oslo
+                const depotCoords = organization?.mainDepot?.coordinates || { lat: 59.9139, lng: 10.7522 }; 
+                
+                if (!organization?.mainDepot?.coordinates) {
+                    toast({
+                        title: "Systemvarsel",
+                        description: "Hoveddepot er ikke satt opp for din organisasjon. Bruker standard posisjon (Oslo).",
+                        variant: "default"
+                    });
+                }
+
                 const dayOfWeek = format(new Date(selectedDate), 'eeee').toLowerCase();
 
                 const results = engine.generateBasicSuggestion(
@@ -153,10 +184,30 @@ export default function RoutingEnginePage() {
                 );
 
                 setSuggestions(results);
-                toast({ 
-                    title: strategy === 'balanced' ? "Jevn fordeling generert" : "Effektive ruter generert", 
-                    description: `Planla ${results.reduce((sum, s) => sum + s.orders.length, 0)} ordre på ${results.length} ruter for ${format(new Date(selectedDate), 'PP')}.` 
-                });
+                
+                const assignedCount = results.reduce((sum, s) => sum + s.orders.length, 0);
+                
+                if (assignedCount === 0) {
+                    toast({ 
+                        title: "Kunne ikke planlegge ruter", 
+                        description: "Ingen ordre passet med tilgjengelige kjøretøy og begrensninger. Sjekk koordinater og kapasitet.", 
+                        variant: "destructive" 
+                    });
+                } else {
+                    toast({ 
+                        title: strategy === 'balanced' ? "Jevn fordeling generert" : "Effektive ruter generert", 
+                        description: `Planla ${assignedCount} av ${orders.length} ordre på ${results.length} ruter.` 
+                    });
+                    
+                    if (assignedCount < orders.length) {
+                         const diff = orders.length - assignedCount;
+                         toast({
+                             title: "Noen ordre ble hoppet over",
+                             description: `${diff} ordre kunne ikke tildeles pga. begrensninger eller manglende koordinater. Se logg for detaljer.`,
+                             variant: "default"
+                         });
+                    }
+                }
             } catch (err) {
                 console.error(err);
                 toast({ title: "Feil ved beregning", description: "Noe gikk galt under ruteoptimaliseringen.", variant: "destructive" });
@@ -203,7 +254,7 @@ export default function RoutingEnginePage() {
     };
 
     const recalculateSuggestionMetrics = (orders: Order[], places: Place[]): { duration: number, distance: number } => {
-        const depotCoords = { lat: 59.9139, lng: 10.7522 };
+        const depotCoords = organization?.mainDepot?.coordinates || { lat: 59.9139, lng: 10.7522 };
         let distance = 0;
         let duration = 0;
         let currentCoords = depotCoords;
@@ -211,7 +262,10 @@ export default function RoutingEnginePage() {
 
         // Heuristic: Process stops in the order they appear in the places list
         for (const place of places) {
-            const dist = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, place.coordinates!.lat, place.coordinates!.lng);
+            const coords = place.coordinates || (place.location ? { lat: place.location.latitude, lng: place.location.longitude } : null);
+            if (!coords) continue;
+
+            const dist = getDistanceFromLatLonInKm(currentCoords.lat, currentCoords.lng, coords.lat, coords.lng);
             distance += dist;
             
             const travelTime = (dist / 40) * 60; // 40km/h average
@@ -219,7 +273,7 @@ export default function RoutingEnginePage() {
             
             duration += travelTime + stopTime;
             visitedPlaceIds.add(place.id);
-            currentCoords = place.coordinates!;
+            currentCoords = coords;
         }
 
         return { duration, distance };
@@ -329,7 +383,7 @@ export default function RoutingEnginePage() {
                 
                 <Button 
                     onClick={handleGenerate} 
-                    disabled={calculating || orders.length === 0} 
+                    disabled={calculating || (orders.length === 0 && suggestions.length === 0)} 
                     size="lg" 
                     className="w-full md:w-auto h-14 px-8 text-lg font-black gap-3 shadow-xl bg-indigo-600 hover:bg-indigo-700 transition-all active:scale-95"
                 >
@@ -548,6 +602,24 @@ export default function RoutingEnginePage() {
                                         </div>
                                     )}
 
+                                    {/* Errors */}
+                                    {s.errors.length > 0 && (
+                                        <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 animate-in fade-in slide-in-from-top-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <X className="h-4 w-4 text-red-600" />
+                                                <span className="text-[10px] font-black text-red-700 uppercase tracking-widest">Kritiske feil</span>
+                                            </div>
+                                            <div className="space-y-1.5 pl-1">
+                                                {s.errors.map((e, eIdx) => (
+                                                    <div key={eIdx} className="text-[10px] flex gap-2 font-bold text-red-800 leading-tight">
+                                                        <div className="h-1 w-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                                        {e}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Timeline */}
                                     <div className="space-y-4">
                                          <div className="flex items-center justify-between">
@@ -603,7 +675,8 @@ export default function RoutingEnginePage() {
 
                                     <Button 
                                         onClick={() => handleApplyRoute(s)} 
-                                        className="w-full h-14 text-lg font-black gap-3 shadow-xl bg-slate-900 hover:bg-indigo-600 transition-all rounded-xl"
+                                        disabled={s.errors.length > 0}
+                                        className="w-full h-14 text-lg font-black gap-3 shadow-xl bg-slate-900 hover:bg-indigo-600 transition-all rounded-xl disabled:opacity-50 disabled:bg-slate-400"
                                         variant="default"
                                     >
                                         <CheckCircle2 className="h-5 w-5" />
@@ -623,7 +696,15 @@ export default function RoutingEnginePage() {
                     </div>
                     <div className="space-y-3">
                         <h3 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Klar for ruteoptimalisering?</h3>
-                        <p className="text-slate-500 max-w-sm font-medium mx-auto text-sm sm:text-base">Klikk på knappen ovenfor for å beregne ruter basert på dagens {orders.length} ledige ordre og {vehicles.length} tilgjengelige kjøretøy.</p>
+                        <p className="text-slate-500 max-w-sm font-medium mx-auto text-sm sm:text-base">
+                            Klikk på knappen ovenfor for å beregne ruter basert på dagens {orders.length} ledige ordre og {vehicles.length} tilgjengelige kjøretøy.
+                        </p>
+                        {orders.length === 0 && (
+                            <p className="text-amber-600 text-sm font-bold">Obs: Ingen ledige (pending) ordre funnet.</p>
+                        )}
+                        {vehicles.length === 0 && (
+                            <p className="text-amber-600 text-sm font-bold">Obs: Ingen klare kjøretøy funnet. Sjekk at de har status 'ready' eller 'parked'.</p>
+                        )}
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-6 pt-8 sm:pt-12">
                         <div className="flex items-center gap-2 opacity-50"><Package className="h-4 w-4 shrink-0" /><span className="text-[10px] font-black uppercase tracking-widest">Intelligent lastekapasitet</span></div>
