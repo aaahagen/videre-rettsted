@@ -18,7 +18,8 @@ import {
   Upload,
   Printer,
   CheckSquare,
-  Square
+  Square,
+  X
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
@@ -286,21 +287,29 @@ export default function OrdersPage() {
 
       {/* Bulk Action Bar */}
       {selectedOrderIds.length > 0 && (
-          <div className="sticky top-20 z-40 bg-indigo-600 text-white p-4 rounded-2xl shadow-xl flex items-center justify-between animate-in slide-in-from-top-4 duration-300">
-              <div className="flex items-center gap-4">
-                  <Badge className="bg-white text-indigo-600 hover:bg-white">{selectedOrderIds.length} valgt</Badge>
-                  <p className="text-xs font-bold uppercase tracking-wider hidden md:block text-indigo-100">Handlinger for markerte ordrer</p>
+          <div className="sticky top-20 z-40 bg-indigo-600 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-4 duration-300 border border-indigo-500">
+              <div className="flex items-center gap-4 pl-2">
+                  <div className="flex -space-x-2">
+                      <Badge className="bg-white text-indigo-700 hover:bg-white px-3 py-1 font-black text-sm shadow-sm">{selectedOrderIds.length}</Badge>
+                  </div>
+                  <p className="text-sm font-bold uppercase tracking-tight hidden md:block text-white">ordrer valgt</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                   <BulkBarcodeGenerator 
                     orders={selectedOrders} 
                     places={places} 
                     buttonLabel="Skriv ut etiketter" 
-                    variant="outline"
+                    variant="secondary"
+                    className="bg-white text-indigo-700 hover:bg-indigo-50 border-none shadow-md px-6 h-10 font-black"
                     onComplete={() => setSelectedOrderIds([])} 
                   />
-                  <Button variant="ghost" onClick={() => setSelectedOrderIds([])} className="text-white hover:bg-white/10 font-bold">
-                      Avbryt
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => setSelectedOrderIds([])} 
+                    className="text-indigo-100 hover:bg-white/10 hover:text-white font-bold gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Avbryt
                   </Button>
               </div>
           </div>

@@ -25,7 +25,7 @@ interface BulkBarcodeGeneratorProps {
   places: Record<string, Place>;
   onComplete?: () => void;
   buttonLabel?: string;
-  variant?: 'default' | 'outline' | 'ghost';
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary';
   className?: string;
 }
 
@@ -212,7 +212,9 @@ export function BulkBarcodeGenerator({ orders, places, onComplete, buttonLabel, 
         </div>
 
         <DialogFooter className="p-4 border-t bg-white gap-2">
-          <Button variant="ghost" onClick={() => setIsOpen(false)} className="font-bold">Avbryt</Button>
+          <Button variant="ghost" onClick={() => setIsOpen(false)} className="font-bold hover:bg-slate-100 hover:text-slate-900">
+            Avbryt
+          </Button>
           <Button 
             disabled={isGenerating || labelUrls.length === 0}
             onClick={handlePrint}
