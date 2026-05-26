@@ -27,27 +27,23 @@ This document defines the mandatory components, features, and role-based access 
 3.  **Tilpasning av Leveringssteder (Place Settings):**
     *   **Kundenummerering:** Toggle Auto-generation, Prefix, Next Number.
     *   **Felt-tilpasning (Field Customization):** 6 configurable fields (Label + Visibility toggle + Placeholder).
-        *   Felt 1 (Beskrivelse)
-        *   Felt 2 (Notater)
-        *   Felt 3 (Valgfritt)
-        *   Felt 4 (Valgfritt)
-        *   Dørkode / Nøkkel
-        *   Kontaktpersoner
-    *   **Midlertidig Salgsmelding:** Configurable label and visibility.
     *   **Visibility:** Admin, Owner, Super Admin.
-4.  **Sikkerhet & Avvik (Safety Settings):**
+4.  **Label-innstillinger (Label Settings):**
+    *   **Features:** Toggle between **Strekkode** (1D) and **QR-kode** (2D), Branding toggle.
+    *   **Visibility:** Admin, Owner, Super Admin.
+5.  **Sikkerhet & Avvik (Safety Settings):**
     *   **Features:** Global toggle for "Avvikshåndtering".
     *   **Visibility:** Admin, Owner, Super Admin.
-5.  **Hoveddepot & Geofencing:**
+6.  **Hoveddepot & Geofencing:**
     *   **Features:** Depot Address, Geocoding (Søk), GPS-capture, Lat/Lng inputs, Radius slider.
     *   **Visibility:** Admin, Owner, Super Admin.
-6.  **Sikkerhetslogg (Audit Trail):**
+7.  **Sikkerhetslogg (Audit Trail):**
     *   **Features:** List of GDPR-sensitive actions.
     *   **Visibility:** Admin, Owner, Super Admin.
-7.  **Datahåndtering (Data Management):**
+8.  **Datahåndtering (Data Management):**
     *   **Features:** JSON Export, JSON Import.
     *   **Visibility:** Admin, Owner, Super Admin.
-8.  **Delete Organization (Danger Zone):**
+9.  **Delete Organization (Danger Zone):**
     *   **Visibility:** Owner, Super Admin.
 
 ---
@@ -72,12 +68,12 @@ This document defines the mandatory components, features, and role-based access 
 2.  **Vehicle Cards:**
     *   **Visuals:** Main image.
     *   **Header:** Name, Reg Number, Status Badges, Edit/Delete (Admin only).
-    *   **Content:** Type, Odometer Reading (km), Compliance Mini-Dashboard (EU-kontroll, Service, Tacho Download).
+    *   **Content:** Type, Odometer Reading (km), Compliance Mini-Dashboard.
 3.  **Vehicle Details Modal:**
     *   **Status Manager:** Toggle functional states.
     *   **Technical Details:** Odometer, Capacity, Dimensions, Fuel.
     *   **Compliance Section:** Register Tacho Download button.
-    *   **Damage History:** List of reports with doc upload (Receipts/Orders).
+    *   **Damage History:** List of reports with doc upload.
 
 ---
 
@@ -88,8 +84,8 @@ This document defines the mandatory components, features, and role-based access 
 2.  **View Toggles:** Card View, Timeline, Time Approvals.
 3.  **Employee Cards:**
     *   **Header:** Photo, Name, Employment Type, Status bar.
-    *   **Content:** Status label, Compliance Section (Driver Card download status + Register button).
-    *   **Expanded Info:** Contact info, Employment details, Payroll/Legal (GDPR Logged), Contracts, Agency info.
+    *   **Content:** Status label, Compliance Section (Driver Card download).
+    *   **Expanded Info:** Contact info, Employment details, Payroll/Legal (GDPR Logged).
 
 ---
 
@@ -98,16 +94,38 @@ This document defines the mandatory components, features, and role-based access 
 ### Mandatory Components
 1.  **Header:** Name, Customer Number Badge.
 2.  **Media:** Image Carousel with full-screen zoom.
-3.  **Sales Message:** Amber alert box (if enabled and active).
-4.  **Main Content:** Description, Notes, Field 3, Field 4 (all respect Org visibility).
-5.  **Map Section:** Embedded Google Map, Start Navigation button.
-6.  **Sidebar:** Door codes, Contact persons, Hashtags, Opening Hours (Collapsible), Physical Constraints (Collapsible).
-7.  **Audit Info:** Log showing creator and last editor.
-8.  **Actions:** Edit, Print PDF, Delete (Admin only).
+3.  **Main Content:** Description, Notes, Field 3, Field 4.
+4.  **Map Section:** Embedded Google Map, Start Navigation button.
+5.  **Sidebar:** Door codes, Contact persons, Hashtags, Opening Hours, Physical Constraints.
+6.  **Actions:** Edit, Print PDF, Delete (Admin only).
 
 ---
 
-## 7. HMS & Sikkerhet (`/dashboard/hms`)
+## 7. Order Management (`/dashboard/orders`)
+
+### Mandatory Components
+1.  **Stats Bar:** Total, Pending, Delivered, Loaded.
+2.  **Bulk Action Bar:** Appears on selection.
+    *   **Features:** Multi-select, Select All, **Bulk Print Labels** (with batch separators).
+3.  **Order Cards:**
+    *   **Selection:** Checkbox for batch actions.
+    *   **Details:** Barcode, Status badge, Destination name, Creation date.
+4.  **Bulk Import:** CSV uploader modal.
+
+---
+
+## 8. Route Details (`/dashboard/routes/[id]`)
+
+### Mandatory Components
+1.  **Header:** Lifecycle Status (Active, Completed, Planned), Route Name, AI Optimization button.
+2.  **Stats Card:** Stop count, Order count, Total Pallet count.
+3.  **Actions:** **Print All Labels** (Bulk print for entire route), Send to Lasterampe.
+4.  **Stops List:** Drag-and-drop sorting (SortableContext).
+5.  **Place Preview:** Detailed view of selected stop with instructions and map navigation.
+
+---
+
+## 9. HMS & Sikkerhet (`/dashboard/hms`)
 
 ### Mandatory Components
 1.  **HMS Settings:** Manage questions, titles, and comment requirements.
@@ -116,34 +134,14 @@ This document defines the mandatory components, features, and role-based access 
 
 ---
 
-## 8. Dashboard Page (`/dashboard`)
+## 10. Dashboard Page (`/dashboard`)
 
 ### Admin View
 - **Operational Status:** Active routes, Finished routes, Overall progress bar.
 - **Terminal Progress:** Loaded Kolli / Total Kolli progress bar.
-- **Order Stats:** Pending, Loaded, Delivered, Failed.
 - **Attendance Card:** Present, Finished, Waiting.
-- **Resource Panels:** Workforce status list, Fleet status list.
 
 ### Driver View
 - **TimeStamp Card:** Punch-in/out.
 - **Active Route Card:** Route name, Manifest progress, Link to execution.
-- **Notifications:** Unread messages badge, Pending courses badge.
-- **Shortcuts:** Kart, Ruter, Favoritter.
-
----
-
-## 9. Routes Overview (`/dashboard/routes`)
-
-### Mandatory Components
-1.  **Tab System:** "Aktive Oppdrag" vs "Rutemaler".
-2.  **Route Cards (Active):**
-    *   **Header:** Route Name, Creation Date, Shipment Number.
-    *   **Metrics:** Stop count, Duration (formatted), Responsible Driver (Name + Vehicle icon).
-    *   **Lifecycle Status:** Dynamic badge (Klargjøres, Venter på rampen, Lastes, Underveis, Fullført).
-    *   **Progress:** Data-driven Progress Bar (Completed/Total stops) with percentage.
-    *   **Actions:** "Se detaljer" button, "Slett Rute" (Admin only, bottom-aligned).
-3.  **Template Cards:**
-    *   **Header:** Name, "Template" label.
-    *   **Content:** Stop count, Notes snippet.
-    *   **Actions:** "Opprett fra mal" button, "Slett Mal" (Admin only).
+- **Notifications:** Unread messages, Pending courses.

@@ -61,7 +61,9 @@ import {
     CheckCircle2 as CheckIcon,
     QrCode,
     Barcode,
-    Tag
+    Tag,
+    Printer,
+    Layers
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -845,6 +847,41 @@ export default function ManualPage() {
                                 </div>
                             </div>
 
+                            <div className="grid md:grid-cols-2 gap-8 pt-6">
+                                <Card className="border-2 border-indigo-100 bg-indigo-50/10">
+                                    <CardHeader>
+                                        <CardTitle className="text-base font-black flex items-center gap-2">
+                                            <Layers className="h-5 w-5 text-indigo-600" />
+                                            Bulk-utskrift (Effektivitet)
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                        <p>Når du skal printe mange etiketter samtidig, bruker systemet automatisk **skille-etiketter**:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                            <li>Før hver ordre printes en grå etikett med kundens navn i stor tekst.</li>
+                                            <li>Dette gjør det enkelt å se hvor en ordre slutter og den neste begynner i bunken med klistremerker.</li>
+                                            <li>Du kan printe for en hel rute (inne på ruten) eller for markerte ordrer (i ordrelisten).</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="border-2 border-slate-100">
+                                    <CardHeader>
+                                        <CardTitle className="text-base font-black flex items-center gap-2">
+                                            <Printer className="h-5 w-5 text-slate-600" />
+                                            Hvor printer jeg?
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="text-sm text-slate-600 font-medium space-y-3">
+                                        <p>Du har to valg for bulk-utskrift:</p>
+                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                            <li><strong className="text-slate-900">I Ordrelisten:</strong> Marker ordrene du vil printe og trykk "Skriv ut etiketter" i den blå linjen som dukker opp.</li>
+                                            <li><strong className="text-slate-900">Inne på en Rute:</strong> Trykk på den store knappen "Skriv ut alle etiketter" for å få alt til den spesifikke bilen i én operasjon.</li>
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
                             <div className="p-6 bg-slate-50 border rounded-2xl space-y-6">
                                 <h3 className="font-black text-slate-800 text-xl tracking-tight">Hvordan endre format?</h3>
                                 <p className="text-sm text-slate-600 font-medium">Bare organisasjons-administratorer og eiere kan endre etikett-innstillinger:</p>
@@ -1103,7 +1140,7 @@ export default function ManualPage() {
                                         Brukere & Tilganger
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Inviter nye ansatte ved å sende en unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som heller pause eller slette en bruker hvis de slutter.
+                                        Inviter nye ansatte ved å sende una unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som heller pause eller slette en bruker hvis de slutter.
                                     </p>
                                 </section>
 
