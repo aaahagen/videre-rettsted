@@ -246,12 +246,12 @@ export default function RoutesPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
-            <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 p-1 rounded-xl h-12 shadow-inner">
-                <TabsTrigger value="active" className="font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+            <TabsList className="flex w-fit bg-slate-100 p-1 rounded-xl h-12 shadow-inner">
+                <TabsTrigger value="active" className="px-6 font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
                     Aktive Oppdrag
                 </TabsTrigger>
-                <TabsTrigger value="template" className="font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
+                <TabsTrigger value="template" className="px-6 font-bold uppercase text-[10px] sm:text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm rounded-lg transition-all">
                     Rutemaler
                 </TabsTrigger>
             </TabsList>

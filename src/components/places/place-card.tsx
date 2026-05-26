@@ -161,7 +161,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
       <CardFooter className="flex flex-col gap-2 p-4 pt-0">
         <div className="flex w-full gap-2">
             {!hasHmsData && orgSettings?.hmsSettings?.enabled && (
-                <Button variant="outline" size="sm" asChild className="w-full bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
+                <Button variant="outline" size="sm" asChild className="flex-1 bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
                     <Link href={`/dashboard/places/${place.id}?tab=hms`}>
                         <ShieldAlert className="mr-2 h-4 w-4" />
                         Fyll ut HMS
@@ -172,7 +172,7 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
                 <Button 
                     variant="outline" 
                     size="sm" 
-                    className="w-full bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                    className="flex-1 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
                     onClick={() => setIsReportModalOpen(true)}
                 >
                     <AlertTriangle className="mr-2 h-4 w-4" />
