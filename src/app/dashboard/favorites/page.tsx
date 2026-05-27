@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase/firebase';
+import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
@@ -18,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function FavoritesPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
@@ -33,40 +33,44 @@ export default function FavoritesPage() {
   }, [authUser, loadingAuth, router]);
 
   useEffect(() => {
-    async function fetchData() {
-      if (authUser) {
-        try {
-          const userDoc = await firebaseDB.getUser(authUser.uid);
-          
-          // Fetch Organization
-          if (userDoc?.orgId) {
-            const org = await firebaseDB.getOrganization(userDoc.orgId);
-            setOrganization(org);
-          }
+    if (authUser) {
+      setLoadingData(true);
 
-          if (userDoc?.favorites && userDoc.favorites.length > 0) {
-            // Fetch each favorite place by ID
+      // Initial organization fetch
+      firebaseDB.getUser(authUser.uid).then(userDoc => {
+        if (userDoc?.orgId) {
+          firebaseDB.getOrganization(userDoc.orgId).then(setOrganization);
+        }
+      });
+
+      // Listen for real-time updates to user favorites
+      const userRef = doc(db, 'users', authUser.uid);
+      const unsub = onSnapshot(userRef, async (snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.data();
+          const favoriteIds = (userData.favorites as string[]) || [];
+
+          if (favoriteIds.length > 0) {
             const favoritePlaces = await Promise.all(
-              userDoc.favorites.map(async (placeId) => {
+              favoriteIds.map(async (placeId) => {
                 const place = await firebaseDB.getPlace(placeId);
                 return place;
               })
             );
-            // Filter out any null results
             setPlaces(favoritePlaces.filter(p => p !== null) as Place[]);
           } else {
             setPlaces([]);
           }
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setLoadingData(false);
+        } else {
+          setPlaces([]);
         }
-      }
-    }
+        setLoadingData(false);
+      }, (error) => {
+        console.error("Error listening to user favorites:", error);
+        setLoadingData(false);
+      });
 
-    if (authUser) {
-      fetchData();
+      return () => unsub();
     }
   }, [authUser]);
 
