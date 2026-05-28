@@ -214,7 +214,7 @@ function LearningAdminContent({ searchParams }: { searchParams: Promise<{ [key: 
   if (isLoading) return <SplashScreen />;
 
   return (
-    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-8 rounded-3xl border shadow-sm">
         <div>
@@ -391,8 +391,7 @@ function LearningAdminContent({ searchParams }: { searchParams: Promise<{ [key: 
                                 <th className="px-8 py-5">Kurs</th>
                                 <th className="px-8 py-5">Status</th>
                                 <th className="px-8 py-5">Progresjon</th>
-                                <th className="px-8 py-5">Sist oppdatert</th>
-                                <th className="px-8 py-5 text-right">Handlinger</th>
+                                <th className="px-8 py-5 text-right">Sist oppdatert</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
@@ -441,15 +440,10 @@ function LearningAdminContent({ searchParams }: { searchParams: Promise<{ [key: 
                                                 <span className="text-[10px] font-black text-slate-400">{assignment.progress}%</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-8 py-6 text-right">
                                             <span className="text-xs font-bold text-slate-500">
                                                 {new Date(assignment.updatedAt instanceof Date ? assignment.updatedAt : (assignment.updatedAt as any).toDate()).toLocaleDateString('nb-NO')}
                                             </span>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-indigo-600 rounded-full">
-                                                <MoreVertical className="h-5 w-5" />
-                                            </Button>
                                         </td>
                                     </tr>
                                 );
