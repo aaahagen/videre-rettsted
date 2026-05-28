@@ -235,7 +235,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Systemet tilpasser seg hvem du er. Her er una oversikt over de ulike rollene og hva de har tilgang til:
+                                Systemet tilpasser seg hvem du er. Her er en oversikt over de ulike rollene og hva de har tilgang til:
                             </p>
 
                             <div className="space-y-4 mt-6">
@@ -307,7 +307,7 @@ export default function ManualPage() {
                                         Bedriftseier (Owner)
                                     </h3>
                                     <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                                        Øverste myndighet. Har alt av tilgang som administrator, men er i tillegg ansvarlig for <strong className="text-slate-800">betaling og abonnement</strong>. Eieren har tilgang til una eksklusiv <strong className="text-slate-800">Bedriftsoversikt</strong> med statistikk på toppnivå.
+                                        Øverste myndighet. Har alt av tilgang som administrator, men er i tillegg ansvarlig for <strong className="text-slate-800">betaling og abonnement</strong>. Eieren har tilgang til en eksklusiv <strong className="text-slate-800">Bedriftsoversikt</strong> med statistikk på toppnivå.
                                     </p>
                                 </div>
                             </div>
@@ -381,7 +381,7 @@ export default function ManualPage() {
                                         <Info className="h-5 w-5" /> Midlertidige Salgsmeldinger
                                     </AlertTitle>
                                     <AlertDescription className="text-amber-700 mt-2 font-medium leading-relaxed">
-                                        Administratorer og selgere kan legge inn gule "Salgsmeldinger" på et sted med en utløpsdato. Dette vises prominent øverst på kortet og brukes for å gi sjåføren una viktig, tidsbegrenset beskjed – for eksempel: <br/><br/>
+                                        Administratorer og selgere kan legge inn gule "Salgsmeldinger" på et sted med en utløpsdato. Dette vises prominent øverst på kortet og brukes for å gi sjåføren en viktig, tidsbegrenset beskjed – for eksempel: <br/><br/>
                                         <em className="font-bold bg-amber-100 px-2 py-1 rounded">"Husk å overrekke kunden jubileumsgaven som ligger bak i bilen!"</em>
                                     </AlertDescription>
                                 </Alert>
@@ -393,7 +393,7 @@ export default function ManualPage() {
                                     Opprette og Redigere Steder
                                 </h3>
                                 <p className="text-slate-600 font-medium mb-4 leading-relaxed">
-                                    Som sjåfør har du makten til å forbedre databasen vår. Når du trykker på <strong>"Nytt sted"</strong> i menyen, eller trykker <strong>"Rediger Sted"</strong> inne på una steds-side, åpnes redigeringsskjemaet.
+                                    Som sjåfør har du makten til å forbedre databasen vår. Når du trykker på <strong>"Nytt sted"</strong> i menyen, eller trykker <strong>"Rediger Sted"</strong> inne på en steds-side, åpnes redigeringsskjemaet.
                                 </p>
 
                                 <div className="grid md:grid-cols-2 gap-6">
@@ -430,7 +430,7 @@ export default function ManualPage() {
                                         </p>
                                         <ul className="text-sm text-slate-600 font-medium space-y-2 list-disc list-inside ml-2">
                                             <li><strong className="text-slate-800">Sjåføren:</strong> Viser umiddelbart om de vil rekke frem før stengetid basert på ruten.</li>
-                                            <li><strong className="text-slate-800">Ruteplanleggeren (Auto):</strong> Maskinen vil automatisk bygge ruten slik at ingen tidsvinduer brytes, og advarer hvis una manuell endring (drag-and-drop) gjør at sjåføren kommer for sent.</li>
+                                            <li><strong className="text-slate-800">Ruteplanleggeren (Auto):</strong> Maskinen vil automatisk bygge ruten slik at ingen tidsvinduer brytes, og advarer hvis en manuell endring (drag-and-drop) gjør at sjåføren kommer for sent.</li>
                                         </ul>
                                     </div>
 
@@ -440,14 +440,14 @@ export default function ManualPage() {
                                             Fysiske Begrensninger
                                         </h4>
                                         <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                            Er det una lav undergang? Una smal port? Eller una bro med vektgrense rett før innkjøringen?
+                                            Er det en lav undergang? En smal port? Eller en bro med vektgrense rett før innkjøringen?
                                         </p>
                                         <ul className="text-sm text-slate-600 font-medium space-y-2 list-none ml-2">
                                             <li className="flex items-center gap-2"><Ruler className="h-4 w-4 text-slate-400" /> <strong>Høyde, Lengde, Bredde (m)</strong></li>
                                             <li className="flex items-center gap-2"><Weight className="h-4 w-4 text-slate-400" /> <strong>Maks Vekt (kg)</strong></li>
                                         </ul>
                                         <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">
-                                            Dette vises tydelig for sjåføren, og sikrer at <strong className="text-slate-700">auto-planleggeren aldri tildeler una lastebil til et sted den ikke fysisk passer inn i</strong>.
+                                            Dette vises tydelig for sjåføren, og sikrer at <strong className="text-slate-700">auto-planleggeren aldri tildeler en lastebil til et sted den ikke fysisk passer inn i</strong>.
                                         </p>
                                     </div>
 
@@ -513,7 +513,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                En trygg arbeidsdag er det aller viktigste. RettSted gjør det enkelt å rapportere farlige forhold før una ulykke skjer, og varsler deretter kollegaer automatisk.
+                                En trygg arbeidsdag er det aller viktigste. RettSted gjør det enkelt å rapportere farlige forhold før en ulykke skjer, og varsler deretter kollegaer automatisk.
                             </p>
 
                             <div className="grid md:grid-cols-2 gap-6 mt-8">
@@ -526,7 +526,7 @@ export default function ManualPage() {
                                         Bruk "Meld Avvik"-knappen på et steds-kort hvis du opplever f.eks. is, farlige hunder, manglende belysning eller blokkerte ramper.
                                     </p>
                                     <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
-                                        <li>Stedet får una rød ramme i appen for alle sjåfører.</li>
+                                        <li>Stedet får en rød ramme i appen for alle sjåfører.</li>
                                         <li>Admins får beskjed og må løse saken for å fjerne advarselen.</li>
                                     </ul>
                                 </div>
@@ -557,7 +557,7 @@ export default function ManualPage() {
                                             <h3 className="font-black text-slate-800 text-lg">Oppdage og Rapportere</h3>
                                         </div>
                                         <p className="text-slate-600 font-medium text-sm leading-relaxed">
-                                            På hvert leveringssted vil du se una knapp merket "Meld Avvik". Trykk på denne hvis noe er galt. Ta et bilde og send inn.
+                                            På hvert leveringssted vil du se en knapp merket "Meld Avvik". Trykk på denne hvis noe er galt. Ta et bilde og send inn.
                                         </p>
                                     </div>
                                 </div>
@@ -571,7 +571,7 @@ export default function ManualPage() {
                                             <h3 className="font-black text-red-700 text-lg">Advarsel til kollegaer</h3>
                                         </div>
                                         <p className="text-slate-700 font-medium text-sm leading-relaxed">
-                                            Når et avvik èr meldt, vil kortet til dette stedet umiddelbart få una rød ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
+                                            Når et avvik èr meldt, vil kortet til dette stedet umiddelbart få en rød ramme. Slik er nestemann som skal levere der advart om faren før de ankommer.
                                         </p>
                                     </div>
                                 </div>
@@ -632,7 +632,7 @@ export default function ManualPage() {
                             <Alert className="bg-slate-50 border-slate-200 rounded-xl">
                                 <Info className="h-5 w-5 text-slate-600" />
                                 <AlertDescription className="text-slate-600 font-medium">
-                                    Dersom una levering ikke lar seg gjennomføre (f.eks. stengt vei eller feil adresse), krever systemet at sjåføren velger una årsak og dokumenterer situasjonen med bilde før saken kan avsluttes.
+                                    Dersom en levering ikke lar seg gjennomføre (f.eks. stengt vei eller feil adresse), krever systemet at sjåføren velger en årsak og dokumenterer situasjonen med bilde før saken kan avsluttes.
                                 </AlertDescription>
                             </Alert>
                         </div>
@@ -663,7 +663,7 @@ export default function ManualPage() {
                                         <ul className="space-y-2 list-disc list-inside">
                                             <li>Aktivere/deaktivere sjekklister globalt.</li>
                                             <li>Definere spørsmålene som skal stilles (f.eks. "Er det trygg belysning?", "Er rampen sikret?").</li>
-                                            <li>Se una fullstendig logg over hvem som har sjekket hvilke steder og når.</li>
+                                            <li>Se en fullstendig logg over hvem som har sjekket hvilke steder og når.</li>
                                         </ul>
                                         <div className="pt-2">
                                             <Button variant="outline" className="w-full font-bold border-indigo-200 text-indigo-700 pointer-events-none">
@@ -685,9 +685,9 @@ export default function ManualPage() {
                                     <CardContent className="space-y-4 text-sm font-medium text-slate-600">
                                         <p>Sjåfører og HMS-ansvarlige ser HMS-behovet direkte på steds-kortet:</p>
                                         <ul className="space-y-2 list-disc list-inside">
-                                            <li>Una <strong className="text-red-600">Rød HMS-knapp</strong> betyr at stedet krever sjekk.</li>
+                                            <li>En <strong className="text-red-600">Rød HMS-knapp</strong> betyr at stedet krever sjekk.</li>
                                             <li>Når knappen trykkes, åpnes sjekklisten med de spørsmålene admin har valgt.</li>
-                                            <li>Man kan legge til una utfyllende kommentar til sjekken.</li>
+                                            <li>Man kan legge til en utfyllende kommentar til sjekken.</li>
                                             <li>Når sjekken er lagret, blir knappen <strong className="text-emerald-600">Grønn</strong> og viser når den sist ble utført.</li>
                                         </ul>
                                     </CardContent>
@@ -755,7 +755,7 @@ export default function ManualPage() {
                                         <li>Appen vil be om tillatelse til å bruke kameraet (feller første gang).</li>
                                         <li><strong className="text-slate-800">Sikt:</strong> Hold strekkoden inne i den markerte rammen på skjermen.</li>
                                         <li><strong className="text-slate-800">Feedback:</strong> Telefonen vil <strong className="text-indigo-600">vibrere</strong> og gi et lydsignal når koden er fanget.</li>
-                                        <li><strong className="text-slate-800">Kontinuerlig skanning:</strong> Du kan skanne neste kolli med una gang. Appen debouncer automatisk slik at du ikke skanner samme kolli to ganger ved et uhell.</li>
+                                        <li><strong className="text-slate-800">Kontinuerlig skanning:</strong> Du kan skanne neste kolli med en gang. Appen debouncer automatisk slik at du ikke skanner samme kolli to ganger ved et uhell.</li>
                                     </ol>
                                     <div className="p-3 bg-indigo-50 rounded-lg flex gap-2 border border-indigo-100">
                                         <RefreshCw className="h-4 w-4 text-indigo-500 shrink-0" />
@@ -779,7 +779,7 @@ export default function ManualPage() {
                                         </div>
                                         <div className="flex gap-3">
                                             <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">3</div>
-                                            <p className="text-xs text-slate-600 font-medium">Hvis una strekkode er ødelagt, skriv inn nummeret manuelt i feltet under skanneren.</p>
+                                            <p className="text-xs text-slate-600 font-medium">Hvis en strekkode er ødelagt, skriv inn nummeret manuelt i feltet under skanneren.</p>
                                         </div>
                                         <div className="flex gap-3">
                                             <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-black shrink-0">4</div>
@@ -824,7 +824,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                                RettSted bruker gjenbrukbare, rute-uavhengige etiketter. Dette betyr at du aldri trenger å printe nye etiketter selv om una pakke bytter bil eller rute.
+                                RettSted bruker gjenbrukbare, rute-uavhengige etiketter. Dette betyr at du aldri trenger å printe nye etiketter selv om en pakke bytter bil eller rute.
                             </p>
 
                             <div className="grid md:grid-cols-2 gap-8">
@@ -860,9 +860,9 @@ export default function ManualPage() {
                                     <CardContent className="text-sm text-slate-600 font-medium space-y-3">
                                         <p>Når du skal printe mange etiketter samtidig, bruker systemet automatisk **skille-etiketter**:</p>
                                         <ul className="list-disc list-inside space-y-1 text-xs">
-                                            <li>Før hver ordre printes una grå etikett med kundens navn i stor tekst.</li>
-                                            <li>Dette gjør det enkelt å se hvor una ordre slutter og den neste begynner i bunken med klistremerker.</li>
-                                            <li>Du kan printe for una hel rute (inne på ruten) eller for markerte ordrer (i ordrelisten).</li>
+                                            <li>Før hver ordre printes en grå etikett med kundens navn i stor tekst.</li>
+                                            <li>Dette gjør det enkelt å se hvor en ordre slutter og den neste begynner i bunken med klistremerker.</li>
+                                            <li>Du kan printe for en hel rute (inne på ruten) eller for markerte ordrer (i ordrelisten).</li>
                                         </ul>
                                     </CardContent>
                                 </Card>
@@ -878,7 +878,7 @@ export default function ManualPage() {
                                         <p>Du har to valg for bulk-utskrift:</p>
                                         <ul className="list-disc list-inside space-y-1 text-xs">
                                             <li><strong className="text-slate-900">I Ordrelisten:</strong> Marker ordrene du vil printe og trykk "Skriv ut etiketter" i den blå linjen som dukker opp.</li>
-                                            <li><strong className="text-slate-900">Inne på una Rute:</strong> Trykk på den store knappen "Skriv ut alle etiketter" for å få alt til den spesifikke bilen i én operasjon.</li>
+                                            <li><strong className="text-slate-900">Inne på en Rute:</strong> Trykk på den store knappen "Skriv ut alle etiketter" for å få alt til den spesifikke bilen i én operasjon.</li>
                                         </ul>
                                     </CardContent>
                                 </Card>
@@ -920,7 +920,7 @@ export default function ManualPage() {
                             </div>
                             
                             <p className="text-slate-700 text-lg font-medium">
-                                Alle oppdrag i RettSted starter som una ordre. Her lærer du hvordan du importerer, oppretter og administrerer dem.
+                                Alle oppdrag i RettSted starter som en ordre. Her lærer du hvordan du importerer, oppretter og administrerer dem.
                             </p>
 
                             <div className="grid md:grid-cols-2 gap-8">
@@ -930,7 +930,7 @@ export default function ManualPage() {
                                         Masseimport (CSV)
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Den mest effektive metoden. Last opp una Excel/CSV-fil fra ditt TMS-system. RettSted vil:
+                                        Den mest effektive metoden. Last opp en Excel/CSV-fil fra ditt TMS-system. RettSted vil:
                                     </p>
                                     <ul className="text-xs text-slate-500 space-y-2 list-disc list-inside">
                                         <li>Koble ordrene til riktige leveringssteder i databasen.</li>
@@ -994,7 +994,7 @@ export default function ManualPage() {
                                         Manuel Justering & Administrasjon
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Når du oppretter una rute manuelt, blir du sendt direkte til rutevisningen. Der kan du:
+                                        Når du oppretter en rute manuelt, blir du sendt direkte til rutevisningen. Der kan du:
                                     </p>
                                     <ul className="space-y-3 text-xs font-medium text-slate-600">
                                         <li className="flex items-start gap-3"><div className="p-1 bg-blue-100 text-blue-600 rounded mt-0.5"><Package className="h-3 w-3" /></div> <div><strong className="text-slate-900">Tildele Ordrer:</strong> Bruk knappen "Administrer Ordrer" for å legge til eller fjerne pakker fra ruten. Stoppesteder legges til automatisk.</div></li>
@@ -1063,7 +1063,7 @@ export default function ManualPage() {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                        <p>Når una sjåfør melder skade, havner den i triagesystemet:</p>
+                                        <p>Når en sjåfør melder skade, havner den i triagesystemet:</p>
                                         <ul className="list-disc list-inside space-y-1 text-xs">
                                             <li>Se bilder og beskrivelse av skaden.</li>
                                             <li>Planlegg verkstedbesøk.</li>
@@ -1080,7 +1080,7 @@ export default function ManualPage() {
                                 </h3>
                                 <p className="text-sm text-slate-600 font-medium leading-relaxed">
                                     RettSted skiller mellom <strong className="text-slate-900">Driv-enheter</strong> (Biler/Trekkvogner) og <strong className="text-slate-900">Passive-enheter</strong> (Hengere/Semi/Swap-bodies). 
-                                    Ved å merke kjøretøyene med riktig type og konfigurasjon, vil systemet automatisk beregne den kombinerte kapasiteten når de brukes sammen på una rute.
+                                    Ved å merke kjøretøyene med riktig type og konfigurasjon, vil systemet automatisk beregne den kombinerte kapasiteten når de brukes sammen på en rute.
                                 </p>
                             </div>
                         </div>
@@ -1160,7 +1160,7 @@ export default function ManualPage() {
                                         Brukere & Tilganger
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Inviter nye ansatte ved å sende una unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som heller pause eller slette una bruker hvis de slutter.
+                                        Inviter nye ansatte ved å sende en unik invitasjonslenke. Du styrer hvilken rolle de får (Sjåfør, Planlegger, Selger, etc.), og kan når som helst pause eller slette en bruker hvis de slutter.
                                     </p>
                                 </section>
 
@@ -1187,7 +1187,7 @@ export default function ManualPage() {
                                         Hoveddepot & Geofencing
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Sett bedriftens baseadresse og definer una "stemplings-radius". Dette sikrer at ansatte bare kan stemple seg inn på jobb når de faktisk befinner seg fysisk på terminalen.
+                                        Sett bedriftens baseadresse og definer en "stemplings-radius". Dette sikrer at ansatte bare kan stemple seg inn på jobb når de faktisk befinner seg fysisk på terminalen.
                                     </p>
                                 </section>
 
@@ -1286,7 +1286,7 @@ export default function ManualPage() {
                                     Tips til Eiere
                                 </h3>
                                 <p className="text-amber-800/80 font-medium leading-relaxed">
-                                    Selv om Eier-dashboardet er "minimalistisk", har du tilgang til alle Administrator-funksjoner. Vi anbefaler likevel at du utnevner una dedikert <strong className="text-amber-900">Administrator</strong> for den daglige oppfølgingen av sjåfører og steder, slik at du kan fokusere på de store linjene.
+                                    Selv om Eier-dashboardet er "minimalistisk", har du tilgang til alle Administrator-funksjoner. Vi anbefaler likevel at du utnevner en dedikert <strong className="text-amber-900">Administrator</strong> for den daglige oppfølgingen av sjåfører og steder, slik at du kan fokusere på de store linjene.
                                 </p>
                             </div>
                         </div>
