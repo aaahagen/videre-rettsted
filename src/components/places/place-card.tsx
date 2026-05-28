@@ -25,18 +25,18 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
   const [hasOpenReport, setHasOpenReport] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'super_admin' || dbUser?.role === 'owner';
-  
   // Feature Gating: 
-  // 1. Super Admin Module level (Global off)
-  const isModuleEnabled = orgSettings?.modules?.danger_reports !== false;
-  // 2. Org Admin toggle level (Off for drivers, on for admins)
-  const isFeatureEnabledForUser = isAdmin || orgSettings?.dangerReportsEnabled !== false;
+  // 1. Module Level (Managed by Super Admin in modules object)
+  const isModuleActive = orgSettings?.modules?.danger_reports === true;
   
-  const showDangerReports = isModuleEnabled && isFeatureEnabledForUser;
+  // 2. Functionality Level (Managed by Org Admin via dangerReportsEnabled toggle)
+  const isFunctionalityEnabled = orgSettings?.dangerReportsEnabled !== false;
+  
+  // The feature is only shown if both the module is active AND the admin has not disabled the functionality
+  const showDangerReports = isModuleActive && isFunctionalityEnabled;
 
   useEffect(() => {
-    // Check for open danger reports only if the feature is active for this user
+    // Check for open danger reports only if the feature is active
     const checkReports = async () => {
        if(!place.orgId || !showDangerReports) {
            setHasOpenReport(false);
