@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { firebaseDB } from '@/lib/firebase/database';
 import { DangerReportModal } from '../reports/danger-report-modal';
 import { useAuth } from '../auth-provider';
+import { cn } from '@/lib/utils';
 
 export function PlaceCard({ place, priority = false, orgSettings }: { place: DeliveryPlace; priority?: boolean; orgSettings?: Organization }) {
   const { dbUser } = useAuth();
@@ -72,6 +73,8 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
   const gmapsUrl = hasCoordinates 
     ? `https://www.google.com/maps/dir/?api=1&destination=${place.coordinates?.lat},${place.coordinates?.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}`;
+
+  const showHmsButton = !hasHmsData && orgSettings?.hmsSettings?.enabled;
 
   return (
     <>
@@ -158,46 +161,53 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
           ))}
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2 p-4 pt-0">
-        <div className="flex w-full gap-2">
-            {!hasHmsData && orgSettings?.hmsSettings?.enabled && (
-                <Button variant="outline" size="sm" asChild className="flex-1 bg-red-50 text-red-600 border-red-200 hover:bg-red-100">
-                    <Link href={`/dashboard/places/${place.id}?tab=hms`}>
-                        <ShieldAlert className="mr-2 h-4 w-4" />
-                        Fyll ut HMS
-                    </Link>
-                </Button>
-            )}
-            {showDangerReports && (
-                <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
-                    onClick={() => setIsReportModalOpen(true)}
-                >
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Meld Avvik
-                </Button>
-            )}
-        </div>
-        <div className="flex w-full gap-2">
-            <Button variant="outline" size="sm" asChild className="flex-1">
-                <Link href={`/dashboard/places/${place.id}`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Se mer
+      <CardFooter className="grid grid-cols-2 gap-2 p-4 pt-0">
+        {showHmsButton && (
+            <Button 
+                variant="outline" 
+                size="sm" 
+                asChild 
+                className={cn(
+                    "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+                    !showDangerReports ? "col-span-2" : "col-span-1"
+                )}
+            >
+                <Link href={`/dashboard/places/${place.id}?tab=hms`}>
+                    <ShieldAlert className="mr-2 h-4 w-4" />
+                    Fyll ut HMS
                 </Link>
             </Button>
-            <Button
-                size="sm"
-                asChild
-                className="bg-accent text-accent-foreground hover:bg-accent/90 flex-1"
+        )}
+        {showDangerReports && (
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className={cn(
+                    "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100",
+                    !showHmsButton ? "col-span-2" : "col-span-1"
+                )}
+                onClick={() => setIsReportModalOpen(true)}
             >
-                <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
-                    <Map className="mr-2 h-4 w-4" />
-                    Naviger
-                </a>
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Meld Avvik
             </Button>
-        </div>
+        )}
+        <Button variant="outline" size="sm" asChild className="col-span-1">
+            <Link href={`/dashboard/places/${place.id}`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Se mer
+            </Link>
+        </Button>
+        <Button
+            size="sm"
+            asChild
+            className="bg-accent text-accent-foreground hover:bg-accent/90 col-span-1"
+        >
+            <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
+                <Map className="mr-2 h-4 w-4" />
+                Naviger
+            </a>
+        </Button>
       </CardFooter>
     </Card>
 

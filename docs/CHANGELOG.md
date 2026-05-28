@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Optimized Mobile Scanner**: Significantly improved camera scanning reliability on iOS.
 
 ### Fixed
+- **PlaceCard Button Alignment**: Refactored the `PlaceCard` footer to use a consistent `grid-cols-2` layout, ensuring "Fyll ut HMS" and "Meld Avvik" buttons align perfectly with "Se mer" and "Naviger" buttons regardless of state.
 - **Security Rule Permissions**: Resolved "Missing or insufficient permissions" error in the Learning Portal by allowing users to read and update their own `courseAssignments`.
 - **Vehicle Persistence Reliability**: Refactored the vehicle saving architecture to resolve issues where new or edited vehicles could not be saved.
 - **UI Navigation**: Added "Avbryt" buttons to creation forms (e.g., New Route) to prevent users from getting stuck.
