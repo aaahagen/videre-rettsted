@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
 import { Loader2, Printer, Heart } from 'lucide-react';
-import { DeliveryPlace, Organization, Place } from '@/lib/types';
+import { DeliveryPlace, Organization, Place, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PrintPlace } from '@/components/places/print-place';
 import {
@@ -21,6 +21,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function FavoritesPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
+  const [userData, setUserData] = useState<User | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loadingData, setLoadingData] = useState(true);
@@ -32,47 +33,45 @@ export default function FavoritesPage() {
     }
   }, [authUser, loadingAuth, router]);
 
+  // Listen for user data (for favorites list and orgId)
   useEffect(() => {
-    if (authUser) {
-      setLoadingData(true);
-
-      // Initial organization fetch
-      firebaseDB.getUser(authUser.uid).then(userDoc => {
-        if (userDoc?.orgId) {
-          firebaseDB.getOrganization(userDoc.orgId).then(setOrganization);
-        }
-      });
-
-      // Listen for real-time updates to user favorites
-      const userRef = doc(db, 'users', authUser.uid);
-      const unsub = onSnapshot(userRef, async (snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.data();
-          const favoriteIds = (userData.favorites as string[]) || [];
-
-          if (favoriteIds.length > 0) {
-            const favoritePlaces = await Promise.all(
-              favoriteIds.map(async (placeId) => {
-                const place = await firebaseDB.getPlace(placeId);
-                return place;
-              })
-            );
-            setPlaces(favoritePlaces.filter(p => p !== null) as Place[]);
-          } else {
-            setPlaces([]);
-          }
+    if (!authUser) return;
+    
+    const unsubUser = onSnapshot(doc(db, 'users', authUser.uid), async (userDoc) => {
+      if (userDoc.exists()) {
+        const uData = { ...userDoc.data(), id: userDoc.id } as User;
+        setUserData(uData);
+        
+        const favoriteIds = uData.favorites || [];
+        if (favoriteIds.length > 0) {
+          const favoritePlaces = await Promise.all(
+            favoriteIds.map(async (placeId) => {
+              return await firebaseDB.getPlace(placeId);
+            })
+          );
+          setPlaces(favoritePlaces.filter(p => p !== null) as Place[]);
         } else {
           setPlaces([]);
         }
         setLoadingData(false);
-      }, (error) => {
-        console.error("Error listening to user favorites:", error);
-        setLoadingData(false);
-      });
+      }
+    });
 
-      return () => unsub();
-    }
+    return () => unsubUser();
   }, [authUser]);
+
+  // Listen for organization data (for feature gating)
+  useEffect(() => {
+    if (!userData?.orgId) return;
+    
+    const unsubOrg = onSnapshot(doc(db, 'organizations', userData.orgId), (orgDoc) => {
+        if (orgDoc.exists()) {
+            setOrganization({ ...orgDoc.data(), id: orgDoc.id } as Organization);
+        }
+    });
+    
+    return () => unsubOrg();
+  }, [userData?.orgId]);
 
   const handlePrint = () => {
     window.print();
@@ -147,7 +146,7 @@ export default function FavoritesPage() {
             )}
 
             {places.length > 0 ? (
-              <PlaceGrid places={places} />
+              <PlaceGrid places={places} orgSettings={organization || undefined} />
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100 shadow-inner">
                 <div className="p-6 bg-slate-50 rounded-full mb-4">
