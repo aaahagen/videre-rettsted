@@ -59,7 +59,8 @@ The UI prioritizes speed, offline resilience, and error prevention over superfic
 
 ### Layout System
 - **Role-Based Routing:** All users hit `/dashboard`. The UI dynamically adapts (Loaders see manifest tools, Planners see routing, Drivers see active assignments).
-- **Responsive Containers:** Main content uses `max-w-7xl` to prevent ultra-wide stretching. Sidebars are mobile-responsive (burger menu).
+- **Left-Aligned Dashboard:** All major dashboard pages (Routes, Fleet, Orders, etc.) use a consistent left-aligned layout with standard padding: `p-4 sm:p-6 lg:p-8 space-y-8`. This maximizes screen real estate and ensures consistency across the application.
+- **Responsive Containers:** Content is designed to be fluid and pinned to the left, rather than centered, to accommodate both mobile devices and wide desktop monitors.
 
 ### Core Components
 - **Cards (`<Card>`):** Primary structural component for data grouping and form sections.

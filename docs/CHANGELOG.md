@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Advanced Camera Scanner**: Integrated `@zxing/library` into the Manifest loading view.
 
 ### Changed
+- **UI Layout Standardization**: Migrated all dashboard pages to a consistent left-aligned layout (`p-4 sm:p-6 lg:p-8 space-y-8`).
+    - Removed `max-w-7xl mx-auto` centering to improve usability on large screens and match the `Places` page design.
+    - Updated Pages: Routes, Fleet, Orders, Monitor, Workforce, Admin, Learning, and Routing Engine.
 - **New Route Workflow**: Updated the "New Route" creation flow to redirect users directly to the planning interface for immediate order assignment.
 - **Optimized Routing Engine**: Major overhaul of the constraint-based routing logic.
     - **Fixed Weight Calculation**: Uses registered `emptyWeight` with fallback to type-based estimates.
@@ -31,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Optimized Mobile Scanner**: Significantly improved camera scanning reliability on iOS.
 
 ### Fixed
+- **Security Rule Permissions**: Resolved "Missing or insufficient permissions" error in the Learning Portal by allowing users to read and update their own `courseAssignments`.
 - **Vehicle Persistence Reliability**: Refactored the vehicle saving architecture to resolve issues where new or edited vehicles could not be saved.
 - **UI Navigation**: Added "Avbryt" buttons to creation forms (e.g., New Route) to prevent users from getting stuck.
 - **UI Overflow Issue on Routes Page**: Adjusted responsive sizing for smaller screens.
@@ -39,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deployment Note (REQUIRED)
 > [!IMPORTANT]
 > **Manual Deployment Steps:**
-> 1.  **Firestore Rules:** Run `firebase deploy --only firestore:rules` to activate new security logic.
+> 1.  **Firestore Rules:** Run `firebase deploy --only firestore:rules` to activate new security logic (Already performed).
 > 2.  **Firestore Indexes:** Run `firebase deploy --only firestore:indexes` to support Audit Log queries.
 > 3.  **Cloud Functions:** Run `firebase deploy --only functions` to apply updated `orgId` signature fixes.
 > 4.  **Firebase Console:** Enable "Identity Platform" and "Phone MFA" in the Authentication settings to support the new security features.

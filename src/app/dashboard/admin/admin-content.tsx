@@ -286,7 +286,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 w-full">
         <h1 className="text-3xl font-bold font-headline">Adminpanel</h1>
 
         {/* 1. USERS & ACCESS */}

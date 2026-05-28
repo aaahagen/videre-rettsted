@@ -80,7 +80,7 @@ service cloud.firestore {
         isSuperAdmin()
       );
       allow delete: if isAuthenticated() && (
-        (isUserInOrg(resource.data.orgId) && isAdmin()) || 
+        (isUserInOrg(request.resource.data.orgId) && isAdmin()) || 
         isSuperAdmin()
       );
     }
@@ -159,9 +159,9 @@ service cloud.firestore {
 
     // === COURSE ASSIGNMENTS ===
     match /courseAssignments/{assignmentId} {
-      allow read: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow read: if request.auth.uid == resource.data.userId || isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow create: if (isUserInOrg(request.resource.data.orgId) && isAdmin()) || isSuperAdmin();
-      allow update: if isUserInOrg(resource.data.orgId) || isSuperAdmin();
+      allow update: if request.auth.uid == resource.data.userId || isUserInOrg(resource.data.orgId) || isSuperAdmin();
       allow delete: if (isUserInOrg(resource.data.orgId) && isAdmin()) || isSuperAdmin();
     }
 

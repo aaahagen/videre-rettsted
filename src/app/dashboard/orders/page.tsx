@@ -195,7 +195,7 @@ export default function OrdersPage() {
   const isAdmin = userData?.role === 'admin' || userData?.role === 'super_admin';
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 mx-auto w-full px-4 max-w-7xl py-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
             <div className="p-3 bg-indigo-100 text-indigo-700 rounded-xl shadow-sm border border-indigo-200">
