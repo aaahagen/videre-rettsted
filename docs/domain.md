@@ -39,9 +39,11 @@ The system is multi-tenant from the ground up to support commercialization. All 
     *   Reports require an explanation and optional photographic evidence to be marked as resolved (Green).
     *   Dedicated dashboard at `/dashboard/reports` for global oversight of hazards.
 *   **HMS Checklists:** Places can require a safety checklist to be completed. 
-    *   Admins define questions at the organization level.
+    *   Admins define questions and subheadings for organization-level grouping at `/dashboard/hms/settings`.
+    *   **Drag-and-Drop Reordering:** Admins can intuitively rearrange the order of questions and subheadings using a drag-and-drop interface.
     *   Drivers/HMS Responsibles complete the checklists at the place level.
     *   A full audit log and CSV export are available at `/dashboard/hms`.
+    *   **Visibility:** Completed HMS results are displayed with date/time stamps and investigator details directly in the detailed Place view for driver awareness.
 
 ### C. Order & Manifest Operations
 *   **Dual Intake:** Orders must be created manually (for redundancy/ad-hoc) or via Bulk CSV/API.

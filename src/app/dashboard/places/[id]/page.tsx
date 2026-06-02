@@ -9,7 +9,7 @@ import { auth } from '../../../../lib/firebase/firebase';
 import { Button } from '../../../../components/ui/button';
 import { AspectRatio } from '../../../../components/ui/aspect-ratio';
 import { Badge } from '../../../../components/ui/badge';
-import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Hash, Megaphone } from 'lucide-react';
+import { Map, ArrowLeft, Calendar, User as UserIcon, Tag, Navigation, Edit3, Loader2, Maximize2, X, Clipboard, FileText, Printer, Trash2, ImageOff, Info, PhoneCall, Mail, Clock, ChevronDown, ChevronUp, Ruler, Weight, Hash, Megaphone, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -150,7 +150,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
     }
   };
 
-  const formatDate = (dateValue: any) => {
+  const formatDate = (dateValue: any, includeTime: boolean = false) => {
     if (!dateValue) return 'Ukjent';
     
     let date: Date;
@@ -165,7 +165,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
 
     if (!isValid(date)) return 'Ugyldig dato';
     
-    return format(date, 'PPP', { locale: nb });
+    return format(date, includeTime ? 'PPPp' : 'PPP', { locale: nb });
   };
 
   if (loading) {
@@ -216,6 +216,11 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
   // Check if sales message is valid
   const hasValidSalesMessage = place.salesMessage && 
     (!place.salesMessageValidUntil || isAfter(place.salesMessageValidUntil instanceof Date ? place.salesMessageValidUntil : (place.salesMessageValidUntil as any).toDate(), new Date()));
+
+  // HMS Display Logic
+  const hmsModuleEnabled = organization?.modules?.hms ?? false;
+  const hmsSettingsEnabled = organization?.hmsSettings?.enabled ?? false;
+  const showHmsData = (hmsModuleEnabled || hmsSettingsEnabled) && place.hmsData;
 
   return (
     <>
@@ -423,6 +428,53 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                           <p className="whitespace-pre-wrap text-slate-700 leading-relaxed">
                               {place.field4}
                           </p>
+                      </section>
+                    )}
+
+                    {/* HMS DOCUMENTATION */}
+                    {showHmsData && (
+                      <section className="bg-white p-5 rounded-xl shadow-sm border border-red-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold flex items-center">
+                                <Shield className="mr-2 h-5 w-5 text-red-500" />
+                                {organization?.hmsSettings?.title || "HMS Dokumentasjon"}
+                            </h2>
+                            {place.hmsData?.completedAt && (
+                                <Badge variant="secondary" className="text-[10px] font-bold">
+                                    Fullført: {formatDate(place.hmsData.completedAt, true)}
+                                </Badge>
+                            )}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {organization?.hmsSettings?.questions.map((q) => (
+                                <div key={q.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    <span className="text-sm font-medium text-slate-700">{q.text}</span>
+                                    {place.hmsData?.answers?.[q.id] ? (
+                                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none">
+                                            <CheckCircle2 className="h-3 w-3 mr-1" /> JA
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-slate-400 border-slate-200 shadow-none">
+                                            <XCircle className="h-3 w-3 mr-1" /> NEI
+                                        </Badge>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {place.hmsData?.comment && (
+                            <div className="mt-4 p-4 bg-red-50/30 rounded-lg border border-red-100">
+                                <h3 className="text-xs font-bold text-red-800 uppercase mb-2">Kommentar</h3>
+                                <p className="text-sm text-slate-700 italic">
+                                    "{place.hmsData.comment}"
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="mt-4 pt-3 border-t flex items-center justify-between text-[10px] text-slate-400">
+                            <span>Sjekkliste utført av: <span className="font-bold">{place.hmsData?.completedByName || 'Ukjent'}</span></span>
+                        </div>
                       </section>
                     )}
 

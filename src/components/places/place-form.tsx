@@ -1051,38 +1051,51 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="p-6 space-y-4">
-                        {organization.hmsSettings.questions.map((q) => (
-                            <div 
-                                key={q.id} 
-                                className={cn(
-                                    "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                                    hmsAnswers[q.id] 
-                                        ? "bg-green-50 border-green-200 shadow-sm" 
-                                        : "bg-slate-50 border-slate-100 hover:border-slate-200"
-                                )}
-                                onClick={() => {
-                                    const current = form.getValues(`hmsData.answers.${q.id}`);
-                                    form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
-                                }}
-                            >
-                                <Checkbox 
-                                    id={`hms-${q.id}`}
-                                    checked={hmsAnswers[q.id] || false}
-                                    onCheckedChange={(checked) => {
-                                        form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
+                        {organization.hmsSettings.questions.map((q) => {
+                            if (q.type === 'heading') {
+                                return (
+                                    <div key={q.id} className="pt-4 pb-2 border-b-2 border-slate-100 mb-2">
+                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-red-500 rounded-full" />
+                                            {q.text}
+                                        </h4>
+                                    </div>
+                                );
+                            }
+                            
+                            return (
+                                <div 
+                                    key={q.id} 
+                                    className={cn(
+                                        "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                                        hmsAnswers[q.id] 
+                                            ? "bg-green-50 border-green-200 shadow-sm" 
+                                            : "bg-slate-50 border-slate-100 hover:border-slate-200"
+                                    )}
+                                    onClick={() => {
+                                        const current = form.getValues(`hmsData.answers.${q.id}`);
+                                        form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
                                     }}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
-                                />
-                                <Label 
-                                    htmlFor={`hms-${q.id}`} 
-                                    className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug"
-                                    onClick={(e) => e.stopPropagation()}
                                 >
-                                    {q.text}
-                                </Label>
-                            </div>
-                        ))}
+                                    <Checkbox 
+                                        id={`hms-${q.id}`}
+                                        checked={hmsAnswers[q.id] || false}
+                                        onCheckedChange={(checked) => {
+                                            form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
+                                    />
+                                    <Label 
+                                        htmlFor={`hms-${q.id}`} 
+                                        className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {q.text}
+                                    </Label>
+                                </div>
+                            );
+                        })}
 
                         {organization.hmsSettings.requireComment && (
                             <FormField

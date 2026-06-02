@@ -47,7 +47,7 @@ export interface Organization {
   hmsSettings?: {
     enabled: boolean;
     title?: string;
-    questions: { id: string; text: string }[];
+    questions: { id: string; text: string; type?: 'question' | 'heading' }[];
     requireComment?: boolean;
   };
   fieldSettings?: {
