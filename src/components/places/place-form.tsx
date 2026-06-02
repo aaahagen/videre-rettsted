@@ -1118,7 +1118,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           <div className="space-y-6">
             {!isHmsResponsible && (
             <div className="space-y-4">
-              <FormLabel>Bilder (Maks 8)</FormLabel>
+              <Label>Bilder (Maks 8)</Label>
               <div className="grid grid-cols-2 gap-4">
                 {fields.map((field, index) => (
                   <div key={field.id} className={cn(
@@ -1276,13 +1276,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                                 control={form.control}
                                                 name={`weeklySchedule.${key}.isOpen`}
                                                 render={({ field }) => (
-                                                    <FormControl>
-                                                        <Switch 
-                                                            checked={field.value} 
-                                                            onCheckedChange={field.onChange} 
-                                                            className="scale-75"
-                                                        />
-                                                    </FormControl>
+                                                    <FormItem>
+                                                        <FormControl>
+                                                            <Switch 
+                                                                checked={field.value} 
+                                                                onCheckedChange={field.onChange} 
+                                                                className="scale-75"
+                                                            />
+                                                        </FormControl>
+                                                    </FormItem>
                                                 )}
                                             />
                                         </div>
@@ -1293,12 +1295,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                                     control={form.control}
                                                     name={`weeklySchedule.${key}.open`}
                                                     render={({ field }) => (
-                                                        <Input 
-                                                            type="time" 
-                                                            {...field} 
-                                                            className="h-7 text-[10px] font-bold px-1" 
-                                                           
-                                                        />
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input 
+                                                                    type="time" 
+                                                                    {...field} 
+                                                                    className="h-7 text-[10px] font-bold px-1" 
+                                                                />
+                                                            </FormControl>
+                                                        </FormItem>
                                                     )}
                                                 />
                                                 <span className="text-slate-400 font-bold">-</span>
@@ -1306,12 +1311,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                                                     control={form.control}
                                                     name={`weeklySchedule.${key}.close`}
                                                     render={({ field }) => (
-                                                        <Input 
-                                                            type="time" 
-                                                            {...field} 
-                                                            className="h-7 text-[10px] font-bold px-1" 
-                                                           
-                                                        />
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input 
+                                                                    type="time" 
+                                                                    {...field} 
+                                                                    className="h-7 text-[10px] font-bold px-1" 
+                                                                />
+                                                            </FormControl>
+                                                        </FormItem>
                                                     )}
                                                 />
                                             </div>
@@ -1336,9 +1344,9 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50">
                     <div className="flex items-center gap-3">
                         <Ruler className="h-5 w-5 text-slate-500" />
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Begrensninger</h3>
+                         <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Begrensninger</h3>
                     </div>
-                    {isConstraintsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {isConstraintsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </Button>
               </CollapsibleTrigger>
               
@@ -1428,7 +1436,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 <h3 className="text-lg font-black text-slate-800 border-b pb-2">Tilgang & Kontakt</h3>
                 {doorCodeEnabled && (
                 <div className="space-y-4">
-                    <FormLabel>{doorCodeLabel}</FormLabel>
+                    <Label>{doorCodeLabel}</Label>
                     {form.watch('doorCode')?.map((_, index) => (
                     <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
                         <div className="flex justify-between items-center">
@@ -1510,7 +1518,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
                 {contactPersonsEnabled && (
                 <div className="space-y-4">
-                    <FormLabel>{contactPersonsLabel}</FormLabel>
+                    <Label>{contactPersonsLabel}</Label>
                     {form.watch('contactPersons')?.map((_, index) => (
                     <div key={index} className="space-y-4 p-4 border rounded-md bg-slate-50">
                         <div className="flex justify-between items-center">
