@@ -52,6 +52,8 @@ import {
 import { deleteField } from 'firebase/firestore';
 import { useAuth } from '../auth-provider';
 
+const MAX_IMAGES = 15;
+
 const openingHoursSchema = z.object({
   isOpen: z.boolean(),
   open: z.string().optional(),
@@ -99,7 +101,7 @@ const placeSchema = z.object({
     url: z.string().optional(),
     description: z.string().optional(),
     preview: z.string().optional(),
-  })).min(0, 'Du kan laste opp bilder senere.').max(8, 'Maks 8 bilder tillatt.'),
+  })).min(0, 'Du kan laste opp bilder senere.').max(MAX_IMAGES, `Maks ${MAX_IMAGES} bilder tillatt.`),
   coordinates: z.object({
     lat: z.number(),
     lng: z.number(),
@@ -334,7 +336,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const remainingSlots = 8 - fields.length;
+    const remainingSlots = MAX_IMAGES - fields.length;
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
     filesToProcess.forEach(file => {
@@ -1131,7 +1133,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           <div className="space-y-6">
             {!isHmsResponsible && (
             <div className="space-y-4">
-              <Label>Bilder (Maks 8)</Label>
+              <Label>Bilder (Maks {MAX_IMAGES})</Label>
               <div className="grid grid-cols-2 gap-4">
                 {fields.map((field, index) => (
                   <div key={field.id} className={cn(
@@ -1190,7 +1192,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   </div>
                 ))}
                 
-                {fields.length < 8 && (
+                {fields.length < MAX_IMAGES && (
                   <div className="relative aspect-video">
                       <Button 
                           type="button" 
@@ -1222,7 +1224,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                   e.preventDefault();
                   cameraInputRef.current?.click();
                 }}
-                disabled={fields.length >= 8}
+                disabled={fields.length >= MAX_IMAGES}
             >
               <Camera className="mr-2 h-4 w-4" />
               Bruk Kamera

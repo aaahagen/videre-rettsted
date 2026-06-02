@@ -27,7 +27,7 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   **Core Data Management:** Ability to manage the master database of Places (RettSted) to ensure data quality.
 
 ### B. Place Management ("Last Meter")
-*   Visual database of exact delivery locations with direct camera upload (max 8 images).
+*   Visual database of exact delivery locations with direct camera upload (max 15 images).
 *   Automatic client-side downscaling of images before upload.
 *   Customizable text fields (e.g., "Beskrivelse & Instruksjoner").
 *   Hashtag categorization and a user-specific "Favorite" system.
