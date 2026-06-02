@@ -431,53 +431,6 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                       </section>
                     )}
 
-                    {/* HMS DOCUMENTATION */}
-                    {showHmsData && (
-                      <section className="bg-white p-5 rounded-xl shadow-sm border border-red-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold flex items-center">
-                                <Shield className="mr-2 h-5 w-5 text-red-500" />
-                                {organization?.hmsSettings?.title || "HMS Dokumentasjon"}
-                            </h2>
-                            {place.hmsData?.completedAt && (
-                                <Badge variant="secondary" className="text-[10px] font-bold">
-                                    Fullført: {formatDate(place.hmsData.completedAt, true)}
-                                </Badge>
-                            )}
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            {organization?.hmsSettings?.questions.map((q) => (
-                                <div key={q.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                    <span className="text-sm font-medium text-slate-700">{q.text}</span>
-                                    {place.hmsData?.answers?.[q.id] ? (
-                                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none">
-                                            <CheckCircle2 className="h-3 w-3 mr-1" /> JA
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="text-slate-400 border-slate-200 shadow-none">
-                                            <XCircle className="h-3 w-3 mr-1" /> NEI
-                                        </Badge>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {place.hmsData?.comment && (
-                            <div className="mt-4 p-4 bg-red-50/30 rounded-lg border border-red-100">
-                                <h3 className="text-xs font-bold text-red-800 uppercase mb-2">Kommentar</h3>
-                                <p className="text-sm text-slate-700 italic">
-                                    "{place.hmsData.comment}"
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="mt-4 pt-3 border-t flex items-center justify-between text-[10px] text-slate-400">
-                            <span>Sjekkliste utført av: <span className="font-bold">{place.hmsData?.completedByName || 'Ukjent'}</span></span>
-                        </div>
-                      </section>
-                    )}
-
                     <section className="bg-white p-5 rounded-xl shadow-sm border">
                       <h2 className="text-xl font-semibold mb-3 flex items-center">
                           <Map className="mr-2 h-5 w-5 text-primary" />
@@ -667,6 +620,62 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                                 )}
                             </CollapsibleContent>
                         </Collapsible>
+                    </section>
+                  )}
+
+                  {/* HMS DOCUMENTATION CARD */}
+                  {showHmsData && (
+                    <section className="bg-white p-5 rounded-xl shadow-sm border border-red-100 space-y-4">
+                      <div className="flex items-center justify-between border-b pb-2">
+                          <h2 className="text-lg font-semibold flex items-center">
+                              <Shield className="mr-2 h-5 w-5 text-red-500" />
+                              {organization?.hmsSettings?.title || "HMS Dokumentasjon"}
+                          </h2>
+                      </div>
+                      
+                      <div className="space-y-2">
+                          {organization?.hmsSettings?.questions.map((q) => {
+                                if (q.type === 'heading') {
+                                    // Always show subheadings if they exist
+                                    return (
+                                        <div key={q.id} className="pt-2 pb-1">
+                                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{q.text}</h4>
+                                        </div>
+                                    );
+                                }
+                                
+                                // Only show checkpoints that are checked (JA)
+                                if (place.hmsData?.answers?.[q.id]) {
+                                    return (
+                                        <div key={q.id} className="flex items-center justify-between p-2 bg-slate-50/50 rounded-lg border border-slate-100 text-xs">
+                                            <span className="font-medium text-slate-700">{q.text}</span>
+                                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none text-[10px] px-1.5 h-5">
+                                                <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> JA
+                                            </Badge>
+                                        </div>
+                                    );
+                                }
+                                
+                                return null;
+                          })}
+                      </div>
+
+                      {place.hmsData?.comment && (
+                          <div className="p-3 bg-red-50/30 rounded-lg border border-red-100 text-xs italic text-slate-600">
+                              "{place.hmsData.comment}"
+                          </div>
+                      )}
+
+                      <div className="pt-2 flex flex-col gap-1 text-[10px] text-slate-400 border-t">
+                          <div className="flex items-center gap-1">
+                              <UserIcon className="h-3 w-3" />
+                              <span>Sjekkliste utført av: <span className="font-bold text-slate-600">{place.hmsData?.completedByName || 'Ukjent'}</span></span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>Tidspunkt: <span className="font-bold text-slate-600">{formatDate(place.hmsData?.completedAt, true)}</span></span>
+                          </div>
+                      </div>
                     </section>
                   )}
 

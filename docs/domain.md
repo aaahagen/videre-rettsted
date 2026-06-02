@@ -43,7 +43,8 @@ The system is multi-tenant from the ground up to support commercialization. All 
     *   **Drag-and-Drop Reordering:** Admins can intuitively rearrange the order of questions and subheadings using a drag-and-drop interface.
     *   Drivers/HMS Responsibles complete the checklists at the place level.
     *   A full audit log and CSV export are available at `/dashboard/hms`.
-    *   **Visibility:** Completed HMS results are displayed with date/time stamps and investigator details directly in the detailed Place view for driver awareness.
+    *   **Visibility:** Completed HMS results are displayed with date/time stamps and investigator details directly in the detailed Place view (Sidebar). 
+    *   **Filtered Summary:** To keep drivers focused, the HMS result card only displays subheadings and the items marked as "JA" (checked).
 
 ### C. Order & Manifest Operations
 *   **Dual Intake:** Orders must be created manually (for redundancy/ad-hoc) or via Bulk CSV/API.

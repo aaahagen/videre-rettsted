@@ -85,7 +85,8 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
     const exportToCSV = () => {
         if (places.length === 0) return;
 
-        const questions = organization.hmsSettings?.questions || [];
+        // Filter out headings for a clean CSV export
+        const questions = (organization.hmsSettings?.questions || []).filter(q => q.type !== 'heading');
         
         // Define Headers
         const headers = [
@@ -217,20 +218,30 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
                                         <div className="space-y-3">
                                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sjekkpunkter</h4>
                                             <div className="space-y-2">
-                                                {organization.hmsSettings?.questions.map((q) => (
-                                                    <div key={q.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-200">
-                                                        <span className="text-sm font-medium text-slate-700">{q.text}</span>
-                                                        {place.hmsData?.answers?.[q.id] ? (
-                                                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none">
-                                                                <CheckCircle2 className="h-3 w-3 mr-1" /> JA
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="text-slate-400 border-slate-200 shadow-none">
-                                                                <XCircle className="h-3 w-3 mr-1" /> NEI
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                {organization.hmsSettings?.questions.map((q) => {
+                                                    if (q.type === 'heading') {
+                                                        return (
+                                                            <div key={q.id} className="pt-3 pb-1 border-b border-slate-200">
+                                                                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">{q.text}</span>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    
+                                                    return (
+                                                        <div key={q.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-200">
+                                                            <span className="text-sm font-medium text-slate-700">{q.text}</span>
+                                                            {place.hmsData?.answers?.[q.id] ? (
+                                                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none">
+                                                                    <CheckCircle2 className="h-3 w-3 mr-1" /> JA
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-slate-400 border-slate-200 shadow-none">
+                                                                    <XCircle className="h-3 w-3 mr-1" /> NEI
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                         <div className="space-y-3">

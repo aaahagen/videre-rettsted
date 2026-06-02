@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Concise HMS Summaries**: The HMS result card in the Place view now exclusively displays subheadings and checked items (marked "JA"), providing a more focused safety summary for drivers.
+- **HMS Result Sidebar Integration**: Moved the completed HMS documentation card to the sidebar for better organization of Place details.
 - **Expanded Place Imagery**: Increased the maximum number of allowed photos per Place from 8 to 15.
 - **Structured & Reorderable HMS Checklists**: Admins can now add subheadings to group HMS questions and rearrange the entire list using drag-and-drop functionality in the HMS settings.
 - **HMS Result Visibility**: Drivers can now see completed HMS checklists directly in the detailed Place view, including a full date/time stamp and investigator name.
