@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 
 
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
+import { UserPlaceStats } from '@/components/admin/user-place-stats';
 import { DriverProfile, Route as RouteType } from '@/lib/types';
 import { getDriverStatus } from "@/lib/workforce-utils";
 import { Activity, Palmtree, Coffee, Briefcase } from 'lucide-react';
@@ -619,6 +620,7 @@ export default function DashboardPage() {
                 <div className="space-y-8">
                     {isWorkforceEnabled && <TimeStampCard user={userData} />}
                     {isAnalyticsEnabled && userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
+                    {isAdmin && userData.orgId && <UserPlaceStats orgId={userData.orgId} />}
                     {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
                 </div>
             </div>
