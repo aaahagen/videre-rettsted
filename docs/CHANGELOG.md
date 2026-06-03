@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **HMS Modification Tracking**: The system now records the name and timestamp of the last person to edit an HMS checklist, ensuring audit accountability.
 - **Concise HMS Summaries**: The HMS result card in the Place view now exclusively displays subheadings and checked items (marked "JA"), providing a more focused safety summary for drivers.
 - **HMS Result Sidebar Integration**: Moved the completed HMS documentation card to the sidebar for better organization of Place details.
 - **Expanded Place Imagery**: Increased the maximum number of allowed photos per Place from 8 to 15.

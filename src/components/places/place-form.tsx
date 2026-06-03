@@ -523,14 +523,20 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const removeField = () => place ? deleteField() : undefined;
 
         // HMS Logic
+        const hmsDirty = form.getFieldState('hmsData').isDirty;
         const hasHmsData = data.hmsData && (Object.keys(data.hmsData.answers || {}).length > 0 || data.hmsData.comment);
-        const hmsDataToSave = hasHmsData ? {
-            answers: data.hmsData?.answers || {},
-            comment: data.hmsData?.comment || '',
-            completedBy: (place?.hmsData as any)?.completedBy || dbUser.id,
-            completedByName: (place?.hmsData as any)?.completedByName || (dbUser.name || 'Ukjent bruker'),
-            completedAt: (place?.hmsData as any)?.completedAt || new Date()
-        } : ((place?.hmsData as any) || removeField());
+        
+        let hmsDataToSave = place?.hmsData || removeField();
+        
+        if (hasHmsData && (hmsDirty || !place)) {
+            hmsDataToSave = {
+                answers: data.hmsData?.answers || {},
+                comment: data.hmsData?.comment || '',
+                completedBy: dbUser.id,
+                completedByName: dbUser.name || 'Ukjent bruker',
+                completedAt: new Date()
+            };
+        }
 
         const placeData = {
             name: data.name,
@@ -1121,7 +1127,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                         
                         {(place?.hmsData as any)?.completedAt && (
                             <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 rounded border border-dashed text-center">
-                                Fullført av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
+                                Sist endret av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
                             </div>
                         )}
                   </CollapsibleContent>

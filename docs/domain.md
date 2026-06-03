@@ -1,4 +1,4 @@
-# Domain & Logic: VIDERE RettSted
+ # Domain & Logic: VIDERE RettSted
 
 ## 1. Project Overview & Target Audience
 VIDERE RettSted solves the "last-meter" delivery problem by providing photos, descriptions, and specific entrance maps that standard GPS misses. It is a central hub for route execution, fleet management, and workforce compliance.
@@ -42,6 +42,7 @@ The system is multi-tenant from the ground up to support commercialization. All 
     *   Admins define questions and subheadings for organization-level grouping at `/dashboard/hms/settings`.
     *   **Drag-and-Drop Reordering:** Admins can intuitively rearrange the order of questions and subheadings using a drag-and-drop interface.
     *   Drivers/HMS Responsibles complete the checklists at the place level.
+    *   **Modification Tracking:** If an HMS checklist is edited, the system automatically updates the completion timestamp and the name of the last contributor.
     *   A full audit log and CSV export are available at `/dashboard/hms`.
     *   **Visibility:** Completed HMS results are displayed with date/time stamps and investigator details directly in the detailed Place view (Sidebar). 
     *   **Filtered Summary:** To keep drivers focused, the HMS result card only displays subheadings and the items marked as "JA" (checked).
