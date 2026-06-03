@@ -620,8 +620,8 @@ export default function DashboardPage() {
                 <div className="space-y-8">
                     {isWorkforceEnabled && <TimeStampCard user={userData} />}
                     {isAnalyticsEnabled && userData.orgId && <AnalyticsDashboard orgId={userData.orgId} />}
-                    {isAdmin && userData.orgId && <UserPlaceStats orgId={userData.orgId} />}
                     {userData.orgId && <NewestPlaceCard orgId={userData.orgId} />}
+                    {isAdmin && userData.orgId && <UserPlaceStats orgId={userData.orgId} />}
                 </div>
             </div>
         </div>
