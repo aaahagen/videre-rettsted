@@ -29,11 +29,12 @@ import {
     User,
     Calendar,
     Hash,
-    Loader2
+    Loader2,
+    MapPin
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { firebaseDB } from '@/lib/firebase/database';
-import { Place, Organization } from '@/lib/types';
+import { Place, Organization, LogEntry } from '@/lib/types';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { 
@@ -41,6 +42,7 @@ import {
     CollapsibleContent, 
     CollapsibleTrigger 
 } from "@/components/ui/collapsible";
+import { getLogs } from '@/lib/db/logs';
 
 interface HMSLogProps {
     orgId: string;
@@ -49,70 +51,59 @@ interface HMSLogProps {
 }
 
 export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogProps) {
-    const [places, setPlaces] = useState<Place[]>([]);
+    const [hmsEntries, setHmsEntries] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
+    const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchPlaces = async () => {
+        const fetchHmsHistory = async () => {
             setIsLoading(true);
             try {
-                const allPlaces = await firebaseDB.getPlaces(orgId);
-                // Filter only places that have HMS data
-                const hmsPlaces = allPlaces.filter(p => 
-                    p.hmsData && (
-                        (p.hmsData.answers && Object.keys(p.hmsData.answers).length > 0) || 
-                        p.hmsData.comment
-                    )
-                );
-                // Sort by date (newest first)
-                hmsPlaces.sort((a, b) => {
-                    const dateA = a.hmsData?.completedAt?.toDate?.() || new Date(0);
-                    const dateB = b.hmsData?.completedAt?.toDate?.() || new Date(0);
-                    return dateB.getTime() - dateA.getTime();
-                });
-                setPlaces(hmsPlaces);
+                // 1. Get all audit logs for this organization
+                const allLogs = await getLogs(orgId);
+                
+                // 2. Filter for HMS updates
+                const filteredLogs = allLogs.filter(log => log.action === 'update_hms_checklist');
+                
+                setHmsEntries(filteredLogs);
             } catch (error) {
-                console.error("Error fetching HMS log:", error);
+                console.error("Error fetching HMS history:", error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchPlaces();
+        fetchHmsHistory();
     }, [orgId]);
 
     const exportToCSV = () => {
-        if (places.length === 0) return;
+        if (hmsEntries.length === 0) return;
 
-        // Filter out headings for a clean CSV export
         const questions = (organization.hmsSettings?.questions || []).filter(q => q.type !== 'heading');
         
         // Define Headers
         const headers = [
-            "Sted",
-            "Kundenummer",
-            "Adresse",
-            "Utfylt av",
             "Dato",
+            "Tid",
+            "Sted",
+            "Sist endret av",
             ...questions.map(q => q.text),
             "Kommentar"
         ];
 
         // Map Data rows
-        const rows = places.map(p => {
-            const date = p.hmsData?.completedAt?.toDate?.() 
-                ? format(p.hmsData.completedAt.toDate(), 'yyyy-MM-dd HH:mm') 
-                : 'Ukjent';
+        const rows = hmsEntries.map(entry => {
+            const dateObj = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp);
+            const date = format(dateObj, 'yyyy-MM-dd');
+            const time = format(dateObj, 'HH:mm');
             
             return [
-                p.name,
-                p.customerNumber || '',
-                p.address,
-                p.hmsData?.completedByName || 'Ukjent',
                 date,
-                ...questions.map(q => p.hmsData?.answers?.[q.id] ? "JA" : "NEI"),
-                (p.hmsData?.comment || '').replace(/"/g, '""') // Escape quotes for CSV
+                time,
+                entry.details?.placeName || 'Ukjent',
+                entry.details?.userName || 'Ukjent',
+                ...questions.map(q => entry.details?.answers?.[q.id] ? "JA" : "NEI"),
+                (entry.details?.comment || '').replace(/"/g, '""')
             ];
         });
 
@@ -127,17 +118,16 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `HMS-Logg-${organization.name}-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+        link.setAttribute("download", `HMS-Historikk-${organization.name}-${format(new Date(), 'yyyy-MM-dd')}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
-    const filteredPlaces = places.filter(p => 
-        p.name.toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
-        (p.customerNumber || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
-        (p.hmsData?.completedByName || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
-        (p.hmsData?.comment || '').toLowerCase().includes(initialSearchQuery.toLowerCase())
+    const filteredEntries = hmsEntries.filter(entry => 
+        (entry.details?.placeName || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+        (entry.details?.userName || '').toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+        (entry.details?.comment || '').toLowerCase().includes(initialSearchQuery.toLowerCase())
     );
 
     if (isLoading) {
@@ -154,69 +144,65 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
                 <div>
                     <CardTitle className="font-headline text-xl flex items-center gap-2">
                         <Shield className="h-5 w-5 text-red-500" />
-                        HMS Dokumentasjonslogg
+                        HMS Dokumentasjonslogg (Historikk)
                     </CardTitle>
                     <CardDescription className="text-xs">
-                        Oversikt over alle steder med utfylt HMS-sjekkliste
+                        Kronologisk liste over alle HMS-oppdateringer utført i organisasjonen
                     </CardDescription>
                 </div>
                 <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={exportToCSV}
-                    disabled={places.length === 0}
+                    disabled={hmsEntries.length === 0}
                     className="font-bold border-slate-300"
                 >
                     <Download className="mr-2 h-4 w-4" />
-                    Eksporter CSV
+                    Eksporter Historikk (CSV)
                 </Button>
             </CardHeader>
             <CardContent className="p-0">
-                {filteredPlaces.length === 0 ? (
+                {filteredEntries.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">
                         <Shield className="h-12 w-12 mx-auto mb-4 opacity-10" />
-                        <p>{initialSearchQuery ? `Ingen HMS-data matchet "${initialSearchQuery}"` : "Ingen HMS-data funnet."}</p>
+                        <p>{initialSearchQuery ? `Ingen loggføringer matchet "${initialSearchQuery}"` : "Ingen HMS-historikk funnet."}</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">
-                        {filteredPlaces.map((place) => (
+                        {filteredEntries.map((entry) => (
                             <Collapsible
-                                key={place.id}
-                                open={expandedPlaceId === place.id}
-                                onOpenChange={() => setExpandedPlaceId(expandedPlaceId === place.id ? null : place.id)}
+                                key={entry.id}
+                                open={expandedEntryId === entry.id}
+                                onOpenChange={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}
                             >
                                 <CollapsibleTrigger asChild>
                                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 cursor-pointer transition-colors group">
                                         <div className="sm:col-span-4 flex items-center gap-3">
                                             <div className="p-2 bg-white rounded-lg border group-hover:border-red-200 transition-colors">
-                                                <Shield className="h-4 w-4 text-red-500" />
+                                                <MapPin className="h-4 w-4 text-red-500" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="font-bold text-slate-900 truncate">{place.name}</p>
-                                                {place.customerNumber && (
-                                                    <p className="text-[10px] font-mono text-slate-500 flex items-center gap-1">
-                                                        <Hash className="h-2.5 w-2.5" /> {place.customerNumber}
-                                                    </p>
-                                                )}
+                                                <p className="font-bold text-slate-900 truncate">{entry.details?.placeName || 'Slettet sted'}</p>
+                                                <p className="text-[10px] text-slate-400">ID: {entry.details?.placeId}</p>
                                             </div>
                                         </div>
                                         <div className="sm:col-span-3 text-slate-600 text-sm flex items-center gap-2">
                                             <User className="h-3.5 w-3.5 text-slate-400" />
-                                            {place.hmsData?.completedByName || 'Ukjent'}
+                                            {entry.details?.userName || 'Ukjent'}
                                         </div>
                                         <div className="sm:col-span-3 text-slate-600 text-sm flex items-center gap-2">
                                             <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                            {place.hmsData?.completedAt?.toDate ? format(place.hmsData.completedAt.toDate(), 'do MMM yyyy', { locale: nb }) : 'Ukjent'}
+                                            {entry.timestamp ? format(entry.timestamp.toDate ? entry.timestamp.toDate() : new Date(entry.timestamp), 'do MMM yyyy HH:mm', { locale: nb }) : 'Ukjent'}
                                         </div>
                                         <div className="sm:col-span-2 flex justify-end">
-                                            {expandedPlaceId === place.id ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                                            {expandedEntryId === entry.id ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                                         </div>
                                     </div>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent className="bg-slate-50/80 border-t border-slate-100 p-6 animate-in slide-in-from-top-1 duration-200">
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-3">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sjekkpunkter</h4>
+                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Sjekkpunkter ved endring</h4>
                                             <div className="space-y-2">
                                                 {organization.hmsSettings?.questions.map((q) => {
                                                     if (q.type === 'heading') {
@@ -230,7 +216,7 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
                                                     return (
                                                         <div key={q.id} className="flex items-center justify-between p-2 bg-white rounded border border-slate-200">
                                                             <span className="text-sm font-medium text-slate-700">{q.text}</span>
-                                                            {place.hmsData?.answers?.[q.id] ? (
+                                                            {entry.details?.answers?.[q.id] ? (
                                                                 <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none">
                                                                     <CheckCircle2 className="h-3 w-3 mr-1" /> JA
                                                                 </Badge>
@@ -245,13 +231,13 @@ export function HMSLog({ orgId, organization, initialSearchQuery = '' }: HMSLogP
                                             </div>
                                         </div>
                                         <div className="space-y-3">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">HMS Kommentar</h4>
+                                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Kommentar ved endring</h4>
                                             <div className="p-4 bg-white rounded-xl border border-slate-200 min-h-[100px] text-sm text-slate-600 italic">
-                                                {place.hmsData?.comment || 'Ingen kommentar lagt inn.'}
+                                                {entry.details?.comment || 'Ingen kommentar lagt inn.'}
                                             </div>
                                             <div className="flex justify-end pt-2">
                                                 <Button size="sm" variant="ghost" className="text-xs text-primary font-bold" asChild>
-                                                    <a href={`/dashboard/places/${place.id}`}>Vis leveringssted</a>
+                                                    <a href={`/dashboard/places/${entry.details?.placeId}`}>Se nåværende status</a>
                                                 </Button>
                                             </div>
                                         </div>

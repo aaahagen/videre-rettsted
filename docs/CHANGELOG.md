@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Full HMS Audit History**: The HMS Documentation log now displays a complete chronological history of all updates. Users can see exactly who changed what and when, with snapshots of the checklist state at each point in time.
 - **HMS Modification Tracking**: The system now records the name and timestamp of the last person to edit an HMS checklist, ensuring audit accountability.
 - **Concise HMS Summaries**: The HMS result card in the Place view now exclusively displays subheadings and checked items (marked "JA"), providing a more focused safety summary for drivers.
 - **HMS Result Sidebar Integration**: Moved the completed HMS documentation card to the sidebar for better organization of Place details.

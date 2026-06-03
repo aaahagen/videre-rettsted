@@ -279,7 +279,7 @@ export interface LogEntry {
   id: string;
   orgId: string;
   userId: string;
-  action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data' | 'view_sensitive_personnel_data';
+  action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data' | 'view_sensitive_personnel_data' | 'update_hms_checklist';
   timestamp: FieldValue | Date;
   details?: any;
 }

@@ -18,7 +18,7 @@ import { LogEntry } from '../types';
  * await logEvent("org_123", "user_abc", "view_sensitive_personnel_data", { targetUserId: "driver_99", targetUserName: "Ola" });
  * ```
  */
-export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data' | 'view_sensitive_personnel_data', details?: any) => {
+export const logEvent = async (orgId: string, userId: string, action: 'create_place' | 'delete_place' | 'login' | 'admin_view_worklog' | 'export_hr_data' | 'view_sensitive_personnel_data' | 'update_hms_checklist', details?: any) => {
     try {
         await addDoc(collection(db, 'audit_logs'), {
             orgId,

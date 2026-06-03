@@ -536,6 +536,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 completedByName: dbUser.name || 'Ukjent bruker',
                 completedAt: new Date()
             };
+            
+            // Audit log for HMS update
+            await firebaseDB.logEvent(dbUser.orgId, dbUser.id, 'update_hms_checklist', { 
+                placeId: place?.id || 'new_place',
+                placeName: data.name,
+                userName: dbUser.name,
+                answers: data.hmsData?.answers || {},
+                comment: data.hmsData?.comment || ''
+            });
         }
 
         const placeData = {
@@ -546,8 +555,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             notes: data.notes || '',
             field3: data.field3 || '',
             field4: data.field4 || '',
-            doorCode: (data.doorCode || []).map(dc => ({ category: dc.category || '', name: dc.name || '', value: dc.value || '' })),
-            contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
+            doorCode: (data.doorCode || []).map(dc => ({ category: dc.category || '', name: dc.name || '', value: dc.value || '' })),            contactPersons: (data.contactPersons || []).map(cp => ({ name: cp.name || '', phone: cp.phone || '', email: cp.email || '' })),
             hashtags: hashtagsArray,
             estimatedDeliveryTime: data.estimatedDeliveryTime || 0,
             isZeroEmissionZone: data.isZeroEmissionZone,
