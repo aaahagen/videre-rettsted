@@ -137,7 +137,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
   
   const [isBasicOpen, setIsBasicOpen] = useState(true);
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
-  const [isHmsOpen, setIsHmsOpen] = useState(true);
+  const [isHmsOpen, setIsHmsOpen] = useState(false);
   const [isSalesOpen, setIsSalesOpen] = useState(false);
   const [isHoursOpen, setIsHoursOpen] = useState(false);
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
@@ -1047,100 +1047,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               </CollapsibleContent>
             </Collapsible>
             )}
-
-            {/* HMS SECTION */}
-            {organization?.hmsSettings?.enabled && !isSalesman && (
-                <Collapsible
-                  open={isHmsOpen}
-                  onOpenChange={setIsHmsOpen}
-                  className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
-                        <div className="flex items-center gap-3">
-                            <Shield className="h-5 w-5 text-red-500" />
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">
-                                {organization.hmsSettings.title || 'HMS Sjekkliste'}
-                            </h3>
-                        </div>
-                        {isHmsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="p-6 space-y-4">
-                        {organization.hmsSettings.questions.map((q) => {
-                            if (q.type === 'heading') {
-                                return (
-                                    <div key={q.id} className="pt-4 pb-2 border-b-2 border-slate-100 mb-2">
-                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                                            <div className="w-1.5 h-4 bg-red-500 rounded-full" />
-                                            {q.text}
-                                        </h4>
-                                    </div>
-                                );
-                            }
-                            
-                            return (
-                                <div 
-                                    key={q.id} 
-                                    className={cn(
-                                        "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                                        hmsAnswers[q.id] 
-                                            ? "bg-green-50 border-green-200 shadow-sm" 
-                                            : "bg-slate-50 border-slate-100 hover:border-slate-200"
-                                    )}
-                                    onClick={() => {
-                                        const current = form.getValues(`hmsData.answers.${q.id}`);
-                                        form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
-                                    }}
-                                >
-                                    <Checkbox 
-                                        id={`hms-${q.id}`}
-                                        checked={hmsAnswers[q.id] || false}
-                                        onCheckedChange={(checked) => {
-                                            form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
-                                    />
-                                    <Label 
-                                        htmlFor={`hms-${q.id}`} 
-                                        className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        {q.text}
-                                    </Label>
-                                </div>
-                            );
-                        })}
-
-                        {organization.hmsSettings.requireComment && (
-                            <FormField
-                                control={form.control}
-                                name="hmsData.comment"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-2 mt-4">
-                                        <FormLabel className="text-sm font-bold text-slate-500 uppercase">HMS Kommentar</FormLabel>
-                                        <FormControl>
-                                            <Textarea 
-                                                placeholder="Legg til utfyllende HMS-informasjon her..."
-                                                className="min-h-[100px] bg-slate-50/50"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        )}
-                        
-                        {(place?.hmsData as any)?.completedAt && (
-                            <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 rounded border border-dashed text-center">
-                                Sist endret av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
-                            </div>
-                        )}
-                  </CollapsibleContent>
-                </Collapsible>
-            )}
           </div>
 
           {/* RIGHT COLUMN */}
@@ -1458,6 +1364,100 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 </div>
               </CollapsibleContent>
             </Collapsible>
+            )}
+
+            {/* HMS SECTION */}
+            {organization?.hmsSettings?.enabled && !isSalesman && (
+                <Collapsible
+                  open={isHmsOpen}
+                  onOpenChange={setIsHmsOpen}
+                  className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
+                        <div className="flex items-center gap-3">
+                            <Shield className="h-5 w-5 text-red-500" />
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                {organization.hmsSettings.title || 'HMS Sjekkliste'}
+                            </h3>
+                        </div>
+                        {isHmsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="p-6 space-y-4">
+                        {organization.hmsSettings.questions.map((q) => {
+                            if (q.type === 'heading') {
+                                return (
+                                    <div key={q.id} className="pt-4 pb-2 border-b-2 border-slate-100 mb-2">
+                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-red-500 rounded-full" />
+                                            {q.text}
+                                        </h4>
+                                    </div>
+                                );
+                            }
+                            
+                            return (
+                                <div 
+                                    key={q.id} 
+                                    className={cn(
+                                        "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                                        hmsAnswers[q.id] 
+                                            ? "bg-green-50 border-green-200 shadow-sm" 
+                                            : "bg-slate-50 border-slate-100 hover:border-slate-200"
+                                    )}
+                                    onClick={() => {
+                                        const current = form.getValues(`hmsData.answers.${q.id}`);
+                                        form.setValue(`hmsData.answers.${q.id}`, !current, { shouldDirty: true });
+                                    }}
+                                >
+                                    <Checkbox 
+                                        id={`hms-${q.id}`}
+                                        checked={hmsAnswers[q.id] || false}
+                                        onCheckedChange={(checked) => {
+                                            form.setValue(`hmsData.answers.${q.id}`, !!checked, { shouldDirty: true });
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="h-8 w-8 border-2 border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 rounded-lg shrink-0"
+                                    />
+                                    <Label 
+                                        htmlFor={`hms-${q.id}`} 
+                                        className="text-base font-bold text-slate-700 cursor-pointer flex-1 leading-snug"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {q.text}
+                                    </Label>
+                                </div>
+                            );
+                        })}
+
+                        {organization.hmsSettings.requireComment && (
+                            <FormField
+                                control={form.control}
+                                name="hmsData.comment"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-2 mt-4">
+                                        <FormLabel className="text-sm font-bold text-slate-500 uppercase">HMS Kommentar</FormLabel>
+                                        <FormControl>
+                                            <Textarea 
+                                                placeholder="Legg til utfyllende HMS-informasjon her..."
+                                                className="min-h-[100px] bg-slate-50/50"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+                        
+                        {(place?.hmsData as any)?.completedAt && (
+                            <div className="text-[10px] text-slate-400 italic bg-slate-50 p-2 rounded border border-dashed text-center">
+                                Sist endret av {(place?.hmsData as any).completedByName} den {new Date((place?.hmsData as any).completedAt.toDate ? (place?.hmsData as any).completedAt.toDate() : (place?.hmsData as any).completedAt).toLocaleDateString('no-NO')}
+                            </div>
+                        )}
+                  </CollapsibleContent>
+                </Collapsible>
             )}
 
             {!isHmsResponsible && !isSalesman && (
