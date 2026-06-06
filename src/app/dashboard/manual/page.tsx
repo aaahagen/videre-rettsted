@@ -529,9 +529,9 @@ export default function ManualPage() {
                                             Et bilde sier mer enn tusen ord. Du kan laste opp inntil 8 bilder per sted.
                                         </p>
                                         <ul className="text-sm text-slate-600 font-medium space-y-2 list-disc list-inside ml-2">
-                                            <li>Take bilde av <strong>innkjørselen</strong> fra veien.</li>
-                                            <li>Take bilde av selve <strong>rampen/porten</strong>.</li>
-                                            <li>Take bilde av eventuelle <strong>hindringer</strong>.</li>
+                                            <li>Ta bilde av <strong>innkjørselen</strong> fra veien.</li>
+                                            <li>Ta bilde av selve <strong>rampen/porten</strong>.</li>
+                                            <li>Ta bilde av eventuelle <strong>hindringer</strong>.</li>
                                             <li>Du kan merke ett av bildene med "Stjerne" for å sette hovedbildet.</li>
                                         </ul>
                                     </div>
