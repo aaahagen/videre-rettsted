@@ -66,7 +66,12 @@ import {
     Layers,
     Link2,
     GripVertical,
-    Star
+    Star,
+    ArrowDownUp,
+    Warehouse,
+    Flag,
+    Navigation,
+    ExternalLink
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -397,24 +402,55 @@ export default function ManualPage() {
                                     For steder du besøker ofte, kan du trykke på <strong className="text-amber-600">stjernen</strong> øverst i hjørnet på steds-kortet. Dette legger stedet til i din personlige liste under menyvalget "Favoritter".
                                 </p>
 
-                                <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-3xl space-y-4">
-                                    <h4 className="font-black text-indigo-900 flex items-center gap-2">
-                                        <Route className="h-5 w-5 text-indigo-600" />
-                                        Automatisk Ruteoptimalisering
-                                    </h4>
-                                    <p className="text-sm text-indigo-800 font-medium leading-relaxed">
-                                        Hvis du har flere favoritter du skal innom i løpet av en dag, kan systemet hjelpe deg med å finne den raskeste veien.
-                                    </p>
-                                    <ol className="text-xs text-indigo-700 space-y-3 list-decimal list-inside font-bold">
-                                        <li>Gå til <strong className="text-indigo-900">Favoritter</strong> i hovedmenyen.</li>
-                                        <li>Trykk på knappen <strong className="text-indigo-900">"Planlegg rute"</strong> øverst på siden.</li>
-                                        <li>Systemet henter din nåværende posisjon og sorterer alle dine favoritter i den mest effektive rekkefølgen.</li>
-                                        <li>Du får opp en full oversikt over ruten med avstander og stoppesteder.</li>
-                                        <li>Trykk på <strong className="text-indigo-900">"START RUTE"</strong> for å sende hele reiseplanen til Google Maps for navigasjon.</li>
-                                    </ol>
-                                    <div className="p-3 bg-white/50 rounded-xl border border-indigo-200 mt-2">
-                                        <p className="text-[10px] text-indigo-600 font-black flex items-center gap-2">
-                                            <Info className="h-3 w-3" /> MERK: Google Maps har en begrensning på 10 stopp. Hvis ruten din er lenger, vil appen automatisk dele den opp i deler (Del 1, Del 2 osv.) for deg.
+                                <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-3xl space-y-6">
+                                    <div className="space-y-2">
+                                        <h4 className="font-black text-indigo-900 flex items-center gap-2">
+                                            <Route className="h-5 w-5 text-indigo-600" />
+                                            Avansert Ruteoptimalisering
+                                        </h4>
+                                        <p className="text-sm text-indigo-800 font-medium leading-relaxed">
+                                            Hvis du har flere favoritter du skal innom i løpet av en dag, kan systemet beregne den mest effektive kjøreplanen for deg.
+                                        </p>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="p-4 bg-white/60 rounded-2xl border border-indigo-100 space-y-3">
+                                            <h5 className="font-black text-indigo-900 text-xs uppercase flex items-center gap-2">
+                                                <Settings2 className="h-4 w-4" /> Tilpasning
+                                            </h5>
+                                            <ul className="text-xs text-indigo-800 space-y-2 font-bold">
+                                                <li className="flex items-start gap-2">
+                                                    <div className="p-1 bg-indigo-100 rounded text-indigo-600 mt-0.5"><MapPin className="h-3 w-3" /></div>
+                                                    <span>Velg startsted (GPS, Depot eller et sted).</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <div className="p-1 bg-indigo-100 rounded text-indigo-600 mt-0.5"><Flag className="h-3 w-3" /></div>
+                                                    <span>Velg endested (Depot eller siste stopp).</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <div className="p-1 bg-indigo-100 rounded text-indigo-600 mt-0.5"><ArrowDownUp className="h-3 w-3" /></div>
+                                                    <span>Velg rekkefølge (Nærmeste eller Lengst unna først).</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg space-y-3">
+                                            <h5 className="font-black text-indigo-100 text-xs uppercase flex items-center gap-2">
+                                                <Navigation className="h-4 w-4" /> Navigasjon
+                                            </h5>
+                                            <p className="text-xs font-medium leading-relaxed">
+                                                Ruten optimaliseres <strong className="text-white">globalt</strong> for maksimal effektivitet. Ved lange ruter deles den sømløst opp i deler som automatisk overlapper, slik at du alltid har riktig startpunkt i Google Maps.
+                                            </p>
+                                            <div className="w-full h-8 bg-white/10 border border-white/20 text-white rounded flex items-center justify-center font-bold text-[10px] uppercase">
+                                                <ExternalLink className="h-3 w-3 mr-2" /> START RUTE
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-3 bg-white/40 rounded-xl border border-indigo-200">
+                                        <p className="text-[10px] text-indigo-600 font-black flex items-center gap-2 leading-relaxed">
+                                            <Info className="h-3 w-3 shrink-0" /> 
+                                            TIPS: Ved å velge "Lengst unna først" vil motoren finne det punktet som er lengst unna deg, og deretter bygge den mest effektive ruten tilbake mot startpunktet ditt.
                                         </p>
                                     </div>
                                 </div>
@@ -867,7 +903,7 @@ export default function ManualPage() {
                                         Strekkode (Standard)
                                     </h3>
                                     <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                                        Det klassiske valget. Fungerer med alle typer skannere, inkludert eldre lasere. Vises horisontalt på etiketten for maksimal lesbarhet.
+                                        Det klassiske valget. Fungerer med alle typer skannere, inkluderat eldre lasere. Vises horisontalt på etiketten for maksimal lesbarhet.
                                     </p>
                                 </div>
 
