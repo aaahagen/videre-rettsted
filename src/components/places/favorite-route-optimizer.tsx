@@ -32,7 +32,7 @@ interface FavoriteRouteOptimizerProps {
 
 export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { getPosition, loading: geolocating } = useGeolocation();
+  const { getPosition, loading: geolocating, coordinates: userCoords } = useGeolocation();
   const [optimizedPath, setOptimizedPath] = useState<Place[]>([]);
   const [totalDistance, setTotalDistance] = useState<number>(0);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -100,22 +100,31 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
   const navigateToStop = (place: Place) => {
     const coords = getValidCoords(place);
     if (!coords) return;
-    // Use the official Directions URL for single stop navigation
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`, '_blank');
+    
+    // Explicitly include current position as origin if available
+    const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
+    window.open(`https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}`, '_blank');
   };
 
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
-    // Google Maps has a limit on waypoints. We batch them by 9 (origin + 8 waypoints + destination)
+    // Google Maps has a limit on waypoints. We batch them by 10 (including origin)
     const batch = optimizedPath.slice(startIndex, startIndex + 10);
     const baseUrl = 'https://www.google.com/maps/dir/';
+    
+    // Prepend user coordinates as the starting point of the route
+    let origin = '';
+    if (userCoords) {
+      origin = `${userCoords.lat},${userCoords.lng}/`;
+    }
+
     const waypoints = batch.map(p => {
       const coords = getValidCoords(p);
       return `${coords?.lat},${coords?.lng}`;
     }).join('/');
     
-    window.open(`${baseUrl}${waypoints}`, '_blank');
+    window.open(`${baseUrl}${origin}${waypoints}`, '_blank');
   };
 
   const missingCoordsCount = places.length - places.filter(p => getValidCoords(p)).length;
@@ -184,6 +193,21 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
 
             <ScrollArea className="flex-1 -mx-6 px-6">
               <div className="space-y-3 py-4">
+                {/* Optional: Show Starting Point */}
+                {userCoords && (
+                   <div className="group relative flex gap-4">
+                      <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-slate-100" />
+                      <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-slate-50 border-slate-200 text-slate-400 font-black text-sm">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 pb-6">
+                        <div className="p-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/30">
+                          <h4 className="font-bold text-slate-400 uppercase tracking-tight text-[10px]">DIN POSISJON (START)</h4>
+                        </div>
+                      </div>
+                   </div>
+                )}
+
                 {optimizedPath.map((place, index) => (
                   <div key={place.id} className="group relative flex gap-4">
                     {/* Timeline Line */}
