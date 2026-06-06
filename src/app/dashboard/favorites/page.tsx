@@ -6,11 +6,10 @@ import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
-import { Loader2, Printer, Star } from 'lucide-react';
+import { Loader2, Printer, Star, Route as RouteIcon } from 'lucide-react';
 import { Organization, Place, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PrintPlace } from '@/components/places/print-place';
-import { FavoriteRouteOptimizer } from '@/components/places/favorite-route-optimizer';
 import {
   Card,
   CardContent,
@@ -19,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { doc, onSnapshot } from 'firebase/firestore';
+import Link from 'next/link';
 
 export default function FavoritesPage() {
   const [authUser, loadingAuth] = useAuthState(auth);
@@ -110,7 +110,15 @@ export default function FavoritesPage() {
             </div>
             {places.length > 0 && (
               <div className="flex items-center gap-2">
-                <FavoriteRouteOptimizer places={places} />
+                <Button 
+                    asChild
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200 h-11"
+                >
+                    <Link href="/dashboard/favorites/route">
+                        <RouteIcon className="mr-2 h-5 w-5" />
+                        Planlegg rute
+                    </Link>
+                </Button>
                 <Button variant="outline" onClick={handlePrint} className="font-bold border-slate-200 h-11">
                   <Printer className="mr-2 h-4 w-4" />
                   Skriv ut alle

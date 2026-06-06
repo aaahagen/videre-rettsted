@@ -151,16 +151,25 @@ This document defines the mandatory components, features, and role-based access 
 ## 11. Favoritter (`/dashboard/favorites`)
 
 ### Mandatory Components
-1. **Header**: Title, "Favoritter" description, Heart icon.
+1. **Header**: Title, "Favoritter" description, Star icon (Amber).
 2. **Action Bar**: 
-   * **Planlegg rute (Plan Route)**: Opens the `FavoriteRouteOptimizer` Sheet.
+   * **Planlegg rute (Plan Route)**: Links to `/dashboard/favorites/route`.
    * **Skriv ut alle (Print All)**: Opens print dialog for all favorite places.
 3. **Nøkkeloversikt (Key Overview)**: A dedicated card summarizing all places that have door codes categorized as "Nøkkel" (Key).
 4. **Place Grid**: The standard grid of `PlaceCard` components for all favorites.
-5. **Empty State**: Illustration and instructions for how to add favorites.
 
-### Favorite Route Optimizer (Sheet)
-* **Optimization Logic**: Triggered upon opening. Calculates the best sequence of stops from current location using Nearest Neighbor.
-* **Route Summary**: Total distance (km), number of stops, and a warning if any places are missing coordinates.
-* **Stop Sequence**: A vertical timeline of all stops in the optimized order.
-* **Navigation**: "ÅPNE I GOOGLE MAPS" button which generates a multi-stop URL for Google Maps navigation.
+---
+
+## 12. Favorite Route Page (`/dashboard/favorites/route`)
+
+### Mandatory Components
+1. **Header**: Title, "Planlagt Rute" description, Route summary (Distance, Stop count).
+2. **Kjøreplan (Timeline)**: 
+   * A vertical list of stops in optimized order.
+   * Includes the user's current starting position.
+   * Each stop has a large navigation button.
+3. **Navigasjon Sidebar**:
+   * Large "START RUTE" button for routes < 10 stops.
+   * Batched "START DEL X" buttons for longer routes.
+   * Integration with Google Maps.
+4. **Resilience**: Graceful handling of missing coordinates.
