@@ -66,7 +66,6 @@ export default function FavoriteRoutePage() {
           setLoadingData(false);
         }
         
-        // Fetch org data
         if (uData.orgId) {
             const orgDoc = await firebaseDB.getOrganization(uData.orgId);
             setOrganization(orgDoc);
@@ -143,23 +142,44 @@ export default function FavoriteRoutePage() {
     const coords = getValidCoords(place);
     if (!coords) return;
     const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
-    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}`;
+    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}&travelmode=driving`;
     window.location.href = url;
   };
 
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
+    
+    // Official Directions API format: 
+    // Origin + Destination + up to 9 waypoints = 11 points total.
     const batch = optimizedPath.slice(startIndex, startIndex + 10);
-    const baseUrl = 'https://www.google.com/maps/dir/';
+    
+    if (batch.length === 0) return;
+
+    const destPlace = batch[batch.length - 1];
+    const destCoords = getValidCoords(destPlace);
+    const destination = `${destCoords?.lat},${destCoords?.lng}`;
+
     let origin = '';
+    let waypointPlaces = [];
+
     if (userCoords) {
-      origin = `${userCoords.lat},${userCoords.lng}/`;
+      origin = `${userCoords.lat},${userCoords.lng}`;
+      waypointPlaces = batch.slice(0, -1); // All batch items except the last one are waypoints
+    } else {
+      const firstPlace = batch[0];
+      const firstCoords = getValidCoords(firstPlace);
+      origin = `${firstCoords?.lat},${firstCoords?.lng}`;
+      waypointPlaces = batch.slice(1, -1); // Items between first and last are waypoints
     }
-    const waypoints = batch.map(p => {
-      const coords = getValidCoords(p);
-      return `${coords?.lat},${coords?.lng}`;
-    }).join('/');
-    window.location.href = `${baseUrl}${origin}${waypoints}`;
+
+    const waypoints = waypointPlaces.map(p => {
+      const c = getValidCoords(p);
+      return `${c?.lat},${c?.lng}`;
+    }).join('|');
+
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${encodeURIComponent(waypoints)}&travelmode=driving`;
+    
+    window.location.href = url;
   };
 
   if (loadingAuth || (loadingData && authUser)) {
@@ -202,7 +222,6 @@ export default function FavoriteRoutePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Timeline */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="border-b bg-slate-50/50">
@@ -302,7 +321,6 @@ export default function FavoriteRoutePage() {
           </Card>
         </div>
 
-        {/* Right Column: Actions & Info */}
         <div className="space-y-6">
           <Card className="border-none shadow-sm bg-indigo-600 text-white rounded-3xl sticky top-8">
             <CardHeader>
@@ -328,12 +346,14 @@ export default function FavoriteRoutePage() {
                     >
                       START DEL 1 (1-10)
                     </Button>
-                    <Button 
-                      onClick={() => openInGoogleMaps(10)} 
-                      className="w-full h-16 bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400 font-black rounded-2xl text-lg"
-                    >
-                      START DEL 2 (11-20)
-                    </Button>
+                    {optimizedPath.length > 10 && (
+                        <Button 
+                        onClick={() => openInGoogleMaps(10)} 
+                        className="w-full h-16 bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400 font-black rounded-2xl text-lg"
+                        >
+                        START DEL 2 (11-20)
+                        </Button>
+                    )}
                     {optimizedPath.length > 20 && (
                       <Button 
                         onClick={() => openInGoogleMaps(20)} 
