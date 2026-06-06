@@ -102,7 +102,9 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
     if (!coords) return;
     
     const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
-    window.open(`https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}`, '_blank');
+    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}`;
+    // Using window.location.href instead of window.open to avoid blank page in PWA standalone mode
+    window.location.href = url;
   };
 
   const openInGoogleMaps = (startIndex: number = 0) => {
@@ -121,7 +123,9 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
       return `${coords?.lat},${coords?.lng}`;
     }).join('/');
     
-    window.open(`${baseUrl}${origin}${waypoints}`, '_blank');
+    const url = `${baseUrl}${origin}${waypoints}`;
+    // Using window.location.href instead of window.open to avoid blank page in PWA standalone mode
+    window.location.href = url;
   };
 
   const missingCoordsCount = places.length - places.filter(p => getValidCoords(p)).length;

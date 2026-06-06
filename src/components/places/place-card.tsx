@@ -203,7 +203,8 @@ export function PlaceCard({ place, priority = false, orgSettings }: { place: Del
             asChild
             className="bg-accent text-accent-foreground hover:bg-accent/90 col-span-1"
         >
-            <a href={gmapsUrl} target="_blank" rel="noopener noreferrer">
+            {/* Removed target="_blank" to avoid blank page issue in PWA standalone mode */}
+            <a href={gmapsUrl}>
                 <Map className="mr-2 h-4 w-4" />
                 Naviger
             </a>
