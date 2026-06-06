@@ -6,7 +6,7 @@ import { auth, db } from '@/lib/firebase/firebase';
 import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
-import { Loader2, Printer, Heart } from 'lucide-react';
+import { Loader2, Printer, Star } from 'lucide-react';
 import { Organization, Place, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PrintPlace } from '@/components/places/print-place';
@@ -96,8 +96,8 @@ export default function FavoritesPage() {
         <Card className="border-none shadow-none bg-transparent">
           <CardHeader className="px-0 pt-0 pb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-red-100 text-red-600 rounded-xl shadow-sm border border-red-200">
-                    <Heart className="h-8 w-8 fill-red-600" />
+                <div className="p-3 bg-amber-50 text-amber-500 rounded-xl shadow-sm border border-amber-100">
+                    <Star className="h-8 w-8 fill-amber-500" />
                 </div>
                 <div>
                     <CardTitle className="font-headline text-3xl font-black tracking-tight text-slate-900">
@@ -154,10 +154,10 @@ export default function FavoritesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100 shadow-inner">
                 <div className="p-6 bg-slate-50 rounded-full mb-4">
-                    <Heart className="h-12 w-12 text-slate-200" />
+                    <Star className="h-12 w-12 text-slate-200" />
                 </div>
                 <p className="text-slate-500 font-bold">Du har ingen favoritter ennå.</p>
-                <p className="text-sm text-slate-400 mt-1">Trykk på hjertet på et sted for å legge det til her.</p>
+                <p className="text-sm text-slate-400 mt-1">Trykk på stjernen på et sted for å legge det til her.</p>
               </div>
             )}
           </CardContent>
