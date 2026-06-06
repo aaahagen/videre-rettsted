@@ -101,7 +101,6 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
     const coords = getValidCoords(place);
     if (!coords) return;
     
-    // Explicitly include current position as origin if available
     const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
     window.open(`https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}`, '_blank');
   };
@@ -109,11 +108,9 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
-    // Google Maps has a limit on waypoints. We batch them by 10 (including origin)
     const batch = optimizedPath.slice(startIndex, startIndex + 10);
     const baseUrl = 'https://www.google.com/maps/dir/';
     
-    // Prepend user coordinates as the starting point of the route
     let origin = '';
     if (userCoords) {
       origin = `${userCoords.lat},${userCoords.lng}/`;
@@ -193,7 +190,6 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
 
             <ScrollArea className="flex-1 -mx-6 px-6">
               <div className="space-y-3 py-4">
-                {/* Optional: Show Starting Point */}
                 {userCoords && (
                    <div className="group relative flex gap-4">
                       <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-slate-100" />
@@ -258,18 +254,18 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
 
             <div className="pt-6 border-t mt-auto space-y-3">
               {isLargeRoute ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-2">
                     <Button 
                         onClick={() => openInGoogleMaps(0)} 
                         variant="secondary"
-                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs"
+                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs w-full"
                     >
                         START DEL 1 (1-10)
                     </Button>
                     <Button 
                         onClick={() => openInGoogleMaps(10)} 
                         variant="secondary"
-                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs"
+                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs w-full"
                     >
                         START DEL 2 (11-20)
                     </Button>
@@ -277,7 +273,7 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
                         <Button 
                             onClick={() => openInGoogleMaps(20)} 
                             variant="secondary"
-                            className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs col-span-2"
+                            className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs w-full"
                         >
                             START DEL 3 (21+)
                         </Button>
