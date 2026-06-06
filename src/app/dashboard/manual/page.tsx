@@ -65,7 +65,8 @@ import {
     Printer,
     Layers,
     Link2,
-    GripVertical
+    GripVertical,
+    Star
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -385,6 +386,38 @@ export default function ManualPage() {
                                         <em className="font-bold bg-amber-100 px-2 py-1 rounded">"Husk å overrekke kunden jubileumsgaven som ligger bak i bilen!"</em>
                                     </AlertDescription>
                                 </Alert>
+                            </div>
+
+                            <div className="space-y-8 pt-6 border-t border-slate-100">
+                                <h3 className="font-black text-slate-800 text-xl tracking-tight flex items-center gap-2">
+                                    <Star className="h-6 w-6 text-amber-500" />
+                                    Favoritter & Personlig Ruteplanlegging
+                                </h3>
+                                <p className="text-slate-600 font-medium leading-relaxed">
+                                    For steder du besøker ofte, kan du trykke på <strong className="text-amber-600">stjernen</strong> øverst i hjørnet på steds-kortet. Dette legger stedet til i din personlige liste under menyvalget "Favoritter".
+                                </p>
+
+                                <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-3xl space-y-4">
+                                    <h4 className="font-black text-indigo-900 flex items-center gap-2">
+                                        <Route className="h-5 w-5 text-indigo-600" />
+                                        Automatisk Ruteoptimalisering
+                                    </h4>
+                                    <p className="text-sm text-indigo-800 font-medium leading-relaxed">
+                                        Hvis du har flere favoritter du skal innom i løpet av en dag, kan systemet hjelpe deg med å finne den raskeste veien.
+                                    </p>
+                                    <ol className="text-xs text-indigo-700 space-y-3 list-decimal list-inside font-bold">
+                                        <li>Gå til <strong className="text-indigo-900">Favoritter</strong> i hovedmenyen.</li>
+                                        <li>Trykk på knappen <strong className="text-indigo-900">"Planlegg rute"</strong> øverst på siden.</li>
+                                        <li>Systemet henter din nåværende posisjon og sorterer alle dine favoritter i den mest effektive rekkefølgen.</li>
+                                        <li>Du får opp en full oversikt over ruten med avstander og stoppesteder.</li>
+                                        <li>Trykk på <strong className="text-indigo-900">"START RUTE"</strong> for å sende hele reiseplanen til Google Maps for navigasjon.</li>
+                                    </ol>
+                                    <div className="p-3 bg-white/50 rounded-xl border border-indigo-200 mt-2">
+                                        <p className="text-[10px] text-indigo-600 font-black flex items-center gap-2">
+                                            <Info className="h-3 w-3" /> MERK: Google Maps har en begrensning på 10 stopp. Hvis ruten din er lenger, vil appen automatisk dele den opp i deler (Del 1, Del 2 osv.) for deg.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-6 pt-6 border-t border-slate-100">
@@ -858,7 +891,7 @@ export default function ManualPage() {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="text-sm text-slate-600 font-medium space-y-3">
-                                        <p>Når du skal printe mange etiketter samtidig, bruker systemet automatisk **skille-etiketter**:</p>
+                                        <p>Når du skal printe many etiketter samtidig, bruker systemet automatisk **skille-etiketter**:</p>
                                         <ul className="list-disc list-inside space-y-1 text-xs">
                                             <li>Før hver ordre printes en grå etikett med kundens navn i stor tekst.</li>
                                             <li>Dette gjør det enkelt å se hvor en ordre slutter og den neste begynner i bunken med klistremerker.</li>
@@ -1080,7 +1113,7 @@ export default function ManualPage() {
                                 </h3>
                                 <p className="text-sm text-slate-600 font-medium leading-relaxed">
                                     RettSted skiller mellom <strong className="text-slate-900">Driv-enheter</strong> (Biler/Trekkvogner) og <strong className="text-slate-900">Passive-enheter</strong> (Hengere/Semi/Swap-bodies). 
-                                    Ved å merke kjøretøyene med riktig type og konfigurasjon, vil systemet automatisk beregne den kombinerte kapasiteten når de brukes sammen på en rute.
+                                    Ved by å merke kjøretøyene med riktig type og konfigurasjon, vil systemet automatisk beregne den kombinerte kapasiteten når de brukes sammen på en rute.
                                 </p>
                             </div>
                         </div>
