@@ -149,36 +149,46 @@ export default function FavoriteRoutePage() {
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
-    // Official Directions API format: 
-    // Origin + Destination + up to 9 waypoints = 11 points total.
-    const batch = optimizedPath.slice(startIndex, startIndex + 10);
+    // Safer limit for Google Maps URLs: Total 10 points (1 origin + up to 8 waypoints + 1 destination)
+    const BATCH_SIZE = 9;
+    const batch = optimizedPath.slice(startIndex, startIndex + BATCH_SIZE);
     
     if (batch.length === 0) return;
 
     const destPlace = batch[batch.length - 1];
     const destCoords = getValidCoords(destPlace);
-    const destination = `${destCoords?.lat},${destCoords?.lng}`;
+    if (!destCoords) return;
 
     let origin = '';
     let waypointPlaces = [];
 
     if (userCoords) {
       origin = `${userCoords.lat},${userCoords.lng}`;
-      waypointPlaces = batch.slice(0, -1); // All batch items except the last one are waypoints
+      waypointPlaces = batch.slice(0, -1);
     } else {
       const firstPlace = batch[0];
       const firstCoords = getValidCoords(firstPlace);
       origin = `${firstCoords?.lat},${firstCoords?.lng}`;
-      waypointPlaces = batch.slice(1, -1); // Items between first and last are waypoints
+      waypointPlaces = batch.slice(1, -1);
     }
 
     const waypoints = waypointPlaces.map(p => {
       const c = getValidCoords(p);
       return `${c?.lat},${c?.lng}`;
-    }).join('|');
+    }).filter(Boolean).join('|');
 
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&waypoints=${encodeURIComponent(waypoints)}&travelmode=driving`;
-    
+    const params = new URLSearchParams({
+        api: '1',
+        origin: origin,
+        destination: `${destCoords.lat},${destCoords.lng}`,
+        travelmode: 'driving'
+    });
+
+    if (waypoints) {
+        params.append('waypoints', waypoints);
+    }
+
+    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
     window.location.href = url;
   };
 
@@ -191,7 +201,7 @@ export default function FavoriteRoutePage() {
   }
 
   const missingCoordsCount = places.length - optimizedPath.length;
-  const isLargeRoute = optimizedPath.length > 10;
+  const isLargeRoute = optimizedPath.length > 9;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
@@ -332,41 +342,31 @@ export default function FavoriteRoutePage() {
                 <div className="p-4 bg-indigo-500/50 rounded-2xl border border-indigo-400 flex items-start gap-3">
                   <Info className="h-5 w-5 shrink-0" />
                   <p className="text-xs font-medium">
-                    Google Maps har en begrensning på 10 stopp. Vi har delt opp ruten din i deler.
+                    Google Maps har en begrensning på antall stopp. Vi har delt opp ruten din i deler for maksimal pålitelighet.
                   </p>
                 </div>
               )}
 
               <div className="space-y-3">
                 {isLargeRoute ? (
-                  <>
+                  Array.from({ length: Math.ceil(optimizedPath.length / 9) }).map((_, i) => (
                     <Button 
-                      onClick={() => openInGoogleMaps(0)} 
-                      className="w-full h-16 bg-white text-indigo-600 hover:bg-indigo-50 font-black rounded-2xl text-lg shadow-lg"
+                      key={i}
+                      onClick={() => openInGoogleMaps(i * 9)} 
+                      className={cn(
+                        "w-full h-16 font-black rounded-2xl text-lg shadow-lg transition-all active:scale-95",
+                        i === 0 
+                            ? "bg-white text-indigo-600 hover:bg-indigo-50" 
+                            : "bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400"
+                      )}
                     >
-                      START DEL 1 (1-10)
+                      START DEL {i + 1} ({i * 9 + 1}-{Math.min((i + 1) * 9, optimizedPath.length)})
                     </Button>
-                    {optimizedPath.length > 10 && (
-                        <Button 
-                        onClick={() => openInGoogleMaps(10)} 
-                        className="w-full h-16 bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400 font-black rounded-2xl text-lg"
-                        >
-                        START DEL 2 (11-20)
-                        </Button>
-                    )}
-                    {optimizedPath.length > 20 && (
-                      <Button 
-                        onClick={() => openInGoogleMaps(20)} 
-                        className="w-full h-16 bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400 font-black rounded-2xl text-lg"
-                      >
-                        START DEL 3 (21+)
-                      </Button>
-                    )}
-                  </>
+                  ))
                 ) : (
                   <Button 
                     onClick={() => openInGoogleMaps(0)} 
-                    className="w-full h-20 bg-white text-indigo-600 hover:bg-indigo-50 font-black rounded-2xl text-xl shadow-lg"
+                    className="w-full h-20 bg-white text-indigo-600 hover:bg-indigo-50 font-black rounded-2xl text-xl shadow-lg transition-all active:scale-95"
                   >
                     <ExternalLink className="mr-3 h-6 w-6" />
                     START RUTE
