@@ -219,42 +219,42 @@ export default function FavoriteRoutePage() {
   const isLargeRoute = optimizedPath.length > 9;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
+        <div className="flex items-center gap-4 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full shrink-0">
             <ChevronLeft className="h-6 w-6" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-              <RouteIcon className="h-8 w-8 text-indigo-600" />
-              Planlagt Rute
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 truncate">
+              <RouteIcon className="h-6 w-6 sm:h-8 sm:8 text-indigo-600 shrink-0" />
+              <span className="truncate">Planlagt Rute</span>
             </h1>
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-500 font-medium text-sm sm:text-base truncate">
               Din mest effektive vei gjennom dine favoritter.
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold px-3 py-1 text-sm">
+        <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold px-3 py-1 text-xs sm:text-sm">
                 {optimizedPath.length} stopp
             </Badge>
-            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-bold px-3 py-1 text-sm">
+            <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-bold px-3 py-1 text-xs sm:text-sm">
                 {totalDistance.toFixed(1)} km totalt
             </Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden min-w-0">
             <CardHeader className="border-b bg-slate-50/50">
               <CardTitle className="text-lg font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
                 <Navigation className="h-4 w-4" /> Kjøreplan
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               {isOptimizing ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
@@ -263,22 +263,22 @@ export default function FavoriteRoutePage() {
               ) : optimizedPath.length > 0 ? (
                 <div className="space-y-4">
                   {userCoords && (
-                    <div className="relative flex gap-6">
+                    <div className="relative flex gap-4 sm:gap-6">
                       <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-slate-100" />
                       <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-indigo-50 border-indigo-100 text-indigo-600 shadow-sm">
                         <MapPin className="h-6 w-6" />
                       </div>
-                      <div className="flex-1 pb-10">
+                      <div className="flex-1 pb-10 min-w-0">
                         <div className="p-4 rounded-2xl border-2 border-dashed border-indigo-100 bg-indigo-50/20">
                           <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Startpunkt</p>
-                          <h4 className="font-black text-slate-900 text-lg">Din nåværende posisjon</h4>
+                          <h4 className="font-black text-slate-900 text-lg truncate">Din nåværende posisjon</h4>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {optimizedPath.map((place, index) => (
-                    <div key={place.id} className="relative flex gap-6 group">
+                    <div key={place.id} className="relative flex gap-4 sm:gap-6 group min-w-0">
                       {index < optimizedPath.length - 1 && (
                         <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-slate-100 group-hover:bg-indigo-100 transition-colors" />
                       )}
@@ -292,31 +292,31 @@ export default function FavoriteRoutePage() {
                         {index + 1}
                       </div>
 
-                      <div className="flex-1 pb-10">
-                        <div className="p-5 rounded-3xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all group-hover:translate-x-1">
-                          <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 pb-10 min-w-0">
+                        <div className="p-4 sm:p-5 rounded-3xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all group-hover:translate-x-1 min-w-0">
+                          <div className="flex justify-between items-start gap-4 min-w-0">
                             <div className="min-w-0 flex-1">
-                              <h4 className="font-black text-slate-900 uppercase tracking-tight text-xl mb-1 truncate">{place.name}</h4>
-                              <p className="text-slate-500 font-medium flex items-center gap-2 truncate">
+                              <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg sm:text-xl mb-1 truncate">{place.name}</h4>
+                              <p className="text-slate-500 font-medium text-sm flex items-center gap-2 truncate">
                                 <MapPin className="h-4 w-4 text-slate-400 shrink-0" /> {place.address}
                               </p>
                             </div>
                             <Button 
                               onClick={() => navigateToStop(place)}
-                              className="h-12 w-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shrink-0"
+                              className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shrink-0 p-0"
                             >
-                              <Navigation className="h-6 w-6" />
+                              <Navigation className="h-5 w-5 sm:h-6 sm:w-6" />
                             </Button>
                           </div>
                           
                           <div className="mt-4 flex flex-wrap gap-2">
                             {place.estimatedDeliveryTime && (
-                              <Badge variant="secondary" className="bg-white border-slate-100 text-slate-600 font-bold">
+                              <Badge variant="secondary" className="bg-white border-slate-100 text-slate-600 font-bold text-[10px] sm:text-xs">
                                 ~{place.estimatedDeliveryTime} min levering
                               </Badge>
                             )}
                             {place.customerNumber && (
-                              <Badge variant="outline" className="bg-slate-100 text-slate-500 border-transparent font-mono">
+                              <Badge variant="outline" className="bg-slate-100 text-slate-500 border-transparent font-mono text-[10px] sm:text-xs">
                                 #{place.customerNumber}
                               </Badge>
                             )}
@@ -326,13 +326,13 @@ export default function FavoriteRoutePage() {
                     </div>
                   ))}
 
-                  <div className="relative flex gap-6">
+                  <div className="relative flex gap-4 sm:gap-6">
                     <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-emerald-50 border-emerald-100 text-emerald-600 shadow-sm">
                       <Flag className="h-6 w-6" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-100 bg-emerald-50/20">
-                        <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight">Rute Slutt</h4>
+                        <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight truncate">Rute Slutt</h4>
                       </div>
                     </div>
                   </div>
@@ -347,7 +347,7 @@ export default function FavoriteRoutePage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-none shadow-sm bg-indigo-600 text-white rounded-3xl sticky top-8">
+          <Card className="border-none shadow-sm bg-indigo-600 text-white rounded-3xl lg:sticky lg:top-8">
             <CardHeader>
               <CardTitle className="text-xl font-black uppercase tracking-tight">Navigasjon</CardTitle>
               <CardDescription className="text-indigo-100 font-medium">Start din rute i Google Maps</CardDescription>
