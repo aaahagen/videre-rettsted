@@ -19,9 +19,8 @@ import {
   Navigation, 
   Loader2, 
   AlertTriangle,
-  ChevronRight,
   ExternalLink,
-  Play
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -98,11 +97,20 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
     }
   };
 
-  const openInGoogleMaps = () => {
+  const navigateToStop = (place: Place) => {
+    const coords = getValidCoords(place);
+    if (!coords) return;
+    // Use the official Directions URL for single stop navigation
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`, '_blank');
+  };
+
+  const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
+    // Google Maps has a limit on waypoints. We batch them by 9 (origin + 8 waypoints + destination)
+    const batch = optimizedPath.slice(startIndex, startIndex + 10);
     const baseUrl = 'https://www.google.com/maps/dir/';
-    const waypoints = optimizedPath.map(p => {
+    const waypoints = batch.map(p => {
       const coords = getValidCoords(p);
       return `${coords?.lat},${coords?.lng}`;
     }).join('/');
@@ -111,13 +119,14 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
   };
 
   const missingCoordsCount = places.length - places.filter(p => getValidCoords(p)).length;
+  const isLargeRoute = optimizedPath.length > 10;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button 
           variant="default" 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-200 h-11"
           onClick={() => {
             setIsOpen(true);
             solveTSP();
@@ -156,10 +165,19 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
             </div>
 
             {missingCoordsCount > 0 && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+              <div className="mb-2 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 font-medium">
-                  {missingCoordsCount} sted(er) mangler koordinater og er utelatt fra ruten.
+                  {missingCoordsCount} sted(er) mangler koordinater og er utelatt.
+                </p>
+              </div>
+            )}
+
+            {isLargeRoute && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-800 font-medium">
+                  Ruten er lang ({optimizedPath.length} stopp). Google Maps fungerer best med opptil 10 stopp av gangen. Naviger til hvert sted individuelt nedenfor.
                 </p>
               </div>
             )}
@@ -184,11 +202,23 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
                     </div>
 
                     <div className="flex-1 pb-6">
-                      <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all cursor-default">
-                        <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm mb-1">{place.name}</h4>
-                        <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
-                          <MapPin className="h-3 w-3" /> {place.address}
-                        </p>
+                      <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all group-hover:border-indigo-100">
+                        <div className="flex justify-between items-start gap-2">
+                            <div className="flex-1">
+                                <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm mb-1 line-clamp-1">{place.name}</h4>
+                                <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 line-clamp-1">
+                                    <MapPin className="h-3 w-3" /> {place.address}
+                                </p>
+                            </div>
+                            <Button 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-8 w-8 rounded-full shrink-0 bg-white shadow-sm border-slate-200 text-indigo-600 hover:text-white hover:bg-indigo-600 hover:border-indigo-600 transition-all"
+                                onClick={() => navigateToStop(place)}
+                            >
+                                <Navigation className="h-4 w-4" />
+                            </Button>
+                        </div>
                         
                         {place.estimatedDeliveryTime && (
                           <Badge variant="secondary" className="mt-2 text-[10px] h-5 bg-white border-slate-100">
@@ -203,13 +233,41 @@ export function FavoriteRouteOptimizer({ places }: FavoriteRouteOptimizerProps) 
             </ScrollArea>
 
             <div className="pt-6 border-t mt-auto space-y-3">
-              <Button 
-                onClick={openInGoogleMaps} 
-                className="w-full h-12 bg-slate-900 hover:bg-black text-white font-black rounded-xl"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                ÅPNE I GOOGLE MAPS
-              </Button>
+              {isLargeRoute ? (
+                <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                        onClick={() => openInGoogleMaps(0)} 
+                        variant="secondary"
+                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs"
+                    >
+                        START DEL 1 (1-10)
+                    </Button>
+                    <Button 
+                        onClick={() => openInGoogleMaps(10)} 
+                        variant="secondary"
+                        className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs"
+                    >
+                        START DEL 2 (11-20)
+                    </Button>
+                    {optimizedPath.length > 20 && (
+                        <Button 
+                            onClick={() => openInGoogleMaps(20)} 
+                            variant="secondary"
+                            className="h-12 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black rounded-xl text-xs col-span-2"
+                        >
+                            START DEL 3 (21+)
+                        </Button>
+                    )}
+                </div>
+              ) : (
+                <Button 
+                    onClick={() => openInGoogleMaps(0)} 
+                    className="w-full h-12 bg-slate-900 hover:bg-black text-white font-black rounded-xl"
+                >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    ÅPNE I GOOGLE MAPS
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 onClick={() => setIsOpen(false)}
