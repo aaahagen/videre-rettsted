@@ -58,12 +58,16 @@ export default function FavoriteRoutePage() {
               return await firebaseDB.getPlace(placeId);
             })
           );
-          // Filter out nulls and places with invalid coordinates early
-          const validPlaces = favoritePlaces.filter(p => p !== null && getValidCoords(p) !== null) as Place[];
-          setPlaces(validPlaces);
-          solveTSP(validPlaces);
+          
+          const allFetched = favoritePlaces.filter(p => p !== null) as Place[];
+          setPlaces(allFetched);
+          
+          const withCoords = allFetched.filter(p => getValidCoords(p) !== null);
+          solveTSP(withCoords);
         } else {
           setPlaces([]);
+          setOptimizedPath([]);
+          setTotalDistance(0);
           setLoadingData(false);
         }
         
@@ -110,45 +114,60 @@ export default function FavoriteRoutePage() {
         console.warn('Could not get current position', e);
       }
 
-      // inputPlaces is already filtered in useEffect, but we double check
-      const validPlaces = inputPlaces.filter(p => getValidCoords(p) !== null);
-      if (validPlaces.length === 0) {
+      if (inputPlaces.length === 0) {
+        setOptimizedPath([]);
+        setTotalDistance(0);
         setLoadingData(false);
         setIsOptimizing(false);
         return;
       }
 
-      let currentPos = startPos || getValidCoords(validPlaces[0])!;
-      const remaining = [...validPlaces];
-      const path: Place[] = [];
-      let distance = 0;
+      const runGreedy = (origin: { lat: number, lng: number }, pool: Place[]) => {
+        let currentPos = origin;
+        const remaining = [...pool];
+        const path: Place[] = [];
+        let distance = 0;
+        while (remaining.length > 0) {
+          let bestIdx = -1;
+          let minDist = Infinity;
+          for (let i = 0; i < remaining.length; i++) {
+            const coords = getValidCoords(remaining[i])!;
+            const d = getDistanceFromLatLonInKm(currentPos.lat, currentPos.lng, coords.lat, coords.lng);
+            if (d < minDist) {
+              minDist = d;
+              bestIdx = i;
+            }
+          }
+          const nextPlace = remaining.splice(bestIdx, 1)[0];
+          path.push(nextPlace);
+          distance += minDist;
+          currentPos = getValidCoords(nextPlace)!;
+        }
+        return { path, distance };
+      };
 
-      while (remaining.length > 0) {
-        let bestIdx = -1;
-        let minDist = Infinity;
+      let bestPath: Place[] = [];
+      let bestDistance = Infinity;
 
-        for (let i = 0; i < remaining.length; i++) {
-          const coords = getValidCoords(remaining[i])!;
-          const d = getDistanceFromLatLonInKm(
-            currentPos.lat,
-            currentPos.lng,
-            coords.lat,
-            coords.lng
-          );
-          if (d < minDist) {
-            minDist = d;
-            bestIdx = i;
+      if (startPos) {
+        const result = runGreedy(startPos, inputPlaces);
+        bestPath = result.path;
+        bestDistance = result.distance;
+      } else {
+        // Try starting from each place to find the best sequence if no GPS
+        for (let i = 0; i < inputPlaces.length; i++) {
+          const firstPlace = inputPlaces[i];
+          const pool = inputPlaces.filter((_, idx) => idx !== i);
+          const result = runGreedy(getValidCoords(firstPlace)!, pool);
+          if (result.distance < bestDistance) {
+            bestDistance = result.distance;
+            bestPath = [firstPlace, ...result.path];
           }
         }
-
-        const nextPlace = remaining.splice(bestIdx, 1)[0];
-        path.push(nextPlace);
-        distance += minDist;
-        currentPos = getValidCoords(nextPlace)!;
       }
 
-      setOptimizedPath(path);
-      setTotalDistance(distance);
+      setOptimizedPath(bestPath);
+      setTotalDistance(bestDistance);
     } finally {
       setIsOptimizing(false);
       setLoadingData(false);
@@ -158,52 +177,55 @@ export default function FavoriteRoutePage() {
   const navigateToStop = (place: Place) => {
     const coords = getValidCoords(place);
     if (!coords) return;
-    const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
-    // Use driving mode and explicit destination
-    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}&travelmode=driving`;
+    const origin = userCoords ? `&origin=${userCoords.lat.toFixed(6)},${userCoords.lng.toFixed(6)}` : '';
+    const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat.toFixed(6)},${coords.lng.toFixed(6)}&travelmode=driving`;
     window.location.href = url;
   };
 
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
-    // BATCH_SIZE 9 + 1 Origin + 1 Destination usually triggers the right UI.
-    // We stick to a safe 9 places per batch.
-    const BATCH_SIZE = 9;
+    // Batch size 8 to be very safe with Google Maps limits (1 origin + up to 6 waypoints + 1 destination = 8 total points)
+    const BATCH_SIZE = 8;
     const batch = optimizedPath.slice(startIndex, startIndex + BATCH_SIZE);
     
     if (batch.length === 0) return;
 
-    const destPlace = batch[batch.length - 1];
-    const destCoords = getValidCoords(destPlace);
-    if (!destCoords) return;
+    const formatC = (c: {lat: number, lng: number}) => `${c.lat.toFixed(6)},${c.lng.toFixed(6)}`;
 
     let originStr = '';
-    let waypointPlaces = [];
+    let waypointPlaces: Place[] = [];
+    const destPlace = batch[batch.length - 1];
+    const destinationStr = formatC(getValidCoords(destPlace)!);
 
-    if (userCoords) {
-      originStr = `${userCoords.lat},${userCoords.lng}`;
+    if (startIndex === 0 && userCoords) {
+      // First part starts from current GPS position
+      originStr = formatC(userCoords);
       waypointPlaces = batch.slice(0, -1);
     } else {
+      // Subsequent parts start from the first place in the batch
       const firstPlace = batch[0];
-      const firstCoords = getValidCoords(firstPlace);
-      originStr = firstCoords ? `${firstCoords.lat},${firstCoords.lng}` : '';
+      originStr = formatC(getValidCoords(firstPlace)!);
       waypointPlaces = batch.slice(1, -1);
     }
 
-    const waypointsStr = waypointPlaces.map(p => {
-      const c = getValidCoords(p);
-      return c ? `${c.lat},${c.lng}` : null;
-    }).filter(Boolean).join('|');
+    const waypointsStr = waypointPlaces
+      .map(p => formatC(getValidCoords(p)!))
+      .join('|');
 
-    // Build URL without URLSearchParams for the main part to ensure '|' and ',' are handled predictably by Google Maps app
-    let url = `https://www.google.com/maps/dir/?api=1&origin=${originStr}&destination=${destCoords.lat},${destCoords.lng}&travelmode=driving`;
-    
+    const params = new URLSearchParams({
+        api: '1',
+        origin: originStr,
+        destination: destinationStr,
+        travelmode: 'driving'
+    });
+
     if (waypointsStr) {
-        url += `&waypoints=${encodeURIComponent(waypointsStr)}`;
+        params.append('waypoints', waypointsStr);
     }
 
-    console.log('Opening Google Maps URL:', url);
+    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
+    console.log('Navigating to batch:', url);
     window.location.href = url;
   };
 
@@ -216,7 +238,7 @@ export default function FavoriteRoutePage() {
   }
 
   const missingCoordsCount = places.length - optimizedPath.length;
-  const isLargeRoute = optimizedPath.length > 9;
+  const isLargeRoute = optimizedPath.length > 8;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto overflow-hidden">
@@ -364,20 +386,34 @@ export default function FavoriteRoutePage() {
 
               <div className="space-y-3">
                 {isLargeRoute ? (
-                  Array.from({ length: Math.ceil(optimizedPath.length / 9) }).map((_, i) => (
-                    <Button 
-                      key={i}
-                      onClick={() => openInGoogleMaps(i * 9)} 
-                      className={cn(
-                        "w-full h-16 font-black rounded-2xl text-lg shadow-lg transition-all active:scale-95",
-                        i === 0 
-                            ? "bg-white text-indigo-600 hover:bg-indigo-50" 
-                            : "bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400"
-                      )}
-                    >
-                      START DEL {i + 1} ({i * 9 + 1}-{Math.min((i + 1) * 9, optimizedPath.length)})
-                    </Button>
-                  ))
+                  (() => {
+                    const buttons = [];
+                    const BATCH_SIZE = 8;
+                    let currentStart = 0;
+                    let partNum = 1;
+                    
+                    while (currentStart < optimizedPath.length - 1) {
+                      const endNum = Math.min(currentStart + BATCH_SIZE, optimizedPath.length);
+                      const startIdx = currentStart;
+                      buttons.push(
+                        <Button 
+                          key={startIdx}
+                          onClick={() => openInGoogleMaps(startIdx)} 
+                          className={cn(
+                            "w-full h-16 font-black rounded-2xl text-lg shadow-lg transition-all active:scale-95",
+                            partNum === 1 
+                                ? "bg-white text-indigo-600 hover:bg-indigo-50" 
+                                : "bg-indigo-500 hover:bg-indigo-400 text-white border-2 border-indigo-400"
+                          )}
+                        >
+                          START DEL {partNum} ({currentStart + 1}-{endNum})
+                        </Button>
+                      );
+                      currentStart += (BATCH_SIZE - 1); // Overlap by 1
+                      partNum++;
+                    }
+                    return buttons;
+                  })()
                 ) : (
                   <Button 
                     onClick={() => openInGoogleMaps(0)} 
