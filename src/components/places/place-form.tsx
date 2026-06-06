@@ -60,7 +60,6 @@ const openingHoursSchema = z.object({
   close: z.string().optional(),
 });
 
-// Robust schema for numeric constraint fields
 const numericConstraintSchema = z.preprocess((val) => {
   if (val === '' || val === null || val === undefined) return undefined;
   const num = typeof val === 'string' ? parseFloat(val.replace(',', '.')) : Number(val);
@@ -111,7 +110,7 @@ const placeSchema = z.object({
     comment: z.string().optional(),
   }).optional(),
   salesMessage: z.string().optional(),
-  salesMessageValidUntil: z.string().optional(), // Using string for HTML date input compatibility
+  salesMessageValidUntil: z.string().optional(),
 });
 
 type PlaceFormValues = z.infer<typeof placeSchema>;
@@ -361,18 +360,19 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     setIsGettingLocation(true);
     toast({
       title: "Henter posisjon...",
-      description: "Vennligst vent mens vi finner koordinatene dine.",
+      description: "Vennligst vent mens vi finner din nøyaktige posisjon.",
     });
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        form.setValue('coordinates', {
+        const newCoords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+        form.setValue('coordinates', newCoords, { shouldDirty: true, shouldValidate: true });
         toast({
-          title: "Posisjon hentet",
-          description: "Koordinater er registrert.",
+          title: "Posisjon oppdatert",
+          description: `Nye koordinater er registrert: ${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`,
         });
         setIsGettingLocation(false);
       },
@@ -383,7 +383,8 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           variant: "destructive",
         });
         setIsGettingLocation(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
@@ -398,7 +399,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
       const coords = await geocodeAddress(currentAddress);
       if (coords) {
         form.setValue('coordinates', coords, { shouldDirty: true, shouldValidate: true });
-        toast({ title: "Adresse funnet", description: `Koordinater satt til ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
+        toast({ title: "Adresse funnet", description: `Koordinater oppdatert til ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` });
       } else {
         toast({ title: "Fant ikke adressen", description: "Kunne ikke finne koordinater for denne adressen. Sjekk skrivemåten.", variant: "destructive" });
       }
@@ -433,12 +434,13 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
     setIsSubmitting(true);
 
-    // AUTO-GEOCODE if coordinates are missing and address is present
+    // AUTO-GEOCODE ONLY IF COORDS ARE ABSOLUTELY MISSING (0,0)
+    // If coords are non-zero, we assume the user has either manually set them or they were previously loaded correctly.
     if ((!data.coordinates || (data.coordinates.lat === 0 && data.coordinates.lng === 0)) && data.address) {
         const coords = await geocodeAddress(data.address);
         if (coords) {
             data.coordinates = coords;
-            form.setValue('coordinates', coords);
+            form.setValue('coordinates', coords, { shouldDirty: true });
         }
     }
 
@@ -518,8 +520,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         const safeMainIndex = Math.min(data.mainImageIndex, finalImages.length - 1);
         const finalMainIndex = safeMainIndex >= 0 ? safeMainIndex : 0;
 
-        // Helper to determine if we should use deleteField() or undefined
-        // deleteField() is required for updateDoc, but illegal for addDoc
         const removeField = () => place ? deleteField() : undefined;
 
         // HMS Logic
@@ -537,7 +537,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 completedAt: new Date()
             };
             
-            // Audit log for HMS update
             await firebaseDB.logEvent(dbUser.orgId, dbUser.id, 'update_hms_checklist', { 
                 placeId: place?.id || 'new_place',
                 placeName: data.name,
@@ -680,7 +679,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* LEFT COLUMN */}
           <div className="space-y-6">
             {!isHmsResponsible && (
             <Collapsible
@@ -691,7 +689,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full flex items-center justify-between p-6 h-auto hover:bg-slate-50 border-b">
                     <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-indigo-500" />
+                        <MapPin className="h-5 w-5 text-indigo-50" />
                         <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Grunnleggende informasjon</h3>
                     </div>
                     {isBasicOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
@@ -807,7 +805,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
                 )}
                 />
 
-                {/* ENVIRONMENTAL ZONES */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                     <FormField
                         control={form.control}
@@ -850,7 +847,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             </Collapsible>
             )}
 
-            {/* SALES MESSAGE */}
             {!isHmsResponsible && salesMessageEnabled && (
             <Collapsible
               open={isSalesOpen}
@@ -1049,7 +1045,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             )}
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="space-y-6">
             {!isHmsResponsible && (
             <div className="space-y-4">
@@ -1151,7 +1146,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             </Button>
             )}
 
-            {/* LEVERINGSVINDU COLLAPSIBLE CARD */}
             {!isHmsResponsible && !isSalesman && (
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="p-6 border-b flex items-center justify-between">
@@ -1268,7 +1262,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             </div>
             )}
 
-            {/* BEGRENSNINGER COLLAPSIBLE CARD */}
             {!isHmsResponsible && !isSalesman && (
             <Collapsible
               open={isConstraintsOpen}
@@ -1366,7 +1359,6 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             </Collapsible>
             )}
 
-            {/* HMS SECTION */}
             {organization?.hmsSettings?.enabled && !isSalesman && (
                 <Collapsible
                   open={isHmsOpen}
