@@ -17,7 +17,11 @@ import {
   AlertTriangle, 
   Info,
   Route as RouteIcon,
-  Flag
+  Flag,
+  ArrowDownUp,
+  Settings2,
+  Home,
+  Warehouse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,6 +29,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type RouteDirection = 'nearest_first' | 'furthest_first';
 
 export default function FavoriteRoutePage() {
   const [authUser, loadingAuth] = useAuthState(auth);
@@ -37,6 +44,10 @@ export default function FavoriteRoutePage() {
   const [loadingData, setLoadingData] = useState(true);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const [direction, setDirection] = useState<RouteDirection>('nearest_first');
+
+  const [startPointId, setStartPointId] = useState<string>('current_gps');
+  const [endPointId, setEndPointId] = useState<string>('last_stop');
 
   useEffect(() => {
     if (!loadingAuth && !authUser) {
@@ -63,7 +74,7 @@ export default function FavoriteRoutePage() {
           setPlaces(allFetched);
           
           const withCoords = allFetched.filter(p => getValidCoords(p) !== null);
-          solveTSP(withCoords);
+          solveTSP(withCoords, direction, startPointId, endPointId);
         } else {
           setPlaces([]);
           setOptimizedPath([]);
@@ -79,20 +90,17 @@ export default function FavoriteRoutePage() {
     });
 
     return () => unsubUser();
-  }, [authUser]);
+  }, [authUser, direction, startPointId, endPointId]);
 
   const getValidCoords = (place: Place) => {
     const check = (lat?: any, lng?: any) => {
         const nLat = parseFloat(String(lat));
         const nLng = parseFloat(String(lng));
-        
         if (isNaN(nLat) || isNaN(nLng)) return null;
         if (nLat === 0 && nLng === 0) return null;
         if (nLat < -90 || nLat > 90 || nLng < -180 || nLng > 180) return null;
-        
         return { lat: nLat, lng: nLng };
     };
-
     if (place.coordinates) {
         const c = check(place.coordinates.lat, place.coordinates.lng);
         if (c) return c;
@@ -104,14 +112,32 @@ export default function FavoriteRoutePage() {
     return null;
   };
 
-  const solveTSP = async (inputPlaces: Place[]) => {
+  const solveTSP = async (inputPlaces: Place[], currentDirection: RouteDirection, startId: string, endId: string) => {
     setIsOptimizing(true);
     try {
-      let startPos: { lat: number, lng: number } | null = null;
-      try {
-        startPos = await getPosition();
-      } catch (e) {
-        console.warn('Could not get current position', e);
+      let startCoords: { lat: number, lng: number } | null = null;
+      let endCoords: { lat: number, lng: number } | null = null;
+
+      // Handle Start Point
+      if (startId === 'current_gps') {
+        try {
+          startCoords = await getPosition();
+        } catch (e) {
+          console.warn('Could not get GPS position', e);
+        }
+      } else if (startId === 'org_depot' && organization?.mainDepot) {
+        startCoords = organization.mainDepot.coordinates;
+      } else {
+        const p = inputPlaces.find(pl => pl.id === startId);
+        if (p) startCoords = getValidCoords(p);
+      }
+
+      // Handle End Point
+      if (endId === 'org_depot' && organization?.mainDepot) {
+        endCoords = organization.mainDepot.coordinates;
+      } else if (endId !== 'last_stop') {
+        const p = inputPlaces.find(pl => pl.id === endId);
+        if (p) endCoords = getValidCoords(p);
       }
 
       if (inputPlaces.length === 0) {
@@ -122,11 +148,38 @@ export default function FavoriteRoutePage() {
         return;
       }
 
-      const runGreedy = (origin: { lat: number, lng: number }, pool: Place[]) => {
+      let pool = [...inputPlaces];
+      let fixedStartPlace = inputPlaces.find(p => p.id === startId);
+      let fixedEndPlace = inputPlaces.find(p => p.id === endId);
+      
+      if (fixedStartPlace) pool = pool.filter(p => p.id !== startId);
+      if (fixedEndPlace && fixedEndPlace.id !== startId) pool = pool.filter(p => p.id !== endId);
+
+      const runGreedy = (origin: { lat: number, lng: number }, deliveryPool: Place[], targetEnd?: { lat: number, lng: number } | null, furthestFirst: boolean = false) => {
         let currentPos = origin;
-        const remaining = [...pool];
+        const remaining = [...deliveryPool];
         const path: Place[] = [];
         let distance = 0;
+
+        if (furthestFirst) {
+            let furthestIdx = -1;
+            let maxDist = -1;
+            for (let i = 0; i < remaining.length; i++) {
+                const coords = getValidCoords(remaining[i])!;
+                const d = getDistanceFromLatLonInKm(origin.lat, origin.lng, coords.lat, coords.lng);
+                if (d > maxDist) {
+                    maxDist = d;
+                    furthestIdx = i;
+                }
+            }
+            if (furthestIdx !== -1) {
+                const p = remaining.splice(furthestIdx, 1)[0];
+                path.push(p);
+                distance += maxDist;
+                currentPos = getValidCoords(p)!;
+            }
+        }
+
         while (remaining.length > 0) {
           let bestIdx = -1;
           let minDist = Infinity;
@@ -143,31 +196,23 @@ export default function FavoriteRoutePage() {
           distance += minDist;
           currentPos = getValidCoords(nextPlace)!;
         }
+
+        if (targetEnd) {
+            distance += getDistanceFromLatLonInKm(currentPos.lat, currentPos.lng, targetEnd.lat, targetEnd.lng);
+        }
+
         return { path, distance };
       };
 
-      let bestPath: Place[] = [];
-      let bestDistance = Infinity;
+      const origin = startCoords || getValidCoords(inputPlaces[0])!;
+      const result = runGreedy(origin, pool, endCoords, currentDirection === 'furthest_first');
+      
+      let finalPath = result.path;
+      if (fixedStartPlace) finalPath = [fixedStartPlace, ...finalPath];
+      if (fixedEndPlace && fixedEndPlace.id !== startId) finalPath = [...finalPath, fixedEndPlace];
 
-      if (startPos) {
-        const result = runGreedy(startPos, inputPlaces);
-        bestPath = result.path;
-        bestDistance = result.distance;
-      } else {
-        // Try starting from each place to find the best sequence if no GPS
-        for (let i = 0; i < inputPlaces.length; i++) {
-          const firstPlace = inputPlaces[i];
-          const pool = inputPlaces.filter((_, idx) => idx !== i);
-          const result = runGreedy(getValidCoords(firstPlace)!, pool);
-          if (result.distance < bestDistance) {
-            bestDistance = result.distance;
-            bestPath = [firstPlace, ...result.path];
-          }
-        }
-      }
-
-      setOptimizedPath(bestPath);
-      setTotalDistance(bestDistance);
+      setOptimizedPath(finalPath);
+      setTotalDistance(result.distance);
     } finally {
       setIsOptimizing(false);
       setLoadingData(false);
@@ -184,61 +229,47 @@ export default function FavoriteRoutePage() {
 
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
-    
-    // Batch size 8 to be very safe with Google Maps limits (1 origin + up to 6 waypoints + 1 destination = 8 total points)
     const BATCH_SIZE = 8;
     const batch = optimizedPath.slice(startIndex, startIndex + BATCH_SIZE);
-    
     if (batch.length === 0) return;
-
     const formatC = (c: {lat: number, lng: number}) => `${c.lat.toFixed(6)},${c.lng.toFixed(6)}`;
-
+    
     let originStr = '';
     let waypointPlaces: Place[] = [];
     const destPlace = batch[batch.length - 1];
     const destinationStr = formatC(getValidCoords(destPlace)!);
 
-    if (startIndex === 0 && userCoords) {
-      // First part starts from current GPS position
-      originStr = formatC(userCoords);
-      waypointPlaces = batch.slice(0, -1);
+    if (startIndex === 0) {
+        if (startPointId === 'current_gps' && userCoords) {
+            originStr = formatC(userCoords);
+            waypointPlaces = batch.slice(0, -1);
+        } else if (startPointId === 'org_depot' && organization?.mainDepot) {
+            originStr = formatC(organization.mainDepot.coordinates);
+            waypointPlaces = batch.slice(0, -1);
+        } else {
+            const firstPlace = batch[0];
+            originStr = formatC(getValidCoords(firstPlace)!);
+            waypointPlaces = batch.slice(1, -1);
+        }
     } else {
-      // Subsequent parts start from the first place in the batch
       const firstPlace = batch[0];
       originStr = formatC(getValidCoords(firstPlace)!);
       waypointPlaces = batch.slice(1, -1);
     }
 
-    const waypointsStr = waypointPlaces
-      .map(p => formatC(getValidCoords(p)!))
-      .join('|');
-
-    const params = new URLSearchParams({
-        api: '1',
-        origin: originStr,
-        destination: destinationStr,
-        travelmode: 'driving'
-    });
-
-    if (waypointsStr) {
-        params.append('waypoints', waypointsStr);
-    }
-
-    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
-    console.log('Navigating to batch:', url);
+    const waypointsStr = waypointPlaces.map(p => formatC(getValidCoords(p)!)).join('|');
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${originStr}&destination=${destinationStr}&waypoints=${encodeURIComponent(waypointsStr)}&travelmode=driving`;
     window.location.href = url;
   };
 
-  if (loadingAuth || (loadingData && authUser)) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const missingCoordsCount = places.length - optimizedPath.length;
+  const missingCoordsCount = places.length - places.filter(p => getValidCoords(p)).length;
   const isLargeRoute = optimizedPath.length > 8;
+
+  const locationOptions = [
+    { id: 'current_gps', name: '📍 Min Posisjon', type: 'gps' },
+    ...(organization?.mainDepot ? [{ id: 'org_depot', name: '🏢 Hoveddepot', type: 'depot' }] : []),
+    ...places.filter(p => getValidCoords(p)).map(p => ({ id: p.id, name: `⭐️ ${p.name}`, type: 'place' }))
+  ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-5xl mx-auto overflow-hidden">
@@ -270,6 +301,63 @@ export default function FavoriteRoutePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6 min-w-0">
+          
+          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden min-w-0">
+            <CardHeader className="bg-slate-50/50 border-b">
+                <CardTitle className="text-sm font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
+                    <Settings2 className="h-4 w-4" /> Rute-innstillinger
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Startsted</label>
+                        <Select value={startPointId} onValueChange={setStartPointId}>
+                            <SelectTrigger className="rounded-xl border-slate-200 font-bold text-slate-700 h-11">
+                                <SelectValue placeholder="Velg start" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {locationOptions.map(opt => (
+                                    <SelectItem key={opt.id} value={opt.id} className="font-bold">{opt.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Endested</label>
+                        <Select value={endPointId} onValueChange={setEndPointId}>
+                            <SelectTrigger className="rounded-xl border-slate-200 font-bold text-slate-700 h-11">
+                                <SelectValue placeholder="Velg slutt" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="last_stop" className="font-bold">🏁 Siste levering</SelectItem>
+                                {locationOptions.filter(o => o.id !== 'current_gps').map(opt => (
+                                    <SelectItem key={opt.id} value={opt.id} className="font-bold">{opt.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                            <ArrowDownUp className="h-4 w-4" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-700">{direction === 'nearest_first' ? 'Nærmeste først' : 'Lengst unna først'}</p>
+                    </div>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setDirection(d => d === 'nearest_first' ? 'furthest_first' : 'nearest_first')}
+                        className="font-bold rounded-xl border-slate-200 h-10 px-4"
+                    >
+                        Bytt retning
+                    </Button>
+                </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden min-w-0">
             <CardHeader className="border-b bg-slate-50/50">
               <CardTitle className="text-lg font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
@@ -284,7 +372,8 @@ export default function FavoriteRoutePage() {
                 </div>
               ) : optimizedPath.length > 0 ? (
                 <div className="space-y-4">
-                  {userCoords && (
+                  
+                  {startPointId === 'current_gps' && userCoords && (
                     <div className="relative flex gap-4 sm:gap-6">
                       <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-slate-100" />
                       <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-indigo-50 border-indigo-100 text-indigo-600 shadow-sm">
@@ -292,8 +381,24 @@ export default function FavoriteRoutePage() {
                       </div>
                       <div className="flex-1 pb-10 min-w-0">
                         <div className="p-4 rounded-2xl border-2 border-dashed border-indigo-100 bg-indigo-50/20">
-                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Startpunkt</p>
+                          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">START</p>
                           <h4 className="font-black text-slate-900 text-lg truncate">Din nåværende posisjon</h4>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {startPointId === 'org_depot' && organization?.mainDepot && (
+                    <div className="relative flex gap-4 sm:gap-6">
+                      <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-slate-100" />
+                      <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-amber-50 border-amber-100 text-amber-600 shadow-sm">
+                        <Warehouse className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1 pb-10 min-w-0">
+                        <div className="p-4 rounded-2xl border-2 border-dashed border-amber-100 bg-amber-50/20">
+                          <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">START</p>
+                          <h4 className="font-black text-slate-900 text-lg truncate">{organization.name} Depot</h4>
+                          <p className="text-xs text-slate-500 truncate">{organization.mainDepot.address}</p>
                         </div>
                       </div>
                     </div>
@@ -301,13 +406,13 @@ export default function FavoriteRoutePage() {
 
                   {optimizedPath.map((place, index) => (
                     <div key={place.id} className="relative flex gap-4 sm:gap-6 group min-w-0">
-                      {index < optimizedPath.length - 1 && (
+                      {(index < optimizedPath.length - 1 || endPointId !== 'last_stop') && (
                         <div className="absolute left-6 top-10 bottom-0 w-0.5 bg-slate-100 group-hover:bg-indigo-100 transition-colors" />
                       )}
                       
                       <div className={cn(
                         "relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 font-black text-lg transition-all",
-                        index === 0 
+                        (index === 0 && startPointId === place.id) || (index === optimizedPath.length -1 && endPointId === place.id)
                           ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110" 
                           : "bg-white border-slate-200 text-slate-500"
                       )}>
@@ -337,27 +442,41 @@ export default function FavoriteRoutePage() {
                                 ~{place.estimatedDeliveryTime} min levering
                               </Badge>
                             )}
-                            {place.customerNumber && (
-                              <Badge variant="outline" className="bg-slate-100 text-slate-500 border-transparent font-mono text-[10px] sm:text-xs">
-                                #{place.customerNumber}
-                              </Badge>
-                            )}
+                            {place.id === startPointId && <Badge className="bg-indigo-600 text-white border-transparent">START</Badge>}
+                            {place.id === endPointId && <Badge className="bg-emerald-600 text-white border-transparent">SLUTT</Badge>}
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
 
-                  <div className="relative flex gap-4 sm:gap-6">
-                    <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-emerald-50 border-emerald-100 text-emerald-600 shadow-sm">
-                      <Flag className="h-6 w-6" />
+                  {endPointId === 'org_depot' && organization?.mainDepot && (
+                    <div className="relative flex gap-4 sm:gap-6">
+                        <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-emerald-50 border-emerald-100 text-emerald-600 shadow-sm">
+                            <Flag className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-100 bg-emerald-50/20">
+                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">SLUTT</p>
+                                <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight truncate">{organization.name} Depot</h4>
+                                <p className="text-xs text-emerald-500 truncate">{organization.mainDepot.address}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-100 bg-emerald-50/20">
-                        <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight truncate">Rute Slutt</h4>
-                      </div>
+                  )}
+
+                  {endPointId === 'last_stop' && (
+                    <div className="relative flex gap-4 sm:gap-6">
+                        <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 bg-emerald-50 border-emerald-100 text-emerald-600 shadow-sm">
+                            <Flag className="h-6 w-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-100 bg-emerald-50/20">
+                                <h4 className="font-black text-emerald-900 text-lg uppercase tracking-tight truncate">Rute Slutt</h4>
+                            </div>
+                        </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-20">
@@ -409,7 +528,7 @@ export default function FavoriteRoutePage() {
                           START DEL {partNum} ({currentStart + 1}-{endNum})
                         </Button>
                       );
-                      currentStart += (BATCH_SIZE - 1); // Overlap by 1
+                      currentStart += (BATCH_SIZE - 1); 
                       partNum++;
                     }
                     return buttons;
@@ -447,7 +566,15 @@ export default function FavoriteRoutePage() {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-slate-50">
                 <span className="text-slate-500 font-medium text-sm">Startsted</span>
-                <span className="font-black text-slate-900">Min Posisjon</span>
+                <span className="font-black text-slate-900 truncate max-w-[120px] text-right">
+                    {locationOptions.find(o => o.id === startPointId)?.name.split(' ').slice(1).join(' ') || 'Min Posisjon'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                <span className="text-slate-500 font-medium text-sm">Endested</span>
+                <span className="font-black text-slate-900 truncate max-w-[120px] text-right">
+                    {endPointId === 'last_stop' ? 'Siste stopp' : locationOptions.find(o => o.id === endPointId)?.name.split(' ').slice(1).join(' ') || 'Depot'}
+                </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-slate-500 font-medium text-sm">Est. Kjørelengde</span>
