@@ -58,7 +58,8 @@ export default function FavoriteRoutePage() {
               return await firebaseDB.getPlace(placeId);
             })
           );
-          const validPlaces = favoritePlaces.filter(p => p !== null) as Place[];
+          // Filter out nulls and places with invalid coordinates early
+          const validPlaces = favoritePlaces.filter(p => p !== null && getValidCoords(p) !== null) as Place[];
           setPlaces(validPlaces);
           solveTSP(validPlaces);
         } else {
@@ -77,9 +78,24 @@ export default function FavoriteRoutePage() {
   }, [authUser]);
 
   const getValidCoords = (place: Place) => {
-    if (place.coordinates && place.coordinates.lat !== 0) return place.coordinates;
-    if (place.location && place.location.latitude !== 0) {
-      return { lat: place.location.latitude, lng: place.location.longitude };
+    const check = (lat?: any, lng?: any) => {
+        const nLat = parseFloat(String(lat));
+        const nLng = parseFloat(String(lng));
+        
+        if (isNaN(nLat) || isNaN(nLng)) return null;
+        if (nLat === 0 && nLng === 0) return null;
+        if (nLat < -90 || nLat > 90 || nLng < -180 || nLng > 180) return null;
+        
+        return { lat: nLat, lng: nLng };
+    };
+
+    if (place.coordinates) {
+        const c = check(place.coordinates.lat, place.coordinates.lng);
+        if (c) return c;
+    }
+    if (place.location) {
+        const c = check(place.location.latitude, place.location.longitude);
+        if (c) return c;
     }
     return null;
   };
@@ -94,6 +110,7 @@ export default function FavoriteRoutePage() {
         console.warn('Could not get current position', e);
       }
 
+      // inputPlaces is already filtered in useEffect, but we double check
       const validPlaces = inputPlaces.filter(p => getValidCoords(p) !== null);
       if (validPlaces.length === 0) {
         setLoadingData(false);
@@ -142,6 +159,7 @@ export default function FavoriteRoutePage() {
     const coords = getValidCoords(place);
     if (!coords) return;
     const origin = userCoords ? `&origin=${userCoords.lat},${userCoords.lng}` : '';
+    // Use driving mode and explicit destination
     const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${coords.lat},${coords.lng}&travelmode=driving`;
     window.location.href = url;
   };
@@ -149,7 +167,8 @@ export default function FavoriteRoutePage() {
   const openInGoogleMaps = (startIndex: number = 0) => {
     if (optimizedPath.length === 0) return;
     
-    // Safer limit for Google Maps URLs: Total 10 points (1 origin + up to 8 waypoints + 1 destination)
+    // BATCH_SIZE 9 + 1 Origin + 1 Destination usually triggers the right UI.
+    // We stick to a safe 9 places per batch.
     const BATCH_SIZE = 9;
     const batch = optimizedPath.slice(startIndex, startIndex + BATCH_SIZE);
     
@@ -159,36 +178,32 @@ export default function FavoriteRoutePage() {
     const destCoords = getValidCoords(destPlace);
     if (!destCoords) return;
 
-    let origin = '';
+    let originStr = '';
     let waypointPlaces = [];
 
     if (userCoords) {
-      origin = `${userCoords.lat},${userCoords.lng}`;
+      originStr = `${userCoords.lat},${userCoords.lng}`;
       waypointPlaces = batch.slice(0, -1);
     } else {
       const firstPlace = batch[0];
       const firstCoords = getValidCoords(firstPlace);
-      origin = `${firstCoords?.lat},${firstCoords?.lng}`;
+      originStr = firstCoords ? `${firstCoords.lat},${firstCoords.lng}` : '';
       waypointPlaces = batch.slice(1, -1);
     }
 
-    const waypoints = waypointPlaces.map(p => {
+    const waypointsStr = waypointPlaces.map(p => {
       const c = getValidCoords(p);
-      return `${c?.lat},${c?.lng}`;
+      return c ? `${c.lat},${c.lng}` : null;
     }).filter(Boolean).join('|');
 
-    const params = new URLSearchParams({
-        api: '1',
-        origin: origin,
-        destination: `${destCoords.lat},${destCoords.lng}`,
-        travelmode: 'driving'
-    });
-
-    if (waypoints) {
-        params.append('waypoints', waypoints);
+    // Build URL without URLSearchParams for the main part to ensure '|' and ',' are handled predictably by Google Maps app
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${originStr}&destination=${destCoords.lat},${destCoords.lng}&travelmode=driving`;
+    
+    if (waypointsStr) {
+        url += `&waypoints=${encodeURIComponent(waypointsStr)}`;
     }
 
-    const url = `https://www.google.com/maps/dir/?${params.toString()}`;
+    console.log('Opening Google Maps URL:', url);
     window.location.href = url;
   };
 
@@ -280,10 +295,10 @@ export default function FavoriteRoutePage() {
                       <div className="flex-1 pb-10">
                         <div className="p-5 rounded-3xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-indigo-200 hover:shadow-md transition-all group-hover:translate-x-1">
                           <div className="flex justify-between items-start gap-4">
-                            <div>
-                              <h4 className="font-black text-slate-900 uppercase tracking-tight text-xl mb-1">{place.name}</h4>
-                              <p className="text-slate-500 font-medium flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-slate-400" /> {place.address}
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-black text-slate-900 uppercase tracking-tight text-xl mb-1 truncate">{place.name}</h4>
+                              <p className="text-slate-500 font-medium flex items-center gap-2 truncate">
+                                <MapPin className="h-4 w-4 text-slate-400 shrink-0" /> {place.address}
                               </p>
                             </div>
                             <Button 
