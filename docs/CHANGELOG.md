@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Favorite Route Optimization**: Introduced a bonus module for drivers on the Favorites page.
+    - **Intelligent Sequencing**: Automatically optimizes the visiting order of favorite places using a Nearest Neighbor algorithm.
+    - **GPS Integration**: Utilizes the user's current location as the starting point for route calculation.
+    - **Interactive Route Summary**: Provides a detailed timeline of the optimized path, total distance estimation, and validation of location coordinates.
+    - **One-Tap Navigation**: Generates a complete multi-stop itinerary and opens it directly in Google Maps.
 - **Full HMS Audit History**: The HMS Documentation log now displays a complete chronological history of all updates. Users can see exactly who changed what and when, with snapshots of the checklist state at each point in time.
 - **HMS Modification Tracking**: The system now records the name and timestamp of the last person to edit an HMS checklist, ensuring audit accountability.
 - **Concise HMS Summaries**: The HMS result card in the Place view now exclusively displays subheadings and checked items (marked "JA"), providing a more focused safety summary for drivers.

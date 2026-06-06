@@ -31,6 +31,10 @@ The system is multi-tenant from the ground up to support commercialization. All 
 *   Automatic client-side downscaling of images before upload.
 *   Customizable text fields (e.g., "Beskrivelse & Instruksjoner").
 *   Hashtag categorization and a user-specific "Favorite" system.
+*   **Favorite Route Optimization**: A bonus feature for drivers to plan an efficient route between their favorite locations.
+    *   Uses a "Nearest Neighbor" algorithm starting from the user's current GPS location.
+    *   Provides a sequenced list of stops with estimated distances.
+    *   Direct integration with Google Maps for turn-by-turn navigation of the entire route.
 *   **Delivery Windows:** Places can have weekly schedules; if none are registered, 24/7 access is assumed.
 *   **Physical Firewalls:** Places can have max height/width/weight limits. If none are registered, open access is assumed.
 *   **Sales Messages:** Temporary, high-visibility notes added by salespeople to inform drivers about specific customer requirements. These messages have an expiration date.

@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 import { firebaseDB } from '@/lib/firebase/database';
 import { PlaceGrid } from '@/components/places/place-grid';
 import { Loader2, Printer, Heart } from 'lucide-react';
-import { DeliveryPlace, Organization, Place, User } from '@/lib/types';
+import { Organization, Place, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PrintPlace } from '@/components/places/print-place';
+import { FavoriteRouteOptimizer } from '@/components/places/favorite-route-optimizer';
 import {
   Card,
   CardContent,
@@ -108,10 +109,13 @@ export default function FavoritesPage() {
                 </div>
             </div>
             {places.length > 0 && (
-              <Button variant="outline" onClick={handlePrint} className="font-bold border-slate-200">
-                <Printer className="mr-2 h-4 w-4" />
-                Skriv ut alle
-              </Button>
+              <div className="flex items-center gap-2">
+                <FavoriteRouteOptimizer places={places} />
+                <Button variant="outline" onClick={handlePrint} className="font-bold border-slate-200 h-11">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Skriv ut alle
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent className="px-0">

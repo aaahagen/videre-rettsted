@@ -145,3 +145,22 @@ This document defines the mandatory components, features, and role-based access 
 - **TimeStamp Card:** Punch-in/out.
 - **Active Route Card:** Route name, Manifest progress, Link to execution.
 - **Notifications:** Unread messages, Pending courses.
+
+---
+
+## 11. Favoritter (`/dashboard/favorites`)
+
+### Mandatory Components
+1. **Header**: Title, "Favoritter" description, Heart icon.
+2. **Action Bar**: 
+   * **Planlegg rute (Plan Route)**: Opens the `FavoriteRouteOptimizer` Sheet.
+   * **Skriv ut alle (Print All)**: Opens print dialog for all favorite places.
+3. **Nøkkeloversikt (Key Overview)**: A dedicated card summarizing all places that have door codes categorized as "Nøkkel" (Key).
+4. **Place Grid**: The standard grid of `PlaceCard` components for all favorites.
+5. **Empty State**: Illustration and instructions for how to add favorites.
+
+### Favorite Route Optimizer (Sheet)
+* **Optimization Logic**: Triggered upon opening. Calculates the best sequence of stops from current location using Nearest Neighbor.
+* **Route Summary**: Total distance (km), number of stops, and a warning if any places are missing coordinates.
+* **Stop Sequence**: A vertical timeline of all stops in the optimized order.
+* **Navigation**: "ÅPNE I GOOGLE MAPS" button which generates a multi-stop URL for Google Maps navigation.
