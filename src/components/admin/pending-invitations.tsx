@@ -38,7 +38,7 @@ import {
 interface InvitationData {
   id: string;
   email: string;
-  role: 'admin' | 'driver';
+  role: string;
   createdAt: { _seconds: number; _nanoseconds: number };
   expiresAt: { _seconds: number; _nanoseconds: number };
 }
@@ -46,12 +46,33 @@ interface InvitationData {
 interface Invitation {
   id: string;
   email: string;
-  role: 'admin' | 'driver';
+  role: string;
   createdAt: Date;
   expiresAt: Date;
 }
 
 const ITEMS_PER_PAGE = 5;
+
+// Helper to format role names for display
+const getRoleLabel = (role: string) => {
+  switch (role) {
+    case 'super_admin': return 'Super Admin';
+    case 'owner': return 'Eier';
+    case 'admin': return 'Admin';
+    case 'planner': return 'Planlegger';
+    case 'loader': return 'Laster';
+    case 'driver': return 'Sjåfør';
+    case 'contractor': return 'Innleid';
+    case 'salesman': return 'Selger';
+    case 'hms_responsible': return 'HMS Ansvarlig';
+    default: return role;
+  }
+};
+
+const getRoleBadgeVariant = (role: string): "default" | "secondary" | "outline" | "destructive" => {
+  if (role === 'admin' || role === 'owner' || role === 'super_admin') return 'default';
+  return 'secondary';
+};
 
 export function PendingInvitations({ orgId }: { orgId: string }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -255,8 +276,8 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                             <TableRow key={invite.id}>
                               <TableCell className="font-medium text-xs py-2">{invite.email}</TableCell>
                               <TableCell className="py-2">
-                                  <Badge variant={invite.role === 'admin' ? 'default' : 'secondary'} className={invite.role === 'admin' ? 'bg-primary' : ''}>
-                                      {invite.role === 'admin' ? 'Admin' : 'Sjåfør'}
+                                  <Badge variant={getRoleBadgeVariant(invite.role)} className={invite.role === 'admin' || invite.role === 'owner' || invite.role === 'super_admin' ? 'bg-primary' : ''}>
+                                      {getRoleLabel(invite.role)}
                                   </Badge>
                               </TableCell>
                               <TableCell className={`py-2 text-xs font-medium ${expiry.color}`}>
@@ -302,10 +323,10 @@ export function PendingInvitations({ orgId }: { orgId: string }) {
                    return (
                       <div key={invite.id} className="p-4 flex justify-between items-center">
                           <div className="space-y-2">
-                              <p className="font-bold">{invite.email}</p>
+                              <p className="font-bold text-sm">{invite.email}</p>
                               <div className="flex items-center gap-2">
-                                  <Badge variant={invite.role === 'admin' ? 'default' : 'secondary'} className={invite.role === 'admin' ? 'bg-primary' : ''}>
-                                      {invite.role === 'admin' ? 'Admin' : 'Sjåfør'}
+                                  <Badge variant={getRoleBadgeVariant(invite.role)} className={invite.role === 'admin' || invite.role === 'owner' || invite.role === 'super_admin' ? 'bg-primary' : ''}>
+                                      {getRoleLabel(invite.role)}
                                   </Badge>
                                   <span className={`text-xs ${expiry.color}`}>
                                       {expiry.text}

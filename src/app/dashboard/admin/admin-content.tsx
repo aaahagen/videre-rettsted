@@ -88,13 +88,13 @@ function UserActionsDropdown({ user, handleToggleStatus, handleDeleteUser, onEdi
  * AdminDashboardContent er kontrollpanelet for organisasjonsadministratorer.
  */
 export default function AdminDashboardContent({ authUser }: { authUser?: FirebaseUser }) {
-  const { dbUser } = useAuth();
+  const { dbUser, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   
   // Basic State
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'driver' | 'admin' | 'contractor' | 'loader' | 'planner' | 'hms_responsible' | 'salesman'>('driver');
+  const [role, setRole] = useState<'driver' | 'admin' | 'contractor' | 'loader' | 'planner' | 'hms_responsible' | 'salesman' | 'owner' | 'super_admin'>('driver');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -317,6 +317,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                             <SelectItem value="loader">Lager / Laster</SelectItem><SelectItem value="planner">Ruteplanlegger</SelectItem>
                                             <SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
                                             <SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem>
+                                            {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -362,6 +363,7 @@ export default function AdminDashboardContent({ authUser }: { authUser?: Firebas
                                                     <SelectItem value="loader">Laster</SelectItem><SelectItem value="planner">Planlegger</SelectItem>
                                                     <SelectItem value="salesman">Selger</SelectItem><SelectItem value="hms_responsible">HMS Ansvarlig</SelectItem>
                                                     <SelectItem value="admin">Admin</SelectItem><SelectItem value="owner">Eier</SelectItem>
+                                                    {(u.role === 'super_admin' || isSuperAdmin) && <SelectItem value="super_admin">Super Admin</SelectItem>}
                                                 </SelectContent>
                                             </Select>
                                         </div>
