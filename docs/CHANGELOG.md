@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Optimized Mobile Scanner**: Significantly improved camera scanning reliability on iOS.
 
 ### Fixed
+- **Super Admin User Management**: Resolved issues where super admins could encounter errors or missing roles when creating or managing users within a switched organization context.
+    - Fixed restrictive role types in `AdminDashboardContent` and `PendingInvitations`.
+    - Added support for inviting and managing `owner` and `super_admin` roles from the Admin Panel.
+- **Invitation Role Visibility**: Corrected a bug where all pending invitations for non-admin roles were incorrectly displayed as "Sjåfør" (Driver). The UI now correctly displays the specific role (e.g., Eier, Laster, Planlegger) and uses appropriate badge styling.
 - **PlaceCard Button Alignment**: Refactored the `PlaceCard` footer to use a consistent `grid-cols-2` layout, ensuring "Fyll ut HMS" and "Meld Avvik" buttons align perfectly with "Se mer" and "Naviger" buttons regardless of state.
 - **Security Rule Permissions**: Resolved "Missing or insufficient permissions" error in the Learning Portal by allowing users to read and update their own `courseAssignments`.
 - **Vehicle Persistence Reliability**: Refactored the vehicle saving architecture to resolve issues where new or edited vehicles could not be saved.
