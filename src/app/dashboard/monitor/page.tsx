@@ -48,7 +48,8 @@ export default function MonitorPage() {
         const uDoc = await firebaseDB.getUser(user.uid);
         setUserData(uDoc);
         
-        if (uDoc?.role !== 'admin') {
+        const allowedRoles = ['admin', 'super_admin', 'owner', 'planner'];
+        if (uDoc && !allowedRoles.includes(uDoc.role)) {
             router.push('/dashboard');
         }
       };
@@ -137,35 +138,40 @@ export default function MonitorPage() {
   }
 
   const totalRoutes = filteredRoutes.length;
-  let finishedRoutes = 0;
-  let activeRoutes = 0;
-  let totalPlacesOverall = 0;
-  let completedPlacesOverall = 0;
 
-  filteredRoutes.forEach(route => {
-    const placesCount = route.places?.length || 0;
-    
-    let expectedItems = placesCount;
-    if (route.prepTimeStart && route.prepTimeStart > 0) expectedItems++;
-    if (route.prepTimeEnd && route.prepTimeEnd > 0) expectedItems++;
-    if (route.breakTime && route.breakTime > 0) expectedItems++;
-    if (route.fuelServiceTime && route.fuelServiceTime > 0) expectedItems++;
-    
-    const completedCount = route.completedStops?.length || 0;
+  const calculateStats = () => {
+      let finished = 0;
+      let active = 0;
+      let totalP = 0;
+      let completedP = 0;
 
-    totalPlacesOverall += placesCount;
-    
-    const currentCompletedPlaces = route.completedStops?.filter(stopId => stopId.startsWith('place_')).length || 0;
-    completedPlacesOverall += currentCompletedPlaces;
+      filteredRoutes.forEach(route => {
+        const placesCount = route.places?.length || 0;
+        
+        let expectedItems = placesCount;
+        if (route.prepTimeStart && route.prepTimeStart > 0) expectedItems++;
+        if (route.prepTimeEnd && route.prepTimeEnd > 0) expectedItems++;
+        if (route.breakTime && route.breakTime > 0) expectedItems++;
+        if (route.fuelServiceTime && route.fuelServiceTime > 0) expectedItems++;
+        
+        const completedCount = route.completedStops?.length || 0;
 
-    if (expectedItems > 0 && completedCount >= expectedItems) {
-      finishedRoutes++;
-    } else if (expectedItems > 0) {
-      activeRoutes++;
-    }
-  });
+        totalP += placesCount;
+        
+        const currentCompletedPlaces = route.completedStops?.filter(stopId => stopId.startsWith('place_')).length || 0;
+        completedP += currentCompletedPlaces;
 
-  const overallProgress = totalPlacesOverall > 0 ? (completedPlacesOverall / totalPlacesOverall) * 100 : 0;
+        if (expectedItems > 0 && completedCount >= expectedItems) {
+          finished++;
+        } else if (expectedItems > 0) {
+          active++;
+        }
+      });
+      return { finished, active, totalP, completedP };
+  };
+
+  const stats = calculateStats();
+  const overallProgress = stats.totalP > 0 ? (stats.completedP / stats.totalP) * 100 : 0;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
@@ -190,15 +196,15 @@ export default function MonitorPage() {
               <span className="text-sm text-muted-foreground">Totale Ruter</span>
             </div>
             <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-              <span className="text-3xl font-bold text-blue-600">{activeRoutes}</span>
+              <span className="text-3xl font-bold text-blue-600">{stats.active}</span>
               <span className="text-sm text-blue-600/80">Aktive Ruter</span>
             </div>
             <div className="flex flex-col items-center p-4 bg-green-50 rounded-lg">
-              <span className="text-3xl font-bold text-green-600">{finishedRoutes}</span>
+              <span className="text-3xl font-bold text-green-600">{stats.finished}</span>
               <span className="text-sm text-green-600/80">Fullførte Ruter</span>
             </div>
             <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg">
-              <span className="text-3xl font-bold text-primary">{totalPlacesOverall}</span>
+              <span className="text-3xl font-bold text-primary">{stats.totalP}</span>
               <span className="text-sm text-primary/80">Totale Stopp</span>
             </div>
           </div>
@@ -206,7 +212,7 @@ export default function MonitorPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium text-slate-700">Total Fremdrift for Dagen</span>
-              <span className="text-muted-foreground">{completedPlacesOverall} / {totalPlacesOverall} stopp fullført ({Math.round(overallProgress)}%)</span>
+              <span className="text-muted-foreground">{stats.completedP} / {stats.totalP} stopp fullført ({Math.round(overallProgress)}%)</span>
             </div>
             <Progress value={overallProgress} className="h-3" />
           </div>

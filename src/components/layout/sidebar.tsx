@@ -175,11 +175,11 @@ export default function AppSidebar() {
         { href: '/dashboard/orders', icon: Package, label: 'Ordrer', adminOnly: true, module: 'logistics' },
         { href: '/dashboard/routes', icon: Route, label: 'Ruter', module: 'logistics', hideFrom: ['hms_responsible', 'salesman'] },
         { href: '/dashboard/admin/routing-engine', icon: Sparkles, label: 'Auto-planlegging', adminOnly: true, module: 'logistics' },
-        { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin', 'owner'], module: 'logistics' },
-        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', module: 'logistics', hideFrom: ['hms_responsible', 'salesman'] },
+        { href: '/dashboard/manifests', icon: Package, label: 'Lasterampe', roles: ['admin', 'loader', 'super_admin', 'owner', 'driver', 'contractor'], module: 'logistics' },
+        { href: '/dashboard/monitor', icon: Activity, label: 'Overvåkning', roles: ['admin', 'super_admin', 'owner', 'planner'], module: 'logistics' },
         { href: '/dashboard/places', icon: MapPin, label: 'Leveringssteder', module: 'places' },
         { href: '/dashboard/favorites', icon: Star, label: 'Favoritter', hideFrom: ['hms_responsible', 'salesman'] },
-        { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places', hideFrom: ['hms_responsible'] }, // HMS shouldn't create new
+        { href: '/dashboard/new', icon: PlusCircle, label: 'Nytt sted', module: 'places', hideFrom: ['loader'] }, // Loaders are restricted from creating
       ]
     },
     {
@@ -192,10 +192,10 @@ export default function AppSidebar() {
     },
     {
       label: 'HMS & Sikkerhet',
-      roles: ['admin', 'super_admin', 'owner', 'hms_responsible', 'driver'],
+      roles: ['admin', 'super_admin', 'owner', 'hms_responsible', 'driver', 'contractor', 'planner'],
       items: [
         { href: '/dashboard/reports', icon: AlertTriangle, label: 'Avviksrapporter', module: 'danger_reports' },
-        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver'], module: 'hms' },
+        { href: '/dashboard/hms', icon: Shield, label: 'HMS Logger & Innstillinger', hideFrom: ['driver', 'contractor', 'loader', 'planner'], module: 'hms' },
       ]
     },
     {

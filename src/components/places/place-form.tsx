@@ -149,6 +149,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
 
   const isSalesman = dbUser?.role === 'salesman';
   const isHmsResponsible = dbUser?.role === 'hms_responsible';
+  const isLoader = dbUser?.role === 'loader';
 
   const initialMainImageIndex = place?.images && place.imageUrl 
     ? place.images.findIndex(img => img.url === place.imageUrl)
@@ -427,6 +428,15 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
         toast({
             title: 'Feil',
             description: 'Du må være logget inn for å utføre denne handlingen.',
+            variant: 'destructive'
+        });
+        return;
+    }
+
+    if (isLoader) {
+        toast({
+            title: 'Tilgang nektet',
+            description: 'Brukere med rollen "Laster" har ikke rettigheter til å opprette eller redigere steder.',
             variant: 'destructive'
         });
         return;
@@ -1150,7 +1160,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="p-6 border-b flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-indigo-500" />
+                        <Calendar className="h-5 w-5 text-indigo-50" />
                         <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight">Leveringsvindu</h3>
                     </div>
                     <FormField
@@ -1636,7 +1646,7 @@ export function PlaceForm({ place, onSuccess }: { place?: Place, onSuccess?: () 
           <Button
             type="submit"
             className="bg-accent text-accent-foreground hover:bg-accent/90 px-8"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLoader}
           >
             {isSubmitting ? (
               <>

@@ -80,7 +80,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
   const [isConstraintsOpen, setIsConstraintsOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { dbUser } = useAuth();
+  const { dbUser, isAdmin } = useAuth();
 
   const requiredDeleteText = "Jeg er ansvarlig og vil slette dette stedet fra databasen. Denne handlingen kan ikke endres";
 
@@ -221,6 +221,8 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
   const hmsModuleEnabled = organization?.modules?.hms ?? false;
   const hmsSettingsEnabled = organization?.hmsSettings?.enabled ?? false;
   const showHmsData = (hmsModuleEnabled || hmsSettingsEnabled) && place.hmsData;
+
+  const isLoader = dbUser?.role === 'loader';
 
   return (
     <>
@@ -714,15 +716,17 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
             {!isEditing && (
             <div className="pt-8 border-t flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-6 rounded-xl border shadow-sm mt-8">
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={() => setIsEditing(!isEditing)} 
-                  className="h-12 text-lg font-semibold px-8"
-                >
-                  <Edit3 className="mr-2 h-5 w-5" />
-                  Rediger Sted
-                </Button>
+                {!isLoader && (
+                    <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={() => setIsEditing(!isEditing)} 
+                    className="h-12 text-lg font-semibold px-8"
+                    >
+                    <Edit3 className="mr-2 h-5 w-5" />
+                    Rediger Sted
+                    </Button>
+                )}
                 
                 <Button 
                   variant="outline" 
@@ -747,7 +751,7 @@ export default function PlaceDetailsPage({ params }: { params: Promise<{ id: str
                   </Link>
                 </Button>
 
-                {userProfile?.role === 'admin' && (
+                {isAdmin && (
                   <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 

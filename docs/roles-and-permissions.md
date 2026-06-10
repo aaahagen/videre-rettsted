@@ -23,8 +23,8 @@ This document defines the Role-Based Access Control (RBAC) model for VIDERE Rett
 | **Org. Settings & Billing** | Full | Full | - | - | - | - | - | - |
 | **User Management** | Full | Full | Full | - | - | - | - | - |
 | **Audit Logs (GDPR)** | View | View | View | - | - | - | - | - |
-| **Place Management** | Full | Full | Full | View | View | View | View* | View* |
-| **- Edit Place Core** | Yes | Yes | Yes | - | - | - | - | Yes |
+| **Place Management** | Full | Full | Full | Full | View | Full | Full* | Full |
+| **- Edit Place Core** | Yes | Yes | Yes | Yes | - | Yes | Yes | Yes |
 | **- Edit HMS Checklist** | Yes | Yes | Yes | - | - | - | Yes | - |
 | **- Edit Sales Message** | Yes | Yes | Yes | - | - | - | - | Yes |
 | **- Danger Reports** | Manage | Manage | Manage | View | - | Create | - | - |
@@ -36,7 +36,7 @@ This document defines the Role-Based Access Control (RBAC) model for VIDERE Rett
 | **Time & Attendance** | Manage | Manage | Manage | View | - | Self | - | - |
 | **HMS Dashboard** | View | View | View | - | - | - | Full | - |
 
-\* *Restricted view or specific edit rights as noted.*
+\* *Restricted view or specific edit rights as noted. Note: Almost all users except Loaders have full create/edit rights on Places as this is a core "living database" feature.*
 
 ## 3. Detailed Role Permissions
 
@@ -65,12 +65,12 @@ This document defines the Role-Based Access Control (RBAC) model for VIDERE Rett
 - **Logistics:** Full access to Routes and Orders.
 - **Planning:** Create, edit, and delete routes. Assign drivers and vehicles.
 - **Manifests:** Create and manage manifests.
-- **Visibility:** View-only access to Fleet, Workforce, and Places.
+- **Visibility:** View-only access to Fleet, Workforce, and Places. *Can edit places.*
 
 ### Warehouse / Loader
 - **Operations:** Access to Loader Dashboard.
 - **Scanning:** Scan packages onto manifests.
-- **Visibility:** View routes and manifests.
+- **Visibility:** View routes, manifests, and places. *Cannot edit places.*
 
 ### Driver / Contractor
 - **App:** Primary access to mobile-optimized features.
@@ -78,9 +78,10 @@ This document defines the Role-Based Access Control (RBAC) model for VIDERE Rett
 - **Safety:** Perform vehicle inspections, report damages, and report hazards (Danger Reports).
 - **Attendance:** Punch-in/out for shifts.
 - **Profile:** View and edit own profile.
+- **Places:** Full create/edit rights to ensure data accuracy from the field.
 
 ### HMS Responsible
-- **Places:** View all places. Edit only HMS-specific fields/checklists.
+- **Places:** View all places. Edit HMS-specific fields/checklists and core details.
 - **Dashboard:** Access to HMS Dashboard (`/dashboard/hms`) to monitor compliance.
 
 ### Salesman
