@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, arrayRemove } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function FavoritesPage() {
@@ -45,12 +45,37 @@ export default function FavoritesPage() {
         
         const favoriteIds = uData.favorites || [];
         if (favoriteIds.length > 0) {
-          const favoritePlaces = await Promise.all(
-            favoriteIds.map(async (placeId) => {
-              return await firebaseDB.getPlace(placeId);
-            })
-          );
-          setPlaces(favoritePlaces.filter(p => p !== null) as Place[]);
+          try {
+              const favoritePlacesResults = await Promise.all(
+                favoriteIds.map(async (placeId) => {
+                  try {
+                      // Attempt to fetch each place, catch individual errors (e.g. permission denied on deleted doc)
+                      return await firebaseDB.getPlace(placeId);
+                  } catch (err) {
+                      console.warn(`Place ${placeId} is inaccessible or deleted.`, err);
+                      return null;
+                  }
+                })
+              );
+
+              const validPlaces = favoritePlacesResults.filter(p => p !== null) as Place[];
+              setPlaces(validPlaces);
+
+              // Auto-cleanup: If some IDs returned null, they are likely deleted. 
+              // We remove them from the user document to prevent future dead-ends.
+              const missingIds = favoriteIds.filter((id, index) => favoritePlacesResults[index] === null);
+              if (missingIds.length > 0) {
+                  const userRef = doc(db, 'users', authUser.uid);
+                  missingIds.forEach(async (mId) => {
+                      await updateDoc(userRef, {
+                          favorites: arrayRemove(mId)
+                      });
+                  });
+              }
+          } catch (err) {
+              console.error("Critical error loading favorites:", err);
+              setPlaces([]);
+          }
         } else {
           setPlaces([]);
         }

@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Optimized Mobile Scanner**: Significantly improved camera scanning reliability on iOS.
 
 ### Fixed
+- **Favorites Management & Cleanup**: Implemented robust error handling for deleted or inaccessible favorite places. The system now automatically cleans up broken references from the user's profile to prevent application errors.
 - **Super Admin User Management**: Resolved issues where super admins could encounter errors or missing roles when creating or managing users within a switched organization context.
     - Fixed restrictive role types in `AdminDashboardContent` and `PendingInvitations`.
     - Added support for inviting and managing `owner` and `super_admin` roles from the Admin Panel.
